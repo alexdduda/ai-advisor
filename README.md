@@ -24,21 +24,6 @@ Data Science: Pandas, NumPy
 
 AI Engine: Anthropic Claude API (Sonnet 3.5 / Haiku)
 
-📂 Project Structure
-
-mcgill-ai-advisor/
-├── backend/                  # Python API & Logic
-│   ├── main.py               # FastAPI Server entry point
-│   ├── mcgill_advisor.py     # Core recommendation logic
-│   ├── data_manager.py       # Data fetching utilities
-│   ├── ClassAverageCrowdSourcing.csv # Database
-│   └── requirements.txt      # Python dependencies
-│
-├── frontend/                 # React Application
-│   ├── src/                  # React components & CSS
-│   └── package.json          # Node dependencies
-
-
 🚀 Getting Started
 
 Follow these instructions to get a copy of the project up and running on your local machine.
