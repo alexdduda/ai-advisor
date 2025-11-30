@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { FaArrowUp } from "react-icons/fa6"
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
 import './App.css';
@@ -81,7 +82,7 @@ export default function ChatInterface() {
           disabled={isLoading}
         />
         <button type="submit" disabled={isLoading}>
-          Send
+          <FaArrowUp />
         </button>
       </form>
     </div>

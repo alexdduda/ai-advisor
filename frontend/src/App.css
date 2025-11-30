@@ -1,12 +1,9 @@
-/* Import Inter Font */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
-
 :root {
-  --mcgill-red: #ED1B2F;
+  --mcgill-red: #d8d8d8;
   --bg-color: #f0f2f5;
   --chat-bg: #ffffff;
-  --user-msg-bg: #ED1B2F; 
-  --bot-msg-bg: #f3f4f6;
+  --user-msg-bg: #218aff; 
+  --bot-msg-bg: #d8d8d8;
   --shadow-color: rgba(0, 0, 0, 0.1);
 }
 
@@ -56,7 +53,7 @@ body {
 /* --- HEADER --- */
 .chat-header {
   background: var(--mcgill-red);
-  color: white;
+  color: black;
   padding: 20px;
   text-align: center;
   box-shadow: 0 2px 10px rgba(0,0,0,0.1);
@@ -160,6 +157,7 @@ body {
   outline: none;
   transition: all 0.2s;
   font-family: inherit;
+  background: #218aff;
 }
 
 .input-area input:focus {
@@ -169,7 +167,7 @@ body {
 
 .input-area button {
   padding: 14px 28px;
-  background: var(--mcgill-red);
+  background: #218aff;
   color: white;
   border: none;
   border-radius: 50px;
@@ -179,8 +177,8 @@ body {
 }
 
 .input-area button:hover:not(:disabled) {
-  background-color: #d6192a;
-  transform: translateY(-1px);
+  background-color: #218aff;
+  transform: translateY(-5px);
 }
 
 .input-area button:disabled {
