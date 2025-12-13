@@ -3,7 +3,7 @@ Logging configuration
 """
 import logging
 import sys
-from api.config import settings
+from config import settings
 
 
 def setup_logging():
