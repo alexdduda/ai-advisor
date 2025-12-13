@@ -5,7 +5,7 @@ from supabase import create_client, Client
 from typing import Optional, List, Dict, Any
 import logging
 
-from config import settings
+from api.config import settings
 from api.exceptions import DatabaseException, UserNotFoundException
 
 logger = logging.getLogger(__name__)

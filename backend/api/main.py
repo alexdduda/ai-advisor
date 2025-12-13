@@ -4,7 +4,7 @@ from fastapi.exceptions import RequestValidationError
 from contextlib import asynccontextmanager
 import time
 
-from config import settings, get_settings
+from api.config import settings, get_settings
 from api.logging_config import setup_logging
 from api.exceptions import (
     AppException,
