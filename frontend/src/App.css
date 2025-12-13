@@ -198,3 +198,41 @@ body {
   box-shadow: none;
   cursor: default;
 }
+
+.error-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+  background: linear-gradient(135deg, #ED1B2F 0%, #B01B2E 100%);
+  color: white;
+}
+
+.error-screen h2 {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.error-screen p {
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+  opacity: 0.9;
+}
+
+.error-screen button {
+  padding: 0.875rem 1.5rem;
+  background: white;
+  color: #ED1B2F;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.error-screen button:hover {
+  transform: translateY(-2px);
+}
