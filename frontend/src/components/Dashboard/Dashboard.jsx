@@ -24,14 +24,44 @@ export default function Dashboard() {
   const [chatInput, setChatInput] = useState('')
 
   const handleProfileUpdate = async (e) => {
-    e.preventDefault()
-    try {
-      await updateProfile(profileForm)
-      setEditingProfile(false)
-    } catch (error) {
-      console.error('Error updating profile:', error)
+  e.preventDefault()
+  
+  try {
+    // Build update object - only include non-empty fields
+    const updates = {}
+    
+    if (profileForm.major && profileForm.major.trim()) {
+      updates.major = profileForm.major.trim()
     }
+    
+    if (profileForm.year) {
+      updates.year = parseInt(profileForm.year)
+    }
+    
+    if (profileForm.interests && profileForm.interests.trim()) {
+      updates.interests = profileForm.interests.trim()
+    }
+    
+    if (profileForm.current_gpa) {
+      const gpa = parseFloat(profileForm.current_gpa)
+      if (!isNaN(gpa) && gpa >= 0 && gpa <= 4) {
+        updates.current_gpa = gpa
+      }
+    }
+    
+    // Only send update if there's something to update
+    if (Object.keys(updates).length > 0) {
+      await updateProfile(updates)
+      setEditingProfile(false)
+    } else {
+      // No changes, just close edit mode
+      setEditingProfile(false)
+    }
+  } catch (error) {
+    console.error('Error updating profile:', error)
+    alert('Failed to update profile. Please try again.')
   }
+}
 
   const handleSignOut = async () => {
     try {
@@ -196,121 +226,261 @@ export default function Dashboard() {
           )}
 
           {/* Profile Tab */}
-          {activeTab === 'profile' && (
-            <div className="profile-container">
-              <div className="profile-card">
-                <div className="profile-header">
-                  <div className="profile-avatar-large">
-                    {user?.email?.[0].toUpperCase()}
+{activeTab === 'profile' && (
+  <div className="profile-page">
+    <div className="profile-page-header">
+      <div className="profile-hero">
+        <div className="profile-avatar-section">
+          <div className="profile-avatar-xl">
+            {user?.email?.[0].toUpperCase()}
+          </div>
+          <div className="profile-hero-info">
+            <h1 className="profile-display-name">{profile?.username || 'McGill Student'}</h1>
+            <p className="profile-email">{user?.email}</p>
+            <div className="profile-badges">
+              <span className="badge badge-year">
+                {profile?.year ? `Year ${profile.year}` : 'Year not set'}
+              </span>
+              {profile?.major && (
+                <span className="badge badge-major">
+                  {profile.major}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div className="profile-content">
+      <div className="profile-grid">
+        {/* Personal Information Card */}
+        <div className="profile-section-card">
+          <div className="card-header">
+            <div className="card-title-group">
+              <span className="card-icon">👤</span>
+              <h2 className="card-title">Personal Information</h2>
+            </div>
+            {!editingProfile && (
+              <button 
+              className="btn-icon-edit"
+              onClick={() => {
+                setProfileForm({
+                  major: profile?.major || '',
+                  year: profile?.year || '',
+                  interests: profile?.interests || '',
+                  current_gpa: profile?.current_gpa || ''
+                })
+                setEditingProfile(true)
+              }}
+              title="Edit Profile"
+            >
+              ✏️
+            </button>
+            )}
+          </div>
+          <div className="card-content">
+            {!editingProfile ? (
+              <div className="info-grid">
+                <div className="info-item">
+                  <span className="info-icon">🎓</span>
+                  <div className="info-details">
+                    <span className="info-label">Major</span>
+                    <span className="info-value">{profile?.major || 'Not specified'}</span>
                   </div>
-                  <h2>{profile?.username || 'User'}</h2>
-                  <p>{user?.email}</p>
                 </div>
-
-                {!editingProfile ? (
-                  <div className="profile-info">
-                    <div className="info-row">
-                      <span className="info-label">Major:</span>
-                      <span className="info-value">{profile?.major || 'Not set'}</span>
-                    </div>
-                    <div className="info-row">
-                      <span className="info-label">Year:</span>
-                      <span className="info-value">{profile?.year || 'Not set'}</span>
-                    </div>
-                    <div className="info-row">
-                      <span className="info-label">Interests:</span>
-                      <span className="info-value">{profile?.interests || 'Not set'}</span>
-                    </div>
-                    <div className="info-row">
-                      <span className="info-label">Current GPA:</span>
-                      <span className="info-value">{profile?.current_gpa || 'Not set'}</span>
-                    </div>
-
-                    <button 
-                      className="btn btn-primary"
-                      onClick={() => {
-                        setProfileForm({
-                          major: profile?.major || '',
-                          year: profile?.year || '',
-                          interests: profile?.interests || '',
-                          current_gpa: profile?.current_gpa || ''
-                        })
-                        setEditingProfile(true)
-                      }}
-                    >
-                      Edit Profile
-                    </button>
+                <div className="info-item">
+                  <span className="info-icon">📅</span>
+                  <div className="info-details">
+                    <span className="info-label">Academic Year</span>
+                    <span className="info-value">
+                      {profile?.year ? `U${profile.year}` : 'Not specified'}
+                    </span>
                   </div>
-                ) : (
-                  <form className="profile-form" onSubmit={handleProfileUpdate}>
-                    <div className="form-group">
-                      <label>Major</label>
-                      <input
-                        type="text"
-                        className="form-input"
-                        placeholder="e.g., Computer Science"
-                        value={profileForm.major}
-                        onChange={(e) => setProfileForm({...profileForm, major: e.target.value})}
-                      />
-                    </div>
+                </div>
+                <div className="info-item">
+                  <span className="info-icon">📧</span>
+                  <div className="info-details">
+                    <span className="info-label">Email</span>
+                    <span className="info-value">{user?.email}</span>
+                  </div>
+                </div>
+                <div className="info-item">
+                  <span className="info-icon">👤</span>
+                  <div className="info-details">
+                    <span className="info-label">Username</span>
+                    <span className="info-value">{profile?.username || 'Not set'}</span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <form className="edit-form" onSubmit={handleProfileUpdate}>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label className="form-label">Major</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="e.g., Computer Science"
+                      value={profileForm.major}
+                      onChange={(e) => setProfileForm({...profileForm, major: e.target.value})}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Year</label>
+                    <select
+                      className="form-input"
+                      value={profileForm.year}
+                      onChange={(e) => setProfileForm({...profileForm, year: e.target.value})}
+                    >
+                      <option value="">Select year</option>
+                      <option value="1">U1</option>
+                      <option value="2">U2</option>
+                      <option value="3">U3</option>
+                      <option value="4">U4</option>
+                      <option value="5">U5+</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="form-actions-inline">
+                  <button type="submit" className="btn btn-primary-sm">
+                    💾 Save Changes
+                  </button>
+                  <button 
+                    type="button"
+                    className="btn btn-secondary-sm"
+                    onClick={() => setEditingProfile(false)}
+                  >
+                    ✕ Cancel
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
 
-                    <div className="form-group">
-                      <label>Year</label>
-                      <select
-                        className="form-input"
-                        value={profileForm.year}
-                        onChange={(e) => setProfileForm({...profileForm, year: e.target.value})}
-                      >
-                        <option value="">Select year</option>
-                        <option value="1">U0/U1</option>
-                        <option value="2">U2</option>
-                        <option value="3">U3</option>
-                        <option value="4">U4+</option>
-                      </select>
-                    </div>
-
-                    <div className="form-group">
-                      <label>Interests</label>
-                      <textarea
-                        className="form-input"
-                        placeholder="e.g., Machine Learning, Web Development, Data Science"
-                        rows="3"
-                        value={profileForm.interests}
-                        onChange={(e) => setProfileForm({...profileForm, interests: e.target.value})}
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label>Current GPA</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        max="4"
-                        className="form-input"
-                        placeholder="e.g., 3.5"
-                        value={profileForm.current_gpa}
-                        onChange={(e) => setProfileForm({...profileForm, current_gpa: e.target.value})}
-                      />
-                    </div>
-
-                    <div className="form-actions">
-                      <button type="submit" className="btn btn-primary">
-                        Save Changes
-                      </button>
-                      <button 
-                        type="button"
-                        className="btn btn-secondary"
-                        onClick={() => setEditingProfile(false)}
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </form>
-                )}
+        {/* Academic Performance Card */}
+        <div className="profile-section-card">
+          <div className="card-header">
+            <div className="card-title-group">
+              <span className="card-icon">📊</span>
+              <h2 className="card-title">Academic Performance</h2>
+            </div>
+          </div>
+          <div className="card-content">
+            <div className="stat-showcase">
+              <div className="stat-item">
+                <div className="stat-value-large">
+                  {profile?.current_gpa || '--'}
+                </div>
+                <div className="stat-label">Current GPA</div>
               </div>
             </div>
-          )}
+            {editingProfile && (
+              <div className="form-group" style={{marginTop: '1rem'}}>
+                <label className="form-label">Update GPA</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max="4"
+                  className="form-input"
+                  placeholder="e.g., 3.75"
+                  value={profileForm.current_gpa}
+                  onChange={(e) => setProfileForm({...profileForm, current_gpa: e.target.value})}
+                />
+              </div>
+            )}
+            <div className="performance-tips">
+              <div className="tip-item">
+                <span className="tip-icon">💡</span>
+                <p className="tip-text">Keep your GPA updated for better course recommendations</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Interests & Preferences Card */}
+        <div className="profile-section-card card-full-width">
+          <div className="card-header">
+            <div className="card-title-group">
+              <span className="card-icon">✨</span>
+              <h2 className="card-title">Interests & Preferences</h2>
+            </div>
+          </div>
+          <div className="card-content">
+            {!editingProfile ? (
+              <div className="interests-display">
+                {profile?.interests ? (
+                  <div className="interests-tags">
+                    {profile.interests.split(',').map((interest, idx) => (
+                      <span key={idx} className="interest-tag">
+                        {interest.trim()}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="empty-state">
+                    <span className="empty-icon">🎯</span>
+                    <span>No interests added yet. Add your academic interests to get personalized recommendations!</span>
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div className="form-group">
+                <label className="form-label">Your Interests</label>
+                <textarea
+                  className="form-input"
+                  placeholder="e.g., Machine Learning, Web Development, Data Science, Finance (comma-separated)"
+                  rows="4"
+                  value={profileForm.interests}
+                  onChange={(e) => setProfileForm({...profileForm, interests: e.target.value})}
+                />
+                <p className="form-hint">Separate multiple interests with commas</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Account Settings Card */}
+        <div className="profile-section-card card-full-width">
+          <div className="card-header">
+            <div className="card-title-group">
+              <span className="card-icon">⚙️</span>
+              <h2 className="card-title">Account Settings</h2>
+            </div>
+          </div>
+          <div className="card-content">
+            <div className="settings-grid">
+              <div className="setting-item">
+                <div className="setting-info">
+                  <h3 className="setting-title">Account Status</h3>
+                  <p className="setting-description">Your account is active and verified</p>
+                </div>
+                <span className="status-badge status-active">Active</span>
+              </div>
+              <div className="setting-item">
+                <div className="setting-info">
+                  <h3 className="setting-title">Member Since</h3>
+                  <p className="setting-description">
+                    {profile?.created_at 
+                      ? new Date(profile.created_at).toLocaleDateString('en-US', { 
+                          year: 'numeric', 
+                          month: 'long', 
+                          day: 'numeric' 
+                        })
+                      : 'Recently joined'
+                    }
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
         </div>
       </main>
     </div>

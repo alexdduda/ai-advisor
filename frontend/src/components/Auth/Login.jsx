@@ -1,41 +1,94 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
+import { 
+  validateEmail, 
+  validatePassword, 
+  validateUsername,
+  getErrorMessage 
+} from '../../utils/validation'
 import './Auth.css'
 
-export default function Login() {
+function Login() {
   const [isLogin, setIsLogin] = useState(true)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [username, setUsername] = useState('')
-  const [error, setError] = useState('')
+  const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   
-  const { signIn, signUp } = useAuth()
+  const { signIn, signUp, error: authError, clearError } = useAuth()
+
+  // Clear auth errors when switching modes
+  useEffect(() => {
+    clearError()
+    setErrors({})
+    setMessage('')
+  }, [isLogin, clearError])
+
+  const validateForm = () => {
+    const newErrors = {}
+    
+    // Email validation
+    const emailError = validateEmail(email)
+    if (emailError) newErrors.email = emailError
+    
+    // Password validation
+    const passwordError = validatePassword(password, !isLogin)
+    if (passwordError) newErrors.password = passwordError
+    
+    // Username validation (signup only)
+    if (!isLogin) {
+      const usernameError = validateUsername(username)
+      if (usernameError) newErrors.username = usernameError
+    }
+    
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setError('')
+    
+    // Clear previous messages
     setMessage('')
+    setErrors({})
+    clearError()
+    
+    // Validate form
+    if (!validateForm()) {
+      return
+    }
+
     setLoading(true)
 
     try {
       if (isLogin) {
         const { error } = await signIn(email, password)
-        if (error) throw error
-      } else {
-        if (!username.trim()) {
-          throw new Error('Username is required')
+        if (error) {
+          setErrors({ form: getErrorMessage(error) })
         }
-        const { error } = await signUp(email, password, username)
-        if (error) throw error
-        setMessage('Account created! Redirecting...')
+      } else {
+        const { error } = await signUp(email, password, username.trim())
+        if (error) {
+          setErrors({ form: getErrorMessage(error) })
+        } else {
+          setMessage('Account created successfully! Redirecting...')
+        }
       }
     } catch (error) {
-      setError(error.message || 'An error occurred')
+      console.error('Form submission error:', error)
+      setErrors({ form: getErrorMessage(error) })
     } finally {
       setLoading(false)
     }
+  }
+
+  const toggleMode = () => {
+    setIsLogin(!isLogin)
+    setErrors({})
+    setMessage('')
+    clearError()
   }
 
   return (
@@ -87,10 +140,10 @@ export default function Login() {
             </p>
           </div>
 
-          {error && (
+          {(errors.form || authError) && (
             <div className="alert alert-error">
               <span className="alert-icon">⚠️</span>
-              {error}
+              {errors.form || getErrorMessage(authError)}
             </div>
           )}
 
@@ -101,7 +154,7 @@ export default function Login() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="auth-form">
+          <form onSubmit={handleSubmit} className="auth-form" noValidate>
             {!isLogin && (
               <div className="form-group">
                 <label htmlFor="username" className="form-label">Username</label>
@@ -111,10 +164,13 @@ export default function Login() {
                   placeholder="johndoe"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="form-input"
-                  required={!isLogin}
+                  className={`form-input ${errors.username ? 'input-error' : ''}`}
                   autoComplete="username"
+                  disabled={loading}
                 />
+                {errors.username && (
+                  <p className="form-error">{errors.username}</p>
+                )}
               </div>
             )}
 
@@ -126,10 +182,13 @@ export default function Login() {
                 placeholder="john.doe@mail.mcgill.ca"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="form-input"
-                required
+                className={`form-input ${errors.email ? 'input-error' : ''}`}
                 autoComplete="email"
+                disabled={loading}
               />
+              {errors.email && (
+                <p className="form-error">{errors.email}</p>
+              )}
             </div>
 
             <div className="form-group">
@@ -140,13 +199,17 @@ export default function Login() {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="form-input"
-                required
+                className={`form-input ${errors.password ? 'input-error' : ''}`}
                 autoComplete={isLogin ? "current-password" : "new-password"}
-                minLength={6}
+                disabled={loading}
               />
-              {!isLogin && (
-                <p className="form-hint">At least 6 characters</p>
+              {errors.password && (
+                <p className="form-error">{errors.password}</p>
+              )}
+              {!isLogin && !errors.password && (
+                <p className="form-hint">
+                  At least 8 characters with uppercase, lowercase, and numbers
+                </p>
               )}
             </div>
 
@@ -172,12 +235,9 @@ export default function Login() {
               {' '}
               <button 
                 type="button"
-                onClick={() => {
-                  setIsLogin(!isLogin)
-                  setError('')
-                  setMessage('')
-                }}
+                onClick={toggleMode}
                 className="auth-toggle-btn"
+                disabled={loading}
               >
                 {isLogin ? 'Sign Up' : 'Sign In'}
               </button>
@@ -188,3 +248,5 @@ export default function Login() {
     </div>
   )
 }
+
+export default Login
