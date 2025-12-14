@@ -16,68 +16,51 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [profile, setProfile] = useState(null)
-  const [authLoading, setAuthLoading] = useState(true)
-  const [profileLoading, setProfileLoading] = useState(true)
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   
   const mountedRef = useRef(true)
-  const profileLoadAttempts = useRef(0)
-  const MAX_PROFILE_RETRIES = 3
+  const loadingProfile = useRef(false)
+  const justSignedUp = useRef(false)  // Track if we just completed signup
 
-  const loading = authLoading || profileLoading
-
-  const loadProfile = useCallback(async (userId, retryCount = 0) => {
-  if (!mountedRef.current) return
-  
-  try {
-    setProfileLoading(true)
-    console.log('Loading profile for:', userId)
+  const loadProfile = useCallback(async (userId) => {
+    if (!mountedRef.current || loadingProfile.current) return
     
-    const { user: userProfile } = await usersAPI.getUser(userId)
+    loadingProfile.current = true
     
-    console.log('Profile loaded:', userProfile)
-    
-    if (mountedRef.current) {
-      setProfile(userProfile)
-      setError(null)
-      profileLoadAttempts.current = 0
-      setProfileLoading(false) // MAKE SURE THIS IS HERE
-    }
-  } catch (error) {
-    console.error('Error loading profile:', error)
-    
-    // If user not found (404), don't retry - this is a permanent error
-    if (error.response?.status === 404 || error.code === 'user_not_found') {
+    try {
+      console.log('Loading profile for:', userId)
+      const { user: userProfile } = await usersAPI.getUser(userId)
+      console.log('Profile loaded:', userProfile)
+      
       if (mountedRef.current) {
-        setProfile(null)
-        setError({
-          type: 'PROFILE_NOT_FOUND',
-          message: 'Your profile was not found. Please complete your profile setup.'
-        })
-        setProfileLoading(false) // CRITICAL: Set loading to false
+        setProfile(userProfile)
+        setError(null)
       }
-      return // Stop retrying
-    }
-    
-    // For other errors, retry with exponential backoff
-    if (retryCount < MAX_PROFILE_RETRIES) {
-      const delay = Math.pow(2, retryCount) * 1000
-      console.log(`Retrying in ${delay}ms...`)
-      setTimeout(() => {
-        loadProfile(userId, retryCount + 1)
-      }, delay)
-    } else {
+    } catch (error) {
+      console.error('Error loading profile:', error)
+      
       if (mountedRef.current) {
-        setProfile(null)
-        setError({
-          type: 'PROFILE_LOAD_FAILED',
-          message: 'Unable to load your profile. Please refresh the page.'
-        })
-        setProfileLoading(false) // CRITICAL: Set loading to false
+        if (error.response?.status === 404) {
+          setProfile(null)
+          // Don't set error if we're in the middle of signing up
+          if (!justSignedUp.current) {
+            setError({
+              type: 'PROFILE_NOT_FOUND',
+              message: 'Profile not found. Please complete your profile setup.'
+            })
+          }
+        } else {
+          setError({
+            type: 'PROFILE_LOAD_FAILED',
+            message: 'Unable to load profile. Please refresh the page.'
+          })
+        }
       }
+    } finally {
+      loadingProfile.current = false
     }
-  }
-}, [])
+  }, [])
 
   useEffect(() => {
     mountedRef.current = true
@@ -85,26 +68,26 @@ export const AuthProvider = ({ children }) => {
 
     const initialize = async () => {
       try {
-        // Get initial session
+        console.log('Initializing auth...')
         const { data: { session }, error: sessionError } = await supabase.auth.getSession()
         
         if (sessionError) throw sessionError
         
+        console.log('Initial session:', session?.user?.id)
+        
         if (mountedRef.current) {
           setUser(session?.user ?? null)
-          setAuthLoading(false)
           
           if (session?.user) {
             await loadProfile(session.user.id)
-          } else {
-            setProfileLoading(false)
           }
+          
+          setLoading(false)
         }
       } catch (error) {
         console.error('Auth initialization error:', error)
         if (mountedRef.current) {
-          setAuthLoading(false)
-          setProfileLoading(false)
+          setLoading(false)
           setError({
             type: 'AUTH_INIT_FAILED',
             message: 'Unable to initialize authentication'
@@ -115,7 +98,6 @@ export const AuthProvider = ({ children }) => {
 
     initialize()
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!mountedRef.current) return
@@ -125,13 +107,16 @@ export const AuthProvider = ({ children }) => {
         setUser(session?.user ?? null)
 
         if (event === 'SIGNED_IN' && session?.user) {
-          await loadProfile(session.user.id)
+          // Skip profile load if we just signed up (already loaded in signUp function)
+          if (justSignedUp.current) {
+            console.log('Skipping profile load - just signed up')
+            justSignedUp.current = false
+          } else {
+            await loadProfile(session.user.id)
+          }
         } else if (event === 'SIGNED_OUT') {
           setProfile(null)
           setError(null)
-          setProfileLoading(false)
-        } else if (event === 'TOKEN_REFRESHED') {
-          // Token refreshed, no need to reload profile
         }
       }
     )
@@ -145,81 +130,66 @@ export const AuthProvider = ({ children }) => {
   }, [loadProfile])
 
   const signUp = async (email, password, username) => {
-  try {
-    setError(null)
-    
-    // Step 1: Create auth user
-    const { data, error: signUpError } = await supabase.auth.signUp({
-      email,
-      password,
-    })
-    
-    if (signUpError) throw signUpError
-    
-    if (!data.user) {
-      throw new Error('Signup failed: No user returned')
-    }
-
-    console.log('Auth user created:', data.user.id)
-
-    // Step 2: Create user profile immediately
     try {
-      console.log('Creating profile for:', data.user.id)
+      setError(null)
       
-      const profileData = {
-        id: data.user.id,
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email,
-        username: username.trim() || null,
-      }
-      
-      const response = await usersAPI.createUser(profileData)
-      console.log('Profile created successfully:', response)
-      
-      // Step 3: IMMEDIATELY load the profile we just created
-      if (mountedRef.current) {
-        setProfile(response.user)  // Set it directly!
-        setProfileLoading(false)
-        setError(null)
-      }
-      
-    } catch (profileError) {
-      console.error('Profile creation error:', profileError)
-      console.error('Profile error details:', {
-        status: profileError.response?.status,
-        code: profileError.code,
-        message: profileError.message,
-        data: profileError.response?.data
+        password,
       })
       
-      // Check if it's truly a duplicate (profile exists)
-      if (profileError.response?.status === 409 || 
-          profileError.response?.data?.code === 'user_already_exists') {
-        console.log('Profile already exists - loading it...')
-        
-        // Profile exists, load it
-        if (mountedRef.current) {
-          await loadProfile(data.user.id)
-        }
-      } else {
-        // Real error - but don't fail signup
-        console.error('Failed to create profile, user will need to complete setup')
-        setError({
-          type: 'PROFILE_CREATE_FAILED',
-          message: 'Account created but profile setup needed'
-        })
+      if (signUpError) throw signUpError
+      
+      if (!data.user) {
+        throw new Error('Signup failed: No user returned')
       }
+
+      console.log('Auth user created:', data.user.id)
+
+      try {
+        console.log('Creating profile for:', data.user.id)
+        
+        const profileData = {
+          id: data.user.id,
+          email,
+          username: username.trim() || null,
+        }
+        
+        const response = await usersAPI.createUser(profileData)
+        console.log('Profile created successfully:', response)
+        
+        if (mountedRef.current && response.user) {
+          setProfile(response.user)
+          setError(null)  // Clear any previous errors
+          justSignedUp.current = true
+        }
+        
+      } catch (profileError) {
+        console.error('Profile creation error:', profileError)
+        
+        if (profileError.response?.status === 409 || 
+            profileError.response?.data?.code === 'user_already_exists') {
+          console.log('Profile already exists, loading it...')
+          await loadProfile(data.user.id)
+        } else {
+          console.error('Failed to create profile')
+          setError({
+            type: 'PROFILE_CREATE_FAILED',
+            message: 'Account created but profile setup needed'
+          })
+        }
+      }
+      
+      return { data, error: null }
+    } catch (error) {
+      console.error('Signup error:', error)
+      setError({
+        type: 'SIGNUP_FAILED',
+        message: error.message
+      })
+      return { data: null, error }
     }
-    
-    return { data, error: null }
-  } catch (error) {
-    console.error('Signup error:', error)
-    setError({
-      type: 'SIGNUP_FAILED',
-      message: error.message
-    })
-    return { data: null, error }
   }
-}
 
   const signIn = async (email, password) => {
     try {
@@ -251,7 +221,6 @@ export const AuthProvider = ({ children }) => {
       
       if (signOutError) throw signOutError
       
-      // Clear state (will be handled by onAuthStateChange too)
       setUser(null)
       setProfile(null)
       
@@ -273,7 +242,6 @@ export const AuthProvider = ({ children }) => {
     
     try {
       setError(null)
-      setProfileLoading(true)
       
       const { user: updatedUser } = await usersAPI.updateUser(user.id, updates)
       
@@ -289,10 +257,6 @@ export const AuthProvider = ({ children }) => {
         message: 'Failed to update profile'
       })
       return { data: null, error }
-    } finally {
-      if (mountedRef.current) {
-        setProfileLoading(false)
-      }
     }
   }
 
