@@ -6,19 +6,15 @@ from pydantic import BaseModel, Field, validator
 from typing import List, Optional
 import anthropic
 import logging
+import os
 
-from ..config import settings
 from api.utils.supabase_client import (
     get_user_by_id,
     get_chat_history,
     save_message
 )
-from api.exceptions import (
-    UserNotFoundException,
-    MessageTooLongException,
-    AIServiceException,
-    DatabaseException
-)
+from api.config import settings
+from api.exceptions import UserNotFoundException, DatabaseException
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -42,7 +38,7 @@ class ChatRequest(BaseModel):
         return v.strip()
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "message": "What are some good computer science courses for a beginner?",
                 "user_id": "123e4567-e89b-12d3-a456-426614174000"
@@ -106,30 +102,29 @@ async def send_message(request: ChatRequest):
     """
     try:
         # Validate message length
-        if len(request.message) > settings.MAX_MESSAGE_LENGTH:
-            raise MessageTooLongException(
-                len(request.message),
-                settings.MAX_MESSAGE_LENGTH
+        MAX_MESSAGE_LENGTH = 4000
+        if len(request.message) > MAX_MESSAGE_LENGTH:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Message too long. Maximum {MAX_MESSAGE_LENGTH} characters."
             )
         
-        # Verify user exists and get profile
+        # Verify user exists and get profile (SYNCHRONOUS - no await)
         user = get_user_by_id(request.user_id)
         
-        # Save user message
+        # Save user message (SYNCHRONOUS - no await)
         save_message(request.user_id, "user", request.message)
         
-        # Get chat history for context
-        history = get_chat_history(
-            request.user_id,
-            limit=settings.CHAT_HISTORY_LIMIT
-        )
+        # Get chat history for context (SYNCHRONOUS - no await)
+        history = get_chat_history(request.user_id, limit=10)
         
         # Build system context
         system_context = build_system_context(user)
         
         # Prepare messages for Claude
         # Use only recent messages to stay within context limits
-        recent_history = history[-(settings.CHAT_CONTEXT_MESSAGES):]
+        CHAT_CONTEXT_MESSAGES = 8
+        recent_history = history[-(CHAT_CONTEXT_MESSAGES):] if len(history) > CHAT_CONTEXT_MESSAGES else history
         formatted_history = format_chat_history(recent_history)
         
         # Add current message
@@ -138,13 +133,19 @@ async def send_message(request: ChatRequest):
             "content": request.message
         })
         
-        # Call Claude API
+        # Call Claude API with Opus model
         try:
-            client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
+            api_key = settings.ANTHROPIC_API_KEY
+            if not api_key:
+                raise ValueError("ANTHROPIC_API_KEY not found in environment")
+            
+            client = anthropic.Anthropic(api_key=api_key)
+            
+            logger.info(f"Calling Claude API with {len(formatted_history)} messages")
             
             message = client.messages.create(
-                model=settings.CLAUDE_MODEL,
-                max_tokens=settings.CLAUDE_MAX_TOKENS,
+                model="claude-3-opus-20240229",  # Claude 3 Opus
+                max_tokens=2048,  # Increased for more detailed responses
                 system=system_context,
                 messages=formatted_history
             )
@@ -156,12 +157,18 @@ async def send_message(request: ChatRequest):
             
         except anthropic.APIError as e:
             logger.error(f"Anthropic API error: {e}")
-            raise AIServiceException(str(e))
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="AI service temporarily unavailable"
+            )
         except Exception as e:
             logger.exception(f"Unexpected error calling Claude API: {e}")
-            raise AIServiceException("AI service temporarily unavailable")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Error generating AI response"
+            )
         
-        # Save assistant response
+        # Save assistant response (SYNCHRONOUS - no await)
         save_message(request.user_id, "assistant", assistant_response)
         
         return ChatResponse(
@@ -172,11 +179,9 @@ async def send_message(request: ChatRequest):
         
     except UserNotFoundException:
         raise
-    except MessageTooLongException:
-        raise
-    except AIServiceException:
-        raise
     except DatabaseException:
+        raise
+    except HTTPException:
         raise
     except Exception as e:
         logger.exception(f"Unexpected error in chat endpoint: {e}")
@@ -198,10 +203,10 @@ async def get_history(
     - **limit**: Maximum number of messages to return (1-200, default 50)
     """
     try:
-        # Verify user exists
-        get_user_by_id(user_id)
+        # Verify user exists (SYNCHRONOUS - no await)
+        user = get_user_by_id(user_id)
         
-        # Get chat history
+        # Get chat history (SYNCHRONOUS - no await)
         messages = get_chat_history(user_id, limit=limit)
         
         return {
@@ -212,6 +217,8 @@ async def get_history(
     except UserNotFoundException:
         raise
     except DatabaseException:
+        raise
+    except HTTPException:
         raise
     except Exception as e:
         logger.exception(f"Unexpected error getting chat history: {e}")

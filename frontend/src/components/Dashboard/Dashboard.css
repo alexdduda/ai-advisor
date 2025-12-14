@@ -355,6 +355,7 @@
   border-radius: 10px;
   font-size: 1rem;
   background: white;
+  color: black;
 }
 
 .search-input:focus {
@@ -1103,4 +1104,33 @@ textarea.form-input {
   .btn-secondary-sm {
     width: 100%;
   }
+}
+
+
+/* Typing Indicator Animation */
+.typing-indicator {
+  display: inline-block;
+  letter-spacing: 4px;
+  animation: typing 1.4s infinite;
+}
+
+@keyframes typing {
+  0%, 100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Disabled input states */
+.chat-input:disabled,
+.btn-send:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-send:disabled:hover {
+  transform: none;
+  box-shadow: none;
 }
