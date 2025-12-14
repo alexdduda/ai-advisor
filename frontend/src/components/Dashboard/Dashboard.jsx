@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
+import { chatAPI } from '../../lib/api'
 import './Dashboard.css'
 
 export default function Dashboard() {
@@ -14,54 +15,101 @@ export default function Dashboard() {
     current_gpa: ''
   })
 
-  // Placeholder states for chat and courses
-  const [chatMessages, setChatMessages] = useState([
-    {
-      role: 'assistant',
-      content: 'Hello! I\'m your McGill AI Academic Advisor. How can I help you plan your courses today?'
-    }
-  ])
+  // Chat states
+  const [chatMessages, setChatMessages] = useState([])
   const [chatInput, setChatInput] = useState('')
+  const [isSending, setIsSending] = useState(false)
+  const [chatError, setChatError] = useState(null)
+  const [isLoadingHistory, setIsLoadingHistory] = useState(true)
+  const messagesEndRef = useRef(null)
 
-  const handleProfileUpdate = async (e) => {
-  e.preventDefault()
-  
-  try {
-    // Build update object - only include non-empty fields
-    const updates = {}
-    
-    if (profileForm.major && profileForm.major.trim()) {
-      updates.major = profileForm.major.trim()
-    }
-    
-    if (profileForm.year) {
-      updates.year = parseInt(profileForm.year)
-    }
-    
-    if (profileForm.interests && profileForm.interests.trim()) {
-      updates.interests = profileForm.interests.trim()
-    }
-    
-    if (profileForm.current_gpa) {
-      const gpa = parseFloat(profileForm.current_gpa)
-      if (!isNaN(gpa) && gpa >= 0 && gpa <= 4) {
-        updates.current_gpa = gpa
+  // Auto-scroll to bottom of chat
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [chatMessages])
+
+  // Load chat history on mount
+  useEffect(() => {
+    const loadChatHistory = async () => {
+      if (!user?.id) return
+      
+      try {
+        setIsLoadingHistory(true)
+        const data = await chatAPI.getHistory(user.id, 50)
+        
+        if (data.messages && data.messages.length > 0) {
+          setChatMessages(data.messages)
+        } else {
+          // If no history, show welcome message
+          setChatMessages([
+            {
+              role: 'assistant',
+              content: 'Hello! I\'m your McGill AI Academic Advisor. How can I help you plan your courses today?'
+            }
+          ])
+        }
+      } catch (error) {
+        console.error('Error loading chat history:', error)
+        // Show welcome message even if history fails to load
+        setChatMessages([
+          {
+            role: 'assistant',
+            content: 'Hello! I\'m your McGill AI Academic Advisor. How can I help you plan your courses today?'
+          }
+        ])
+      } finally {
+        setIsLoadingHistory(false)
       }
     }
-    
-    // Only send update if there's something to update
-    if (Object.keys(updates).length > 0) {
-      await updateProfile(updates)
-      setEditingProfile(false)
-    } else {
-      // No changes, just close edit mode
-      setEditingProfile(false)
+
+    if (activeTab === 'chat') {
+      loadChatHistory()
     }
-  } catch (error) {
-    console.error('Error updating profile:', error)
-    alert('Failed to update profile. Please try again.')
+  }, [user?.id, activeTab])
+
+  const handleProfileUpdate = async (e) => {
+    e.preventDefault()
+    
+    try {
+      // Build update object - only include non-empty fields
+      const updates = {}
+      
+      if (profileForm.major && profileForm.major.trim()) {
+        updates.major = profileForm.major.trim()
+      }
+      
+      if (profileForm.year) {
+        updates.year = parseInt(profileForm.year)
+      }
+      
+      if (profileForm.interests && profileForm.interests.trim()) {
+        updates.interests = profileForm.interests.trim()
+      }
+      
+      if (profileForm.current_gpa) {
+        const gpa = parseFloat(profileForm.current_gpa)
+        if (!isNaN(gpa) && gpa >= 0 && gpa <= 4) {
+          updates.current_gpa = gpa
+        }
+      }
+      
+      // Only send update if there's something to update
+      if (Object.keys(updates).length > 0) {
+        await updateProfile(updates)
+        setEditingProfile(false)
+      } else {
+        // No changes, just close edit mode
+        setEditingProfile(false)
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error)
+      alert('Failed to update profile. Please try again.')
+    }
   }
-}
 
   const handleSignOut = async () => {
     try {
@@ -71,21 +119,51 @@ export default function Dashboard() {
     }
   }
 
-  const handleSendMessage = (e) => {
+  const handleSendMessage = async (e) => {
     e.preventDefault()
-    if (!chatInput.trim()) return
+    if (!chatInput.trim() || isSending || !user?.id) return
     
-    // Add user message
-    setChatMessages([...chatMessages, { role: 'user', content: chatInput }])
+    const userMessage = chatInput.trim()
     setChatInput('')
+    setChatError(null)
     
-    // Simulate AI response (replace with actual API call later)
-    setTimeout(() => {
+    // Add user message immediately
+    const newUserMessage = { role: 'user', content: userMessage }
+    setChatMessages(prev => [...prev, newUserMessage])
+    
+    setIsSending(true)
+    
+    try {
+      // Call the actual API
+      const response = await chatAPI.sendMessage(user.id, userMessage)
+      
+      // Add AI response
+      const assistantMessage = {
+        role: 'assistant',
+        content: response.response
+      }
+      
+      setChatMessages(prev => [...prev, assistantMessage])
+      
+    } catch (error) {
+      console.error('Error sending message:', error)
+      setChatError('Failed to get response. Please try again.')
+      
+      // Add error message to chat
       setChatMessages(prev => [...prev, {
         role: 'assistant',
-        content: 'This is a placeholder response. The chat functionality will be connected to the backend API soon!'
+        content: '❌ Sorry, I encountered an error. Please try again or contact support if the issue persists.'
       }])
-    }, 1000)
+    } finally {
+      setIsSending(false)
+    }
+  }
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleSendMessage(e)
+    }
   }
 
   return (
@@ -178,17 +256,51 @@ export default function Dashboard() {
           {activeTab === 'chat' && (
             <div className="chat-container">
               <div className="chat-messages">
-                {chatMessages.map((msg, idx) => (
-                  <div key={idx} className={`message ${msg.role}`}>
-                    <div className="message-avatar">
-                      {msg.role === 'user' ? user?.email?.[0].toUpperCase() : '🤖'}
-                    </div>
+                {isLoadingHistory ? (
+                  <div className="message assistant">
+                    <div className="message-avatar">🤖</div>
                     <div className="message-content">
-                      <div className="message-text">{msg.content}</div>
+                      <div className="message-text">Loading chat history...</div>
                     </div>
                   </div>
-                ))}
+                ) : (
+                  chatMessages.map((msg, idx) => (
+                    <div key={idx} className={`message ${msg.role}`}>
+                      <div className="message-avatar">
+                        {msg.role === 'user' ? user?.email?.[0].toUpperCase() : '🤖'}
+                      </div>
+                      <div className="message-content">
+                        <div className="message-text">{msg.content}</div>
+                      </div>
+                    </div>
+                  ))
+                )}
+                
+                {isSending && (
+                  <div className="message assistant">
+                    <div className="message-avatar">🤖</div>
+                    <div className="message-content">
+                      <div className="message-text">
+                        <span className="typing-indicator">●●●</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                <div ref={messagesEndRef} />
               </div>
+
+              {chatError && (
+                <div style={{
+                  padding: '1rem',
+                  background: '#fee',
+                  color: '#c33',
+                  borderTop: '1px solid #e99',
+                  textAlign: 'center'
+                }}>
+                  {chatError}
+                </div>
+              )}
 
               <form className="chat-input-container" onSubmit={handleSendMessage}>
                 <input
@@ -197,9 +309,15 @@ export default function Dashboard() {
                   placeholder="Ask me anything about courses, planning, or McGill academics..."
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  disabled={isSending}
                 />
-                <button type="submit" className="btn btn-send">
-                  Send
+                <button 
+                  type="submit" 
+                  className="btn btn-send"
+                  disabled={isSending || !chatInput.trim()}
+                >
+                  {isSending ? 'Sending...' : 'Send'}
                 </button>
               </form>
             </div>
