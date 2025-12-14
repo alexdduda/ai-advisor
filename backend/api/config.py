@@ -3,9 +3,8 @@ Centralized configuration management with validation
 """
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import field_validator, Field
-from typing import List
+from typing import List, Union
 import os
-
 
 class Settings(BaseSettings):
     """Application settings with validation"""
@@ -37,19 +36,23 @@ class Settings(BaseSettings):
     DEFAULT_SEARCH_LIMIT: int = 50
     MAX_SEARCH_LIMIT: int = 200
     
-    # Security - Load from environment
-    ALLOWED_ORIGINS: List[str] = Field(default=[
-        "http://localhost:5173",
-        "https://ai-advisor-pi.vercel.app"
-    ])
-
+    # Security - Changed to Union[str, List[str]] to handle both formats
+    ALLOWED_ORIGINS: Union[str, List[str]] = Field(
+        default="http://localhost:5173,https://ai-advisor-pi.vercel.app"
+    )
+    
     @field_validator('ALLOWED_ORIGINS', mode='before')
     @classmethod
     def parse_origins(cls, v):
+        """Parse comma-separated string or JSON array into list"""
         if isinstance(v, str):
-            # Parse comma-separated string from env
-            return [origin.strip() for origin in v.split(',')]
-        return v
+            # Handle comma-separated string from env var
+            return [origin.strip() for origin in v.split(',') if origin.strip()]
+        elif isinstance(v, list):
+            # Already a list (from JSON or default)
+            return v
+        # Fallback to default
+        return ["http://localhost:5173"]
     
     # Rate Limiting
     RATE_LIMIT_PER_MINUTE: int = 20
@@ -87,10 +90,8 @@ class Settings(BaseSettings):
         extra='ignore'
     )
 
-
 # Global settings instance
 settings = Settings()
-
 
 def get_settings() -> Settings:
     """Get application settings"""
