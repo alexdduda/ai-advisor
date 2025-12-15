@@ -24,77 +24,96 @@ export const AuthProvider = ({ children }) => {
   const justSignedUp = useRef(false)  // Track if we just completed signup
 
   const loadProfile = useCallback(async (userId) => {
-    if (!mountedRef.current || loadingProfile.current) return
+  if (!mountedRef.current || loadingProfile.current) {
+    console.log('Skipping loadProfile - already loading or unmounted')
+    return
+  }
+  
+  loadingProfile.current = true
+  
+  try {
+    console.log('Loading profile for:', userId)
     
-    loadingProfile.current = true
+    // Add timeout to prevent infinite hanging
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Profile load timeout')), 10000)
+    )
     
-    try {
-      console.log('Loading profile for:', userId)
-      const { user: userProfile } = await usersAPI.getUser(userId)
-      console.log('Profile loaded:', userProfile)
-      
-      if (mountedRef.current) {
-        setProfile(userProfile)
-        setError(null)
-      }
-    } catch (error) {
-      console.error('Error loading profile:', error)
-      
-      if (mountedRef.current) {
-        if (error.response?.status === 404) {
-          setProfile(null)
-          // Don't set error if we're in the middle of signing up
-          if (!justSignedUp.current) {
-            setError({
-              type: 'PROFILE_NOT_FOUND',
-              message: 'Profile not found. Please complete your profile setup.'
-            })
-          }
-        } else {
+    const profilePromise = usersAPI.getUser(userId)
+    
+    const { user: userProfile } = await Promise.race([profilePromise, timeoutPromise])
+    console.log('Profile loaded:', userProfile)
+    
+    if (mountedRef.current) {
+      setProfile(userProfile)
+      setError(null)
+    }
+  } catch (error) {
+    console.error('Error loading profile:', error)
+    
+    if (mountedRef.current) {
+      if (error.message === 'Profile load timeout') {
+        setError({
+          type: 'PROFILE_LOAD_TIMEOUT',
+          message: 'Profile load timed out. Please check your connection and refresh.'
+        })
+      } else if (error.response?.status === 404) {
+        setProfile(null)
+        // Don't set error if we're in the middle of signing up
+        if (!justSignedUp.current) {
           setError({
-            type: 'PROFILE_LOAD_FAILED',
-            message: 'Unable to load profile. Please refresh the page.'
+            type: 'PROFILE_NOT_FOUND',
+            message: 'Profile not found. Please complete your profile setup.'
           })
         }
+      } else {
+        setError({
+          type: 'PROFILE_LOAD_FAILED',
+          message: 'Unable to load profile. Please refresh the page.'
+        })
       }
-    } finally {
-      loadingProfile.current = false
     }
-  }, [])
+  } finally {
+    loadingProfile.current = false
+    console.log('loadProfile finished - ref reset')
+  }
+}, [])
 
   useEffect(() => {
     mountedRef.current = true
     let authSubscription = null
 
     const initialize = async () => {
-      try {
-        console.log('Initializing auth...')
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+    try {
+      console.log('Initializing auth...')
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      
+      if (sessionError) throw sessionError
+      
+      console.log('Initial session:', session?.user?.id)
+      
+      if (mountedRef.current) {
+        setUser(session?.user ?? null)
         
-        if (sessionError) throw sessionError
-        
-        console.log('Initial session:', session?.user?.id)
-        
-        if (mountedRef.current) {
-          setUser(session?.user ?? null)
-          
-          if (session?.user) {
-            await loadProfile(session.user.id)
-          }
-          
-          setLoading(false)
-        }
-      } catch (error) {
-        console.error('Auth initialization error:', error)
-        if (mountedRef.current) {
-          setLoading(false)
-          setError({
-            type: 'AUTH_INIT_FAILED',
-            message: 'Unable to initialize authentication'
-          })
+        if (session?.user) {
+          await loadProfile(session.user.id)
         }
       }
+    } catch (error) {
+      console.error('Auth initialization error:', error)
+      if (mountedRef.current) {
+        setError({
+          type: 'AUTH_INIT_FAILED',
+          message: 'Unable to initialize authentication'
+        })
+      }
+    } finally {
+      // Always set loading to false, regardless of success or failure
+      if (mountedRef.current) {
+        setLoading(false)
+      }
     }
+  }
 
     initialize()
 

@@ -1,5 +1,5 @@
 """
-Course search and retrieval endpoints
+Course search and retrieval endpoints with optional professor ratings
 """
 from fastapi import APIRouter, HTTPException, Query, status
 from typing import Optional, List
@@ -7,8 +7,9 @@ from pydantic import BaseModel, Field
 import logging
 
 from ..config import settings
-from api.utils.supabase_client import search_courses, get_course
-from api.exceptions import DatabaseException
+from ..utils.supabase_client import search_courses, get_course
+from ..exceptions import DatabaseException
+from ..utils.professor_ratings import enrich_course_with_professor_ratings
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -54,6 +55,10 @@ async def search(
         ge=1,
         le=settings.MAX_SEARCH_LIMIT,
         description="Maximum number of results to return"
+    ),
+    include_ratings: bool = Query(
+        default=False,
+        description="Include RateMyProfessor ratings for instructors"
     )
 ):
     """
@@ -62,6 +67,7 @@ async def search(
     - **query**: Search term (matches course title, subject, or catalog number)
     - **subject**: Filter by specific subject code
     - **limit**: Maximum number of results (default 50, max 200)
+    - **include_ratings**: If true, fetch RateMyProfessor ratings for instructors (slower)
     
     Returns a list of matching courses with basic information.
     """
@@ -77,13 +83,25 @@ async def search(
             limit=limit
         )
         
+        # Optionally enrich with professor ratings
+        if include_ratings and courses:
+            logger.info("Enriching courses with professor ratings...")
+            # Only enrich first 10 to avoid rate limiting
+            for i, course in enumerate(courses[:10]):
+                try:
+                    courses[i] = enrich_course_with_professor_ratings(course)
+                except Exception as e:
+                    logger.warning(f"Failed to enrich course {i} with ratings: {e}")
+                    courses[i]["professor_rating"] = None
+        
         logger.info(f"Course search: query='{clean_query}', subject='{clean_subject}', results={len(courses)}")
         
         return {
             "courses": courses,
             "count": len(courses),
             "query": clean_query,
-            "subject": clean_subject
+            "subject": clean_subject,
+            "includes_ratings": include_ratings
         }
         
     except DatabaseException:
@@ -99,15 +117,20 @@ async def search(
 @router.get("/{subject}/{catalog}", response_model=dict)
 async def get_course_details(
     subject: str,
-    catalog: str
+    catalog: str,
+    include_ratings: bool = Query(
+        default=True,
+        description="Include RateMyProfessor ratings for instructors"
+    )
 ):
     """
     Get detailed information for a specific course
     
     - **subject**: Course subject code (e.g., COMP, MATH)
     - **catalog**: Course catalog number (e.g., 206, 251)
+    - **include_ratings**: If true, fetch RateMyProfessor ratings for instructors
     
-    Returns detailed information including all sections and average grades.
+    Returns detailed information including all sections, average grades, and professor ratings.
     """
     try:
         # Validate and sanitize inputs
@@ -136,6 +159,16 @@ async def get_course_details(
                 detail=f"Course {clean_subject} {clean_catalog} not found"
             )
         
+        # Enrich sections with professor ratings if requested
+        if include_ratings:
+            logger.info("Enriching sections with professor ratings...")
+            for i, section in enumerate(sections):
+                try:
+                    sections[i] = enrich_course_with_professor_ratings(section)
+                except Exception as e:
+                    logger.warning(f"Failed to enrich section {i} with ratings: {e}")
+                    sections[i]["professor_rating"] = None
+        
         # Calculate statistics across all sections
         grades = [s['average'] for s in sections if s.get('average') is not None]
         avg_grade = sum(grades) / len(grades) if grades else None
@@ -146,7 +179,8 @@ async def get_course_details(
             "title": sections[0]['title'],
             "average_grade": round(avg_grade, 2) if avg_grade else None,
             "num_sections": len(sections),
-            "sections": sections
+            "sections": sections,
+            "includes_ratings": include_ratings
         }
         
         logger.info(f"Course details retrieved: {clean_subject} {clean_catalog}")
