@@ -232,7 +232,7 @@ You should see the McGill AI Advisor login page. Create an account to start usin
 ```bash
 cd backend
 source venv/bin/activate  # or venv\Scripts\activate on Windows
-python main.py
+uvicorn api.main:app --reload
 ```
 
 **Terminal 2 (Frontend):**
