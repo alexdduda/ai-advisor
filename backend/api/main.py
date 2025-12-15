@@ -2,9 +2,9 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from contextlib import asynccontextmanager
+from .routes import chat, courses, users, professors
 import time
 
-# ✅ 1. Standard Relative Imports (No sys.path hacks needed)
 from .config import settings
 from .logging_config import setup_logging
 from .exceptions import (
@@ -14,8 +14,6 @@ from .exceptions import (
     general_exception_handler
 )
 
-# ✅ 2. Relative Import for Routes (Crucial Fix)
-# We use ".routes" instead of "api.routes"
 from .routes import chat, courses, users
 
 # Setup logging
@@ -69,6 +67,7 @@ app.add_exception_handler(Exception, general_exception_handler)
 app.include_router(chat.router, prefix=f"{settings.API_PREFIX}/chat", tags=["Chat"])
 app.include_router(courses.router, prefix=f"{settings.API_PREFIX}/courses", tags=["Courses"])
 app.include_router(users.router, prefix=f"{settings.API_PREFIX}/users", tags=["Users"])
+app.include_router(professors.router, prefix=f"{settings.API_PREFIX}/professors", tags=["Professors"])
 
 @app.get("/")
 async def root():

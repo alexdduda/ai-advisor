@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { chatAPI } from '../../lib/api'
+import { coursesAPI } from '../../lib/professorsAPI'
+import ProfessorRating, { ProfessorRatingCompact } from '../ProfessorRating/ProfessorRating'
 import './Dashboard.css'
 
 export default function Dashboard() {
@@ -22,6 +24,14 @@ export default function Dashboard() {
   const [chatError, setChatError] = useState(null)
   const [isLoadingHistory, setIsLoadingHistory] = useState(true)
   const messagesEndRef = useRef(null)
+
+  // Course search states
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState([])
+  const [isSearching, setIsSearching] = useState(false)
+  const [searchError, setSearchError] = useState(null)
+  const [selectedCourse, setSelectedCourse] = useState(null)
+  const [isLoadingCourse, setIsLoadingCourse] = useState(false)
 
   // Auto-scroll to bottom of chat
   const scrollToBottom = () => {
@@ -166,6 +176,47 @@ export default function Dashboard() {
     }
   }
 
+  // Course search handler
+  const handleCourseSearch = async (e) => {
+    e.preventDefault()
+    if (!searchQuery.trim()) return
+
+    setIsSearching(true)
+    setSearchError(null)
+    setSelectedCourse(null)
+
+    try {
+      const data = await coursesAPI.search(searchQuery, null, 20, true)
+      setSearchResults(data.courses || [])
+      
+      if (data.courses.length === 0) {
+        setSearchError('No courses found matching your search.')
+      }
+    } catch (error) {
+      console.error('Course search error:', error)
+      setSearchError('Failed to search courses. Please try again.')
+      setSearchResults([])
+    } finally {
+      setIsSearching(false)
+    }
+  }
+
+  // Load course details
+  const handleCourseClick = async (course) => {
+    setIsLoadingCourse(true)
+    setSelectedCourse(null)
+
+    try {
+      const data = await coursesAPI.getDetails(course.subject, course.catalog, true)
+      setSelectedCourse(data.course)
+    } catch (error) {
+      console.error('Error loading course details:', error)
+      setSearchError('Failed to load course details.')
+    } finally {
+      setIsLoadingCourse(false)
+    }
+  }
+
   return (
     <div className="dashboard">
       {/* Sidebar */}
@@ -291,13 +342,7 @@ export default function Dashboard() {
               </div>
 
               {chatError && (
-                <div style={{
-                  padding: '1rem',
-                  background: '#fee',
-                  color: '#c33',
-                  borderTop: '1px solid #e99',
-                  textAlign: 'center'
-                }}>
+                <div className="error-banner">
                   {chatError}
                 </div>
               )}
@@ -326,279 +371,398 @@ export default function Dashboard() {
           {/* Courses Tab */}
           {activeTab === 'courses' && (
             <div className="courses-container">
-              <div className="search-section">
+              <form className="search-section" onSubmit={handleCourseSearch}>
                 <input
                   type="text"
                   className="search-input"
                   placeholder="Search for courses (e.g., COMP 202, Introduction to Programming)..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  disabled={isSearching}
                 />
-                <button className="btn btn-search">Search</button>
-              </div>
+                <button 
+                  type="submit" 
+                  className="btn btn-search"
+                  disabled={isSearching || !searchQuery.trim()}
+                >
+                  {isSearching ? 'Searching...' : 'Search'}
+                </button>
+              </form>
 
-              <div className="placeholder-content">
-                <div className="placeholder-icon">📚</div>
-                <h3>Course Explorer Coming Soon</h3>
-                <p>Search through 11,000+ McGill courses with historical grade data, instructor ratings, and AI-powered recommendations.</p>
-              </div>
+              {searchError && (
+                <div className="error-banner">
+                  {searchError}
+                </div>
+              )}
+
+              {searchResults.length > 0 && !selectedCourse && (
+                <div className="search-results">
+                  <h3 className="results-header">
+                    Found {searchResults.length} course{searchResults.length !== 1 ? 's' : ''}
+                  </h3>
+                  <div className="course-list">
+                    {searchResults.map((course) => (
+                      <div 
+                        key={course.id} 
+                        className="course-card"
+                        onClick={() => handleCourseClick(course)}
+                      >
+                        <div className="course-header">
+                          <div className="course-code">
+                            {course.subject} {course.catalog}
+                          </div>
+                          {course.average && (
+                            <div className="course-average">
+                              Avg: {course.average} GPA
+                            </div>
+                          )}
+                        </div>
+                        {course.instructor && (
+                          <div className="course-instructor">
+                            👤 {course.instructor}
+                            {course.professor_rating && (
+                              <ProfessorRatingCompact rating={course.professor_rating} />
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <button 
+                    className="btn-back"
+                    onClick={() => {
+                      setSearchResults([])
+                      setSearchQuery('')
+                    }}
+                  >
+                    ← New Search
+                  </button>
+                </div>
+              )}
+
+              {isLoadingCourse && (
+                <div className="loading-container">
+                  <div className="loading-spinner">Loading course details...</div>
+                </div>
+              )}
+
+              {selectedCourse && !isLoadingCourse && (
+                <div className="course-details">
+                  <button 
+                    className="btn-back"
+                    onClick={() => setSelectedCourse(null)}
+                  >
+                    ← Back to Results
+                  </button>
+
+                  <div className="course-details-header">
+                    <h2 className="course-details-title">
+                      {selectedCourse.subject} {selectedCourse.catalog}: {selectedCourse.title}
+                    </h2>
+                    {selectedCourse.average_grade && (
+                      <div className="course-stat-badge">
+                        Average Grade: {selectedCourse.average_grade}%
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="course-sections">
+                    <h3 className="sections-header">
+                      Sections ({selectedCourse.num_sections})
+                    </h3>
+                    {selectedCourse.sections.map((section, idx) => (
+                      <div key={idx} className="section-card">
+                        <div className="section-info">
+                          <div className="section-header">
+                            <span className="section-term">{section.term || 'N/A'}</span>
+                            {section.average && (
+                              <span className="section-average">
+                                Average: {section.average}%
+                              </span>
+                            )}
+                          </div>
+                          {section.instructor && section.instructor !== 'TBA' && (
+                            <div className="section-instructor">
+                              <strong>Instructor:</strong> {section.instructor}
+                            </div>
+                          )}
+                        </div>
+                        {section.professor_rating && (
+                          <ProfessorRating rating={section.professor_rating} />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {searchResults.length === 0 && !selectedCourse && !searchError && !isSearching && (
+                <div className="placeholder-content">
+                  <div className="placeholder-icon">📚</div>
+                  <h3>Course Explorer with Professor Ratings</h3>
+                  <p>Search through McGill courses with historical grade data and live RateMyProfessor ratings.</p>
+                </div>
+              )}
             </div>
           )}
 
-          {/* Profile Tab */}
-{activeTab === 'profile' && (
-  <div className="profile-page">
-    <div className="profile-page-header">
-      <div className="profile-hero">
-        <div className="profile-avatar-section">
-          <div className="profile-avatar-xl">
-            {user?.email?.[0].toUpperCase()}
-          </div>
-          <div className="profile-hero-info">
-            <h1 className="profile-display-name">{profile?.username || 'McGill Student'}</h1>
-            <p className="profile-email">{user?.email}</p>
-            <div className="profile-badges">
-              <span className="badge badge-year">
-                {profile?.year ? `Year ${profile.year}` : 'Year not set'}
-              </span>
-              {profile?.major && (
-                <span className="badge badge-major">
-                  {profile.major}
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+          {/* Profile Tab - Keep existing profile code */}
+          {activeTab === 'profile' && (
+            <div className="profile-page">
+              {/* ... existing profile code from your original file ... */}
+              <div className="profile-page-header">
+                <div className="profile-hero">
+                  <div className="profile-avatar-section">
+                    <div className="profile-avatar-xl">
+                      {user?.email?.[0].toUpperCase()}
+                    </div>
+                    <div className="profile-hero-info">
+                      <h1 className="profile-display-name">{profile?.username || 'McGill Student'}</h1>
+                      <p className="profile-email">{user?.email}</p>
+                      <div className="profile-badges">
+                        <span className="badge badge-year">
+                          {profile?.year ? `Year ${profile.year}` : 'Year not set'}
+                        </span>
+                        {profile?.major && (
+                          <span className="badge badge-major">
+                            {profile.major}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-    <div className="profile-content">
-      <div className="profile-grid">
-        {/* Personal Information Card */}
-        <div className="profile-section-card">
-          <div className="card-header">
-            <div className="card-title-group">
-              <span className="card-icon">👤</span>
-              <h2 className="card-title">Personal Information</h2>
-            </div>
-            {!editingProfile && (
-              <button 
-              className="btn-icon-edit"
-              onClick={() => {
-                setProfileForm({
-                  major: profile?.major || '',
-                  year: profile?.year || '',
-                  interests: profile?.interests || '',
-                  current_gpa: profile?.current_gpa || ''
-                })
-                setEditingProfile(true)
-              }}
-              title="Edit Profile"
-            >
-              ✏️
-            </button>
-            )}
-          </div>
-          <div className="card-content">
-            {!editingProfile ? (
-              <div className="info-grid">
-                <div className="info-item">
-                  <span className="info-icon">🎓</span>
-                  <div className="info-details">
-                    <span className="info-label">Major</span>
-                    <span className="info-value">{profile?.major || 'Not specified'}</span>
+              <div className="profile-content">
+                <div className="profile-grid">
+                  {/* Personal Information Card */}
+                  <div className="profile-section-card">
+                    <div className="card-header">
+                      <div className="card-title-group">
+                        <span className="card-icon">👤</span>
+                        <h2 className="card-title">Personal Information</h2>
+                      </div>
+                      {!editingProfile && (
+                        <button 
+                        className="btn-icon-edit"
+                        onClick={() => {
+                          setProfileForm({
+                            major: profile?.major || '',
+                            year: profile?.year || '',
+                            interests: profile?.interests || '',
+                            current_gpa: profile?.current_gpa || ''
+                          })
+                          setEditingProfile(true)
+                        }}
+                        title="Edit Profile"
+                      >
+                        ✏️
+                      </button>
+                      )}
+                    </div>
+                    <div className="card-content">
+                      {!editingProfile ? (
+                        <div className="info-grid">
+                          <div className="info-item">
+                            <span className="info-icon">🎓</span>
+                            <div className="info-details">
+                              <span className="info-label">Major</span>
+                              <span className="info-value">{profile?.major || 'Not specified'}</span>
+                            </div>
+                          </div>
+                          <div className="info-item">
+                            <span className="info-icon">📅</span>
+                            <div className="info-details">
+                              <span className="info-label">Academic Year</span>
+                              <span className="info-value">
+                                {profile?.year ? `U${profile.year}` : 'Not specified'}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="info-item">
+                            <span className="info-icon">📧</span>
+                            <div className="info-details">
+                              <span className="info-label">Email</span>
+                              <span className="info-value">{user?.email}</span>
+                            </div>
+                          </div>
+                          <div className="info-item">
+                            <span className="info-icon">👤</span>
+                            <div className="info-details">
+                              <span className="info-label">Username</span>
+                              <span className="info-value">{profile?.username || 'Not set'}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <form className="edit-form" onSubmit={handleProfileUpdate}>
+                          <div className="form-row">
+                            <div className="form-group">
+                              <label className="form-label">Major</label>
+                              <input
+                                type="text"
+                                className="form-input"
+                                placeholder="e.g., Computer Science"
+                                value={profileForm.major}
+                                onChange={(e) => setProfileForm({...profileForm, major: e.target.value})}
+                              />
+                            </div>
+                            <div className="form-group">
+                              <label className="form-label">Year</label>
+                              <select
+                                className="form-input"
+                                value={profileForm.year}
+                                onChange={(e) => setProfileForm({...profileForm, year: e.target.value})}
+                              >
+                                <option value="">Select year</option>
+                                <option value="1">U1</option>
+                                <option value="2">U2</option>
+                                <option value="3">U3</option>
+                                <option value="4">U4</option>
+                                <option value="5">U5+</option>
+                              </select>
+                            </div>
+                          </div>
+                          <div className="form-actions-inline">
+                            <button type="submit" className="btn btn-primary-sm">
+                              💾 Save Changes
+                            </button>
+                            <button 
+                              type="button"
+                              className="btn btn-secondary-sm"
+                              onClick={() => setEditingProfile(false)}
+                            >
+                              ✕ Cancel
+                            </button>
+                          </div>
+                        </form>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <div className="info-item">
-                  <span className="info-icon">📅</span>
-                  <div className="info-details">
-                    <span className="info-label">Academic Year</span>
-                    <span className="info-value">
-                      {profile?.year ? `U${profile.year}` : 'Not specified'}
-                    </span>
-                  </div>
-                </div>
-                <div className="info-item">
-                  <span className="info-icon">📧</span>
-                  <div className="info-details">
-                    <span className="info-label">Email</span>
-                    <span className="info-value">{user?.email}</span>
-                  </div>
-                </div>
-                <div className="info-item">
-                  <span className="info-icon">👤</span>
-                  <div className="info-details">
-                    <span className="info-label">Username</span>
-                    <span className="info-value">{profile?.username || 'Not set'}</span>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <form className="edit-form" onSubmit={handleProfileUpdate}>
-                <div className="form-row">
-                  <div className="form-group">
-                    <label className="form-label">Major</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      placeholder="e.g., Computer Science"
-                      value={profileForm.major}
-                      onChange={(e) => setProfileForm({...profileForm, major: e.target.value})}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Year</label>
-                    <select
-                      className="form-input"
-                      value={profileForm.year}
-                      onChange={(e) => setProfileForm({...profileForm, year: e.target.value})}
-                    >
-                      <option value="">Select year</option>
-                      <option value="1">U1</option>
-                      <option value="2">U2</option>
-                      <option value="3">U3</option>
-                      <option value="4">U4</option>
-                      <option value="5">U5+</option>
-                    </select>
-                  </div>
-                </div>
-                <div className="form-actions-inline">
-                  <button type="submit" className="btn btn-primary-sm">
-                    💾 Save Changes
-                  </button>
-                  <button 
-                    type="button"
-                    className="btn btn-secondary-sm"
-                    onClick={() => setEditingProfile(false)}
-                  >
-                    ✕ Cancel
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
-        </div>
 
-        {/* Academic Performance Card */}
-        <div className="profile-section-card">
-          <div className="card-header">
-            <div className="card-title-group">
-              <span className="card-icon">📊</span>
-              <h2 className="card-title">Academic Performance</h2>
-            </div>
-          </div>
-          <div className="card-content">
-            <div className="stat-showcase">
-              <div className="stat-item">
-                <div className="stat-value-large">
-                  {profile?.current_gpa || '--'}
-                </div>
-                <div className="stat-label">Current GPA</div>
-              </div>
-            </div>
-            {editingProfile && (
-              <div className="form-group" style={{marginTop: '1rem'}}>
-                <label className="form-label">Update GPA</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  max="4"
-                  className="form-input"
-                  placeholder="e.g., 3.75"
-                  value={profileForm.current_gpa}
-                  onChange={(e) => setProfileForm({...profileForm, current_gpa: e.target.value})}
-                />
-              </div>
-            )}
-            <div className="performance-tips">
-              <div className="tip-item">
-                <span className="tip-icon">💡</span>
-                <p className="tip-text">Keep your GPA updated for better course recommendations</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Interests & Preferences Card */}
-        <div className="profile-section-card card-full-width">
-          <div className="card-header">
-            <div className="card-title-group">
-              <span className="card-icon">✨</span>
-              <h2 className="card-title">Interests & Preferences</h2>
-            </div>
-          </div>
-          <div className="card-content">
-            {!editingProfile ? (
-              <div className="interests-display">
-                {profile?.interests ? (
-                  <div className="interests-tags">
-                    {profile.interests.split(',').map((interest, idx) => (
-                      <span key={idx} className="interest-tag">
-                        {interest.trim()}
-                      </span>
-                    ))}
+                  {/* Academic Performance Card */}
+                  <div className="profile-section-card">
+                    <div className="card-header">
+                      <div className="card-title-group">
+                        <span className="card-icon">📊</span>
+                        <h2 className="card-title">Academic Performance</h2>
+                      </div>
+                    </div>
+                    <div className="card-content">
+                      <div className="stat-showcase">
+                        <div className="stat-item">
+                          <div className="stat-value-large">
+                            {profile?.current_gpa || '--'}
+                          </div>
+                          <div className="stat-label">Current GPA</div>
+                        </div>
+                      </div>
+                      {editingProfile && (
+                        <div className="form-group" style={{marginTop: '1rem'}}>
+                          <label className="form-label">Update GPA</label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            max="4"
+                            className="form-input"
+                            placeholder="e.g., 3.75"
+                            value={profileForm.current_gpa}
+                            onChange={(e) => setProfileForm({...profileForm, current_gpa: e.target.value})}
+                          />
+                        </div>
+                      )}
+                      <div className="performance-tips">
+                        <div className="tip-item">
+                          <span className="tip-icon">💡</span>
+                          <p className="tip-text">Keep your GPA updated for better course recommendations</p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                ) : (
-                  <p className="empty-state">
-                    <span className="empty-icon">🎯</span>
-                    <span>No interests added yet. Add your academic interests to get personalized recommendations!</span>
-                  </p>
-                )}
-              </div>
-            ) : (
-              <div className="form-group">
-                <label className="form-label">Your Interests</label>
-                <textarea
-                  className="form-input"
-                  placeholder="e.g., Machine Learning, Web Development, Data Science, Finance (comma-separated)"
-                  rows="4"
-                  value={profileForm.interests}
-                  onChange={(e) => setProfileForm({...profileForm, interests: e.target.value})}
-                />
-                <p className="form-hint">Separate multiple interests with commas</p>
-              </div>
-            )}
-          </div>
-        </div>
 
-        {/* Account Settings Card */}
-        <div className="profile-section-card card-full-width">
-          <div className="card-header">
-            <div className="card-title-group">
-              <span className="card-icon">⚙️</span>
-              <h2 className="card-title">Account Settings</h2>
-            </div>
-          </div>
-          <div className="card-content">
-            <div className="settings-grid">
-              <div className="setting-item">
-                <div className="setting-info">
-                  <h3 className="setting-title">Account Status</h3>
-                  <p className="setting-description">Your account is active and verified</p>
+                  {/* Interests & Preferences Card */}
+                  <div className="profile-section-card card-full-width">
+                    <div className="card-header">
+                      <div className="card-title-group">
+                        <span className="card-icon">✨</span>
+                        <h2 className="card-title">Interests & Preferences</h2>
+                      </div>
+                    </div>
+                    <div className="card-content">
+                      {!editingProfile ? (
+                        <div className="interests-display">
+                          {profile?.interests ? (
+                            <div className="interests-tags">
+                              {profile.interests.split(',').map((interest, idx) => (
+                                <span key={idx} className="interest-tag">
+                                  {interest.trim()}
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="empty-state">
+                              <span className="empty-icon">🎯</span>
+                              <span>No interests added yet. Add your academic interests to get personalized recommendations!</span>
+                            </p>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="form-group">
+                          <label className="form-label">Your Interests</label>
+                          <textarea
+                            className="form-input"
+                            placeholder="e.g., Machine Learning, Web Development, Data Science, Finance (comma-separated)"
+                            rows="4"
+                            value={profileForm.interests}
+                            onChange={(e) => setProfileForm({...profileForm, interests: e.target.value})}
+                          />
+                          <p className="form-hint">Separate multiple interests with commas</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Account Settings Card */}
+                  <div className="profile-section-card card-full-width">
+                    <div className="card-header">
+                      <div className="card-title-group">
+                        <span className="card-icon">⚙️</span>
+                        <h2 className="card-title">Account Settings</h2>
+                      </div>
+                    </div>
+                    <div className="card-content">
+                      <div className="settings-grid">
+                        <div className="setting-item">
+                          <div className="setting-info">
+                            <h3 className="setting-title">Account Status</h3>
+                            <p className="setting-description">Your account is active and verified</p>
+                          </div>
+                          <span className="status-badge status-active">Active</span>
+                        </div>
+                        <div className="setting-item">
+                          <div className="setting-info">
+                            <h3 className="setting-title">Member Since</h3>
+                            <p className="setting-description">
+                              {profile?.created_at 
+                                ? new Date(profile.created_at).toLocaleDateString('en-US', { 
+                                    year: 'numeric', 
+                                    month: 'long', 
+                                    day: 'numeric' 
+                                  })
+                                : 'Recently joined'
+                              }
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <span className="status-badge status-active">Active</span>
-              </div>
-              <div className="setting-item">
-                <div className="setting-info">
-                  <h3 className="setting-title">Member Since</h3>
-                  <p className="setting-description">
-                    {profile?.created_at 
-                      ? new Date(profile.created_at).toLocaleDateString('en-US', { 
-                          year: 'numeric', 
-                          month: 'long', 
-                          day: 'numeric' 
-                        })
-                      : 'Recently joined'
-                    }
-                  </p>
-                </div>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-)}
+          )}
         </div>
       </main>
     </div>
