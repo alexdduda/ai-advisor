@@ -227,3 +227,17 @@ def get_course(subject: str, catalog: str) -> List[Dict[str, Any]]:
     except Exception as e:
         logger.error(f"Error getting course {subject} {catalog}: {e}")
         raise DatabaseException("get_course", str(e))
+
+def delete_chat_history(user_id: str) -> None:
+    """Delete all chat messages for a user"""
+    try:
+        supabase = get_supabase()
+        response = supabase.table('chat_messages')\
+            .delete()\
+            .eq('user_id', user_id)\
+            .execute()
+        
+        logger.info(f"Deleted chat history for user {user_id}")
+    except Exception as e:
+        logger.error(f"Error deleting chat history for {user_id}: {e}")
+        raise DatabaseException("delete_chat_history", str(e))

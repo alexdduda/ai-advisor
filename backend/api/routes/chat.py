@@ -11,7 +11,8 @@ import os
 from api.utils.supabase_client import (
     get_user_by_id,
     get_chat_history,
-    save_message
+    save_message,
+    delete_chat_history
 )
 from api.config import settings
 from api.exceptions import UserNotFoundException, DatabaseException
@@ -159,7 +160,7 @@ async def send_message(request: ChatRequest):
             logger.error(f"Anthropic API error: {e}")
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="AI service temporarily unavailable"
+                detail="AI service temporarily unavailable. Please try again in a moment."
             )
         except Exception as e:
             logger.exception(f"Unexpected error calling Claude API: {e}")
@@ -234,9 +235,35 @@ async def clear_history(user_id: str):
     Clear user's chat history
     
     - **user_id**: The user's unique identifier
+    
+    Deletes all chat messages for the specified user.
+    This action cannot be undone.
     """
-    # TODO: Implement chat history clearing
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Chat history clearing not yet implemented"
-    )
+    try:
+        # Verify user exists
+        get_user_by_id(user_id)
+        
+        # Delete chat history
+        delete_chat_history(user_id)
+        
+        logger.info(f"Chat history cleared for user: {user_id}")
+        
+        return None  # 204 No Content
+        
+    except UserNotFoundException:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    except DatabaseException as e:
+        logger.error(f"Failed to clear chat history for {user_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to clear chat history. Please try again."
+        )
+    except Exception as e:
+        logger.exception(f"Unexpected error clearing chat history: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error occurred"
+        )
