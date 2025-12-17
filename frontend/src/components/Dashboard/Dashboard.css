@@ -1628,3 +1628,11 @@ textarea.form-input {
     font-size: 2.5rem;
   }
 }
+
+/* Course meta info */
+.course-meta {
+  font-size: 0.9rem;
+  color: #666;
+  margin-top: 0.5rem;
+  font-weight: 500;
+}
