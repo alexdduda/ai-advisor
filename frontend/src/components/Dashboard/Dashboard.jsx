@@ -33,6 +33,21 @@ export default function Dashboard() {
   const [selectedCourse, setSelectedCourse] = useState(null)
   const [isLoadingCourse, setIsLoadingCourse] = useState(false)
 
+  // Helper function to convert GPA to letter grade
+  const gpaToLetterGrade = (gpa) => {
+    if (!gpa) return '';
+    const numGpa = parseFloat(gpa);
+    if (numGpa >= 3.85) return 'A';
+    if (numGpa >= 3.7) return 'A-';
+    if (numGpa >= 3.3) return 'B+';
+    if (numGpa >= 3.0) return 'B';
+    if (numGpa >= 2.7) return 'B-';
+    if (numGpa >= 2.3) return 'C+';
+    if (numGpa >= 2.0) return 'C';
+    if (numGpa >= 1.0) return 'D';
+    return 'F';
+  };
+
   // Auto-scroll to bottom of chat
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -167,6 +182,7 @@ export default function Dashboard() {
     }
   }
 
+  // Course search handler - FIXED: Groups sections by unique course
   const handleCourseSearch = async (e) => {
     e.preventDefault()
     if (!searchQuery.trim()) return
@@ -176,10 +192,43 @@ export default function Dashboard() {
     setSelectedCourse(null)
 
     try {
-      const data = await coursesAPI.search(searchQuery, null, 20, true)
-      setSearchResults(data.courses || [])
+      const data = await coursesAPI.search(searchQuery, null, 100, true)
       
-      if (data.courses.length === 0) {
+      // Group sections by unique course (subject + catalog)
+      const coursesMap = new Map()
+      
+      data.courses?.forEach(section => {
+        const key = `${section.subject}-${section.catalog}`
+        
+        if (!coursesMap.has(key)) {
+          // First time seeing this course
+          coursesMap.set(key, {
+            id: section.id,
+            subject: section.subject,
+            catalog: section.catalog,
+            title: section.title,
+            average: section.average,
+            instructor: section.instructor,
+            sections: [section]
+          })
+        } else {
+          // Add this section to existing course
+          const course = coursesMap.get(key)
+          course.sections.push(section)
+          
+          // Update average if this section has better data
+          if (section.average && (!course.average || section.average > course.average)) {
+            course.average = section.average
+          }
+        }
+      })
+      
+      // Convert map to array
+      const uniqueCourses = Array.from(coursesMap.values())
+      
+      setSearchResults(uniqueCourses)
+      
+      if (uniqueCourses.length === 0) {
         setSearchError('No courses found matching your search.')
       }
     } catch (error) {
@@ -191,6 +240,7 @@ export default function Dashboard() {
     }
   }
 
+  // Load course details
   const handleCourseClick = async (course) => {
     setIsLoadingCourse(true)
     setSelectedCourse(null)
@@ -399,7 +449,7 @@ export default function Dashboard() {
                   <div className="course-list">
                     {searchResults.map((course) => (
                       <div 
-                        key={course.id} 
+                        key={`${course.subject}-${course.catalog}`}
                         className="course-card"
                         onClick={() => handleCourseClick(course)}
                       >
@@ -409,16 +459,14 @@ export default function Dashboard() {
                           </div>
                           {course.average && (
                             <div className="course-average">
-                              Avg: {course.average} GPA
+                              {course.average.toFixed(1)} GPA ({gpaToLetterGrade(course.average)})
                             </div>
                           )}
                         </div>
-                        {course.instructor && (
-                          <div className="course-instructor">
-                            👤 {course.instructor}
-                            {course.professor_rating && (
-                              <ProfessorRatingCompact rating={course.professor_rating} />
-                            )}
+                        <h4 className="course-title">{course.title}</h4>
+                        {course.sections && (
+                          <div className="course-meta">
+                            📊 {course.sections.length} section{course.sections.length !== 1 ? 's' : ''} available
                           </div>
                         )}
                       </div>
@@ -457,7 +505,7 @@ export default function Dashboard() {
                     </h2>
                     {selectedCourse.average_grade && (
                       <div className="course-stat-badge">
-                        Average Grade: {selectedCourse.average_grade}%
+                        Average: {selectedCourse.average_grade} GPA ({gpaToLetterGrade(selectedCourse.average_grade)})
                       </div>
                     )}
                   </div>
@@ -473,7 +521,7 @@ export default function Dashboard() {
                             <span className="section-term">{section.term || 'N/A'}</span>
                             {section.average && (
                               <span className="section-average">
-                                Average: {section.average}%
+                                Average: {section.average} GPA ({gpaToLetterGrade(section.average)})
                               </span>
                             )}
                           </div>
