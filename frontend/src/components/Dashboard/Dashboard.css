@@ -1,9 +1,27 @@
+/* ============================================
+   FORCE SCROLLBAR - PREVENTS LAYOUT SHIFT
+   ============================================ */
+html {
+  overflow-y: scroll; /* Always show scrollbar */
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 /* Dashboard Layout */
 .dashboard {
   display: flex;
   height: 100vh;
   background: #F5F5F5;
   overflow: hidden;
+  width: 100vw;
 }
 
 /* Sidebar */
@@ -15,6 +33,7 @@
   flex-direction: column;
   transition: transform 0.3s ease;
   z-index: 100;
+  flex-shrink: 0;
 }
 
 .sidebar-header {
@@ -60,7 +79,7 @@
   padding: 0.25rem;
 }
 
-/* Navigation */
+/* Navigation - FIXED: Consistent sizing */
 .sidebar-nav {
   flex: 1;
   padding: 1rem;
@@ -69,19 +88,21 @@
 
 .nav-item {
   width: 100%;
+  height: 48px; /* FIXED HEIGHT */
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.875rem 1rem;
+  padding: 0 1rem; /* Only horizontal padding */
   border: none;
   background: none;
   border-radius: 10px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease, color 0.2s ease;
   margin-bottom: 0.5rem;
   font-size: 1rem;
   color: #666;
   text-align: left;
+  flex-shrink: 0;
 }
 
 .nav-item:hover {
@@ -92,11 +113,11 @@
 .nav-item.active {
   background: linear-gradient(135deg, #ED1B2F 0%, #B01B2E 100%);
   color: white;
-  box-shadow: 0 4px 12px rgba(237, 27, 47, 0.25);
 }
 
 .nav-icon {
   font-size: 1.25rem;
+  flex-shrink: 0;
 }
 
 .nav-label {
@@ -130,6 +151,7 @@
   justify-content: center;
   font-weight: 600;
   font-size: 1.1rem;
+  flex-shrink: 0;
 }
 
 .user-details {
@@ -171,12 +193,29 @@
   color: white;
 }
 
+/* Sidebar Overlay */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 99;
+}
+
+.sidebar-overlay.active {
+  display: block;
+}
+
 /* Main Content */
 .main-content {
   flex: 1;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  min-width: 0;
 }
 
 .dashboard-header {
@@ -186,6 +225,7 @@
   display: flex;
   align-items: center;
   gap: 1rem;
+  flex-shrink: 0;
 }
 
 .mobile-menu-btn {
@@ -207,8 +247,10 @@
 
 .content-area {
   flex: 1;
-  overflow-y: auto;
+  overflow-y: scroll;
   padding: 2rem;
+  scrollbar-gutter: stable;
+  min-width: 0;
 }
 
 /* Chat Container */
@@ -284,6 +326,7 @@
   padding: 1rem 1.25rem;
   border-radius: 12px;
   line-height: 1.6;
+  word-wrap: break-word;
 }
 
 .message.assistant .message-text {
@@ -304,6 +347,7 @@
   display: flex;
   gap: 1rem;
   background: white;
+  flex-shrink: 0;
 }
 
 .chat-input {
@@ -313,6 +357,7 @@
   border-radius: 8px;
   font-size: 1rem;
   transition: border-color 0.2s ease;
+  font-family: inherit;
 }
 
 .chat-input:focus {
@@ -329,9 +374,10 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
-.btn-send:hover {
+.btn-send:hover:not(:disabled) {
   box-shadow: 0 4px 12px rgba(237, 27, 47, 0.3);
   transform: translateY(-2px);
 }
@@ -356,6 +402,7 @@
   font-size: 1rem;
   background: white;
   color: black;
+  font-family: inherit;
 }
 
 .search-input:focus {
@@ -372,9 +419,10 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
-.btn-search:hover {
+.btn-search:hover:not(:disabled) {
   box-shadow: 0 4px 12px rgba(237, 27, 47, 0.3);
   transform: translateY(-2px);
 }
@@ -552,65 +600,6 @@ textarea.form-input {
 
 .btn-secondary:hover {
   background: #E0E0E0;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 100vh;
-    transform: translateX(-100%);
-  }
-  
-  .sidebar.open {
-    transform: translateX(0);
-  }
-  
-  .sidebar-close {
-    display: block;
-  }
-  
-  .sidebar-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 99;
-  }
-  
-  .mobile-menu-btn {
-    display: block;
-  }
-  
-  .page-title {
-    font-size: 1.25rem;
-  }
-  
-  .content-area {
-    padding: 1rem;
-  }
-  
-  .dashboard-header {
-    padding: 1rem;
-  }
-  
-  .message-content {
-    max-width: 85%;
-  }
-}
-
-@media (max-width: 640px) {
-  .search-section {
-    flex-direction: column;
-  }
-  
-  .form-actions {
-    flex-direction: column;
-  }
 }
 
 /* ============================================
@@ -999,6 +988,12 @@ textarea.form-input {
   color: #333;
 }
 
+.setting-title {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+  color: #333;
+}
+
 .setting-description {
   margin: 0;
   font-size: 0.95rem;
@@ -1017,95 +1012,6 @@ textarea.form-input {
   color: #155724;
   border: 1px solid #C3E6CB;
 }
-
-/* Danger Zone */
-.danger-zone {
-  padding-top: 2rem;
-  border-top: 1px solid #E0E0E0;
-}
-
-.danger-zone-title {
-  color: #DC3545;
-  font-size: 1.1rem;
-  margin: 0 0 1rem 0;
-  font-weight: 700;
-}
-
-.btn-danger {
-  padding: 0.875rem 1.5rem;
-  background: #DC3545;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-size: 1rem;
-}
-
-.btn-danger:hover {
-  background: #C82333;
-  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
-  transform: translateY(-2px);
-}
-
-/* Responsive Design for Profile */
-@media (max-width: 968px) {
-  .profile-page-header {
-    padding: 2rem 1rem;
-  }
-
-  .profile-avatar-section {
-    flex-direction: column;
-    text-align: center;
-  }
-
-  .profile-display-name {
-    font-size: 2rem;
-  }
-
-  .profile-badges {
-    justify-content: center;
-  }
-
-  .profile-content {
-    padding: 0 1rem 1rem 1rem;
-  }
-
-  .profile-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .form-row {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 640px) {
-  .profile-avatar-xl {
-    width: 100px;
-    height: 100px;
-    font-size: 2.5rem;
-  }
-
-  .profile-display-name {
-    font-size: 1.75rem;
-  }
-
-  .stat-value-large {
-    font-size: 3rem;
-  }
-
-  .form-actions-inline {
-    flex-direction: column;
-  }
-
-  .btn-primary-sm,
-  .btn-secondary-sm {
-    width: 100%;
-  }
-}
-
 
 /* Typing Indicator Animation */
 .typing-indicator {
@@ -1136,7 +1042,6 @@ textarea.form-input {
 }
 
 /* Course Search Results Styles */
-
 .search-results {
   animation: fadeIn 0.3s ease;
 }
@@ -1371,25 +1276,355 @@ textarea.form-input {
   font-weight: 600;
 }
 
-/* Responsive Course Search */
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+/* Tablet (768px - 1024px) */
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 240px;
+  }
+  
+  .content-area {
+    padding: 1.5rem;
+  }
+  
+  .chat-container {
+    max-width: 100%;
+  }
+  
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Mobile (max-width: 768px) */
 @media (max-width: 768px) {
+  /* Fixed Sidebar for Mobile */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 280px;
+    transform: translateX(-100%);
+    z-index: 1000;
+    box-shadow: none;
+  }
+  
+  .sidebar.open {
+    transform: translateX(0);
+    box-shadow: 4px 0 12px rgba(0, 0, 0, 0.15);
+  }
+  
+  .sidebar-close {
+    display: block;
+  }
+  
+  /* Mobile Menu Button */
+  .mobile-menu-btn {
+    display: block;
+  }
+  
+  /* Header */
+  .page-title {
+    font-size: 1.25rem;
+  }
+  
+  .dashboard-header {
+    padding: 1rem;
+  }
+  
+  /* Content */
+  .content-area {
+    padding: 1rem;
+  }
+  
+  /* Chat */
+  .chat-messages {
+    padding: 1rem;
+  }
+  
+  .message-content {
+    max-width: 85%;
+  }
+  
+  .chat-input-container {
+    padding: 1rem;
+    flex-direction: column;
+  }
+  
+  .btn-send {
+    width: 100%;
+  }
+  
+  /* Profile */
+  .profile-page-header {
+    padding: 2rem 1rem;
+    margin: -1rem -1rem 1rem -1rem;
+  }
+  
+  .profile-avatar-section {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .profile-display-name {
+    font-size: 2rem;
+  }
+  
+  .profile-badges {
+    justify-content: center;
+  }
+  
+  .profile-content {
+    padding: 0 1rem 1rem 1rem;
+  }
+  
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+  
+  /* Courses */
+  .search-section {
+    flex-direction: column;
+  }
+  
+  .btn-search {
+    width: 100%;
+  }
+  
   .course-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
   }
-
+  
   .course-details-title {
     font-size: 1.4rem;
   }
-
+  
   .sections-header {
     font-size: 1.25rem;
   }
-
+  
   .section-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
+  }
+}
+
+/* Small Mobile (max-width: 480px) */
+@media (max-width: 480px) {
+  /* Sidebar */
+  .sidebar {
+    width: 100%;
+  }
+  
+  .logo-name {
+    font-size: 1.1rem;
+  }
+  
+  /* Header */
+  .page-title {
+    font-size: 1.1rem;
+  }
+  
+  .dashboard-header {
+    padding: 0.75rem;
+  }
+  
+  /* Content */
+  .content-area {
+    padding: 0.75rem;
+  }
+  
+  /* Chat */
+  .chat-container {
+    border-radius: 8px;
+  }
+  
+  .chat-messages {
+    padding: 0.75rem;
+    gap: 1rem;
+  }
+  
+  .message-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 0.9rem;
+  }
+  
+  .message-text {
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+  }
+  
+  .chat-input-container {
+    padding: 0.75rem;
+  }
+  
+  .chat-input {
+    font-size: 16px; /* Prevents iOS zoom */
+  }
+  
+  /* Profile */
+  .profile-page-header {
+    padding: 1.5rem 0.75rem;
+  }
+  
+  .profile-avatar-xl {
+    width: 100px;
+    height: 100px;
+    font-size: 2.5rem;
+  }
+  
+  .profile-display-name {
+    font-size: 1.75rem;
+  }
+  
+  .profile-email {
+    font-size: 0.95rem;
+  }
+  
+  .badge {
+    font-size: 0.85rem;
+    padding: 0.4rem 0.8rem;
+  }
+  
+  .stat-value-large {
+    font-size: 3rem;
+  }
+  
+  .card-header {
+    padding: 1rem;
+  }
+  
+  .card-content {
+    padding: 1rem;
+  }
+  
+  /* Courses */
+  .search-input {
+    font-size: 16px; /* Prevents iOS zoom */
+  }
+  
+  .course-card {
+    padding: 1rem;
+  }
+  
+  .course-code {
+    font-size: 1rem;
+  }
+  
+  .course-title {
+    font-size: 1rem;
+  }
+  
+  .course-details-header {
+    padding: 1rem;
+  }
+  
+  .course-details-title {
+    font-size: 1.3rem;
+  }
+  
+  .course-sections {
+    padding: 1rem;
+  }
+  
+  .sections-header {
+    font-size: 1.1rem;
+  }
+  
+  .section-card {
+    padding: 1rem;
+  }
+  
+  /* Forms */
+  .form-input {
+    font-size: 16px; /* Prevents iOS zoom */
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+  
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+  }
+  
+  .form-actions-inline {
+    flex-direction: column;
+  }
+  
+  .btn-primary-sm,
+  .btn-secondary-sm {
+    width: 100%;
+  }
+}
+
+/* Landscape Mobile */
+@media (max-width: 768px) and (orientation: landscape) {
+  .profile-page-header {
+    padding: 1.5rem 1rem;
+  }
+  
+  .profile-avatar-section {
+    flex-direction: row;
+    text-align: left;
+  }
+  
+  .profile-avatar-xl {
+    width: 80px;
+    height: 80px;
+    font-size: 2rem;
+  }
+  
+  .profile-display-name {
+    font-size: 1.5rem;
+  }
+}
+
+/* Touch-friendly adjustments */
+@media (hover: none) and (pointer: coarse) {
+  /* Increase tap targets for mobile */
+  .nav-item {
+    min-height: 48px; /* Accessibility guideline */
+  }
+  
+  .btn-send,
+  .btn-search,
+  .btn-primary,
+  .btn-secondary {
+    min-height: 44px; /* iOS accessibility guideline */
+  }
+  
+  .chat-input,
+  .search-input,
+  .form-input {
+    min-height: 44px;
+  }
+}
+
+/* Very small screens */
+@media (max-width: 360px) {
+  .page-title {
+    font-size: 1rem;
+  }
+  
+  .profile-display-name {
+    font-size: 1.5rem;
+  }
+  
+  .stat-value-large {
+    font-size: 2.5rem;
   }
 }
