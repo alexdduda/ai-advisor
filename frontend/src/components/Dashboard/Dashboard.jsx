@@ -54,7 +54,6 @@ export default function Dashboard() {
         if (data.messages && data.messages.length > 0) {
           setChatMessages(data.messages)
         } else {
-          // If no history, show welcome message
           setChatMessages([
             {
               role: 'assistant',
@@ -64,7 +63,6 @@ export default function Dashboard() {
         }
       } catch (error) {
         console.error('Error loading chat history:', error)
-        // Show welcome message even if history fails to load
         setChatMessages([
           {
             role: 'assistant',
@@ -85,7 +83,6 @@ export default function Dashboard() {
     e.preventDefault()
     
     try {
-      // Build update object - only include non-empty fields
       const updates = {}
       
       if (profileForm.major && profileForm.major.trim()) {
@@ -107,12 +104,10 @@ export default function Dashboard() {
         }
       }
       
-      // Only send update if there's something to update
       if (Object.keys(updates).length > 0) {
         await updateProfile(updates)
         setEditingProfile(false)
       } else {
-        // No changes, just close edit mode
         setEditingProfile(false)
       }
     } catch (error) {
@@ -137,17 +132,14 @@ export default function Dashboard() {
     setChatInput('')
     setChatError(null)
     
-    // Add user message immediately
     const newUserMessage = { role: 'user', content: userMessage }
     setChatMessages(prev => [...prev, newUserMessage])
     
     setIsSending(true)
     
     try {
-      // Call the actual API
       const response = await chatAPI.sendMessage(user.id, userMessage)
       
-      // Add AI response
       const assistantMessage = {
         role: 'assistant',
         content: response.response
@@ -159,7 +151,6 @@ export default function Dashboard() {
       console.error('Error sending message:', error)
       setChatError('Failed to get response. Please try again.')
       
-      // Add error message to chat
       setChatMessages(prev => [...prev, {
         role: 'assistant',
         content: '❌ Sorry, I encountered an error. Please try again or contact support if the issue persists.'
@@ -176,7 +167,6 @@ export default function Dashboard() {
     }
   }
 
-  // Course search handler
   const handleCourseSearch = async (e) => {
     e.preventDefault()
     if (!searchQuery.trim()) return
@@ -201,7 +191,6 @@ export default function Dashboard() {
     }
   }
 
-  // Load course details
   const handleCourseClick = async (course) => {
     setIsLoadingCourse(true)
     setSelectedCourse(null)
@@ -217,6 +206,11 @@ export default function Dashboard() {
     }
   }
 
+  const handleTabChange = (tab) => {
+    setActiveTab(tab)
+    setSidebarOpen(false)
+  }
+
   return (
     <div className="dashboard">
       {/* Sidebar */}
@@ -229,6 +223,7 @@ export default function Dashboard() {
           <button 
             className="sidebar-close"
             onClick={() => setSidebarOpen(false)}
+            aria-label="Close menu"
           >
             ✕
           </button>
@@ -237,7 +232,7 @@ export default function Dashboard() {
         <nav className="sidebar-nav">
           <button 
             className={`nav-item ${activeTab === 'chat' ? 'active' : ''}`}
-            onClick={() => setActiveTab('chat')}
+            onClick={() => handleTabChange('chat')}
           >
             <span className="nav-icon">💬</span>
             <span className="nav-label">AI Chat</span>
@@ -245,7 +240,7 @@ export default function Dashboard() {
           
           <button 
             className={`nav-item ${activeTab === 'courses' ? 'active' : ''}`}
-            onClick={() => setActiveTab('courses')}
+            onClick={() => handleTabChange('courses')}
           >
             <span className="nav-icon">📚</span>
             <span className="nav-label">Courses</span>
@@ -253,7 +248,7 @@ export default function Dashboard() {
           
           <button 
             className={`nav-item ${activeTab === 'profile' ? 'active' : ''}`}
-            onClick={() => setActiveTab('profile')}
+            onClick={() => handleTabChange('profile')}
           >
             <span className="nav-icon">👤</span>
             <span className="nav-label">Profile</span>
@@ -279,7 +274,7 @@ export default function Dashboard() {
       {/* Mobile Overlay */}
       {sidebarOpen && (
         <div 
-          className="sidebar-overlay"
+          className={`sidebar-overlay ${sidebarOpen ? 'active' : ''}`}
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -291,6 +286,7 @@ export default function Dashboard() {
           <button 
             className="mobile-menu-btn"
             onClick={() => setSidebarOpen(true)}
+            aria-label="Open menu"
           >
             ☰
           </button>
@@ -354,7 +350,7 @@ export default function Dashboard() {
                   placeholder="Ask me anything about courses, planning, or McGill academics..."
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
-                  onKeyPress={handleKeyPress}
+                  onKeyDown={handleKeyPress}
                   disabled={isSending}
                 />
                 <button 
@@ -506,10 +502,9 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* Profile Tab - Keep existing profile code */}
+          {/* Profile Tab */}
           {activeTab === 'profile' && (
             <div className="profile-page">
-              {/* ... existing profile code from your original file ... */}
               <div className="profile-page-header">
                 <div className="profile-hero">
                   <div className="profile-avatar-section">
