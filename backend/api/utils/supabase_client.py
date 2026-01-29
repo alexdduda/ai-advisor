@@ -4,6 +4,7 @@ Supabase client with improved error handling and typing
 from supabase import create_client, Client
 from typing import Optional, List, Dict, Any
 import logging
+import uuid
 
 from api.config import settings
 from api.exceptions import DatabaseException, UserNotFoundException
@@ -145,13 +146,19 @@ def update_user(user_id: str, updates: Dict[str, Any]) -> Dict[str, Any]:
 
 
 # Chat Operations
-def get_chat_history(user_id: str, limit: int = 50) -> List[Dict[str, Any]]:
-    """Get user's chat history"""
+def get_chat_history(user_id: str, session_id: Optional[str] = None, limit: int = 50) -> List[Dict[str, Any]]:
+    """Get user's chat history, optionally filtered by session"""
     try:
         supabase = get_supabase()
-        response = supabase.table('chat_messages')\
+        query = supabase.table('chat_messages')\
             .select('*')\
-            .eq('user_id', user_id)\
+            .eq('user_id', user_id)
+        
+        # Filter by session if provided
+        if session_id:
+            query = query.eq('session_id', session_id)
+        
+        response = query\
             .order('created_at', desc=False)\
             .limit(min(limit, 200))\
             .execute()
@@ -162,14 +169,102 @@ def get_chat_history(user_id: str, limit: int = 50) -> List[Dict[str, Any]]:
         raise DatabaseException("get_chat_history", str(e))
 
 
-def save_message(user_id: str, role: str, content: str) -> Dict[str, Any]:
-    """Save a chat message"""
+
+
+def get_user_sessions(user_id: str, limit: int = 20) -> List[Dict[str, Any]]:
+    """Get all chat sessions for a user with message counts"""
     try:
         supabase = get_supabase()
+        
+        # Get all messages grouped by session
+        all_messages = supabase.table('chat_messages')\
+            .select('session_id, created_at, content, role')\
+            .eq('user_id', user_id)\
+            .not_.is_('session_id', 'null')\
+            .order('created_at', desc=True)\
+            .execute()
+        
+        # Group by session manually
+        sessions_dict = {}
+        for msg in all_messages.data:
+            sid = msg['session_id']
+            if sid not in sessions_dict:
+                # Get first user message for title
+                title = msg['content'][:50] if msg['role'] == 'user' else 'Chat Session'
+                sessions_dict[sid] = {
+                    'session_id': sid,
+                    'last_message': title,
+                    'last_updated': msg['created_at'],
+                    'message_count': 0
+                }
+            sessions_dict[sid]['message_count'] += 1
+        
+        # Convert to list and sort by last_updated
+        sessions = sorted(
+            sessions_dict.values(), 
+            key=lambda x: x['last_updated'], 
+            reverse=True
+        )
+        
+        return sessions[:limit]
+    except Exception as e:
+        logger.error(f"Error getting user sessions for {user_id}: {e}")
+        return []
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def save_message(user_id: str, role: str, content: str, session_id: Optional[str] = None) -> Dict[str, Any]:
+    """Save a chat message with optional session_id"""
+    try:
+        supabase = get_supabase()
+        
+        # Generate new session_id if not provided
+        if not session_id:
+            session_id = str(uuid.uuid4())
+            logger.info(f"Generated new session_id: {session_id}")
+        
         message_data = {
             'user_id': user_id,
             'role': role,
-            'content': content[:settings.MAX_MESSAGE_LENGTH]  # Truncate if needed
+            'content': content[:settings.MAX_MESSAGE_LENGTH],
+            'session_id': session_id
         }
         response = supabase.table('chat_messages').insert(message_data).execute()
         
@@ -180,6 +275,22 @@ def save_message(user_id: str, role: str, content: str) -> Dict[str, Any]:
     except Exception as e:
         logger.error(f"Error saving message: {e}")
         raise DatabaseException("save_message", str(e))
+
+
+def delete_chat_session(user_id: str, session_id: str) -> None:
+    """Delete a specific chat session"""
+    try:
+        supabase = get_supabase()
+        response = supabase.table('chat_messages')\
+            .delete()\
+            .eq('user_id', user_id)\
+            .eq('session_id', session_id)\
+            .execute()
+        
+        logger.info(f"Deleted session {session_id} for user {user_id}")
+    except Exception as e:
+        logger.error(f"Error deleting session {session_id}: {e}")
+        raise DatabaseException("delete_session", str(e))
 
 
 # Course Operations
@@ -201,7 +312,7 @@ def search_courses(
             # Sanitize query
             clean_query = query.strip()[:100]
             query_builder = query_builder.or_(
-                f'course_name.ilike.%{clean_query}%,'  # ← Search course_name
+                f'course_name.ilike.%{clean_query}%,'
                 f'title.ilike.%{clean_query}%,'
                 f'subject.ilike.%{clean_query}%,'
                 f'catalog.ilike.%{clean_query}%'
@@ -223,6 +334,7 @@ def search_courses(
         logger.error(f"Error searching courses: {e}")
         raise DatabaseException("search_courses", str(e))
 
+
 def get_course(subject: str, catalog: str) -> List[Dict[str, Any]]:
     """Get specific course sections"""
     try:
@@ -237,6 +349,7 @@ def get_course(subject: str, catalog: str) -> List[Dict[str, Any]]:
     except Exception as e:
         logger.error(f"Error getting course {subject} {catalog}: {e}")
         raise DatabaseException("get_course", str(e))
+
 
 def delete_chat_history(user_id: str) -> None:
     """Delete all chat messages for a user"""
