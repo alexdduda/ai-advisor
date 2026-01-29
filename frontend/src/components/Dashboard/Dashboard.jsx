@@ -708,7 +708,7 @@ export default function Dashboard() {
                             type="number"
                             step="0.01"
                             min="0"
-                            max="4"
+                            max="4.0"
                             className="form-input"
                             placeholder="e.g., 3.75"
                             value={profileForm.current_gpa}

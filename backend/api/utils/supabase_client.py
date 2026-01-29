@@ -201,17 +201,27 @@ def search_courses(
             # Sanitize query
             clean_query = query.strip()[:100]
             query_builder = query_builder.or_(
+                f'course_name.ilike.%{clean_query}%,'  # ← Search course_name
                 f'title.ilike.%{clean_query}%,'
                 f'subject.ilike.%{clean_query}%,'
                 f'catalog.ilike.%{clean_query}%'
             )
         
         response = query_builder.limit(min(limit, settings.MAX_SEARCH_LIMIT)).execute()
-        return response.data
+        
+        # Map course_name to title for API response
+        courses = []
+        for row in response.data:
+            course = dict(row)
+            # Use course_name if available, fallback to title
+            if course.get('course_name'):
+                course['title'] = course['course_name']
+            courses.append(course)
+        
+        return courses
     except Exception as e:
         logger.error(f"Error searching courses: {e}")
         raise DatabaseException("search_courses", str(e))
-
 
 def get_course(subject: str, catalog: str) -> List[Dict[str, Any]]:
     """Get specific course sections"""
