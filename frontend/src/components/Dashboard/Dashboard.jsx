@@ -8,7 +8,8 @@ import './Dashboard.css'
 export default function Dashboard() {
   const { user, profile, signOut, updateProfile } = useAuth()
   const [activeTab, setActiveTab] = useState('chat')
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [rightSidebarOpen, setRightSidebarOpen] = useState(false)
   const [editingProfile, setEditingProfile] = useState(false)
   const [profileForm, setProfileForm] = useState({
     major: '',
@@ -17,8 +18,13 @@ export default function Dashboard() {
     current_gpa: ''
   })
 
+  // Chat tabs state
+const [chatTabs, setChatTabs] = useState([{ id: 1, title: 'New Chat', messages: [], sessionId: null }])
+  const [activeChatTab, setActiveChatTab] = useState(1)
+  const [nextChatTabId, setNextChatTabId] = useState(2)
+  const [chatHistory, setChatHistory] = useState([])
+
   // Chat states
-  const [chatMessages, setChatMessages] = useState([])
   const [chatInput, setChatInput] = useState('')
   const [isSending, setIsSending] = useState(false)
   const [chatError, setChatError] = useState(null)
@@ -32,6 +38,188 @@ export default function Dashboard() {
   const [searchError, setSearchError] = useState(null)
   const [selectedCourse, setSelectedCourse] = useState(null)
   const [isLoadingCourse, setIsLoadingCourse] = useState(false)
+
+  // Get current chat tab's messages
+  const getCurrentChatMessages = () => {
+    const currentTab = chatTabs.find(tab => tab.id === activeChatTab)
+    return currentTab ? currentTab.messages : []
+  }
+
+  // Update current chat tab's messages
+  const updateCurrentChatMessages = (newMessages) => {
+    setChatTabs(prevTabs =>
+      prevTabs.map(tab =>
+        tab.id === activeChatTab
+          ? { ...tab, messages: newMessages }
+          : tab
+      )
+    )
+  }
+// Get current chat tab
+  const getCurrentChatTab = () => {
+    return chatTabs.find(tab => tab.id === activeChatTab)
+  }
+
+  // Update current chat tab's session ID
+  const updateCurrentChatSessionId = (sessionId) => {
+    setChatTabs(prevTabs =>
+      prevTabs.map(tab =>
+        tab.id === activeChatTab
+          ? { ...tab, sessionId: sessionId }
+          : tab
+      )
+    )
+  }
+
+  // Create new chat tab
+ 
+
+
+
+
+
+
+
+
+
+
+
+// Create new chat tab
+  const createNewChatTab = () => {
+    const newTab = {
+      id: nextChatTabId,
+      title: 'New Chat',
+      messages: [],
+      sessionId: null  // NEW
+    }
+    setChatTabs([...chatTabs, newTab])
+    setActiveChatTab(nextChatTabId)
+    setNextChatTabId(nextChatTabId + 1)
+  }
+
+
+
+
+
+
+
+
+
+  // Close chat tab
+  const closeChatTab = (tabId, e) => {
+    e.stopPropagation()
+    if (chatTabs.length === 1) {
+ setChatTabs([{ id: nextChatTabId, title: 'New Chat', messages: [], sessionId: null }]) 
+      setActiveChatTab(nextChatTabId)
+      setNextChatTabId(nextChatTabId + 1)
+      return
+    }
+
+    const newTabs = chatTabs.filter(tab => tab.id !== tabId)
+    setChatTabs(newTabs)
+
+    if (activeChatTab === tabId) {
+      setActiveChatTab(newTabs[newTabs.length - 1].id)
+    }
+  }
+
+
+ 
+
+// Handle drag and drop for tab reordering
+const [draggedTab, setDraggedTab] = useState(null)
+
+const handleDragStart = (e, tabId) => {
+  setDraggedTab(tabId)
+  e.dataTransfer.effectAllowed = 'move'
+}
+
+const handleDragOver = (e) => {
+  e.preventDefault()
+  e.dataTransfer.dropEffect = 'move'
+}
+
+const handleDrop = (e, targetTabId) => {
+  e.preventDefault()
+  
+  if (draggedTab === targetTabId) return
+  
+  const draggedIndex = chatTabs.findIndex(tab => tab.id === draggedTab)
+  const targetIndex = chatTabs.findIndex(tab => tab.id === targetTabId)
+  
+  const newTabs = [...chatTabs]
+  const [removed] = newTabs.splice(draggedIndex, 1)
+  newTabs.splice(targetIndex, 0, removed)
+  
+  setChatTabs(newTabs)
+  setDraggedTab(null)
+}
+
+const handleDragEnd = () => {
+  setDraggedTab(null)
+}
+
+
+
+
+
+
+
+
+
+
+
+// Load historical chat session into new tab
+  const loadHistoricalChat = async (sessionId) => {
+    try {
+      const data = await chatAPI.getHistory(user.id, sessionId, 100)
+      
+      if (data.messages && data.messages.length > 0) {
+        // Get title from first user message
+        const firstUserMessage = data.messages.find(m => m.role === 'user')
+        const title = firstUserMessage 
+          ? (firstUserMessage.content.substring(0, 30) + (firstUserMessage.content.length > 30 ? '...' : ''))
+          : 'Previous Chat'
+
+        const newTab = {
+          id: nextChatTabId,
+          title: title,
+          messages: data.messages,
+          sessionId: sessionId  // Store the session ID
+        }
+        setChatTabs([...chatTabs, newTab])
+        setActiveChatTab(nextChatTabId)
+        setNextChatTabId(nextChatTabId + 1)
+        setRightSidebarOpen(false)
+      }
+    } catch (error) {
+      console.error('Error loading historical chat:', error)
+    }
+  }
+
+  // Load available sessions from backend
+  const loadChatSessions = async () => {
+    try {
+      const data = await chatAPI.getSessions(user.id, 20)
+      
+      if (data.sessions && data.sessions.length > 0) {
+        // Transform backend sessions to history format
+        const history = data.sessions.map(session => ({
+          id: session.session_id,
+          title: session.last_message || 'Previous Chat',
+          messageCount: session.message_count || 0,
+          lastUpdated: session.last_updated
+        }))
+        setChatHistory(history)
+      }
+    } catch (error) {
+      console.error('Error loading chat sessions:', error)
+    }
+  }
+
+
+
+
 
   // Helper function to convert GPA to letter grade
   const gpaToLetterGrade = (gpa) => {
@@ -55,44 +243,46 @@ export default function Dashboard() {
 
   useEffect(() => {
     scrollToBottom()
-  }, [chatMessages])
+  }, [chatTabs, activeChatTab])
 
   // Load chat history on mount
+// Initialize chat on mount
   useEffect(() => {
-    const loadChatHistory = async () => {
+    const initializeChat = async () => {
       if (!user?.id) return
       
       try {
         setIsLoadingHistory(true)
-        const data = await chatAPI.getHistory(user.id, 50)
         
-        if (data.messages && data.messages.length > 0) {
-          setChatMessages(data.messages)
-        } else {
-          setChatMessages([
-            {
+        // Load available sessions for sidebar
+        await loadChatSessions()
+        
+        // Start with a fresh chat (don't auto-load anything)
+        if (chatTabs.length === 1 && chatTabs[0].messages.length === 0) {
+          setChatTabs([{
+            id: 1,
+            title: 'New Chat',
+            messages: [{
               role: 'assistant',
               content: 'Hello! I\'m your McGill AI Academic Advisor. How can I help you plan your courses today?'
-            }
-          ])
+            }],
+            sessionId: null
+          }])
         }
+        
       } catch (error) {
-        console.error('Error loading chat history:', error)
-        setChatMessages([
-          {
-            role: 'assistant',
-            content: 'Hello! I\'m your McGill AI Academic Advisor. How can I help you plan your courses today?'
-          }
-        ])
+        console.error('Error initializing chat:', error)
       } finally {
         setIsLoadingHistory(false)
       }
     }
 
     if (activeTab === 'chat') {
-      loadChatHistory()
+      initializeChat()
     }
   }, [user?.id, activeTab])
+
+
 
   const handleProfileUpdate = async (e) => {
     e.preventDefault()
@@ -139,41 +329,128 @@ export default function Dashboard() {
     }
   }
 
-  const handleSendMessage = async (e) => {
+const handleSendMessage = async (e) => {
     e.preventDefault()
     if (!chatInput.trim() || isSending || !user?.id) return
     
     const userMessage = chatInput.trim()
+    const currentMessages = getCurrentChatMessages()
+    const currentTab = getCurrentChatTab()
+    const currentSessionId = currentTab?.sessionId  // Get current session ID
+    
     setChatInput('')
     setChatError(null)
     
     const newUserMessage = { role: 'user', content: userMessage }
-    setChatMessages(prev => [...prev, newUserMessage])
+    
+    // Update tab title based on first message
+    if (currentMessages.length === 0 || (currentMessages.length === 1 && currentMessages[0].role === 'assistant')) {
+      const newTitle = userMessage.length > 30 ? userMessage.substring(0, 30) + '...' : userMessage
+      setChatTabs(prevTabs =>
+        prevTabs.map(tab =>
+          tab.id === activeChatTab ? { ...tab, title: newTitle } : tab
+        )
+      )
+    }
+    
+    // Show user message immediately
+    updateCurrentChatMessages([...currentMessages, newUserMessage])
     
     setIsSending(true)
     
     try {
-      const response = await chatAPI.sendMessage(user.id, userMessage)
+      // Send message WITH session ID
+      const response = await chatAPI.sendMessage(user.id, userMessage, currentSessionId)
       
       const assistantMessage = {
         role: 'assistant',
         content: response.response
       }
       
-      setChatMessages(prev => [...prev, assistantMessage])
+      // Update session ID if this was a new session
+      if (!currentSessionId && response.session_id) {
+        updateCurrentChatSessionId(response.session_id)
+        console.log('New session created:', response.session_id)
+      }
+      
+      // Add assistant response
+      updateCurrentChatMessages([...currentMessages, newUserMessage, assistantMessage])
+      
+      // Reload sessions in sidebar
+      await loadChatSessions()
       
     } catch (error) {
       console.error('Error sending message:', error)
       setChatError('Failed to get response. Please try again.')
       
-      setChatMessages(prev => [...prev, {
+      const errorMessage = {
         role: 'assistant',
         content: '❌ Sorry, I encountered an error. Please try again or contact support if the issue persists.'
-      }])
+      }
+      updateCurrentChatMessages([...currentMessages, newUserMessage, errorMessage])
     } finally {
       setIsSending(false)
     }
   }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -182,7 +459,7 @@ export default function Dashboard() {
     }
   }
 
-  // Course search handler - FIXED: Groups sections by unique course
+  // Course search handler
   const handleCourseSearch = async (e) => {
     e.preventDefault()
     if (!searchQuery.trim()) return
@@ -194,14 +471,12 @@ export default function Dashboard() {
     try {
       const data = await coursesAPI.search(searchQuery, null, 100, true)
       
-      // Group sections by unique course (subject + catalog)
       const coursesMap = new Map()
       
       data.courses?.forEach(section => {
         const key = `${section.subject}-${section.catalog}`
         
         if (!coursesMap.has(key)) {
-          // First time seeing this course
           coursesMap.set(key, {
             id: section.id,
             subject: section.subject,
@@ -212,18 +487,15 @@ export default function Dashboard() {
             sections: [section]
           })
         } else {
-          // Add this section to existing course
           const course = coursesMap.get(key)
           course.sections.push(section)
           
-          // Update average if this section has better data
           if (section.average && (!course.average || section.average > course.average)) {
             course.average = section.average
           }
         }
       })
       
-      // Convert map to array
       const uniqueCourses = Array.from(coursesMap.values())
       
       setSearchResults(uniqueCourses)
@@ -258,67 +530,86 @@ export default function Dashboard() {
 
   const handleTabChange = (tab) => {
     setActiveTab(tab)
-    setSidebarOpen(false)
+    if (window.innerWidth < 768) {
+      setSidebarOpen(false)
+    }
   }
 
   return (
     <div className="dashboard">
       {/* Sidebar */}
-      <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
+      <aside className={`sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
         <div className="sidebar-header">
-          <div className="logo-container">
-            <div className="logo-icon">M</div>
-            <span className="logo-name">McGill AI</span>
-          </div>
-          <button 
-            className="sidebar-close"
-            onClick={() => setSidebarOpen(false)}
-            aria-label="Close menu"
-          >
-            ✕
-          </button>
+          {sidebarOpen && (
+            <>
+              <div className="logo-container">
+                <div className="logo-icon">M</div>
+                <span className="logo-name">McGill AI</span>
+              </div>
+              <button 
+                className="sidebar-toggle-btn"
+                onClick={() => setSidebarOpen(false)}
+                aria-label="Collapse sidebar"
+              >
+                ◀
+              </button>
+            </>
+          )}
+          {!sidebarOpen && (
+            <button 
+              className="sidebar-toggle-btn-collapsed"
+              onClick={() => setSidebarOpen(true)}
+              aria-label="Expand sidebar"
+            >
+              ▶
+            </button>
+          )}
         </div>
 
-        <nav className="sidebar-nav">
-          <button 
-            className={`nav-item ${activeTab === 'chat' ? 'active' : ''}`}
-            onClick={() => handleTabChange('chat')}
-          >
-            <span className="nav-icon">💬</span>
-            <span className="nav-label">AI Chat</span>
-          </button>
-          
-          <button 
-            className={`nav-item ${activeTab === 'courses' ? 'active' : ''}`}
-            onClick={() => handleTabChange('courses')}
-          >
-            <span className="nav-icon">📚</span>
-            <span className="nav-label">Courses</span>
-          </button>
-          
-          <button 
-            className={`nav-item ${activeTab === 'profile' ? 'active' : ''}`}
-            onClick={() => handleTabChange('profile')}
-          >
-            <span className="nav-icon">👤</span>
-            <span className="nav-label">Profile</span>
-          </button>
-        </nav>
+        {sidebarOpen && (
+          <>
+            <nav className="sidebar-nav">
+              <button 
+                className={`nav-item ${activeTab === 'chat' ? 'active' : ''}`}
+                onClick={() => handleTabChange('chat')}
+              >
+                <span className="nav-icon">💬</span>
+                <span className="nav-label">AI Chat</span>
+              </button>
+              
+              <button 
+                className={`nav-item ${activeTab === 'courses' ? 'active' : ''}`}
+                onClick={() => handleTabChange('courses')}
+              >
+                <span className="nav-icon">📚</span>
+                <span className="nav-label">Courses</span>
+              </button>
+              
+              <button 
+                className={`nav-item ${activeTab === 'profile' ? 'active' : ''}`}
+                onClick={() => handleTabChange('profile')}
+              >
+                <span className="nav-icon">👤</span>
+                <span className="nav-label">Profile</span>
+              </button>
+            </nav>
 
-        <div className="sidebar-footer">
-          <div className="user-info">
-            <div className="user-avatar">
-              {user?.email?.[0].toUpperCase()}
+            <div className="sidebar-footer">
+              <div className="user-info">
+                <div className="user-avatar">
+                  {user?.email?.[0].toUpperCase()}
+                </div>
+                <div className="user-details">
+                  <div className="user-name">{profile?.username || 'User'}</div>
+                  <div className="user-email">{user?.email}</div>
+                </div>
+              </div>
+              <button className="btn btn-signout" onClick={handleSignOut}>
+                Sign Out
+              </button>
             </div>
-            <div className="user-details">
-              <div className="user-name">{profile?.username || 'User'}</div>
-              <div className="user-email">{user?.email}</div>
-            </div>
-          </div>
-          <button className="btn btn-signout" onClick={handleSignOut}>
-            Sign Out
-          </button>
-        </div>
+          </>
+        )}
       </aside>
 
       {/* Mobile Overlay */}
@@ -331,21 +622,67 @@ export default function Dashboard() {
 
       {/* Main Content */}
       <main className="main-content">
-        {/* Header */}
-        <header className="dashboard-header">
-          <button 
-            className="mobile-menu-btn"
-            onClick={() => setSidebarOpen(true)}
-            aria-label="Open menu"
-          >
-            ☰
-          </button>
-          <h1 className="page-title">
-            {activeTab === 'chat' && '💬 AI Academic Advisor'}
-            {activeTab === 'courses' && '📚 Course Explorer'}
-            {activeTab === 'profile' && '👤 Your Profile'}
-          </h1>
-        </header>
+        {/* Chat Tabs Bar - Only show for chat tab */}
+        {activeTab === 'chat' && (
+          <div className="chat-tabs-bar">
+            <div className="chat-tabs-container">
+
+
+{chatTabs.map(tab => (
+  <div
+    key={tab.id}
+    className={`chat-tab ${activeChatTab === tab.id ? 'active' : ''} ${draggedTab === tab.id ? 'dragging' : ''}`}
+    onClick={() => setActiveChatTab(tab.id)}
+    draggable
+    onDragStart={(e) => handleDragStart(e, tab.id)}
+    onDragOver={handleDragOver}
+    onDrop={(e) => handleDrop(e, tab.id)}
+    onDragEnd={handleDragEnd}
+  >
+    <span className="chat-tab-title">{tab.title}</span>
+    <button
+      className="chat-tab-close"
+      onClick={(e) => closeChatTab(tab.id, e)}
+    >
+      ✕
+    </button>
+  </div>
+))}
+
+
+
+
+
+
+
+
+
+
+
+
+              <button className="chat-tab-new" onClick={createNewChatTab}>
+                +
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Header - Only shown for non-chat tabs */}
+        {activeTab !== 'chat' && (
+          <header className="dashboard-header">
+            <button 
+              className="mobile-menu-btn"
+              onClick={() => setSidebarOpen(true)}
+              aria-label="Open menu"
+            >
+              ☰
+            </button>
+            <h1 className="page-title">
+              {activeTab === 'courses' && '📚 Course Explorer'}
+              {activeTab === 'profile' && '👤 Your Profile'}
+            </h1>
+          </header>
+        )}
 
         {/* Content Area */}
         <div className="content-area">
@@ -361,7 +698,7 @@ export default function Dashboard() {
                     </div>
                   </div>
                 ) : (
-                  chatMessages.map((msg, idx) => (
+                  getCurrentChatMessages().map((msg, idx) => (
                     <div key={idx} className={`message ${msg.role}`}>
                       <div className="message-avatar">
                         {msg.role === 'user' ? user?.email?.[0].toUpperCase() : '🤖'}
@@ -808,6 +1145,54 @@ export default function Dashboard() {
           )}
         </div>
       </main>
+
+      {/* Right Sidebar - Chat History */}
+      {activeTab === 'chat' && (
+        <aside className={`right-sidebar ${rightSidebarOpen ? 'open' : 'closed'}`}>
+          {!rightSidebarOpen && (
+            <div className="sidebar-header">
+              <button 
+                className="right-sidebar-toggle-collapsed"
+                onClick={() => setRightSidebarOpen(true)}
+                title="Show chat history"
+              >
+                ◀
+              </button>
+            </div>
+          )}
+          {rightSidebarOpen && (
+            <>
+              <div className="right-sidebar-header">
+                <h3>Chat History</h3>
+                <button 
+                  className="right-sidebar-close"
+                  onClick={() => setRightSidebarOpen(false)}
+                >
+                  ▶
+                </button>
+              </div>
+              <div className="right-sidebar-content">
+                {chatHistory.length > 0 ? (
+                  chatHistory.map(chat => (
+                    <div 
+                      key={chat.id} 
+                      className="history-item"
+                      onClick={() => loadHistoricalChat(chat.id)}
+                    >
+                      <div className="history-title">{chat.title}</div>
+                      <div className="history-meta">{chat.messageCount} messages</div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="history-empty">
+                    <p>No previous chats</p>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </aside>
+      )}
     </div>
   )
 }
