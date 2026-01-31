@@ -1,18 +1,20 @@
 """
-Chat endpoints with AI integration
+Chat endpoints with AI integration and session management
 """
 from fastapi import APIRouter, HTTPException, status, Query
 from pydantic import BaseModel, Field, validator
 from typing import List, Optional
 import anthropic
 import logging
-import os
+import uuid
 
 from api.utils.supabase_client import (
     get_user_by_id,
     get_chat_history,
     save_message,
-    delete_chat_history
+    delete_chat_history,
+    get_user_sessions,
+    delete_chat_session
 )
 from api.config import settings
 from api.exceptions import UserNotFoundException, DatabaseException
@@ -31,6 +33,7 @@ class ChatRequest(BaseModel):
     """Chat request schema"""
     message: str = Field(..., min_length=1, max_length=4000)
     user_id: str
+    session_id: Optional[str] = None  # NEW: Optional session ID
     
     @validator('message')
     def validate_message(cls, v):
@@ -42,7 +45,8 @@ class ChatRequest(BaseModel):
         json_schema_extra = {
             "example": {
                 "message": "What are some good computer science courses for a beginner?",
-                "user_id": "123e4567-e89b-12d3-a456-426614174000"
+                "user_id": "123e4567-e89b-12d3-a456-426614174000",
+                "session_id": "optional-session-uuid"
             }
         }
 
@@ -51,6 +55,7 @@ class ChatResponse(BaseModel):
     """Chat response schema"""
     response: str
     user_id: str
+    session_id: str  # NEW: Return session ID
     tokens_used: Optional[int] = None
 
 
@@ -100,6 +105,7 @@ async def send_message(request: ChatRequest):
     
     - **message**: The user's message (1-4000 characters)
     - **user_id**: The user's unique identifier
+    - **session_id**: Optional session ID for continuing a conversation
     """
     try:
         # Validate message length
@@ -110,20 +116,23 @@ async def send_message(request: ChatRequest):
                 detail=f"Message too long. Maximum {MAX_MESSAGE_LENGTH} characters."
             )
         
-        # Verify user exists and get profile (SYNCHRONOUS - no await)
+        # Generate session_id if not provided
+        session_id = request.session_id or str(uuid.uuid4())
+        logger.info(f"Processing message for session: {session_id}")
+        
+        # Verify user exists and get profile
         user = get_user_by_id(request.user_id)
         
-        # Save user message (SYNCHRONOUS - no await)
-        save_message(request.user_id, "user", request.message)
+        # Save user message with session_id
+        save_message(request.user_id, "user", request.message, session_id)
         
-        # Get chat history for context (SYNCHRONOUS - no await)
-        history = get_chat_history(request.user_id, limit=10)
+        # Get chat history for THIS SESSION ONLY
+        history = get_chat_history(request.user_id, session_id=session_id, limit=10)
         
         # Build system context
         system_context = build_system_context(user)
         
         # Prepare messages for Claude
-        # Use only recent messages to stay within context limits
         CHAT_CONTEXT_MESSAGES = 8
         recent_history = history[-(CHAT_CONTEXT_MESSAGES):] if len(history) > CHAT_CONTEXT_MESSAGES else history
         formatted_history = format_chat_history(recent_history)
@@ -134,7 +143,7 @@ async def send_message(request: ChatRequest):
             "content": request.message
         })
         
-        # Call Claude API with Opus model
+        # Call Claude API
         try:
             api_key = settings.ANTHROPIC_API_KEY
             if not api_key:
@@ -142,11 +151,11 @@ async def send_message(request: ChatRequest):
             
             client = anthropic.Anthropic(api_key=api_key)
             
-            logger.info(f"Calling Claude API with {len(formatted_history)} messages")
+            logger.info(f"Calling Claude API with {len(formatted_history)} messages for session {session_id}")
             
             message = client.messages.create(
-                model="claude-3-opus-20240229",  # Claude 3 Opus
-                max_tokens=2048,  # Increased for more detailed responses
+                model="claude-sonnet-4-20250514",
+                max_tokens=2048,
                 system=system_context,
                 messages=formatted_history
             )
@@ -169,12 +178,13 @@ async def send_message(request: ChatRequest):
                 detail="Error generating AI response"
             )
         
-        # Save assistant response (SYNCHRONOUS - no await)
-        save_message(request.user_id, "assistant", assistant_response)
+        # Save assistant response with session_id
+        save_message(request.user_id, "assistant", assistant_response, session_id)
         
         return ChatResponse(
             response=assistant_response,
             user_id=request.user_id,
+            session_id=session_id,  # Return the session ID
             tokens_used=tokens_used
         )
         
@@ -195,24 +205,27 @@ async def send_message(request: ChatRequest):
 @router.get("/history/{user_id}", response_model=dict)
 async def get_history(
     user_id: str,
+    session_id: Optional[str] = Query(None, description="Optional session ID filter"),
     limit: int = Query(default=50, ge=1, le=200)
 ):
     """
-    Get user's chat history
+    Get user's chat history, optionally filtered by session
     
     - **user_id**: The user's unique identifier
+    - **session_id**: Optional session ID to filter messages
     - **limit**: Maximum number of messages to return (1-200, default 50)
     """
     try:
-        # Verify user exists (SYNCHRONOUS - no await)
+        # Verify user exists
         user = get_user_by_id(user_id)
         
-        # Get chat history (SYNCHRONOUS - no await)
-        messages = get_chat_history(user_id, limit=limit)
+        # Get chat history with optional session filter
+        messages = get_chat_history(user_id, session_id=session_id, limit=limit)
         
         return {
             "messages": messages,
-            "count": len(messages)
+            "count": len(messages),
+            "session_id": session_id
         }
         
     except UserNotFoundException:
@@ -229,10 +242,83 @@ async def get_history(
         )
 
 
+@router.get("/sessions/{user_id}", response_model=dict)
+async def get_sessions(
+    user_id: str,
+    limit: int = Query(default=20, ge=1, le=100)
+):
+    """
+    Get all chat sessions for a user
+    
+    - **user_id**: The user's unique identifier
+    - **limit**: Maximum number of sessions to return (1-100, default 20)
+    """
+    try:
+        # Verify user exists
+        user = get_user_by_id(user_id)
+        
+        # Get user sessions
+        sessions = get_user_sessions(user_id, limit=limit)
+        
+        return {
+            "sessions": sessions,
+            "count": len(sessions)
+        }
+        
+    except UserNotFoundException:
+        raise
+    except DatabaseException:
+        raise
+    except Exception as e:
+        logger.exception(f"Unexpected error getting sessions: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error occurred while retrieving sessions"
+        )
+
+
+@router.delete("/session/{user_id}/{session_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def clear_session(user_id: str, session_id: str):
+    """
+    Delete a specific chat session
+    
+    - **user_id**: The user's unique identifier
+    - **session_id**: The session to delete
+    """
+    try:
+        # Verify user exists
+        get_user_by_id(user_id)
+        
+        # Delete the session
+        delete_chat_session(user_id, session_id)
+        
+        logger.info(f"Session {session_id} deleted for user: {user_id}")
+        
+        return None
+        
+    except UserNotFoundException:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    except DatabaseException as e:
+        logger.error(f"Failed to delete session {session_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete session"
+        )
+    except Exception as e:
+        logger.exception(f"Unexpected error deleting session: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error occurred"
+        )
+
+
 @router.delete("/history/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def clear_history(user_id: str):
     """
-    Clear user's chat history
+    Clear ALL chat history for a user (all sessions)
     
     - **user_id**: The user's unique identifier
     
@@ -243,12 +329,12 @@ async def clear_history(user_id: str):
         # Verify user exists
         get_user_by_id(user_id)
         
-        # Delete chat history
+        # Delete all chat history
         delete_chat_history(user_id)
         
-        logger.info(f"Chat history cleared for user: {user_id}")
+        logger.info(f"All chat history cleared for user: {user_id}")
         
-        return None  # 204 No Content
+        return None
         
     except UserNotFoundException:
         raise HTTPException(

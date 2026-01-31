@@ -96,34 +96,68 @@ api.interceptors.response.use(
   }
 )
 
-// API methods with error handling
+// Chat API with session support
 export const chatAPI = {
-  sendMessage: async (userId, message) => {
+  async sendMessage(userId, message, sessionId = null) {
     try {
       const response = await api.post('/chat/send', {
         user_id: userId,
         message: message,
+        session_id: sessionId
       })
       return response.data
     } catch (error) {
-      console.error('Chat API error:', error)
+      console.error('Send message error:', error)
       throw error
     }
   },
-  
-  getHistory: async (userId, limit = 50) => {
+
+  async getHistory(userId, sessionId = null, limit = 50) {
     try {
-      const response = await api.get(`/chat/history/${userId}`, {
+      const params = { limit }
+      if (sessionId) {
+        params.session_id = sessionId
+      }
+      const response = await api.get(`/chat/history/${userId}`, { params })
+      return response.data
+    } catch (error) {
+      console.error('Get history error:', error)
+      throw error
+    }
+  },
+
+  async getSessions(userId, limit = 20) {
+    try {
+      const response = await api.get(`/chat/sessions/${userId}`, {
         params: { limit }
       })
       return response.data
     } catch (error) {
-      console.error('Chat history error:', error)
+      console.error('Get sessions error:', error)
       throw error
     }
   },
+
+  async deleteSession(userId, sessionId) {
+    try {
+      await api.delete(`/chat/session/${userId}/${sessionId}`)
+    } catch (error) {
+      console.error('Delete session error:', error)
+      throw error
+    }
+  },
+
+  async clearHistory(userId) {
+    try {
+      await api.delete(`/chat/history/${userId}`)
+    } catch (error) {
+      console.error('Clear history error:', error)
+      throw error
+    }
+  }
 }
 
+// Courses API
 export const coursesAPI = {
   search: async (query = '', subject = null, limit = 50) => {
     try {
@@ -161,6 +195,7 @@ export const coursesAPI = {
   },
 }
 
+// Users API
 export const usersAPI = {
   createUser: async (userData) => {
     try {
