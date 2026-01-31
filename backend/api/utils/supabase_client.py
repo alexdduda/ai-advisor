@@ -168,87 +168,58 @@ def get_chat_history(user_id: str, session_id: Optional[str] = None, limit: int 
         logger.error(f"Error getting chat history for {user_id}: {e}")
         raise DatabaseException("get_chat_history", str(e))
 
-
-
-
 def get_user_sessions(user_id: str, limit: int = 20) -> List[Dict[str, Any]]:
     """Get all chat sessions for a user with message counts"""
     try:
         supabase = get_supabase()
         
-        # Get all messages grouped by session
+        # Get all messages in ASCENDING order (oldest first)
         all_messages = supabase.table('chat_messages')\
             .select('session_id, created_at, content, role')\
             .eq('user_id', user_id)\
             .not_.is_('session_id', 'null')\
-            .order('created_at', desc=True)\
+            .order('created_at', desc=False)\
             .execute()
         
-        # Group by session manually
+        # Group by session and track first user message
         sessions_dict = {}
         for msg in all_messages.data:
             sid = msg['session_id']
             if sid not in sessions_dict:
-                # Get first user message for title
-                title = msg['content'][:50] if msg['role'] == 'user' else 'Chat Session'
                 sessions_dict[sid] = {
                     'session_id': sid,
-                    'last_message': title,
                     'last_updated': msg['created_at'],
-                    'message_count': 0
+                    'message_count': 0,
+                    'first_user_message': None
                 }
+            
+            # Capture FIRST user message for title
+            if msg['role'] == 'user' and sessions_dict[sid]['first_user_message'] is None:
+                sessions_dict[sid]['first_user_message'] = msg['content'][:50]
+            
+            # Update last_updated to most recent
+            if msg['created_at'] > sessions_dict[sid]['last_updated']:
+                sessions_dict[sid]['last_updated'] = msg['created_at']
+            
             sessions_dict[sid]['message_count'] += 1
         
-        # Convert to list and sort by last_updated
-        sessions = sorted(
-            sessions_dict.values(), 
-            key=lambda x: x['last_updated'], 
-            reverse=True
-        )
+        # Build final list
+        sessions = []
+        for sid, data in sessions_dict.items():
+            sessions.append({
+                'session_id': sid,
+                'last_message': data['first_user_message'] or 'Chat Session',
+                'last_updated': data['last_updated'],
+                'message_count': data['message_count']
+            })
+        
+        # Sort by last_updated descending (most recent first)
+        sessions.sort(key=lambda x: x['last_updated'], reverse=True)
         
         return sessions[:limit]
     except Exception as e:
         logger.error(f"Error getting user sessions for {user_id}: {e}")
         return []
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 def save_message(user_id: str, role: str, content: str, session_id: Optional[str] = None) -> Dict[str, Any]:
     """Save a chat message with optional session_id"""
