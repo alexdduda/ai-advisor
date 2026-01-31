@@ -3,6 +3,9 @@ import { useAuth } from '../../contexts/AuthContext'
 import { chatAPI } from '../../lib/api'
 import { coursesAPI } from '../../lib/professorsAPI'
 import ProfessorRating, { ProfessorRatingCompact } from '../ProfessorRating/ProfessorRating'
+import { IoChevronBack, IoChevronForward } from 'react-icons/io5';
+import { MdKeyboardArrowLeft, MdKeyboardArrowRight } from 'react-icons/md';
+import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import './Dashboard.css'
 
 export default function Dashboard() {
@@ -19,7 +22,7 @@ export default function Dashboard() {
   })
 
   // Chat tabs state
-const [chatTabs, setChatTabs] = useState([{ id: 1, title: 'New Chat', messages: [], sessionId: null }])
+  const [chatTabs, setChatTabs] = useState([{ id: 1, title: 'New Chat', messages: [], sessionId: null }])
   const [activeChatTab, setActiveChatTab] = useState(1)
   const [nextChatTabId, setNextChatTabId] = useState(2)
   const [chatHistory, setChatHistory] = useState([])
@@ -43,6 +46,48 @@ const [chatTabs, setChatTabs] = useState([{ id: 1, title: 'New Chat', messages: 
   const getCurrentChatMessages = () => {
     const currentTab = chatTabs.find(tab => tab.id === activeChatTab)
     return currentTab ? currentTab.messages : []
+  }
+
+  // Drag-able Sidebar
+  const [leftToggleY, setLeftToggleY] = useState(20)
+  const [rightToggleY, setRightToggleY] = useState(20)
+  const [isDraggingLeft, setIsDraggingLeft] = useState(false)
+  const [isDraggingRight, setIsDraggingRight] = useState(false)
+  const [dragStartY, setDragStartY] = useState(0)
+  const [dragStartPos, setDragStartPos] = useState(0)
+
+  // Left sidebar toggle drag handlers
+  const handleLeftToggleMouseDown = (e) => {
+    if (sidebarOpen) return // Only draggable when closed
+    setIsDraggingLeft(true)
+    setDragStartY(e.clientY)
+    setDragStartPos(leftToggleY)
+    e.preventDefault()
+  }
+
+  const handleLeftToggleTouchStart = (e) => {
+    if (sidebarOpen) return // Only draggable when closed
+    setIsDraggingLeft(true)
+    setDragStartY(e.touches[0].clientY)
+    setDragStartPos(leftToggleY)
+    e.preventDefault()
+  }
+
+  // Right sidebar toggle drag handlers
+  const handleRightToggleMouseDown = (e) => {
+    if (rightSidebarOpen) return // Only draggable when closed
+    setIsDraggingRight(true)
+    setDragStartY(e.clientY)
+    setDragStartPos(rightToggleY)
+    e.preventDefault()
+  }
+
+  const handleRightToggleTouchStart = (e) => {
+    if (rightSidebarOpen) return // Only draggable when closed
+    setIsDraggingRight(true)
+    setDragStartY(e.touches[0].clientY)
+    setDragStartPos(rightToggleY)
+    e.preventDefault()
   }
 
   // Update current chat tab's messages
@@ -71,19 +116,6 @@ const [chatTabs, setChatTabs] = useState([{ id: 1, title: 'New Chat', messages: 
     )
   }
 
-  // Create new chat tab
- 
-
-
-
-
-
-
-
-
-
-
-
 // Create new chat tab
   const createNewChatTab = () => {
     const newTab = {
@@ -96,14 +128,6 @@ const [chatTabs, setChatTabs] = useState([{ id: 1, title: 'New Chat', messages: 
     setActiveChatTab(nextChatTabId)
     setNextChatTabId(nextChatTabId + 1)
   }
-
-
-
-
-
-
-
-
 
   // Close chat tab
   const closeChatTab = (tabId, e) => {
@@ -159,43 +183,48 @@ const handleDragEnd = () => {
   setDraggedTab(null)
 }
 
-
-
-
-
-
-
-
-
-
-
 // Load historical chat session into new tab
-  const loadHistoricalChat = async (sessionId) => {
-    try {
-      const data = await chatAPI.getHistory(user.id, sessionId, 100)
-      
-      if (data.messages && data.messages.length > 0) {
-        // Get title from first user message
-        const firstUserMessage = data.messages.find(m => m.role === 'user')
-        const title = firstUserMessage 
-          ? (firstUserMessage.content.substring(0, 30) + (firstUserMessage.content.length > 30 ? '...' : ''))
-          : 'Previous Chat'
-
-        const newTab = {
-          id: nextChatTabId,
-          title: title,
-          messages: data.messages,
-          sessionId: sessionId  // Store the session ID
-        }
-        setChatTabs([...chatTabs, newTab])
-        setActiveChatTab(nextChatTabId)
-        setNextChatTabId(nextChatTabId + 1)
-        setRightSidebarOpen(false)
-      }
-    } catch (error) {
-      console.error('Error loading historical chat:', error)
+const loadHistoricalChat = async (sessionId) => {
+  try {
+    setIsLoadingHistory(true)
+    setRightSidebarOpen(false) // Close sidebar when loading
+    
+    // Check if this session is already open in a tab
+    const existingTab = chatTabs.find(tab => tab.sessionId === sessionId)
+    if (existingTab) {
+      setActiveChatTab(existingTab.id)
+      setIsLoadingHistory(false)
+      return
     }
+    
+    // Fetch ALL messages from this session
+    const data = await chatAPI.getHistory(user.id, sessionId, 200)
+    
+    if (data.messages && data.messages.length > 0) {
+      // Create title from first user message
+      const firstUserMessage = data.messages.find(m => m.role === 'user')
+      const title = firstUserMessage 
+        ? (firstUserMessage.content.substring(0, 30) + (firstUserMessage.content.length > 30 ? '...' : ''))
+        : 'Previous Chat'
+
+      const newTab = {
+        id: nextChatTabId,
+        title: title,
+        messages: data.messages,  // This contains ALL messages from the session
+        sessionId: sessionId
+      }
+      
+      setChatTabs([...chatTabs, newTab])
+      setActiveChatTab(nextChatTabId)
+      setNextChatTabId(nextChatTabId + 1)
+    }
+  } catch (error) {
+    console.error('Error loading historical chat:', error)
+    setChatError('Failed to load chat history')
+  } finally {
+    setIsLoadingHistory(false)
   }
+}
 
   // Load available sessions from backend
   const loadChatSessions = async () => {
@@ -244,6 +273,53 @@ const handleDragEnd = () => {
   useEffect(() => {
     scrollToBottom()
   }, [chatTabs, activeChatTab])
+
+  useEffect(() => {
+  const handleMouseMove = (e) => {
+    if (isDraggingLeft) {
+      const deltaY = e.clientY - dragStartY
+      const newY = Math.max(20, Math.min(window.innerHeight - 56, dragStartPos + deltaY))
+      setLeftToggleY(newY)
+    }
+    if (isDraggingRight) {
+      const deltaY = e.clientY - dragStartY
+      const newY = Math.max(20, Math.min(window.innerHeight - 56, dragStartPos + deltaY))
+      setRightToggleY(newY)
+    }
+  }
+
+  const handleTouchMove = (e) => {
+    if (isDraggingLeft) {
+      const deltaY = e.touches[0].clientY - dragStartY
+      const newY = Math.max(20, Math.min(window.innerHeight - 56, dragStartPos + deltaY))
+      setLeftToggleY(newY)
+    }
+    if (isDraggingRight) {
+      const deltaY = e.touches[0].clientY - dragStartY
+      const newY = Math.max(20, Math.min(window.innerHeight - 56, dragStartPos + deltaY))
+      setRightToggleY(newY)
+    }
+  }
+
+  const handleMouseUp = () => {
+    setIsDraggingLeft(false)
+    setIsDraggingRight(false)
+  }
+
+  if (isDraggingLeft || isDraggingRight) {
+    window.addEventListener('mousemove', handleMouseMove)
+    window.addEventListener('mouseup', handleMouseUp)
+    window.addEventListener('touchmove', handleTouchMove)
+    window.addEventListener('touchend', handleMouseUp)
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('mouseup', handleMouseUp)
+      window.removeEventListener('touchmove', handleTouchMove)
+      window.removeEventListener('touchend', handleMouseUp)
+    }
+  }
+}, [isDraggingLeft, isDraggingRight, dragStartY, dragStartPos, leftToggleY, rightToggleY])
 
   // Load chat history on mount
 // Initialize chat on mount
@@ -393,65 +469,6 @@ const handleSendMessage = async (e) => {
     }
   }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
@@ -481,7 +498,7 @@ const handleSendMessage = async (e) => {
             id: section.id,
             subject: section.subject,
             catalog: section.catalog,
-            title: section.title,
+            title: section.course_name,
             average: section.average,
             instructor: section.instructor,
             sections: [section]
@@ -551,17 +568,23 @@ const handleSendMessage = async (e) => {
                 onClick={() => setSidebarOpen(false)}
                 aria-label="Collapse sidebar"
               >
-                ◀
+                <FaChevronLeft size={20} />
               </button>
             </>
           )}
           {!sidebarOpen && (
             <button 
-              className="sidebar-toggle-btn-collapsed"
+              className={`sidebar-toggle-btn-collapsed ${isDraggingLeft ? 'dragging' : ''}`}
               onClick={() => setSidebarOpen(true)}
+              onMouseDown={handleLeftToggleMouseDown}
+              onTouchStart={handleLeftToggleTouchStart}
+              style={{ 
+                top: `${leftToggleY}px`,
+                cursor: isDraggingLeft ? 'grabbing' : 'grab'
+              }}
               aria-label="Expand sidebar"
             >
-              ▶
+              <FaChevronRight size={20} />
             </button>
           )}
         </div>
@@ -648,17 +671,6 @@ const handleSendMessage = async (e) => {
     </button>
   </div>
 ))}
-
-
-
-
-
-
-
-
-
-
-
 
               <button className="chat-tab-new" onClick={createNewChatTab}>
                 +
@@ -1152,11 +1164,17 @@ const handleSendMessage = async (e) => {
           {!rightSidebarOpen && (
             <div className="sidebar-header">
               <button 
-                className="right-sidebar-toggle-collapsed"
+                className={`right-sidebar-toggle-collapsed ${isDraggingRight ? 'dragging' : ''}`}
                 onClick={() => setRightSidebarOpen(true)}
+                onMouseDown={handleRightToggleMouseDown}
+                onTouchStart={handleRightToggleTouchStart}
+                style={{ 
+                  top: `${rightToggleY}px`,
+                  cursor: isDraggingRight ? 'grabbing' : 'grab'
+                }}
                 title="Show chat history"
               >
-                ◀
+                <FaChevronLeft size={20} />
               </button>
             </div>
           )}
@@ -1167,8 +1185,9 @@ const handleSendMessage = async (e) => {
                 <button 
                   className="right-sidebar-close"
                   onClick={() => setRightSidebarOpen(false)}
+                  aria-label="Close history"
                 >
-                  ▶
+                  <FaChevronRight size={20} />
                 </button>
               </div>
               <div className="right-sidebar-content">
