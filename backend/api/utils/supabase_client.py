@@ -309,7 +309,6 @@ def search_courses(
             query_builder = query_builder.eq('subject', subject.upper())
         
         if query:
-            # Sanitize query
             clean_query = query.strip()[:100]
             query_builder = query_builder.or_(
                 f'course_name.ilike.%{clean_query}%,'
@@ -320,7 +319,7 @@ def search_courses(
         
         response = query_builder.limit(min(limit, settings.MAX_SEARCH_LIMIT)).execute()
         
-        # Map course_name to title for API response
+        # Map course_name to title
         courses = []
         for row in response.data:
             course = dict(row)
@@ -345,7 +344,15 @@ def get_course(subject: str, catalog: str) -> List[Dict[str, Any]]:
             .eq('catalog', catalog)\
             .execute()
         
-        return response.data
+        # Map course_name to title
+        courses = []
+        for row in response.data:
+            course = dict(row)
+            if course.get('course_name'):
+                course['title'] = course['course_name']
+            courses.append(course)
+        
+        return courses
     except Exception as e:
         logger.error(f"Error getting course {subject} {catalog}: {e}")
         raise DatabaseException("get_course", str(e))
