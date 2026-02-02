@@ -649,29 +649,26 @@ const handleSendMessage = async (e) => {
         {activeTab === 'chat' && (
           <div className="chat-tabs-bar">
             <div className="chat-tabs-container">
-
-
-{chatTabs.map(tab => (
-  <div
-    key={tab.id}
-    className={`chat-tab ${activeChatTab === tab.id ? 'active' : ''} ${draggedTab === tab.id ? 'dragging' : ''}`}
-    onClick={() => setActiveChatTab(tab.id)}
-    draggable
-    onDragStart={(e) => handleDragStart(e, tab.id)}
-    onDragOver={handleDragOver}
-    onDrop={(e) => handleDrop(e, tab.id)}
-    onDragEnd={handleDragEnd}
-  >
-    <span className="chat-tab-title">{tab.title}</span>
-    <button
-      className="chat-tab-close"
-      onClick={(e) => closeChatTab(tab.id, e)}
-    >
-      ✕
-    </button>
-  </div>
-))}
-
+              {chatTabs.map(tab => (
+                <div
+                  key={tab.id}
+                  className={`chat-tab ${activeChatTab === tab.id ? 'active' : ''} ${draggedTab === tab.id ? 'dragging' : ''}`}
+                  onClick={() => setActiveChatTab(tab.id)}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, tab.id)}
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handleDrop(e, tab.id)}
+                  onDragEnd={handleDragEnd}
+                >
+                  <span className="chat-tab-title">{tab.title}</span>
+                  <button
+                    className="chat-tab-close"
+                    onClick={(e) => closeChatTab(tab.id, e)}
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
               <button className="chat-tab-new" onClick={createNewChatTab}>
                 +
               </button>
@@ -743,14 +740,19 @@ const handleSendMessage = async (e) => {
               )}
 
               <form className="chat-input-container" onSubmit={handleSendMessage}>
-                <input
-                  type="text"
+                <textarea
                   className="chat-input"
                   placeholder="Ask me anything about courses, planning, or McGill academics..."
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
                   onKeyDown={handleKeyPress}
                   disabled={isSending}
+                  rows={1}
+                  style={{ resize: 'none', overflow: 'hidden' }}
+                  onInput={(e) => {
+                    e.target.style.height = 'auto';
+                    e.target.style.height = e.target.scrollHeight + 'px';
+                  }}
                 />
                 <button 
                   type="submit" 
