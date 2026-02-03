@@ -270,23 +270,55 @@ def search_courses(
     subject: Optional[str] = None,
     limit: int = 100
 ) -> List[Dict[str, Any]]:
-    """Search for courses"""
+    """Search for courses with optimized full-text search"""
     try:
         supabase = get_supabase()
         
         query_builder = supabase.table('courses').select('*')
         
+        # Subject filter (uses index)
         if subject:
             query_builder = query_builder.eq('subject', subject.upper())
         
         if query:
             clean_query = query.strip()[:100]
-            query_builder = query_builder.or_(
-                f'course_name.ilike.%{clean_query}%,'
-                f'title.ilike.%{clean_query}%,'
-                f'subject.ilike.%{clean_query}%,'
-                f'catalog.ilike.%{clean_query}%'
-            )
+            
+            # OPTIMIZATION: Use different strategies based on query type
+            
+            # Strategy 1: Exact subject/catalog match (fastest)
+            if len(clean_query) <= 8 and clean_query.replace(' ', '').isalnum():
+                # Likely a course code like "COMP202" or "COMP 202"
+                # Try exact match first
+                parts = clean_query.upper().replace(' ', '')
+                
+                # Check if it's subject + catalog
+                import re
+                match = re.match(r'([A-Z]+)(\d+)', parts)
+                if match:
+                    subj, cat = match.groups()
+                    query_builder = query_builder.or_(
+                        f'and(subject.eq.{subj},catalog.eq.{cat}),'
+                        f'course_name.ilike.%{clean_query}%'
+                    )
+                else:
+                    # Fallback to ilike
+                    query_builder = query_builder.or_(
+                        f'course_name.ilike.%{clean_query}%,'
+                        f'subject.ilike.%{clean_query}%,'
+                        f'catalog.ilike.%{clean_query}%'
+                    )
+            else:
+                # Strategy 2: Full-text search for longer queries (course names)
+                # Use textSearch for course_name (requires index)
+                try:
+                    query_builder = query_builder.text_search(
+                        'course_name', 
+                        clean_query,
+                        config='english'
+                    )
+                except:
+                    # Fallback to ilike if text search not available
+                    query_builder = query_builder.ilike('course_name', f'%{clean_query}%')
         
         response = query_builder.limit(min(limit, settings.MAX_SEARCH_LIMIT)).execute()
         
@@ -294,7 +326,6 @@ def search_courses(
         courses = []
         for row in response.data:
             course = dict(row)
-            # Use course_name if available, fallback to title
             if course.get('course_name'):
                 course['title'] = course['course_name']
             courses.append(course)

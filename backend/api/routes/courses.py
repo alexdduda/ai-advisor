@@ -9,14 +9,13 @@ import logging
 from ..config import settings
 from ..utils.supabase_client import search_courses, get_course
 from ..exceptions import DatabaseException
-from ..utils.professor_ratings import enrich_course_with_professor_ratings
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
 class Course(BaseModel):
-    """Course schema"""
+    """Course schema with ratings"""
     id: int
     subject: str
     catalog: str
@@ -24,16 +23,21 @@ class Course(BaseModel):
     average: Optional[float]
     instructor: Optional[str]
     term: Optional[str]
+    rmp_rating: Optional[float] = None
+    rmp_difficulty: Optional[float] = None
+    rmp_num_ratings: Optional[int] = None
+    rmp_would_take_again: Optional[float] = None
 
 
 class CourseDetail(BaseModel):
-    """Detailed course information"""
+    """Detailed course information with ratings"""
     subject: str
     catalog: str
     title: str
     average_grade: float
     num_sections: int
     sections: List[dict]
+    professor_rating: Optional[dict] = None  # Aggregated rating for primary instructor
 
 
 @router.get("/search", response_model=dict)
@@ -57,51 +61,98 @@ async def search(
         description="Maximum number of results to return"
     ),
     include_ratings: bool = Query(
-        default=False,
-        description="Include RateMyProfessor ratings for instructors"
+        default=True,  # Always true now since ratings are in DB
+        description="Include RateMyProfessor ratings (always enabled)"
     )
 ):
     """
-    Search for courses
+    Search for courses with ratings from database
     
     - **query**: Search term (matches course title, subject, or catalog number)
     - **subject**: Filter by specific subject code
     - **limit**: Maximum number of results (default 50, max 200)
-    - **include_ratings**: If true, fetch RateMyProfessor ratings for instructors (slower)
+    - **include_ratings**: Deprecated (ratings always included from database)
     
-    Returns a list of matching courses with basic information.
+    Returns a list of matching courses with ratings (no API calls needed!).
     """
     try:
         # Sanitize inputs
         clean_query = query.strip() if query else None
         clean_subject = subject.strip().upper() if subject else None
         
-        # Search courses
+        # Search courses (ratings are already in the database)
         courses = search_courses(
             query=clean_query,
             subject=clean_subject,
             limit=limit
         )
         
-        # Optionally enrich with professor ratings
-        if include_ratings and courses:
-            logger.info("Enriching courses with professor ratings...")
-            # Only enrich first 10 to avoid rate limiting
-            for i, course in enumerate(courses[:10]):
-                try:
-                    courses[i] = enrich_course_with_professor_ratings(course)
-                except Exception as e:
-                    logger.warning(f"Failed to enrich course {i} with ratings: {e}")
-                    courses[i]["professor_rating"] = None
+        # Group by course code to get unique courses
+        from collections import defaultdict
+        courses_map = defaultdict(lambda: {
+            'sections': [],
+            'best_average': None,
+            'rating': None
+        })
         
-        logger.info(f"Course search: query='{clean_query}', subject='{clean_subject}', results={len(courses)}")
+        for section in courses:
+            key = f"{section['subject']}-{section['catalog']}"
+            course = courses_map[key]
+            
+            # Add section
+            course['sections'].append(section)
+            
+            # Track best average
+            if section.get('average'):
+                if course['best_average'] is None or section['average'] > course['best_average']:
+                    course['best_average'] = section['average']
+            
+            # Use rating from any section that has one (should be same for all sections of same course)
+            if section.get('rmp_rating') and not course['rating']:
+                course['rating'] = {
+                    'avg_rating': section['rmp_rating'],
+                    'avg_difficulty': section.get('rmp_difficulty'),
+                    'num_ratings': section.get('rmp_num_ratings'),
+                    'would_take_again_percent': section.get('rmp_would_take_again'),
+                    'instructor': section.get('instructor')
+                }
+            
+            # Store basic info
+            if 'subject' not in course:
+                course['subject'] = section['subject']
+                course['catalog'] = section['catalog']
+                course['title'] = section.get('course_name') or section.get('title', '')
+                course['instructor'] = section.get('instructor')
+        
+        # Convert to list format
+        result_courses = []
+        for key, course_data in courses_map.items():
+            course_obj = {
+                'subject': course_data['subject'],
+                'catalog': course_data['catalog'],
+                'title': course_data['title'],
+                'average': course_data['best_average'],
+                'instructor': course_data['instructor'],
+                'num_sections': len(course_data['sections']),
+                'professor_rating': course_data['rating']
+            }
+            result_courses.append(course_obj)
+        
+        # Sort by subject and catalog
+        result_courses.sort(key=lambda c: (c['subject'], c['catalog']))
+        
+        # Limit results
+        result_courses = result_courses[:limit]
+        
+        logger.info(f"Course search: query='{clean_query}', subject='{clean_subject}', "
+                   f"results={len(result_courses)} unique courses")
         
         return {
-            "courses": courses,
-            "count": len(courses),
+            "courses": result_courses,
+            "count": len(result_courses),
             "query": clean_query,
             "subject": clean_subject,
-            "includes_ratings": include_ratings
+            "includes_ratings": True
         }
         
     except DatabaseException:
@@ -120,17 +171,17 @@ async def get_course_details(
     catalog: str,
     include_ratings: bool = Query(
         default=True,
-        description="Include RateMyProfessor ratings for instructors"
+        description="Include RateMyProfessor ratings (always enabled)"
     )
 ):
     """
-    Get detailed information for a specific course
+    Get detailed information for a specific course with ratings
     
     - **subject**: Course subject code (e.g., COMP, MATH)
     - **catalog**: Course catalog number (e.g., 206, 251)
-    - **include_ratings**: If true, fetch RateMyProfessor ratings for instructors
+    - **include_ratings**: Deprecated (ratings always included)
     
-    Returns detailed information including all sections, average grades, and professor ratings.
+    Returns detailed information including all sections and professor ratings from database.
     """
     try:
         # Validate and sanitize inputs
@@ -150,7 +201,7 @@ async def get_course_details(
         clean_subject = subject.strip().upper()
         clean_catalog = catalog.strip()
         
-        # Get course sections
+        # Get course sections (ratings already in database)
         sections = get_course(clean_subject, clean_catalog)
         
         if not sections:
@@ -159,28 +210,47 @@ async def get_course_details(
                 detail=f"Course {clean_subject} {clean_catalog} not found"
             )
         
-        # Enrich sections with professor ratings if requested
-        if include_ratings:
-            logger.info("Enriching sections with professor ratings...")
-            for i, section in enumerate(sections):
-                try:
-                    sections[i] = enrich_course_with_professor_ratings(section)
-                except Exception as e:
-                    logger.warning(f"Failed to enrich section {i} with ratings: {e}")
-                    sections[i]["professor_rating"] = None
+        # Format sections with ratings
+        formatted_sections = []
+        professor_rating = None
         
-        # Calculate statistics across all sections
+        for section in sections:
+            formatted_section = dict(section)
+            
+            # If section has rating data, format it
+            if section.get('rmp_rating'):
+                section_rating = {
+                    'avg_rating': section['rmp_rating'],
+                    'avg_difficulty': section.get('rmp_difficulty'),
+                    'num_ratings': section.get('rmp_num_ratings'),
+                    'would_take_again_percent': section.get('rmp_would_take_again'),
+                }
+                formatted_section['professor_rating'] = section_rating
+                
+                # Use first rating found as course-level rating
+                if not professor_rating:
+                    professor_rating = {
+                        **section_rating,
+                        'first_name': section.get('instructor', '').split()[0] if section.get('instructor') else '',
+                        'last_name': ' '.join(section.get('instructor', '').split()[1:]) if section.get('instructor') else '',
+                        'instructor': section.get('instructor')
+                    }
+            
+            formatted_sections.append(formatted_section)
+        
+        # Calculate statistics
         grades = [s['average'] for s in sections if s.get('average') is not None]
         avg_grade = sum(grades) / len(grades) if grades else None
         
         course_detail = {
             "subject": clean_subject,
             "catalog": clean_catalog,
-            "title": sections[0]['title'],
+            "title": sections[0].get('course_name') or sections[0].get('title', ''),
             "average_grade": round(avg_grade, 2) if avg_grade else None,
             "num_sections": len(sections),
-            "sections": sections,
-            "includes_ratings": include_ratings
+            "sections": formatted_sections,
+            "professor_rating": professor_rating,
+            "includes_ratings": True
         }
         
         logger.info(f"Course details retrieved: {clean_subject} {clean_catalog}")

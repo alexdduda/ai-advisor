@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { chatAPI } from '../../lib/api'
-import { coursesAPI } from '../../lib/professorsAPI'
+import coursesAPI from '../../lib/professorsAPI'
 import ProfessorRating, { ProfessorRatingCompact } from '../ProfessorRating/ProfessorRating'
 import { IoChevronBack, IoChevronForward } from 'react-icons/io5';
 import { MdKeyboardArrowLeft, MdKeyboardArrowRight } from 'react-icons/md';
@@ -486,7 +486,7 @@ const handleSendMessage = async (e) => {
     setSelectedCourse(null)
 
     try {
-      const data = await coursesAPI.search(searchQuery, null, 100, true)
+      const data = await coursesAPI.search(searchQuery, null, 100)
       
       const coursesMap = new Map()
       
@@ -535,7 +535,7 @@ const handleSendMessage = async (e) => {
     setSelectedCourse(null)
 
     try {
-      const data = await coursesAPI.getDetails(course.subject, course.catalog, true)
+      const data = await coursesAPI.getDetails(course.subject, course.catalog)
       setSelectedCourse(data.course)
     } catch (error) {
       console.error('Error loading course details:', error)

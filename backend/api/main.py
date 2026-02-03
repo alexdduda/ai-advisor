@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from contextlib import asynccontextmanager
-from .routes import chat, courses, users, professors
+from .routes import chat, courses, users
 import time
 
 from .config import settings
@@ -67,7 +67,6 @@ app.add_exception_handler(Exception, general_exception_handler)
 app.include_router(chat.router, prefix=f"{settings.API_PREFIX}/chat", tags=["Chat"])
 app.include_router(courses.router, prefix=f"{settings.API_PREFIX}/courses", tags=["Courses"])
 app.include_router(users.router, prefix=f"{settings.API_PREFIX}/users", tags=["Users"])
-app.include_router(professors.router, prefix=f"{settings.API_PREFIX}/professors", tags=["Professors"])
 
 @app.get("/")
 async def root():
