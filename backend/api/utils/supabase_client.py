@@ -270,94 +270,82 @@ def search_courses(
     subject: Optional[str] = None,
     limit: int = 100
 ) -> List[Dict[str, Any]]:
-    """Search for courses with optimized full-text search"""
+    """
+    Search for courses using old column structure
+    
+    Database columns:
+    - Class: Full class identifier (e.g., "ACCT351-201601")
+    - Course: Course code (e.g., "ACCT351")
+    - Term Name: Term (e.g., "W2016")
+    - Class Ave: Letter grade (e.g., "A", "B+")
+    - Class Ave.1: Numeric GPA (e.g., 3.0, 3.3)
+    - course_name: Course title
+    - instructor: Professor name
+    - rmp_rating: RMP rating (1-5)
+    - rmp_difficulty: RMP difficulty (1-5)
+    - rmp_num_ratings: Number of RMP ratings
+    - rmp_would_take_again: Percentage who would take again
+    
+    Performance note: For faster queries, ensure these indexes exist:
+    CREATE INDEX idx_courses_course ON courses(Course);
+    CREATE INDEX idx_courses_course_name ON courses(course_name);
+    
+    Args:
+        query: Search term for course name or code
+        subject: Filter by subject code (e.g., 'COMP', 'MATH')
+        limit: Maximum number of results
+    
+    Returns:
+        List of course dictionaries
+    """
     try:
         supabase = get_supabase()
         
-        query_builder = supabase.table('courses').select('*')
+        # Start with base query
+        db_query = supabase.table('courses').select('*')
         
-        # Subject filter (uses index)
+        # Filter by subject using the 'Course' column (e.g., 'COMP206' starts with 'COMP')
         if subject:
-            query_builder = query_builder.eq('subject', subject.upper())
+            db_query = db_query.like('Course', f'{subject.upper()}%')
         
+        # Search in course_name or Course columns
         if query:
             clean_query = query.strip()[:100]
-            
-            # OPTIMIZATION: Use different strategies based on query type
-            
-            # Strategy 1: Exact subject/catalog match (fastest)
-            if len(clean_query) <= 8 and clean_query.replace(' ', '').isalnum():
-                # Likely a course code like "COMP202" or "COMP 202"
-                # Try exact match first
-                parts = clean_query.upper().replace(' ', '')
-                
-                # Check if it's subject + catalog
-                import re
-                match = re.match(r'([A-Z]+)(\d+)', parts)
-                if match:
-                    subj, cat = match.groups()
-                    query_builder = query_builder.or_(
-                        f'and(subject.eq.{subj},catalog.eq.{cat}),'
-                        f'course_name.ilike.%{clean_query}%'
-                    )
-                else:
-                    # Fallback to ilike
-                    query_builder = query_builder.or_(
-                        f'course_name.ilike.%{clean_query}%,'
-                        f'subject.ilike.%{clean_query}%,'
-                        f'catalog.ilike.%{clean_query}%'
-                    )
-            else:
-                # Strategy 2: Full-text search for longer queries (course names)
-                # Use textSearch for course_name (requires index)
-                try:
-                    query_builder = query_builder.text_search(
-                        'course_name', 
-                        clean_query,
-                        config='english'
-                    )
-                except:
-                    # Fallback to ilike if text search not available
-                    query_builder = query_builder.ilike('course_name', f'%{clean_query}%')
+            db_query = db_query.or_(
+                f'course_name.ilike.%{clean_query}%,'
+                f'Course.ilike.%{clean_query}%'
+            )
         
-        response = query_builder.limit(min(limit, settings.MAX_SEARCH_LIMIT)).execute()
+        # Apply limit and execute
+        db_query = db_query.limit(limit)
+        response = db_query.execute()
         
-        # Map course_name to title
-        courses = []
-        for row in response.data:
-            course = dict(row)
-            if course.get('course_name'):
-                course['title'] = course['course_name']
-            courses.append(course)
+        return response.data if response.data else []
         
-        return courses
     except Exception as e:
-        logger.error(f"Error searching courses: {e}")
-        raise DatabaseException("search_courses", str(e))
+        raise DatabaseException(f"Database query failed: {str(e)}")
 
 
-def get_course(subject: str, catalog: str) -> List[Dict[str, Any]]:
-    """Get specific course sections"""
+def get_course(course_code: str) -> List[Dict[str, Any]]:
+    """
+    Get all sections for a specific course using old column structure
+    
+    Args:
+        course_code: Full course code (e.g., 'COMP206', 'MATH140')
+    
+    Returns:
+        List of section dictionaries for the course
+    """
     try:
         supabase = get_supabase()
-        response = supabase.table('courses')\
-            .select('*')\
-            .eq('subject', subject.upper())\
-            .eq('catalog', catalog)\
-            .execute()
         
-        # Map course_name to title
-        courses = []
-        for row in response.data:
-            course = dict(row)
-            if course.get('course_name'):
-                course['title'] = course['course_name']
-            courses.append(course)
+        # Query by the 'Course' column which contains the full course code
+        response = supabase.table('courses').select('*').eq('Course', course_code.upper()).execute()
         
-        return courses
+        return response.data if response.data else []
+        
     except Exception as e:
-        logger.error(f"Error getting course {subject} {catalog}: {e}")
-        raise DatabaseException("get_course", str(e))
+        raise DatabaseException(f"Database query failed: {str(e)}")
 
 
 def delete_chat_history(user_id: str) -> None:

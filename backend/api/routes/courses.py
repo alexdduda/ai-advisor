@@ -1,10 +1,11 @@
 """
-Course search and retrieval endpoints with optional professor ratings
+Course search and retrieval endpoints with professor ratings from database
 """
 from fastapi import APIRouter, HTTPException, Query, status
 from typing import Optional, List
 from pydantic import BaseModel, Field
 import logging
+import re
 
 from ..config import settings
 from ..utils.supabase_client import search_courses, get_course
@@ -16,13 +17,13 @@ logger = logging.getLogger(__name__)
 
 class Course(BaseModel):
     """Course schema with ratings"""
-    id: int
     subject: str
     catalog: str
     title: str
     average: Optional[float]
     instructor: Optional[str]
     term: Optional[str]
+    num_sections: Optional[int] = 1
     rmp_rating: Optional[float] = None
     rmp_difficulty: Optional[float] = None
     rmp_num_ratings: Optional[int] = None
@@ -34,10 +35,25 @@ class CourseDetail(BaseModel):
     subject: str
     catalog: str
     title: str
-    average_grade: float
+    average_grade: Optional[float]
     num_sections: int
     sections: List[dict]
-    professor_rating: Optional[dict] = None  # Aggregated rating for primary instructor
+    professor_rating: Optional[dict] = None
+
+
+def parse_course_code(course_code):
+    """
+    Parse course code like 'ACCT351' into subject and catalog
+    Returns: (subject, catalog) tuple, e.g., ('ACCT', '351')
+    """
+    if not course_code:
+        return None, None
+    
+    # Match pattern: letters followed by numbers
+    match = re.match(r'^([A-Z]+)(\d+[A-Z]?)$', course_code.upper())
+    if match:
+        return match.group(1), match.group(2)
+    return None, None
 
 
 @router.get("/search", response_model=dict)
@@ -61,8 +77,8 @@ async def search(
         description="Maximum number of results to return"
     ),
     include_ratings: bool = Query(
-        default=True,  # Always true now since ratings are in DB
-        description="Include RateMyProfessor ratings (always enabled)"
+        default=True,
+        description="Include RateMyProfessor ratings (always from database)"
     )
 ):
     """
@@ -71,9 +87,9 @@ async def search(
     - **query**: Search term (matches course title, subject, or catalog number)
     - **subject**: Filter by specific subject code
     - **limit**: Maximum number of results (default 50, max 200)
-    - **include_ratings**: Deprecated (ratings always included from database)
+    - **include_ratings**: Ratings always included from database
     
-    Returns a list of matching courses with ratings (no API calls needed!).
+    Returns a list of matching courses with ratings.
     """
     try:
         # Sanitize inputs
@@ -81,10 +97,10 @@ async def search(
         clean_subject = subject.strip().upper() if subject else None
         
         # Search courses (ratings are already in the database)
-        courses = search_courses(
+        sections = search_courses(
             query=clean_query,
             subject=clean_subject,
-            limit=limit
+            limit=limit * 10  # Get more to account for grouping
         )
         
         # Group by course code to get unique courses
@@ -95,33 +111,44 @@ async def search(
             'rating': None
         })
         
-        for section in courses:
-            key = f"{section['subject']}-{section['catalog']}"
+        for section in sections:
+            # Parse the 'Course' column (e.g., "ACCT351") into subject and catalog
+            course_code = section.get('Course')
+            subj, cat = parse_course_code(course_code)
+            
+            if not subj or not cat:
+                continue
+            
+            key = f"{subj}-{cat}"
             course = courses_map[key]
             
             # Add section
             course['sections'].append(section)
             
-            # Track best average
-            if section.get('average'):
-                if course['best_average'] is None or section['average'] > course['best_average']:
-                    course['best_average'] = section['average']
+            # Track best average - use 'Class Ave.1' column (numeric GPA like 3.0, 3.3)
+            avg = section.get('Class Ave.1')
+            if avg:
+                try:
+                    avg_float = float(avg)
+                    if course['best_average'] is None or avg_float > course['best_average']:
+                        course['best_average'] = avg_float
+                except (ValueError, TypeError):
+                    pass
             
-            # Use rating from any section that has one (should be same for all sections of same course)
-            if section.get('rmp_rating') and not course['rating']:
+            # Use rating from any section that has one
+            if section.get('rmp_rating') is not None and course['rating'] is None:
                 course['rating'] = {
-                    'avg_rating': section['rmp_rating'],
-                    'avg_difficulty': section.get('rmp_difficulty'),
-                    'num_ratings': section.get('rmp_num_ratings'),
-                    'would_take_again_percent': section.get('rmp_would_take_again'),
-                    'instructor': section.get('instructor')
+                    'rmp_rating': section['rmp_rating'],
+                    'rmp_difficulty': section.get('rmp_difficulty'),
+                    'rmp_num_ratings': section.get('rmp_num_ratings'),
+                    'rmp_would_take_again': section.get('rmp_would_take_again')
                 }
             
             # Store basic info
             if 'subject' not in course:
-                course['subject'] = section['subject']
-                course['catalog'] = section['catalog']
-                course['title'] = section.get('course_name') or section.get('title', '')
+                course['subject'] = subj
+                course['catalog'] = cat
+                course['title'] = section.get('course_name', '')
                 course['instructor'] = section.get('instructor')
         
         # Convert to list format
@@ -134,8 +161,12 @@ async def search(
                 'average': course_data['best_average'],
                 'instructor': course_data['instructor'],
                 'num_sections': len(course_data['sections']),
-                'professor_rating': course_data['rating']
             }
+            
+            # Add RMP data if available
+            if course_data['rating']:
+                course_obj.update(course_data['rating'])
+            
             result_courses.append(course_obj)
         
         # Sort by subject and catalog
@@ -171,7 +202,7 @@ async def get_course_details(
     catalog: str,
     include_ratings: bool = Query(
         default=True,
-        description="Include RateMyProfessor ratings (always enabled)"
+        description="Include RateMyProfessor ratings (always from database)"
     )
 ):
     """
@@ -179,9 +210,9 @@ async def get_course_details(
     
     - **subject**: Course subject code (e.g., COMP, MATH)
     - **catalog**: Course catalog number (e.g., 206, 251)
-    - **include_ratings**: Deprecated (ratings always included)
+    - **include_ratings**: Ratings always included from database
     
-    Returns detailed information including all sections and professor ratings from database.
+    Returns detailed information including all sections and professor ratings.
     """
     try:
         # Validate and sanitize inputs
@@ -201,8 +232,11 @@ async def get_course_details(
         clean_subject = subject.strip().upper()
         clean_catalog = catalog.strip()
         
+        # Construct course code for old database structure
+        course_code = f"{clean_subject}{clean_catalog}"
+        
         # Get course sections (ratings already in database)
-        sections = get_course(clean_subject, clean_catalog)
+        sections = get_course(course_code)
         
         if not sections:
             raise HTTPException(
@@ -215,37 +249,48 @@ async def get_course_details(
         professor_rating = None
         
         for section in sections:
-            formatted_section = dict(section)
+            formatted_section = {
+                'term': section.get('Term Name'),  # Old column
+                'average': section.get('Class Ave.1'),  # Old column - numeric GPA
+                'instructor': section.get('instructor'),
+                'class': section.get('Class'),  # Full class identifier
+            }
             
-            # If section has rating data, format it
-            if section.get('rmp_rating'):
-                section_rating = {
-                    'avg_rating': section['rmp_rating'],
-                    'avg_difficulty': section.get('rmp_difficulty'),
-                    'num_ratings': section.get('rmp_num_ratings'),
-                    'would_take_again_percent': section.get('rmp_would_take_again'),
-                }
-                formatted_section['professor_rating'] = section_rating
+            # If section has rating data, include it
+            if section.get('rmp_rating') is not None:
+                formatted_section['rmp_rating'] = section['rmp_rating']
+                formatted_section['rmp_difficulty'] = section.get('rmp_difficulty')
+                formatted_section['rmp_num_ratings'] = section.get('rmp_num_ratings')
+                formatted_section['rmp_would_take_again'] = section.get('rmp_would_take_again')
                 
                 # Use first rating found as course-level rating
                 if not professor_rating:
                     professor_rating = {
-                        **section_rating,
-                        'first_name': section.get('instructor', '').split()[0] if section.get('instructor') else '',
-                        'last_name': ' '.join(section.get('instructor', '').split()[1:]) if section.get('instructor') else '',
+                        'rmp_rating': section['rmp_rating'],
+                        'rmp_difficulty': section.get('rmp_difficulty'),
+                        'rmp_num_ratings': section.get('rmp_num_ratings'),
+                        'rmp_would_take_again': section.get('rmp_would_take_again'),
                         'instructor': section.get('instructor')
                     }
             
             formatted_sections.append(formatted_section)
         
         # Calculate statistics
-        grades = [s['average'] for s in sections if s.get('average') is not None]
+        grades = []
+        for s in sections:
+            avg = s.get('Class Ave.1')
+            if avg:
+                try:
+                    grades.append(float(avg))
+                except (ValueError, TypeError):
+                    pass
+        
         avg_grade = sum(grades) / len(grades) if grades else None
         
         course_detail = {
             "subject": clean_subject,
             "catalog": clean_catalog,
-            "title": sections[0].get('course_name') or sections[0].get('title', ''),
+            "title": sections[0].get('course_name', ''),
             "average_grade": round(avg_grade, 2) if avg_grade else None,
             "num_sections": len(sections),
             "sections": formatted_sections,
@@ -277,10 +322,18 @@ async def get_subjects():
     Returns a sorted list of unique subject codes (e.g., COMP, MATH, PHYS).
     """
     try:
-        # Get all courses and extract unique subjects
-        all_courses = search_courses(limit=settings.MAX_SEARCH_LIMIT)
+        # Get all courses and extract unique subjects from course codes
+        all_sections = search_courses(limit=settings.MAX_SEARCH_LIMIT)
         
-        subjects = sorted(list(set(course['subject'] for course in all_courses)))
+        # Parse course codes to extract subjects
+        subjects = set()
+        for section in all_sections:
+            course_code = section.get('Course')
+            subj, _ = parse_course_code(course_code)
+            if subj:
+                subjects.add(subj)
+        
+        subjects = sorted(list(subjects))
         
         logger.info(f"Retrieved {len(subjects)} unique subjects")
         
