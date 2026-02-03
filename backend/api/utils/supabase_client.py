@@ -361,3 +361,83 @@ def delete_chat_history(user_id: str) -> None:
     except Exception as e:
         logger.error(f"Error deleting chat history for {user_id}: {e}")
         raise DatabaseException("delete_chat_history", str(e))
+
+
+# Favorites Operations
+def get_favorites(user_id: str) -> List[Dict[str, Any]]:
+    """Get all favorited courses for a user"""
+    try:
+        supabase = get_supabase()
+        response = supabase.table('favorites')\
+            .select('*')\
+            .eq('user_id', user_id)\
+            .order('created_at', desc=True)\
+            .execute()
+        
+        return response.data if response.data else []
+    except Exception as e:
+        logger.error(f"Error getting favorites for {user_id}: {e}")
+        raise DatabaseException("get_favorites", str(e))
+
+
+def add_favorite(user_id: str, course_code: str, course_title: str, subject: str, catalog: str) -> Dict[str, Any]:
+    """Add a course to user's favorites"""
+    try:
+        supabase = get_supabase()
+        
+        favorite_data = {
+            'user_id': user_id,
+            'course_code': course_code,
+            'course_title': course_title,
+            'subject': subject,
+            'catalog': catalog
+        }
+        
+        response = supabase.table('favorites').insert(favorite_data).execute()
+        
+        if not response.data:
+            raise DatabaseException("add_favorite", "No data returned from insert")
+        
+        logger.info(f"Added favorite {course_code} for user {user_id}")
+        return response.data[0]
+    except Exception as e:
+        error_str = str(e)
+        logger.error(f"Error adding favorite: {error_str}")
+        
+        # Check if already favorited
+        if 'duplicate key' in error_str.lower() or '23505' in error_str:
+            raise DatabaseException("add_favorite", "Course already in favorites")
+        
+        raise DatabaseException("add_favorite", error_str)
+
+
+def remove_favorite(user_id: str, course_code: str) -> None:
+    """Remove a course from user's favorites"""
+    try:
+        supabase = get_supabase()
+        response = supabase.table('favorites')\
+            .delete()\
+            .eq('user_id', user_id)\
+            .eq('course_code', course_code)\
+            .execute()
+        
+        logger.info(f"Removed favorite {course_code} for user {user_id}")
+    except Exception as e:
+        logger.error(f"Error removing favorite: {e}")
+        raise DatabaseException("remove_favorite", str(e))
+
+
+def is_favorited(user_id: str, course_code: str) -> bool:
+    """Check if a course is favorited by user"""
+    try:
+        supabase = get_supabase()
+        response = supabase.table('favorites')\
+            .select('id')\
+            .eq('user_id', user_id)\
+            .eq('course_code', course_code)\
+            .execute()
+        
+        return len(response.data) > 0 if response.data else False
+    except Exception as e:
+        logger.error(f"Error checking favorite: {e}")
+        return False
