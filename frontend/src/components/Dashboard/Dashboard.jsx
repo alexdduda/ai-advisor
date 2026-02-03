@@ -2,10 +2,11 @@ import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { chatAPI } from '../../lib/api'
 import coursesAPI from '../../lib/professorsAPI'
+import favoritesAPI from '../../lib/favoritesAPI'
 import ProfessorRating, { ProfessorRatingCompact } from '../ProfessorRating/ProfessorRating'
 import { IoChevronBack, IoChevronForward } from 'react-icons/io5';
 import { MdKeyboardArrowLeft, MdKeyboardArrowRight } from 'react-icons/md';
-import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import { FaChevronLeft, FaChevronRight, FaHeart, FaRegHeart } from 'react-icons/fa';
 import './Dashboard.css'
 
 export default function Dashboard() {
@@ -42,6 +43,11 @@ export default function Dashboard() {
   const [selectedCourse, setSelectedCourse] = useState(null)
   const [isLoadingCourse, setIsLoadingCourse] = useState(false)
   const [sortBy, setSortBy] = useState('relevance') // New sort state
+
+  // Favorites states
+  const [favorites, setFavorites] = useState([])
+  const [favoritesMap, setFavoritesMap] = useState(new Set())
+  const [isLoadingFavorites, setIsLoadingFavorites] = useState(false)
 
   // Get current chat tab's messages
   const getCurrentChatMessages = () => {
@@ -514,6 +520,77 @@ export default function Dashboard() {
     setSortBy(e.target.value)
   }
 
+  // Load favorites when tab changes or user logs in
+  useEffect(() => {
+    const loadFavorites = async () => {
+      if (!user?.id || activeTab !== 'courses') return
+      
+      try {
+        setIsLoadingFavorites(true)
+        const data = await favoritesAPI.getFavorites(user.id)
+        setFavorites(data.favorites || [])
+        
+        // Create a Set of favorited course codes for fast lookup
+        const favMap = new Set(data.favorites.map(f => f.course_code))
+        setFavoritesMap(favMap)
+      } catch (error) {
+        console.error('Error loading favorites:', error)
+      } finally {
+        setIsLoadingFavorites(false)
+      }
+    }
+
+    loadFavorites()
+  }, [user?.id, activeTab])
+
+  // Toggle favorite status
+  const handleToggleFavorite = async (course) => {
+    if (!user?.id) return
+    
+    const courseCode = `${course.subject}${course.catalog}`
+    const isFavorited = favoritesMap.has(courseCode)
+    
+    try {
+      if (isFavorited) {
+        // Remove from favorites
+        await favoritesAPI.removeFavorite(user.id, courseCode)
+        setFavorites(prev => prev.filter(f => f.course_code !== courseCode))
+        setFavoritesMap(prev => {
+          const newSet = new Set(prev)
+          newSet.delete(courseCode)
+          return newSet
+        })
+      } else {
+        // Add to favorites
+        await favoritesAPI.addFavorite(user.id, {
+          course_code: courseCode,
+          course_title: course.title,
+          subject: course.subject,
+          catalog: course.catalog
+        })
+        
+        const newFavorite = {
+          course_code: courseCode,
+          course_title: course.title,
+          subject: course.subject,
+          catalog: course.catalog
+        }
+        
+        setFavorites(prev => [newFavorite, ...prev])
+        setFavoritesMap(prev => new Set([...prev, courseCode]))
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error)
+      alert(error.message || 'Failed to update favorites')
+    }
+  }
+
+  // Check if a course is favorited
+  const isFavorited = (subject, catalog) => {
+    const courseCode = `${subject}${catalog}`
+    return favoritesMap.has(courseCode)
+  }
+
   // OPTIMIZED Course search handler - reduced limit and better grouping
   const handleCourseSearch = async (e) => {
     e.preventDefault()
@@ -628,6 +705,17 @@ export default function Dashboard() {
               </button>
               
               <button 
+                className={`nav-item ${activeTab === 'favorites' ? 'active' : ''}`}
+                onClick={() => handleTabChange('favorites')}
+              >
+                <span className="nav-icon">⭐</span>
+                <span className="nav-label">Favorites</span>
+                {favorites.length > 0 && (
+                  <span className="nav-badge">{favorites.length}</span>
+                )}
+              </button>
+              
+              <button 
                 className={`nav-item ${activeTab === 'profile' ? 'active' : ''}`}
                 onClick={() => handleTabChange('profile')}
               >
@@ -707,6 +795,7 @@ export default function Dashboard() {
             </button>
             <h1 className="page-title">
               {activeTab === 'courses' && '📚 Course Explorer'}
+              {activeTab === 'favorites' && '⭐ My Favorites'}
               {activeTab === 'profile' && '👤 Your Profile'}
             </h1>
           </header>
@@ -843,60 +932,77 @@ export default function Dashboard() {
                       <div 
                         key={`${course.subject}-${course.catalog}`}
                         className="course-card"
-                        onClick={() => handleCourseClick(course)}
                       >
-                        <div className="course-header">
-                          <div className="course-code">
-                            {course.subject} {course.catalog}
-                          </div>
-                          {course.average && (
-                            <div className="course-average">
-                              {course.average.toFixed(1)} GPA ({gpaToLetterGrade(course.average)})
+                        <div className="course-card-content" onClick={() => handleCourseClick(course)}>
+                          <div className="course-header">
+                            <div className="course-code">
+                              {course.subject} {course.catalog}
                             </div>
-                          )}
-                        </div>
-                        <h4 className="course-title">{course.title}</h4>
-                        
-                        {/* Display instructor with RMP ratings */}
-                        {course.instructor && (
-                          <div className="course-instructor-section">
-                            <div className="instructor-name">
-                              👤 {course.instructor}
-                            </div>
-                            
-                            {/* Show RMP ratings if available */}
-                            {course.rmp_rating && (
-                              <div className="rmp-compact">
-                                <div className="rmp-stat">
-                                  <span className="rmp-label">⭐ Rating:</span>
-                                  <span className="rmp-value">{course.rmp_rating.toFixed(1)}/5.0</span>
-                                </div>
-                                <div className="rmp-stat">
-                                  <span className="rmp-label">📊 Difficulty:</span>
-                                  <span className="rmp-value">{course.rmp_difficulty?.toFixed(1) || 'N/A'}/5.0</span>
-                                </div>
-                                {course.rmp_num_ratings && (
-                                  <div className="rmp-stat">
-                                    <span className="rmp-label">📝 Reviews:</span>
-                                    <span className="rmp-value">{Math.round(course.rmp_num_ratings)}</span>
-                                  </div>
-                                )}
-                                {course.rmp_would_take_again && (
-                                  <div className="rmp-stat">
-                                    <span className="rmp-label">🔄 Would retake:</span>
-                                    <span className="rmp-value">{Math.round(course.rmp_would_take_again)}%</span>
-                                  </div>
-                                )}
+                            {course.average && (
+                              <div className="course-average">
+                                {course.average.toFixed(1)} GPA ({gpaToLetterGrade(course.average)})
                               </div>
                             )}
                           </div>
-                        )}
+                          <h4 className="course-title">{course.title}</h4>
+                          
+                          {/* Display instructor with RMP ratings */}
+                          {course.instructor && (
+                            <div className="course-instructor-section">
+                              <div className="instructor-name">
+                                👤 {course.instructor}
+                              </div>
+                              
+                              {/* Show RMP ratings if available */}
+                              {course.rmp_rating && (
+                                <div className="rmp-compact">
+                                  <div className="rmp-stat">
+                                    <span className="rmp-label">⭐ Rating:</span>
+                                    <span className="rmp-value">{course.rmp_rating.toFixed(1)}/5.0</span>
+                                  </div>
+                                  <div className="rmp-stat">
+                                    <span className="rmp-label">📊 Difficulty:</span>
+                                    <span className="rmp-value">{course.rmp_difficulty?.toFixed(1) || 'N/A'}/5.0</span>
+                                  </div>
+                                  {course.rmp_num_ratings && (
+                                    <div className="rmp-stat">
+                                      <span className="rmp-label">📝 Reviews:</span>
+                                      <span className="rmp-value">{Math.round(course.rmp_num_ratings)}</span>
+                                    </div>
+                                  )}
+                                  {course.rmp_would_take_again && (
+                                    <div className="rmp-stat">
+                                      <span className="rmp-label">🔄 Would retake:</span>
+                                      <span className="rmp-value">{Math.round(course.rmp_would_take_again)}%</span>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          
+                          {course.num_sections && (
+                            <div className="course-meta">
+                              📊 {course.num_sections} section{course.num_sections !== 1 ? 's' : ''} available
+                            </div>
+                          )}
+                        </div>
                         
-                        {course.num_sections && (
-                          <div className="course-meta">
-                            📊 {course.num_sections} section{course.num_sections !== 1 ? 's' : ''} available
-                          </div>
-                        )}
+                        {/* Favorite Button */}
+                        <button
+                          className={`favorite-btn ${isFavorited(course.subject, course.catalog) ? 'favorited' : ''}`}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleToggleFavorite(course)
+                          }}
+                          title={isFavorited(course.subject, course.catalog) ? 'Remove from favorites' : 'Add to favorites'}
+                        >
+                          {isFavorited(course.subject, course.catalog) ? (
+                            <FaHeart className="favorite-icon" />
+                          ) : (
+                            <FaRegHeart className="favorite-icon" />
+                          )}
+                        </button>
                       </div>
                     ))}
                   </div>
@@ -1011,6 +1117,83 @@ export default function Dashboard() {
                   <div className="placeholder-icon">📚</div>
                   <h3>Course Explorer with Professor Ratings</h3>
                   <p>Search through McGill courses with historical grade data and live RateMyProfessor ratings.</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Favorites Tab */}
+          {activeTab === 'favorites' && (
+            <div className="favorites-container">
+              {isLoadingFavorites ? (
+                <div className="loading-container">
+                  <div className="loading-spinner">Loading favorites...</div>
+                </div>
+              ) : favorites.length === 0 ? (
+                <div className="placeholder-content">
+                  <div className="placeholder-icon">⭐</div>
+                  <h3>No Favorites Yet</h3>
+                  <p>Start exploring courses and add your favorites by clicking the heart icon!</p>
+                  <button 
+                    className="btn btn-primary"
+                    onClick={() => setActiveTab('courses')}
+                  >
+                    Browse Courses
+                  </button>
+                </div>
+              ) : (
+                <div className="favorites-list">
+                  <div className="favorites-header">
+                    <h3>My Favorite Courses</h3>
+                    <p className="favorites-count">{favorites.length} course{favorites.length !== 1 ? 's' : ''} saved</p>
+                  </div>
+                  
+                  <div className="course-list">
+                    {favorites.map((favorite) => (
+                      <div 
+                        key={favorite.course_code}
+                        className="course-card"
+                      >
+                        <div className="course-card-content" onClick={async () => {
+                          // Load course details when clicked
+                          setActiveTab('courses')
+                          setTimeout(async () => {
+                            await handleCourseClick({
+                              subject: favorite.subject,
+                              catalog: favorite.catalog,
+                              title: favorite.course_title
+                            })
+                          }, 100)
+                        }}>
+                          <div className="course-header">
+                            <div className="course-code">
+                              {favorite.subject} {favorite.catalog}
+                            </div>
+                          </div>
+                          <h4 className="course-title">{favorite.course_title}</h4>
+                          <div className="course-meta">
+                            📅 Added {new Date(favorite.created_at).toLocaleDateString()}
+                          </div>
+                        </div>
+                        
+                        {/* Remove Favorite Button */}
+                        <button
+                          className="favorite-btn favorited"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleToggleFavorite({
+                              subject: favorite.subject,
+                              catalog: favorite.catalog,
+                              title: favorite.course_title
+                            })
+                          }}
+                          title="Remove from favorites"
+                        >
+                          <FaHeart className="favorite-icon" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>

@@ -2361,3 +2361,163 @@ textarea.form-input {
     justify-content: center;
   }
 }
+
+/* ============================================
+   FAVORITES FEATURE STYLING
+   ============================================ */
+
+/* Sidebar nav badge */
+.nav-badge {
+  background: linear-gradient(135deg, #ED1B2F 0%, #B01B2E 100%);
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  margin-left: auto;
+}
+
+.nav-item.active .nav-badge {
+  background: white;
+  color: #ED1B2F;
+}
+
+/* Course card with favorite button */
+.course-card {
+  position: relative;
+  display: flex;
+  gap: 1rem;
+}
+
+.course-card-content {
+  flex: 1;
+  cursor: pointer;
+}
+
+/* Favorite button */
+.favorite-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: white;
+  border: 2px solid #E0E0E0;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+  padding: 0;
+}
+
+.favorite-btn:hover {
+  transform: scale(1.1);
+  border-color: #ED1B2F;
+  box-shadow: 0 4px 12px rgba(237, 27, 47, 0.2);
+}
+
+.favorite-btn:active {
+  transform: scale(0.95);
+}
+
+.favorite-icon {
+  font-size: 1.25rem;
+  color: #999;
+  transition: color 0.2s ease;
+}
+
+.favorite-btn:hover .favorite-icon {
+  color: #ED1B2F;
+}
+
+.favorite-btn.favorited {
+  background: linear-gradient(135deg, #ED1B2F 0%, #B01B2E 100%);
+  border-color: #ED1B2F;
+}
+
+.favorite-btn.favorited .favorite-icon {
+  color: white;
+}
+
+.favorite-btn.favorited:hover {
+  background: linear-gradient(135deg, #FF2B3F 0%, #C02B3E 100%);
+  transform: scale(1.1);
+}
+
+/* Favorites container */
+.favorites-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.favorites-list {
+  animation: fadeIn 0.3s ease;
+}
+
+.favorites-header {
+  margin-bottom: 2rem;
+}
+
+.favorites-header h3 {
+  font-size: 1.75rem;
+  color: #333;
+  margin: 0 0 0.5rem 0;
+  font-weight: 700;
+}
+
+.favorites-count {
+  color: #666;
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+/* Empty state button */
+.btn-primary {
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, #ED1B2F 0%, #B01B2E 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 1rem;
+  margin-top: 1.5rem;
+}
+
+.btn-primary:hover {
+  box-shadow: 0 4px 12px rgba(237, 27, 47, 0.3);
+  transform: translateY(-2px);
+}
+
+/* Mobile responsiveness for favorites */
+@media (max-width: 768px) {
+  .favorite-btn {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .favorite-icon {
+    font-size: 1.1rem;
+  }
+  
+  .favorites-header h3 {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .favorite-btn {
+    width: 36px;
+    height: 36px;
+    top: 0.75rem;
+    right: 0.75rem;
+  }
+  
+  .favorite-icon {
+    font-size: 1rem;
+  }
+}

@@ -1,0 +1,172 @@
+"""
+Favorites endpoints for managing user's favorited courses
+"""
+from fastapi import APIRouter, HTTPException, status, Depends
+from typing import List
+from pydantic import BaseModel
+import logging
+
+from ..utils.supabase_client import (
+    get_favorites,
+    add_favorite,
+    remove_favorite,
+    is_favorited
+)
+from ..exceptions import DatabaseException
+
+router = APIRouter()
+logger = logging.getLogger(__name__)
+
+
+class FavoriteRequest(BaseModel):
+    """Request to add a favorite"""
+    course_code: str
+    course_title: str
+    subject: str
+    catalog: str
+
+
+class FavoriteResponse(BaseModel):
+    """Favorite course response"""
+    id: int
+    course_code: str
+    course_title: str
+    subject: str
+    catalog: str
+    created_at: str
+
+
+@router.get("/{user_id}", response_model=dict)
+async def get_user_favorites(user_id: str):
+    """
+    Get all favorited courses for a user
+    
+    - **user_id**: User's UUID
+    
+    Returns list of favorited courses with details
+    """
+    try:
+        favorites = get_favorites(user_id)
+        
+        logger.info(f"Retrieved {len(favorites)} favorites for user {user_id}")
+        
+        return {
+            "favorites": favorites,
+            "count": len(favorites)
+        }
+    except DatabaseException as e:
+        logger.error(f"Database error getting favorites: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve favorites"
+        )
+    except Exception as e:
+        logger.exception(f"Unexpected error getting favorites: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error occurred"
+        )
+
+
+@router.post("/{user_id}", response_model=dict)
+async def add_user_favorite(user_id: str, favorite: FavoriteRequest):
+    """
+    Add a course to user's favorites
+    
+    - **user_id**: User's UUID
+    - **favorite**: Course information to favorite
+    
+    Returns the created favorite
+    """
+    try:
+        result = add_favorite(
+            user_id=user_id,
+            course_code=favorite.course_code,
+            course_title=favorite.course_title,
+            subject=favorite.subject,
+            catalog=favorite.catalog
+        )
+        
+        logger.info(f"Added favorite {favorite.course_code} for user {user_id}")
+        
+        return {
+            "favorite": result,
+            "message": "Course added to favorites"
+        }
+    except DatabaseException as e:
+        error_msg = str(e)
+        if "already in favorites" in error_msg:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Course is already in favorites"
+            )
+        
+        logger.error(f"Database error adding favorite: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to add favorite"
+        )
+    except Exception as e:
+        logger.exception(f"Unexpected error adding favorite: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error occurred"
+        )
+
+
+@router.delete("/{user_id}/{course_code}", response_model=dict)
+async def remove_user_favorite(user_id: str, course_code: str):
+    """
+    Remove a course from user's favorites
+    
+    - **user_id**: User's UUID
+    - **course_code**: Course code to unfavorite (e.g., "COMP206")
+    
+    Returns success message
+    """
+    try:
+        remove_favorite(user_id, course_code)
+        
+        logger.info(f"Removed favorite {course_code} for user {user_id}")
+        
+        return {
+            "message": "Course removed from favorites",
+            "course_code": course_code
+        }
+    except DatabaseException as e:
+        logger.error(f"Database error removing favorite: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to remove favorite"
+        )
+    except Exception as e:
+        logger.exception(f"Unexpected error removing favorite: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error occurred"
+        )
+
+
+@router.get("/{user_id}/check/{course_code}", response_model=dict)
+async def check_favorite_status(user_id: str, course_code: str):
+    """
+    Check if a course is favorited by user
+    
+    - **user_id**: User's UUID
+    - **course_code**: Course code to check (e.g., "COMP206")
+    
+    Returns whether the course is favorited
+    """
+    try:
+        favorited = is_favorited(user_id, course_code)
+        
+        return {
+            "is_favorited": favorited,
+            "course_code": course_code
+        }
+    except Exception as e:
+        logger.exception(f"Error checking favorite status: {e}")
+        return {
+            "is_favorited": False,
+            "course_code": course_code
+        }
