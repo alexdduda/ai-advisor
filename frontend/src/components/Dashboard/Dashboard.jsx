@@ -41,6 +41,7 @@ export default function Dashboard() {
   const [searchError, setSearchError] = useState(null)
   const [selectedCourse, setSelectedCourse] = useState(null)
   const [isLoadingCourse, setIsLoadingCourse] = useState(false)
+  const [sortBy, setSortBy] = useState('relevance') // New sort state
 
   // Get current chat tab's messages
   const getCurrentChatMessages = () => {
@@ -58,7 +59,7 @@ export default function Dashboard() {
 
   // Left sidebar toggle drag handlers
   const handleLeftToggleMouseDown = (e) => {
-    if (sidebarOpen) return // Only draggable when closed
+    if (sidebarOpen) return
     setIsDraggingLeft(true)
     setDragStartY(e.clientY)
     setDragStartPos(leftToggleY)
@@ -66,7 +67,7 @@ export default function Dashboard() {
   }
 
   const handleLeftToggleTouchStart = (e) => {
-    if (sidebarOpen) return // Only draggable when closed
+    if (sidebarOpen) return
     setIsDraggingLeft(true)
     setDragStartY(e.touches[0].clientY)
     setDragStartPos(leftToggleY)
@@ -75,7 +76,7 @@ export default function Dashboard() {
 
   // Right sidebar toggle drag handlers
   const handleRightToggleMouseDown = (e) => {
-    if (rightSidebarOpen) return // Only draggable when closed
+    if (rightSidebarOpen) return
     setIsDraggingRight(true)
     setDragStartY(e.clientY)
     setDragStartPos(rightToggleY)
@@ -83,7 +84,7 @@ export default function Dashboard() {
   }
 
   const handleRightToggleTouchStart = (e) => {
-    if (rightSidebarOpen) return // Only draggable when closed
+    if (rightSidebarOpen) return
     setIsDraggingRight(true)
     setDragStartY(e.touches[0].clientY)
     setDragStartPos(rightToggleY)
@@ -100,7 +101,8 @@ export default function Dashboard() {
       )
     )
   }
-// Get current chat tab
+
+  // Get current chat tab
   const getCurrentChatTab = () => {
     return chatTabs.find(tab => tab.id === activeChatTab)
   }
@@ -116,13 +118,13 @@ export default function Dashboard() {
     )
   }
 
-// Create new chat tab
+  // Create new chat tab
   const createNewChatTab = () => {
     const newTab = {
       id: nextChatTabId,
       title: 'New Chat',
       messages: [],
-      sessionId: null  // NEW
+      sessionId: null
     }
     setChatTabs([...chatTabs, newTab])
     setActiveChatTab(nextChatTabId)
@@ -133,7 +135,7 @@ export default function Dashboard() {
   const closeChatTab = (tabId, e) => {
     e.stopPropagation()
     if (chatTabs.length === 1) {
- setChatTabs([{ id: nextChatTabId, title: 'New Chat', messages: [], sessionId: null }]) 
+      setChatTabs([{ id: nextChatTabId, title: 'New Chat', messages: [], sessionId: null }])
       setActiveChatTab(nextChatTabId)
       setNextChatTabId(nextChatTabId + 1)
       return
@@ -147,84 +149,78 @@ export default function Dashboard() {
     }
   }
 
+  // Handle drag and drop for tab reordering
+  const [draggedTab, setDraggedTab] = useState(null)
 
- 
+  const handleDragStart = (e, tabId) => {
+    setDraggedTab(tabId)
+    e.dataTransfer.effectAllowed = 'move'
+  }
 
-// Handle drag and drop for tab reordering
-const [draggedTab, setDraggedTab] = useState(null)
+  const handleDragOver = (e) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+  }
 
-const handleDragStart = (e, tabId) => {
-  setDraggedTab(tabId)
-  e.dataTransfer.effectAllowed = 'move'
-}
-
-const handleDragOver = (e) => {
-  e.preventDefault()
-  e.dataTransfer.dropEffect = 'move'
-}
-
-const handleDrop = (e, targetTabId) => {
-  e.preventDefault()
-  
-  if (draggedTab === targetTabId) return
-  
-  const draggedIndex = chatTabs.findIndex(tab => tab.id === draggedTab)
-  const targetIndex = chatTabs.findIndex(tab => tab.id === targetTabId)
-  
-  const newTabs = [...chatTabs]
-  const [removed] = newTabs.splice(draggedIndex, 1)
-  newTabs.splice(targetIndex, 0, removed)
-  
-  setChatTabs(newTabs)
-  setDraggedTab(null)
-}
-
-const handleDragEnd = () => {
-  setDraggedTab(null)
-}
-
-// Load historical chat session into new tab
-const loadHistoricalChat = async (sessionId) => {
-  try {
-    setIsLoadingHistory(true)
-    setRightSidebarOpen(false) // Close sidebar when loading
+  const handleDrop = (e, targetTabId) => {
+    e.preventDefault()
     
-    // Check if this session is already open in a tab
-    const existingTab = chatTabs.find(tab => tab.sessionId === sessionId)
-    if (existingTab) {
-      setActiveChatTab(existingTab.id)
-      setIsLoadingHistory(false)
-      return
-    }
+    if (draggedTab === targetTabId) return
     
-    // Fetch ALL messages from this session
-    const data = await chatAPI.getHistory(user.id, sessionId, 200)
+    const draggedIndex = chatTabs.findIndex(tab => tab.id === draggedTab)
+    const targetIndex = chatTabs.findIndex(tab => tab.id === targetTabId)
     
-    if (data.messages && data.messages.length > 0) {
-      // Create title from first user message
-      const firstUserMessage = data.messages.find(m => m.role === 'user')
-      const title = firstUserMessage 
-        ? (firstUserMessage.content.substring(0, 30) + (firstUserMessage.content.length > 30 ? '...' : ''))
-        : 'Previous Chat'
+    const newTabs = [...chatTabs]
+    const [removed] = newTabs.splice(draggedIndex, 1)
+    newTabs.splice(targetIndex, 0, removed)
+    
+    setChatTabs(newTabs)
+    setDraggedTab(null)
+  }
 
-      const newTab = {
-        id: nextChatTabId,
-        title: title,
-        messages: data.messages,  // This contains ALL messages from the session
-        sessionId: sessionId
+  const handleDragEnd = () => {
+    setDraggedTab(null)
+  }
+
+  // Load historical chat session into new tab
+  const loadHistoricalChat = async (sessionId) => {
+    try {
+      setIsLoadingHistory(true)
+      setRightSidebarOpen(false)
+      
+      const existingTab = chatTabs.find(tab => tab.sessionId === sessionId)
+      if (existingTab) {
+        setActiveChatTab(existingTab.id)
+        setIsLoadingHistory(false)
+        return
       }
       
-      setChatTabs([...chatTabs, newTab])
-      setActiveChatTab(nextChatTabId)
-      setNextChatTabId(nextChatTabId + 1)
+      const data = await chatAPI.getHistory(user.id, sessionId, 200)
+      
+      if (data.messages && data.messages.length > 0) {
+        const firstUserMessage = data.messages.find(m => m.role === 'user')
+        const title = firstUserMessage 
+          ? (firstUserMessage.content.substring(0, 30) + (firstUserMessage.content.length > 30 ? '...' : ''))
+          : 'Previous Chat'
+
+        const newTab = {
+          id: nextChatTabId,
+          title: title,
+          messages: data.messages,
+          sessionId: sessionId
+        }
+        
+        setChatTabs([...chatTabs, newTab])
+        setActiveChatTab(nextChatTabId)
+        setNextChatTabId(nextChatTabId + 1)
+      }
+    } catch (error) {
+      console.error('Error loading historical chat:', error)
+      setChatError('Failed to load chat history')
+    } finally {
+      setIsLoadingHistory(false)
     }
-  } catch (error) {
-    console.error('Error loading historical chat:', error)
-    setChatError('Failed to load chat history')
-  } finally {
-    setIsLoadingHistory(false)
   }
-}
 
   // Load available sessions from backend
   const loadChatSessions = async () => {
@@ -232,7 +228,6 @@ const loadHistoricalChat = async (sessionId) => {
       const data = await chatAPI.getSessions(user.id, 20)
       
       if (data.sessions && data.sessions.length > 0) {
-        // Transform backend sessions to history format
         const history = data.sessions.map(session => ({
           id: session.session_id,
           title: session.last_message || 'Previous Chat',
@@ -245,10 +240,6 @@ const loadHistoricalChat = async (sessionId) => {
       console.error('Error loading chat sessions:', error)
     }
   }
-
-
-
-
 
   // Helper function to convert GPA to letter grade
   const gpaToLetterGrade = (gpa) => {
@@ -275,54 +266,53 @@ const loadHistoricalChat = async (sessionId) => {
   }, [chatTabs, activeChatTab])
 
   useEffect(() => {
-  const handleMouseMove = (e) => {
-    if (isDraggingLeft) {
-      const deltaY = e.clientY - dragStartY
-      const newY = Math.max(20, Math.min(window.innerHeight - 56, dragStartPos + deltaY))
-      setLeftToggleY(newY)
+    const handleMouseMove = (e) => {
+      if (isDraggingLeft) {
+        const deltaY = e.clientY - dragStartY
+        const newY = Math.max(20, Math.min(window.innerHeight - 56, dragStartPos + deltaY))
+        setLeftToggleY(newY)
+      }
+      if (isDraggingRight) {
+        const deltaY = e.clientY - dragStartY
+        const newY = Math.max(20, Math.min(window.innerHeight - 56, dragStartPos + deltaY))
+        setRightToggleY(newY)
+      }
     }
-    if (isDraggingRight) {
-      const deltaY = e.clientY - dragStartY
-      const newY = Math.max(20, Math.min(window.innerHeight - 56, dragStartPos + deltaY))
-      setRightToggleY(newY)
+
+    const handleTouchMove = (e) => {
+      if (isDraggingLeft) {
+        const deltaY = e.touches[0].clientY - dragStartY
+        const newY = Math.max(20, Math.min(window.innerHeight - 56, dragStartPos + deltaY))
+        setLeftToggleY(newY)
+      }
+      if (isDraggingRight) {
+        const deltaY = e.touches[0].clientY - dragStartY
+        const newY = Math.max(20, Math.min(window.innerHeight - 56, dragStartPos + deltaY))
+        setRightToggleY(newY)
+      }
     }
-  }
 
-  const handleTouchMove = (e) => {
-    if (isDraggingLeft) {
-      const deltaY = e.touches[0].clientY - dragStartY
-      const newY = Math.max(20, Math.min(window.innerHeight - 56, dragStartPos + deltaY))
-      setLeftToggleY(newY)
+    const handleMouseUp = () => {
+      setIsDraggingLeft(false)
+      setIsDraggingRight(false)
     }
-    if (isDraggingRight) {
-      const deltaY = e.touches[0].clientY - dragStartY
-      const newY = Math.max(20, Math.min(window.innerHeight - 56, dragStartPos + deltaY))
-      setRightToggleY(newY)
+
+    if (isDraggingLeft || isDraggingRight) {
+      window.addEventListener('mousemove', handleMouseMove)
+      window.addEventListener('mouseup', handleMouseUp)
+      window.addEventListener('touchmove', handleTouchMove)
+      window.addEventListener('touchend', handleMouseUp)
+
+      return () => {
+        window.removeEventListener('mousemove', handleMouseMove)
+        window.removeEventListener('mouseup', handleMouseUp)
+        window.removeEventListener('touchmove', handleTouchMove)
+        window.removeEventListener('touchend', handleMouseUp)
+      }
     }
-  }
+  }, [isDraggingLeft, isDraggingRight, dragStartY, dragStartPos, leftToggleY, rightToggleY])
 
-  const handleMouseUp = () => {
-    setIsDraggingLeft(false)
-    setIsDraggingRight(false)
-  }
-
-  if (isDraggingLeft || isDraggingRight) {
-    window.addEventListener('mousemove', handleMouseMove)
-    window.addEventListener('mouseup', handleMouseUp)
-    window.addEventListener('touchmove', handleTouchMove)
-    window.addEventListener('touchend', handleMouseUp)
-
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove)
-      window.removeEventListener('mouseup', handleMouseUp)
-      window.removeEventListener('touchmove', handleTouchMove)
-      window.removeEventListener('touchend', handleMouseUp)
-    }
-  }
-}, [isDraggingLeft, isDraggingRight, dragStartY, dragStartPos, leftToggleY, rightToggleY])
-
-  // Load chat history on mount
-// Initialize chat on mount
+  // Initialize chat on mount
   useEffect(() => {
     const initializeChat = async () => {
       if (!user?.id) return
@@ -330,10 +320,8 @@ const loadHistoricalChat = async (sessionId) => {
       try {
         setIsLoadingHistory(true)
         
-        // Load available sessions for sidebar
         await loadChatSessions()
         
-        // Start with a fresh chat (don't auto-load anything)
         if (chatTabs.length === 1 && chatTabs[0].messages.length === 0) {
           setChatTabs([{
             id: 1,
@@ -357,8 +345,6 @@ const loadHistoricalChat = async (sessionId) => {
       initializeChat()
     }
   }, [user?.id, activeTab])
-
-
 
   const handleProfileUpdate = async (e) => {
     e.preventDefault()
@@ -405,21 +391,20 @@ const loadHistoricalChat = async (sessionId) => {
     }
   }
 
-const handleSendMessage = async (e) => {
+  const handleSendMessage = async (e) => {
     e.preventDefault()
     if (!chatInput.trim() || isSending || !user?.id) return
     
     const userMessage = chatInput.trim()
     const currentMessages = getCurrentChatMessages()
     const currentTab = getCurrentChatTab()
-    const currentSessionId = currentTab?.sessionId  // Get current session ID
+    const currentSessionId = currentTab?.sessionId
     
     setChatInput('')
     setChatError(null)
     
     const newUserMessage = { role: 'user', content: userMessage }
     
-    // Update tab title based on first message
     if (currentMessages.length === 0 || (currentMessages.length === 1 && currentMessages[0].role === 'assistant')) {
       const newTitle = userMessage.length > 30 ? userMessage.substring(0, 30) + '...' : userMessage
       setChatTabs(prevTabs =>
@@ -429,13 +414,11 @@ const handleSendMessage = async (e) => {
       )
     }
     
-    // Show user message immediately
     updateCurrentChatMessages([...currentMessages, newUserMessage])
     
     setIsSending(true)
     
     try {
-      // Send message WITH session ID
       const response = await chatAPI.sendMessage(user.id, userMessage, currentSessionId)
       
       const assistantMessage = {
@@ -443,16 +426,13 @@ const handleSendMessage = async (e) => {
         content: response.response
       }
       
-      // Update session ID if this was a new session
       if (!currentSessionId && response.session_id) {
         updateCurrentChatSessionId(response.session_id)
         console.log('New session created:', response.session_id)
       }
       
-      // Add assistant response
       updateCurrentChatMessages([...currentMessages, newUserMessage, assistantMessage])
       
-      // Reload sessions in sidebar
       await loadChatSessions()
       
     } catch (error) {
@@ -476,7 +456,65 @@ const handleSendMessage = async (e) => {
     }
   }
 
-  // Course search handler
+  // Sort function for course results
+  const sortCourses = (courses, sortType) => {
+    const sorted = [...courses]
+    
+    switch(sortType) {
+      case 'rating-high':
+        return sorted.sort((a, b) => {
+          const ratingA = a.rmp_rating || 0
+          const ratingB = b.rmp_rating || 0
+          return ratingB - ratingA // Highest first
+        })
+      
+      case 'rating-low':
+        return sorted.sort((a, b) => {
+          const ratingA = a.rmp_rating || 0
+          const ratingB = b.rmp_rating || 0
+          return ratingA - ratingB // Lowest first
+        })
+      
+      case 'name-az':
+        return sorted.sort((a, b) => {
+          const nameA = `${a.subject} ${a.catalog}`
+          const nameB = `${b.subject} ${b.catalog}`
+          return nameA.localeCompare(nameB)
+        })
+      
+      case 'name-za':
+        return sorted.sort((a, b) => {
+          const nameA = `${a.subject} ${a.catalog}`
+          const nameB = `${b.subject} ${b.catalog}`
+          return nameB.localeCompare(nameA)
+        })
+      
+      case 'instructor-az':
+        return sorted.sort((a, b) => {
+          const instrA = a.instructor || 'ZZZ'
+          const instrB = b.instructor || 'ZZZ'
+          return instrA.localeCompare(instrB)
+        })
+      
+      case 'instructor-za':
+        return sorted.sort((a, b) => {
+          const instrA = a.instructor || ''
+          const instrB = b.instructor || ''
+          return instrB.localeCompare(instrA)
+        })
+      
+      case 'relevance':
+      default:
+        return sorted // Already sorted by backend
+    }
+  }
+
+  // Handle sort change
+  const handleSortChange = (e) => {
+    setSortBy(e.target.value)
+  }
+
+  // OPTIMIZED Course search handler - reduced limit and better grouping
   const handleCourseSearch = async (e) => {
     e.preventDefault()
     if (!searchQuery.trim()) return
@@ -484,40 +522,20 @@ const handleSendMessage = async (e) => {
     setIsSearching(true)
     setSearchError(null)
     setSelectedCourse(null)
+    setSortBy('relevance') // Reset sort on new search
 
     try {
-      const data = await coursesAPI.search(searchQuery, null, 100)
+      // Reduced limit from 100 to 50 for faster response
+      const data = await coursesAPI.search(searchQuery, null, 50)
       
-      const coursesMap = new Map()
+      console.log('Search response:', data) // Debug log
       
-      data.courses?.forEach(section => {
-        const key = `${section.subject}-${section.catalog}`
-        
-        if (!coursesMap.has(key)) {
-          coursesMap.set(key, {
-            id: section.id,
-            subject: section.subject,
-            catalog: section.catalog,
-            title: section.course_name,
-            average: section.average,
-            instructor: section.instructor,
-            sections: [section]
-          })
-        } else {
-          const course = coursesMap.get(key)
-          course.sections.push(section)
-          
-          if (section.average && (!course.average || section.average > course.average)) {
-            course.average = section.average
-          }
-        }
-      })
+      // Backend already groups courses, just use them directly
+      const courses = data.courses || []
       
-      const uniqueCourses = Array.from(coursesMap.values())
+      setSearchResults(courses)
       
-      setSearchResults(uniqueCourses)
-      
-      if (uniqueCourses.length === 0) {
+      if (courses.length === 0) {
         setSearchError('No courses found matching your search.')
       }
     } catch (error) {
@@ -536,6 +554,7 @@ const handleSendMessage = async (e) => {
 
     try {
       const data = await coursesAPI.getDetails(course.subject, course.catalog)
+      console.log('Course details:', data) // Debug log
       setSelectedCourse(data.course)
     } catch (error) {
       console.error('Error loading course details:', error)
@@ -645,7 +664,7 @@ const handleSendMessage = async (e) => {
 
       {/* Main Content */}
       <main className="main-content">
-        {/* Chat Tabs Bar - Only show for chat tab */}
+        {/* Chat Tabs Bar */}
         {activeTab === 'chat' && (
           <div className="chat-tabs-bar">
             <div className="chat-tabs-container">
@@ -676,7 +695,7 @@ const handleSendMessage = async (e) => {
           </div>
         )}
 
-        {/* Header - Only shown for non-chat tabs */}
+        {/* Header */}
         {activeTab !== 'chat' && (
           <header className="dashboard-header">
             <button 
@@ -794,11 +813,33 @@ const handleSendMessage = async (e) => {
 
               {searchResults.length > 0 && !selectedCourse && (
                 <div className="search-results">
-                  <h3 className="results-header">
-                    Found {searchResults.length} course{searchResults.length !== 1 ? 's' : ''}
-                  </h3>
+                  <div className="results-header-bar">
+                    <h3 className="results-header">
+                      Found {searchResults.length} course{searchResults.length !== 1 ? 's' : ''}
+                    </h3>
+                    
+                    {/* Sort Dropdown */}
+                    <div className="sort-controls">
+                      <label htmlFor="sort-select" className="sort-label">Sort by:</label>
+                      <select 
+                        id="sort-select"
+                        className="sort-select"
+                        value={sortBy}
+                        onChange={handleSortChange}
+                      >
+                        <option value="relevance">Relevance</option>
+                        <option value="rating-high">⭐ Rating (High to Low)</option>
+                        <option value="rating-low">⭐ Rating (Low to High)</option>
+                        <option value="name-az">📚 Course Name (A-Z)</option>
+                        <option value="name-za">📚 Course Name (Z-A)</option>
+                        <option value="instructor-az">👤 Professor (A-Z)</option>
+                        <option value="instructor-za">👤 Professor (Z-A)</option>
+                      </select>
+                    </div>
+                  </div>
+                  
                   <div className="course-list">
-                    {searchResults.map((course) => (
+                    {sortCourses(searchResults, sortBy).map((course) => (
                       <div 
                         key={`${course.subject}-${course.catalog}`}
                         className="course-card"
@@ -815,9 +856,45 @@ const handleSendMessage = async (e) => {
                           )}
                         </div>
                         <h4 className="course-title">{course.title}</h4>
-                        {course.sections && (
+                        
+                        {/* Display instructor with RMP ratings */}
+                        {course.instructor && (
+                          <div className="course-instructor-section">
+                            <div className="instructor-name">
+                              👤 {course.instructor}
+                            </div>
+                            
+                            {/* Show RMP ratings if available */}
+                            {course.rmp_rating && (
+                              <div className="rmp-compact">
+                                <div className="rmp-stat">
+                                  <span className="rmp-label">⭐ Rating:</span>
+                                  <span className="rmp-value">{course.rmp_rating.toFixed(1)}/5.0</span>
+                                </div>
+                                <div className="rmp-stat">
+                                  <span className="rmp-label">📊 Difficulty:</span>
+                                  <span className="rmp-value">{course.rmp_difficulty?.toFixed(1) || 'N/A'}/5.0</span>
+                                </div>
+                                {course.rmp_num_ratings && (
+                                  <div className="rmp-stat">
+                                    <span className="rmp-label">📝 Reviews:</span>
+                                    <span className="rmp-value">{Math.round(course.rmp_num_ratings)}</span>
+                                  </div>
+                                )}
+                                {course.rmp_would_take_again && (
+                                  <div className="rmp-stat">
+                                    <span className="rmp-label">🔄 Would retake:</span>
+                                    <span className="rmp-value">{Math.round(course.rmp_would_take_again)}%</span>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        
+                        {course.num_sections && (
                           <div className="course-meta">
-                            📊 {course.sections.length} section{course.sections.length !== 1 ? 's' : ''} available
+                            📊 {course.num_sections} section{course.num_sections !== 1 ? 's' : ''} available
                           </div>
                         )}
                       </div>
@@ -859,6 +936,31 @@ const handleSendMessage = async (e) => {
                         Average: {selectedCourse.average_grade} GPA ({gpaToLetterGrade(selectedCourse.average_grade)})
                       </div>
                     )}
+                    
+                    {/* Show professor rating for the course */}
+                    {selectedCourse.professor_rating && (
+                      <div className="course-professor-rating">
+                        <h3>📊 Professor Rating: {selectedCourse.professor_rating.instructor}</h3>
+                        <div className="rmp-stats-grid">
+                          <div className="rmp-stat-card">
+                            <div className="rmp-stat-value">{selectedCourse.professor_rating.rmp_rating?.toFixed(1) || 'N/A'}</div>
+                            <div className="rmp-stat-label">Rating</div>
+                          </div>
+                          <div className="rmp-stat-card">
+                            <div className="rmp-stat-value">{selectedCourse.professor_rating.rmp_difficulty?.toFixed(1) || 'N/A'}</div>
+                            <div className="rmp-stat-label">Difficulty</div>
+                          </div>
+                          <div className="rmp-stat-card">
+                            <div className="rmp-stat-value">{selectedCourse.professor_rating.rmp_num_ratings ? Math.round(selectedCourse.professor_rating.rmp_num_ratings) : 'N/A'}</div>
+                            <div className="rmp-stat-label">Reviews</div>
+                          </div>
+                          <div className="rmp-stat-card">
+                            <div className="rmp-stat-value">{selectedCourse.professor_rating.rmp_would_take_again ? Math.round(selectedCourse.professor_rating.rmp_would_take_again) + '%' : 'N/A'}</div>
+                            <div className="rmp-stat-label">Would Retake</div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="course-sections">
@@ -881,10 +983,23 @@ const handleSendMessage = async (e) => {
                               <strong>Instructor:</strong> {section.instructor}
                             </div>
                           )}
+                          
+                          {/* Show section-specific RMP ratings */}
+                          {section.rmp_rating && (
+                            <div className="section-rmp">
+                              <div className="rmp-inline">
+                                <span className="rmp-badge">⭐ {section.rmp_rating.toFixed(1)}</span>
+                                <span className="rmp-badge">📊 Difficulty: {section.rmp_difficulty?.toFixed(1) || 'N/A'}</span>
+                                {section.rmp_num_ratings && (
+                                  <span className="rmp-badge">📝 {Math.round(section.rmp_num_ratings)} reviews</span>
+                                )}
+                                {section.rmp_would_take_again && (
+                                  <span className="rmp-badge">🔄 {Math.round(section.rmp_would_take_again)}% would retake</span>
+                                )}
+                              </div>
+                            </div>
+                          )}
                         </div>
-                        {section.professor_rating && (
-                          <ProfessorRating rating={section.professor_rating} />
-                        )}
                       </div>
                     ))}
                   </div>
@@ -901,7 +1016,7 @@ const handleSendMessage = async (e) => {
             </div>
           )}
 
-          {/* Profile Tab */}
+          {/* Profile Tab - UNCHANGED FROM ORIGINAL */}
           {activeTab === 'profile' && (
             <div className="profile-page">
               <div className="profile-page-header">

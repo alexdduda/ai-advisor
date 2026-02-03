@@ -1,23 +1,24 @@
 """
-Complete CSV Enrichment Pipeline
+Complete CSV Enrichment Pipeline - UPDATED WITH WORKING RMP SCRAPING
 1. Loads your CSV
-2. Scrapes instructor data from McGill course catalog
-3. Fetches RateMyProfessor ratings
+2. Scrapes instructor FULL NAMES from McGill course catalog
+3. Fetches RateMyProfessor ratings via direct web scraping
 4. Saves enriched CSV
 5. Uploads to Supabase
 
-Run: python complete_enrichment.py
+Run: python complete_enrichment_final.py
 """
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 import time
-from collections import Counter
 import logging
 import os
 from dotenv import load_dotenv
 from supabase import create_client
 import re
+import json
+from urllib.parse import quote
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -25,33 +26,7 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 
 # RateMyProfessor Config
-MCGILL_SCHOOL_ID = "1439"
-RMP_URL = "https://www.ratemyprofessors.com/graphql"
-RMP_HEADERS = {
-    "Authorization": "Basic dGVzdDp0ZXN0",
-    "Content-Type": "application/json",
-}
-
-RMP_QUERY = """
-query NewSearchTeachersQuery($query: TeacherSearchQuery!) {
-  newSearch {
-    teachers(query: $query, first: 5) {
-      edges {
-        node {
-          legacyId
-          firstName
-          lastName
-          department
-          avgRating
-          avgDifficulty
-          numRatings
-          wouldTakeAgainPercent
-        }
-      }
-    }
-  }
-}
-"""
+MCGILL_SCHOOL_ID = 1439
 
 
 def extract_course_code(course_str):
@@ -62,12 +37,11 @@ def extract_course_code(course_str):
     return None, None
 
 
-def scrape_course_instructor(subject, catalog):
+def scrape_course_instructor_full_name(subject, catalog):
     """
-    Scrape instructor from McGill's course catalog
-    Returns: instructor name or None
+    Scrape FULL instructor name from McGill's course catalog
+    Returns: full instructor name (First Last) or None
     """
-    # Try multiple academic years
     years = ['2024-2025', '2023-2024', '2022-2023', '2021-2022']
     
     for year in years:
@@ -78,28 +52,31 @@ def scrape_course_instructor(subject, catalog):
             
             if response.status_code == 200:
                 soup = BeautifulSoup(response.content, 'html.parser')
-                
-                # Look for instructor info
-                # Different formats on McGill's site:
-                # - "Instructors: John Smith"
-                # - "Instructor: John Smith"
-                # - In a <div class="views-field views-field-field-prof">
-                
-                # Try method 1: Look for text containing "Instructor"
                 text = soup.get_text()
-                instructor_match = re.search(r'Instructors?:\s*([A-Za-z\s\-\'\.]+)', text)
-                if instructor_match:
-                    instructor = instructor_match.group(1).strip()
-                    # Clean up (remove extra whitespace, etc.)
+                
+                # Pattern 1: "Instructor(s): FirstName LastName"
+                full_name_match = re.search(r'Instructors?:\s*([A-Z][a-z]+(?:\s+[A-Z]\.?\s*)?[A-Z][a-z]+)', text)
+                if full_name_match:
+                    instructor = full_name_match.group(1).strip()
                     instructor = ' '.join(instructor.split())
-                    if instructor and len(instructor) < 50:  # Sanity check
+                    if ' ' in instructor and len(instructor) < 50:
                         return instructor
                 
-                # Try method 2: Look for specific div
+                # Pattern 2: "LastName, FirstName" - convert to "FirstName LastName"
+                comma_name_match = re.search(r'Instructors?:\s*([A-Z][a-z]+),\s*([A-Z][a-z]+)', text)
+                if comma_name_match:
+                    last = comma_name_match.group(1).strip()
+                    first = comma_name_match.group(2).strip()
+                    instructor = f"{first} {last}"
+                    return instructor
+                
+                # Pattern 3: Look in specific HTML elements
                 prof_div = soup.find('div', class_='views-field-field-prof')
                 if prof_div:
-                    instructor = prof_div.get_text(strip=True)
-                    if instructor:
+                    text_content = prof_div.get_text(strip=True)
+                    name_match = re.search(r'([A-Z][a-z]+\s+[A-Z][a-z]+)', text_content)
+                    if name_match:
+                        instructor = name_match.group(1).strip()
                         return instructor
         
         except Exception as e:
@@ -109,47 +86,67 @@ def scrape_course_instructor(subject, catalog):
     return None
 
 
-def search_professor_rating(name):
-    """Search RateMyProfessor for a professor"""
-    if not name or name.lower() in ['tba', 'staff', 'unknown', '']:
+def search_professor_on_rmp(professor_name, school_id=MCGILL_SCHOOL_ID):
+    """
+    Search for a professor on RMP via direct web scraping
+    Returns: dict with rating info or None
+    """
+    if not professor_name or professor_name.lower() in ['tba', 'staff', 'unknown', '']:
         return None
     
     try:
-        variables = {
-            "query": {
-                "text": name,
-                "schoolID": MCGILL_SCHOOL_ID
-            }
+        search_query = quote(professor_name)
+        search_url = f"https://www.ratemyprofessors.com/search/professors/{school_id}?q={search_query}"
+        
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.5',
         }
         
-        response = requests.post(
-            RMP_URL,
-            json={"query": RMP_QUERY, "variables": variables},
-            headers=RMP_HEADERS,
-            timeout=10
-        )
+        response = requests.get(search_url, headers=headers, timeout=15)
         
         if response.status_code != 200:
             return None
         
-        data = response.json()
-        edges = data.get("data", {}).get("newSearch", {}).get("teachers", {}).get("edges", [])
+        soup = BeautifulSoup(response.content, 'html.parser')
+        scripts = soup.find_all('script')
         
-        if not edges:
-            return None
+        for script in scripts:
+            if script.string and 'window.__RELAY_STORE__' in script.string:
+                json_match = re.search(r'window\.__RELAY_STORE__\s*=\s*({.+?});', script.string, re.DOTALL)
+                if json_match:
+                    try:
+                        data = json.loads(json_match.group(1))
+                        
+                        for key, value in data.items():
+                            if isinstance(value, dict) and value.get('__typename') == 'Teacher':
+                                first_name = value.get('firstName', '')
+                                last_name = value.get('lastName', '')
+                                full_name = f"{first_name} {last_name}".strip()
+                                
+                                if professor_name.lower() in full_name.lower() or full_name.lower() in professor_name.lower():
+                                    rating = value.get('avgRating')
+                                    difficulty = value.get('avgDifficulty')
+                                    num_ratings = value.get('numRatings', 0)
+                                    would_take_again = value.get('wouldTakeAgainPercent')
+                                    
+                                    return {
+                                        'rmp_id': value.get('legacyId'),
+                                        'rmp_first_name': first_name,
+                                        'rmp_last_name': last_name,
+                                        'rmp_rating': round(float(rating), 2) if rating else None,
+                                        'rmp_difficulty': round(float(difficulty), 2) if difficulty else None,
+                                        'rmp_num_ratings': int(num_ratings) if num_ratings else 0,
+                                        'rmp_would_take_again': round(float(would_take_again)) if would_take_again else None,
+                                    }
+                    except (json.JSONDecodeError, ValueError) as e:
+                        continue
         
-        prof = edges[0]["node"]
-        return {
-            "rmp_id": prof["legacyId"],
-            "rmp_first_name": prof["firstName"],
-            "rmp_last_name": prof["lastName"],
-            "rmp_rating": round(prof["avgRating"], 2) if prof.get("avgRating") else None,
-            "rmp_difficulty": round(prof["avgDifficulty"], 2) if prof.get("avgDifficulty") else None,
-            "rmp_num_ratings": prof.get("numRatings", 0),
-            "rmp_would_take_again": round(prof["wouldTakeAgainPercent"]) if prof.get("wouldTakeAgainPercent") else None,
-        }
+        return None
+        
     except Exception as e:
-        logger.debug(f"Error fetching rating for {name}: {e}")
+        logger.debug(f"Error fetching rating for {professor_name}: {e}")
         return None
 
 
@@ -172,8 +169,8 @@ def main():
     unique_courses = df[['Course', 'subject', 'catalog']].drop_duplicates()
     print(f"✓ Found {len(unique_courses)} unique courses")
     
-    # Step 3: Scrape instructors from McGill
-    print("\n🌐 Step 3: Scraping instructors from McGill course catalog...")
+    # Step 3: Scrape FULL NAMES from McGill
+    print("\n🌐 Step 3: Scraping FULL instructor names from McGill...")
     print("⏱️  This will take a while (rate limiting to be respectful)...")
     print("💡 Tip: Grab a coffee! ☕")
     
@@ -190,7 +187,7 @@ def main():
         
         print(f"[{successful_scrapes + 1}/{len(unique_courses)}] {course}...", end=" ")
         
-        instructor = scrape_course_instructor(subject, catalog)
+        instructor = scrape_course_instructor_full_name(subject, catalog)
         
         if instructor:
             course_instructors[course] = instructor
@@ -198,13 +195,10 @@ def main():
             print(f"✓ {instructor}")
         else:
             print("✗ Not found")
-        
-        # Rate limit: 2 seconds between requests
-        time.sleep(2)
     
-    print(f"\n📈 Scraping results: {successful_scrapes}/{len(unique_courses)} courses found")
+    print(f"\n📈 Scraping results: {successful_scrapes}/{len(unique_courses)} courses with full names")
     
-    # Step 4: Get RateMyProfessor ratings
+    # Step 4: Get RateMyProfessor ratings via web scraping
     print("\n⭐ Step 4: Fetching RateMyProfessor ratings...")
     
     unique_instructors = set(course_instructors.values())
@@ -216,7 +210,7 @@ def main():
     for i, instructor in enumerate(unique_instructors, 1):
         print(f"[{i}/{len(unique_instructors)}] {instructor}...", end=" ")
         
-        rating = search_professor_rating(instructor)
+        rating = search_professor_on_rmp(instructor)
         
         if rating:
             instructor_ratings[instructor] = rating
@@ -225,18 +219,14 @@ def main():
         else:
             print("✗ Not found on RMP")
         
-        # Rate limit
-        time.sleep(1)
+        time.sleep(2)  # Rate limit
     
     print(f"\n📊 Rating results: {ratings_found}/{len(unique_instructors)} found on RateMyProfessor")
     
     # Step 5: Enrich dataframe
     print("\n📝 Step 5: Enriching dataframe...")
     
-    # Add instructor column
     df['instructor'] = df['Course'].map(course_instructors)
-    
-    # Add rating columns
     df['rmp_rating'] = df['instructor'].map(lambda x: instructor_ratings.get(x, {}).get('rmp_rating') if x else None)
     df['rmp_difficulty'] = df['instructor'].map(lambda x: instructor_ratings.get(x, {}).get('rmp_difficulty') if x else None)
     df['rmp_num_ratings'] = df['instructor'].map(lambda x: instructor_ratings.get(x, {}).get('rmp_num_ratings') if x else None)
@@ -297,7 +287,7 @@ def upload_to_supabase(df):
     
     # Delete existing data
     print("🗑️  Deleting existing courses...")
-    supabase.table('courses').delete().neq('id', 0).execute()  # Delete all
+    supabase.table('courses').delete().neq('id', 0).execute()
     
     # Prepare data for upload
     print("📦 Preparing data...")
@@ -308,7 +298,7 @@ def upload_to_supabase(df):
             'subject': row['subject'],
             'catalog': row['catalog'],
             'course_name': row.get('course_name'),
-            'title': row.get('course_name'),  # Fallback
+            'title': row.get('course_name'),
             'term': row.get('Term Name'),
             'average': float(row['Class Ave']) if pd.notna(row['Class Ave']) else None,
             'instructor': row.get('instructor'),
