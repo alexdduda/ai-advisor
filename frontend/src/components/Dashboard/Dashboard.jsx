@@ -13,6 +13,8 @@ import PersonalizedInsights from './PersonalizedInsights'
 import PersonalInfoCard from './PersonalInfoCard'
 import SavedCoursesView from './SavedCoursesView'
 import GPATrendChart from './GPATrendChart'
+import TargetGPACalculator from './TargetGPACalculator'
+import Settings from './Settings'
 import { IoChevronBack, IoChevronForward } from 'react-icons/io5';
 import { MdKeyboardArrowLeft, MdKeyboardArrowRight } from 'react-icons/md';
 import { FaChevronLeft, FaChevronRight, FaHeart, FaRegHeart, FaCheckCircle, FaCamera } from 'react-icons/fa';
@@ -1368,7 +1370,6 @@ const handleToggleCompleted = async (course) => {
                     />
                     <div className="profile-hero-info">
                       <h1 className="profile-display-name">{profile?.username || 'McGill Student'}</h1>
-                      <p className="profile-email">{user?.email}</p>
                       <div className="profile-badges">
                         <span className="badge badge-year">
                           {profile?.year ? `Year ${profile.year}` : 'Year not set'}
@@ -1543,6 +1544,18 @@ const handleToggleCompleted = async (course) => {
                     </div>
                   </div>
 
+                  {/* Target GPA Calculator - Full Width Card */}
+                  <div className="profile-section-card card-full-width">
+                    <TargetGPACalculator 
+                      currentGPA={profile?.current_gpa}
+                      completedCredits={
+                        completedCourses.reduce((total, course) => total + (course.credits || 3), 0) +
+                        (profile?.advanced_standing?.reduce((total, course) => total + (course.credits || 3), 0) || 0)
+                      }
+                      totalCreditsRequired={120}
+                    />
+                  </div>
+
                   {/* Interests & Preferences Card */}
                   <div className="profile-section-card card-full-width">
                     <div className="card-header">
@@ -1611,32 +1624,28 @@ const handleToggleCompleted = async (course) => {
                     </div>
                   </div>
 
-                  {/* Account Settings Card */}
+                  {/* Settings Card */}
                   <div className="profile-section-card card-full-width">
-                    <div className="card-header">
-                      <div className="card-title-group">
-                        <span className="card-icon">⚙️</span>
-                        <h2 className="card-title">Account Settings</h2>
-                      </div>
-                    </div>
+                    <Settings 
+                      user={user}
+                      profile={profile}
+                      onUpdateSettings={(settings) => {
+                        console.log('Settings updated:', settings)
+                      }}
+                    />
+                  </div>
+
+                  {/* Sign Out Button */}
+                  <div className="profile-section-card card-full-width">
                     <div className="card-content">
-                      <div className="settings-grid">
-                        <div className="setting-item">
-                          <div className="setting-info">
-                            <h3 className="setting-title">Account Status</h3>
-                            <p className="setting-description">Your account is active</p>
-                          </div>
-                          <span className="status-badge status-active">Active</span>
+                      <div className="sign-out-section">
+                        <div className="sign-out-info">
+                          <h3 className="sign-out-title">Sign Out</h3>
+                          <p className="sign-out-description">Sign out of your McGill AI Advisor account</p>
                         </div>
-                        <div className="setting-item">
-                          <div className="setting-info">
-                            <h3 className="setting-title">Sign Out</h3>
-                            <p className="setting-description">Sign out of your McGill AI account</p>
-                          </div>
-                          <button className="btn btn-secondary" onClick={signOut}>
-                            Sign Out
-                          </button>
-                        </div>
+                        <button className="btn btn-secondary" onClick={signOut}>
+                          Sign Out
+                        </button>
                       </div>
                     </div>
                   </div>
