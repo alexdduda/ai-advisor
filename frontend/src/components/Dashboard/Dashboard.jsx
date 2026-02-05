@@ -12,6 +12,7 @@ import DegreeProgressTracker from './DegreeProgressTracker'
 import PersonalizedInsights from './PersonalizedInsights'
 import PersonalInfoCard from './PersonalInfoCard'
 import SavedCoursesView from './SavedCoursesView'
+import GPATrendChart from './GPATrendChart'
 import { IoChevronBack, IoChevronForward } from 'react-icons/io5';
 import { MdKeyboardArrowLeft, MdKeyboardArrowRight } from 'react-icons/md';
 import { FaChevronLeft, FaChevronRight, FaHeart, FaRegHeart, FaCheckCircle, FaCamera } from 'react-icons/fa';
@@ -724,6 +725,18 @@ const handleToggleCompleted = async (course) => {
     }
   }, [profile])
 
+  // Sync profile image when profile changes
+  useEffect(() => {
+    console.log('Profile changed, profile_image:', profile?.profile_image ? 'exists' : 'null')
+    if (profile?.profile_image) {
+      console.log('Setting profile image from profile')
+      setProfileImage(profile.profile_image)
+    } else {
+      console.log('No profile_image in profile, clearing local state')
+      setProfileImage(null)
+    }
+  }, [profile?.profile_image])
+
   // Handle window resize for mouse drag
   useEffect(() => {
     const handleMouseMove = (e) => {
@@ -1398,11 +1411,13 @@ const handleToggleCompleted = async (course) => {
 
 
 {/* Personal Information Card - REDESIGNED */}
-                  <PersonalInfoCard
-                    profile={profile}
-                    user={user}
-                    onUpdateProfile={updateProfile}
-                  />
+                  <div className="profile-card-main">
+                    <PersonalInfoCard
+                      profile={profile}
+                      user={user}
+                      onUpdateProfile={updateProfile}
+                    />
+                  </div>
 
 
 
@@ -1481,7 +1496,7 @@ const handleToggleCompleted = async (course) => {
 
 
                   {/* Academic Performance Card */}
-                  <div className="profile-section-card">
+                  <div className="profile-section-card profile-card-sidebar">
                     <div className="card-header">
                       <div className="card-title-group">
                         <span className="card-icon">📊</span>
@@ -1503,6 +1518,12 @@ const handleToggleCompleted = async (course) => {
                           <p className="tip-text">Keep your GPA updated for better course recommendations</p>
                         </div>
                       </div>
+                      
+                      {/* GPA Trend Chart */}
+                      <GPATrendChart 
+                        completedCourses={completedCourses}
+                        currentGPA={profile?.current_gpa}
+                      />
                     </div>
                   </div>
 
