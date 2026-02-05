@@ -117,7 +117,8 @@
   border-radius: 12px;
   padding: 16px;
   transition: all 0.2s ease;
-  min-height: 160px;
+  display: flex;
+  flex-direction: column;
 }
 
 .saved-courses-view .course-card:hover {
@@ -128,7 +129,9 @@
 /* Course Card Content - Clickable Area */
 .saved-courses-view .course-card-content {
   cursor: pointer;
-  padding-bottom: 60px; /* Space for buttons at bottom */
+  padding-bottom: 16px; /* Space for bar and buttons */
+  border-bottom: 2px solid #e5e7eb;
+  margin-bottom: 12px;
 }
 
 .saved-courses-view .course-header {
@@ -155,14 +158,127 @@
   line-height: 1.4;
 }
 
-/* Buttons at BOTTOM LEFT */
-.saved-courses-view .course-card-actions {
-  position: absolute;
-  bottom: 12px;
-  left: 12px;
+/* Buttons BELOW the bar on the left */
+.saved-courses-view .course-card .course-card-actions {
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 8px;
+  align-items: center;
+  position: relative !important;
+  bottom: auto !important;
+  right: auto !important;
+  top: auto !important;
+  left: auto !important;
+  margin: 0;
+  padding: 0;
+}
+
+/* Favorite Button - Original Style */
+.saved-courses-view .course-card .course-card-actions .favorite-btn {
+  background: white;
+  border: 2px solid #E0E0E0;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
   display: flex;
-  gap: 10px;
-  z-index: 10;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+  position: relative !important;
+  top: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  left: auto !important;
+}
+
+.saved-courses-view .course-card .course-card-actions .favorite-btn:hover {
+  transform: scale(1.1);
+  border-color: #ED1B2F;
+  box-shadow: 0 4px 12px rgba(237, 27, 47, 0.2);
+}
+
+.saved-courses-view .course-card .course-card-actions .favorite-btn:active {
+  transform: scale(0.95);
+}
+
+.saved-courses-view .course-card .course-card-actions .favorite-icon {
+  font-size: 1.25rem;
+  color: #999;
+  transition: color 0.2s ease;
+}
+
+.saved-courses-view .course-card .course-card-actions .favorite-btn:hover .favorite-icon {
+  color: #ED1B2F;
+}
+
+.saved-courses-view .course-card .course-card-actions .favorite-btn.favorited {
+  background: linear-gradient(135deg, #ED1B2F 0%, #B01B2E 100%);
+  border-color: #ED1B2F;
+}
+
+.saved-courses-view .course-card .course-card-actions .favorite-btn.favorited .favorite-icon {
+  color: white;
+}
+
+.saved-courses-view .course-card .course-card-actions .favorite-btn.favorited:hover {
+  background: linear-gradient(135deg, #FF2B3F 0%, #C02B3E 100%);
+  transform: scale(1.1);
+}
+
+/* Completed Button - Original Style */
+.saved-courses-view .course-card .course-card-actions .completed-btn {
+  width: 44px;
+  height: 44px;
+  border: 2px solid #E0E0E0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: white;
+  padding: 0;
+  position: relative !important;
+  top: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  left: auto !important;
+}
+
+.saved-courses-view .course-card .course-card-actions .completed-btn:hover {
+  transform: scale(1.1);
+  border-color: #28a745;
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.2);
+}
+
+.saved-courses-view .course-card .course-card-actions .completed-btn:active {
+  transform: scale(0.95);
+}
+
+.saved-courses-view .course-card .course-card-actions .completed-icon {
+  font-size: 1.25rem;
+  color: #999;
+  transition: color 0.2s ease;
+}
+
+.saved-courses-view .course-card .course-card-actions .completed-btn:hover .completed-icon {
+  color: #28a745;
+}
+
+.saved-courses-view .course-card .course-card-actions .completed-btn.completed {
+  background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+  border-color: #28a745;
+}
+
+.saved-courses-view .course-card .course-card-actions .completed-btn.completed .completed-icon {
+  color: white;
+}
+
+.saved-courses-view .course-card .course-card-actions .completed-btn.completed:hover {
+  background: linear-gradient(135deg, #34ce57 0%, #28a745 100%);
+  transform: scale(1.1);
 }
 
 /* Completed Course Card Specific Styles */
@@ -222,9 +338,18 @@
     gap: 12px;
   }
 
-  .saved-courses-view .course-card-actions {
-    bottom: 8px;
-    left: 8px;
+  .saved-courses-view .course-card .course-card-actions {
     gap: 8px;
+  }
+
+  .saved-courses-view .course-card .course-card-actions .favorite-btn,
+  .saved-courses-view .course-card .course-card-actions .completed-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .saved-courses-view .course-card .course-card-actions .favorite-icon,
+  .saved-courses-view .course-card .course-card-actions .completed-icon {
+    font-size: 1.1rem;
   }
 }

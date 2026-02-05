@@ -471,12 +471,14 @@
   gap: 8px;
   align-items: stretch;
   flex-wrap: wrap;
+  width: 100%;
 }
 
 .enhanced-profile-form .course-code-input,
 .course-code-input {
-  flex: 1;
-  min-width: 200px;
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 100%;
   padding: 11px 14px;
   border: 2px solid #ED1B2F;
   border-radius: 10px;
@@ -487,6 +489,7 @@
   text-transform: uppercase;
   background: #fee2e2 !important;
   color: #1f2937 !important;
+  box-sizing: border-box;
 }
 
 .enhanced-profile-form .course-code-input::placeholder,

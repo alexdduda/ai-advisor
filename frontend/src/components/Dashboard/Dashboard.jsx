@@ -14,7 +14,7 @@ import PersonalInfoCard from './PersonalInfoCard'
 import SavedCoursesView from './SavedCoursesView'
 import { IoChevronBack, IoChevronForward } from 'react-icons/io5';
 import { MdKeyboardArrowLeft, MdKeyboardArrowRight } from 'react-icons/md';
-import { FaChevronLeft, FaChevronRight, FaHeart, FaRegHeart, FaCheckCircle } from 'react-icons/fa';
+import { FaChevronLeft, FaChevronRight, FaHeart, FaRegHeart, FaCheckCircle, FaCamera } from 'react-icons/fa';
 import './Dashboard.css'
 
 
@@ -44,6 +44,9 @@ export default function Dashboard() {
     interests: '',
     current_gpa: ''
   })
+  const [profileImage, setProfileImage] = useState(profile?.profile_image || null)
+  const [isUploadingImage, setIsUploadingImage] = useState(false)
+  const fileInputRef = useRef(null)
 
   // Chat tabs state
   const [chatTabs, setChatTabs] = useState([{ id: 1, title: 'New Chat', messages: [], sessionId: null }])
@@ -562,6 +565,48 @@ const handleToggleCompleted = async (course) => {
       console.error('Error toggling completed:', error)
       alert(error.message || 'Failed to update completed courses')
     }
+  }
+
+  // Handle profile image upload
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    // Check file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image size must be less than 5MB')
+      return
+    }
+
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please upload an image file')
+      return
+    }
+
+    setIsUploadingImage(true)
+
+    try {
+      // Convert to base64 for preview and storage
+      const reader = new FileReader()
+      reader.onloadend = async () => {
+        const base64Image = reader.result
+        setProfileImage(base64Image)
+        
+        // Save to profile
+        await updateProfile({ profile_image: base64Image })
+      }
+      reader.readAsDataURL(file)
+    } catch (error) {
+      console.error('Error uploading image:', error)
+      alert('Failed to upload image')
+    } finally {
+      setIsUploadingImage(false)
+    }
+  }
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click()
   }
 
 
@@ -1253,6 +1298,7 @@ const handleToggleCompleted = async (course) => {
               favorites={favorites}
               completedCourses={completedCourses}
               completedCoursesMap={completedCoursesMap}
+              favoritesMap={favoritesMap}
               user={user}
               onToggleFavorite={handleToggleFavorite}
               onToggleCompleted={handleToggleCompleted}
@@ -1282,9 +1328,31 @@ const handleToggleCompleted = async (course) => {
               <div className="profile-page-header">
                 <div className="profile-hero">
                   <div className="profile-avatar-section">
-                    <div className="profile-avatar-xl">
-                      {user?.email?.[0].toUpperCase()}
+                    <div className="profile-avatar-xl-wrapper" onClick={handleAvatarClick}>
+                      {profileImage ? (
+                        <img src={profileImage} alt="Profile" className="profile-avatar-xl-image" />
+                      ) : (
+                        <div className="profile-avatar-xl">
+                          {user?.email?.[0].toUpperCase()}
+                        </div>
+                      )}
+                      <div className="avatar-xl-overlay">
+                        <FaCamera className="camera-xl-icon" />
+                        <span className="overlay-xl-text">Change Photo</span>
+                      </div>
+                      {isUploadingImage && (
+                        <div className="avatar-xl-loading">
+                          <div className="spinner-xl"></div>
+                        </div>
+                      )}
                     </div>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      style={{ display: 'none' }}
+                    />
                     <div className="profile-hero-info">
                       <h1 className="profile-display-name">{profile?.username || 'McGill Student'}</h1>
                       <p className="profile-email">{user?.email}</p>
