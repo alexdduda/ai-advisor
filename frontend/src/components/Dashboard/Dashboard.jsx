@@ -10,11 +10,12 @@ import EnhancedProfileForm from './EnhancedProfileForm'
 import BadgesDisplay from './BadgesDisplay'
 import DegreeProgressTracker from './DegreeProgressTracker'
 import PersonalizedInsights from './PersonalizedInsights'
-import SavedCoursesView from './SavedCoursesView'
+import PersonalInfoCard from './PersonalInfoCard'
 import { IoChevronBack, IoChevronForward } from 'react-icons/io5';
 import { MdKeyboardArrowLeft, MdKeyboardArrowRight } from 'react-icons/md';
 import { FaChevronLeft, FaChevronRight, FaHeart, FaRegHeart, FaCheckCircle } from 'react-icons/fa';
 import './Dashboard.css'
+
 
 // Course credits lookup - McGill specific
 const COURSE_CREDITS = {
@@ -492,7 +493,7 @@ export default function Dashboard() {
   }
 
   // Toggle completed - UPDATED WITH CREDITS FIX
-  const handleToggleCompleted = async (course) => {
+const handleToggleCompleted = async (course) => {
     if (!user?.id) return
     
     const courseCode = `${course.subject} ${course.catalog}`
@@ -1251,7 +1252,6 @@ export default function Dashboard() {
               favorites={favorites}
               completedCourses={completedCourses}
               completedCoursesMap={completedCoursesMap}
-	      favoritesMap={favoritesMap}
               user={user}
               onToggleFavorite={handleToggleFavorite}
               onToggleCompleted={handleToggleCompleted}
@@ -1305,106 +1305,111 @@ export default function Dashboard() {
               <div className="profile-content">
                 <div className="profile-grid">
                   {/* Personal Information Card */}
-                  <div className="profile-section-card">
-                    <div className="card-header">
-                      <div className="card-title-group">
-                        <span className="card-icon">👤</span>
-                        <h2 className="card-title">Personal Information</h2>
-                      </div>
-                      {!editingProfile && (
-                        <button 
-                        className="btn-icon-edit"
-                        onClick={() => {
-                          setProfileForm({
-                            major: profile?.major || '',
-                            year: profile?.year || '',
-                            interests: profile?.interests || '',
-                            current_gpa: profile?.current_gpa || ''
-                          })
-                          setEditingProfile(true)
-                        }}
-                        title="Edit Profile"
-                      >
-                        ✏️
-                      </button>
-                      )}
-                    </div>
-                    <div className="card-content">
-                      {!editingProfile ? (
-                        <div className="info-grid">
-                          <div className="info-item">
-                            <span className="info-icon">🎓</span>
-                            <div className="info-details">
-                              <span className="info-label">Major</span>
-                              <span className="info-value">{profile?.major || 'Not specified'}</span>
-                              {profile?.other_majors && profile.other_majors.length > 0 && (
-                                <div className="info-tags" style={{marginTop: '6px'}}>
-                                  {profile.other_majors.map((major, idx) => (
-                                    <span key={idx} className="info-tag">{major}</span>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          <div className="info-item">
-                            <span className="info-icon">📅</span>
-                            <div className="info-details">
-                              <span className="info-label">Academic Year</span>
-                              <span className="info-value">
-                                {profile?.year ? `U${profile.year}` : 'Not specified'}
-                              </span>
-                            </div>
-                          </div>
-                          {(profile?.minor || (profile?.other_minors && profile.other_minors.length > 0)) && (
-                            <div className="info-item">
-                              <span className="info-icon">📘</span>
-                              <div className="info-details">
-                                <span className="info-label">Minor{profile?.other_minors?.length > 0 ? 's' : ''}</span>
-                                {profile?.minor && (
-                                  <span className="info-value">{profile.minor}</span>
-                                )}
-                                {profile?.other_minors && profile.other_minors.length > 0 && (
-                                  <div className="info-tags" style={{marginTop: '6px'}}>
-                                    {profile.other_minors.map((minor, idx) => (
-                                      <span key={idx} className="info-tag">{minor}</span>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          )}
-                          <div className="info-item">
-                            <span className="info-icon">📧</span>
-                            <div className="info-details">
-                              <span className="info-label">Email</span>
-                              <span className="info-value">{user?.email}</span>
-                            </div>
-                          </div>
-                          <div className="info-item">
-                            <span className="info-icon">👤</span>
-                            <div className="info-details">
-                              <span className="info-label">Username</span>
-                              <span className="info-value">{profile?.username || 'Not set'}</span>
-                            </div>
-                          </div>
-                        </div>
-                      ) : (
-                        <EnhancedProfileForm
-                          profile={profile}
-                          onSave={async (formData) => {
-                            try {
-                              await updateProfile(formData)
-                              setEditingProfile(false)
-                            } catch (error) {
-                              console.error('Error updating profile:', error)
-                              alert('Failed to update profile')
-                            }
-                          }}
-                          onCancel={() => setEditingProfile(false)}
-                        />
-                      )}
-                    </div>
-                  </div>
+                  
+                 
+                
+               
+              
+             
+            
+           
+          
+         
+        
+       
+      
+     
+    
+   
+  
+ 
+
+
+
+
+
+{/* Personal Information Card - REDESIGNED */}
+                  <PersonalInfoCard
+                    profile={profile}
+                    user={user}
+                    onUpdateProfile={updateProfile}
+                  />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
                   {/* Academic Performance Card */}
                   <div className="profile-section-card">
