@@ -3,6 +3,7 @@
   margin: 0;
   padding: 24px;
   box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 .settings-header {
@@ -30,6 +31,8 @@
   flex-direction: column;
   gap: 20px;
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 /* Section Styling */
@@ -37,8 +40,10 @@
   background: white;
   border-radius: 12px;
   border: 2px solid #e5e7eb;
-  overflow: visible;
+  overflow: hidden;
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .section-header {
@@ -49,6 +54,8 @@
   background: #f9fafb;
   border-bottom: 2px solid #e5e7eb;
   min-height: 56px;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .section-icon {
@@ -75,6 +82,8 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 /* Setting Item */
@@ -84,11 +93,21 @@
   align-items: center;
   gap: 24px;
   min-height: 60px;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
 }
 
 .setting-info {
   flex: 1;
   min-width: 0;
+  max-width: 60%;
+  box-sizing: border-box;
+}
+
+.setting-control {
+  flex-shrink: 0;
+  box-sizing: border-box;
 }
 
 .setting-label {
