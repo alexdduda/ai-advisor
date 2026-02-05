@@ -1,21 +1,48 @@
 // McGill University Academic Programs Data
 
 export const FACULTIES = [
-  'Faculty of Arts',
-  'Faculty of Science',
-  'Faculty of Arts and Science',
-  'Desautels Faculty of Management',
-  'Faculty of Engineering',
-  'Faculty of Medicine and Health Sciences',
-  'Faculty of Law',
-  'Faculty of Education',
-  'Schulich School of Music',
-  'School of Architecture',
   'Faculty of Agricultural and Environmental Sciences',
   'School of Continuing Studies',
-  'Faculty of Dentistry',
-  'Faculty of Religious Studies'
+  'Faculty of Education',
+  'Graduate and Postdoctoral Studies',
+  'Desautels Faculty of Management',
+  'Schulich School of Music',
+  'Faculty of Arts',
+  'Faculty of Dental Medicine and Oral Health Sciences',
+  'Faculty of Engineering',
+  'Faculty of Law',
+  'Faculty of Medicine and Health Sciences',
+  'Faculty of Science'
 ];
+
+// Credit requirements by faculty and specific programs
+export const FACULTY_CREDIT_REQUIREMENTS = {
+  'Faculty of Agricultural and Environmental Sciences': 120,
+  'School of Continuing Studies': 90,
+  'Faculty of Education': 120,
+  'Graduate and Postdoctoral Studies': 45,
+  'Desautels Faculty of Management': 120,
+  'Schulich School of Music': 120,
+  'Faculty of Arts': 120,
+  'Faculty of Dental Medicine and Oral Health Sciences': 120,
+  'Faculty of Engineering': 120, // Default for engineering
+  'Faculty of Law': 90,
+  'Faculty of Medicine and Health Sciences': 170,
+  'Faculty of Science': 120
+};
+
+// Program-specific credit requirements (overrides faculty defaults)
+export const PROGRAM_CREDIT_REQUIREMENTS = {
+  'Mechanical Engineering': 142,
+  'Civil Engineering': 137,
+  'Electrical Engineering': 136,
+  'Computer Engineering': 136,
+  'Software Engineering': 143,
+  'Bioengineering': 142,
+  'Chemical Engineering': 135,
+  'Mining Engineering': 135,
+  'Materials Engineering': 135
+};
 
 export const MAJORS = [
   // Arts
