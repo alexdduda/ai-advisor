@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { FACULTY_CREDIT_REQUIREMENTS, PROGRAM_CREDIT_REQUIREMENTS } from '../../utils/mcgillData'
 import './DegreeProgressTracker.css'
 
 export default function DegreeProgressTracker({ completedCourses = [], profile = {} }) {
@@ -16,8 +17,18 @@ export default function DegreeProgressTracker({ completedCourses = [], profile =
     // Total earned credits
     const totalEarnedCredits = completedCredits + advancedStandingCredits
 
-    // Typical degree requirements
-    const TOTAL_CREDITS_REQUIRED = 120 // Standard bachelor's degree
+    // Get credit requirements - check program first, then faculty, default to 120
+    let TOTAL_CREDITS_REQUIRED = 120 // Default
+    
+    // Check if the major has specific credit requirements
+    if (profile?.major && PROGRAM_CREDIT_REQUIREMENTS[profile.major]) {
+      TOTAL_CREDITS_REQUIRED = PROGRAM_CREDIT_REQUIREMENTS[profile.major]
+    }
+    // Otherwise check faculty requirements
+    else if (profile?.faculty && FACULTY_CREDIT_REQUIREMENTS[profile.faculty]) {
+      TOTAL_CREDITS_REQUIRED = FACULTY_CREDIT_REQUIREMENTS[profile.faculty]
+    }
+    
     const remainingCredits = Math.max(0, TOTAL_CREDITS_REQUIRED - totalEarnedCredits)
     const progressPercentage = Math.min(100, (totalEarnedCredits / TOTAL_CREDITS_REQUIRED) * 100)
 
@@ -100,29 +111,29 @@ export default function DegreeProgressTracker({ completedCourses = [], profile =
 
       {/* Milestones */}
       <div className="milestones">
-        <div className={`milestone ${stats.totalEarnedCredits >= 30 ? 'completed' : ''}`}>
+        <div className={`milestone ${stats.totalEarnedCredits >= Math.round(stats.totalRequired * 0.25) ? 'completed' : ''}`}>
           <div className="milestone-marker">
-            {stats.totalEarnedCredits >= 30 ? '✓' : '○'}
+            {stats.totalEarnedCredits >= Math.round(stats.totalRequired * 0.25) ? '✓' : '○'}
           </div>
-          <div className="milestone-text">30 credits (U1 Complete)</div>
+          <div className="milestone-text">{Math.round(stats.totalRequired * 0.25)} credits - 1/4 of the way there!</div>
         </div>
-        <div className={`milestone ${stats.totalEarnedCredits >= 60 ? 'completed' : ''}`}>
+        <div className={`milestone ${stats.totalEarnedCredits >= Math.round(stats.totalRequired * 0.5) ? 'completed' : ''}`}>
           <div className="milestone-marker">
-            {stats.totalEarnedCredits >= 60 ? '✓' : '○'}
+            {stats.totalEarnedCredits >= Math.round(stats.totalRequired * 0.5) ? '✓' : '○'}
           </div>
-          <div className="milestone-text">60 credits (U2 Complete)</div>
+          <div className="milestone-text">{Math.round(stats.totalRequired * 0.5)} credits - Halfway done! 🎉</div>
         </div>
-        <div className={`milestone ${stats.totalEarnedCredits >= 90 ? 'completed' : ''}`}>
+        <div className={`milestone ${stats.totalEarnedCredits >= Math.round(stats.totalRequired * 0.75) ? 'completed' : ''}`}>
           <div className="milestone-marker">
-            {stats.totalEarnedCredits >= 90 ? '✓' : '○'}
+            {stats.totalEarnedCredits >= Math.round(stats.totalRequired * 0.75) ? '✓' : '○'}
           </div>
-          <div className="milestone-text">90 credits (U3 Complete)</div>
+          <div className="milestone-text">{Math.round(stats.totalRequired * 0.75)} credits - Almost there! 💪</div>
         </div>
-        <div className={`milestone ${stats.totalEarnedCredits >= 120 ? 'completed' : ''}`}>
+        <div className={`milestone ${stats.totalEarnedCredits >= stats.totalRequired ? 'completed' : ''}`}>
           <div className="milestone-marker">
-            {stats.totalEarnedCredits >= 120 ? '✓' : '○'}
+            {stats.totalEarnedCredits >= stats.totalRequired ? '✓' : '○'}
           </div>
-          <div className="milestone-text">120 credits (Graduation!)</div>
+          <div className="milestone-text">{stats.totalRequired} credits - Graduation! 🎓</div>
         </div>
       </div>
 

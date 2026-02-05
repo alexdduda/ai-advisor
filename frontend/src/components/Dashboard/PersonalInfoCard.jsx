@@ -21,7 +21,7 @@ export default function PersonalInfoCard({ profile, user, onUpdateProfile }) {
   // Calculate profile completeness
   const calculateCompleteness = () => {
     const fields = [
-      'username', 'major', 'year', 'current_gpa', 
+      'username', 'major', 'year', 'faculty', 
       'interests', 'concentration'
     ]
     const completed = fields.filter(field => profile?.[field]).length
@@ -149,24 +149,20 @@ export default function PersonalInfoCard({ profile, user, onUpdateProfile }) {
                     </div>
                   )}
 
+                  {/* Faculty */}
+                  <div className="info-field">
+                    <label className="field-label">Faculty</label>
+                    <div className="field-value">
+                      {profile?.faculty || <span className="text-muted">Not specified</span>}
+                    </div>
+                  </div>
+
                   {/* Year */}
                   <div className="info-field">
                     <label className="field-label">Academic Year</label>
                     <div className="field-value">
                       {profile?.year ? (
                         <span className="year-badge">U{profile.year}</span>
-                      ) : (
-                        <span className="text-muted">Not specified</span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* GPA */}
-                  <div className="info-field">
-                    <label className="field-label">Current GPA</label>
-                    <div className="field-value">
-                      {profile?.current_gpa ? (
-                        <span className="gpa-value">{profile.current_gpa}</span>
                       ) : (
                         <span className="text-muted">Not specified</span>
                       )}

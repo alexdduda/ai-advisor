@@ -11,6 +11,7 @@ import BadgesDisplay from './BadgesDisplay'
 import DegreeProgressTracker from './DegreeProgressTracker'
 import PersonalizedInsights from './PersonalizedInsights'
 import PersonalInfoCard from './PersonalInfoCard'
+import SavedCoursesView from './SavedCoursesView'
 import { IoChevronBack, IoChevronForward } from 'react-icons/io5';
 import { MdKeyboardArrowLeft, MdKeyboardArrowRight } from 'react-icons/md';
 import { FaChevronLeft, FaChevronRight, FaHeart, FaRegHeart, FaCheckCircle } from 'react-icons/fa';
@@ -1437,6 +1438,22 @@ const handleToggleCompleted = async (course) => {
                     </div>
                   </div>
 
+                  {/* Degree Progress */}
+                  <div className="profile-section-card card-full-width">
+                    <div className="card-header">
+                      <div className="card-title-group">
+                        <span className="card-icon">🎯</span>
+                        <h2 className="card-title">Degree Progress</h2>
+                      </div>
+                    </div>
+                    <div className="card-content">
+                      <DegreeProgressTracker 
+                        completedCourses={completedCourses}
+                        profile={profile}
+                      />
+                    </div>
+                  </div>
+
                   {/* Interests & Preferences Card */}
                   <div className="profile-section-card card-full-width">
                     <div className="card-header">
@@ -1462,22 +1479,6 @@ const handleToggleCompleted = async (course) => {
                           </p>
                         )}
                       </div>
-                    </div>
-                  </div>
-
-                  {/* Degree Progress */}
-                  <div className="profile-section-card card-full-width">
-                    <div className="card-header">
-                      <div className="card-title-group">
-                        <span className="card-icon">🎯</span>
-                        <h2 className="card-title">Degree Progress</h2>
-                      </div>
-                    </div>
-                    <div className="card-content">
-                      <DegreeProgressTracker 
-                        completedCourses={completedCourses}
-                        profile={profile}
-                      />
                     </div>
                   </div>
 
