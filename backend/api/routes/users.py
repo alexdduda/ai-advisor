@@ -3,7 +3,7 @@ User management endpoints with improved error handling
 """
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, EmailStr, Field, validator, field_validator
-from typing import Optional
+from typing import Optional, List
 import logging
 
 from api.utils.supabase_client import (
@@ -29,9 +29,14 @@ class UserCreate(BaseModel):
     email: EmailStr
     username: Optional[str] = Field(None, min_length=3, max_length=20)
     major: Optional[str] = Field(None, max_length=100)
+    other_majors: Optional[List[str]] = Field(default_factory=list)
+    minor: Optional[str] = Field(None, max_length=100)
+    other_minors: Optional[List[str]] = Field(default_factory=list)
+    concentration: Optional[str] = Field(None, max_length=100)
     year: Optional[int] = Field(None, ge=1, le=10)
     interests: Optional[str] = Field(None, max_length=500)
     current_gpa: Optional[float] = Field(None, ge=0.0, le=4.0)
+    advanced_standing: Optional[List[dict]] = Field(default_factory=list)
     
     @validator('username')
     def validate_username(cls, v):
@@ -46,9 +51,16 @@ class UserCreate(BaseModel):
                 "email": "student@mail.mcgill.ca",
                 "username": "mcgill_student",
                 "major": "Computer Science",
+                "other_majors": ["Mathematics"],
+                "minor": "Economics",
+                "other_minors": [],
+                "concentration": "AI/ML",
                 "year": 3,
                 "interests": "Machine Learning, Web Development",
-                "current_gpa": 3.5
+                "current_gpa": 3.5,
+                "advanced_standing": [
+                    {"course_code": "MATH 140", "course_title": "Calculus I", "credits": 3}
+                ]
             }
         }
 
@@ -57,9 +69,14 @@ class UserUpdate(BaseModel):
     """User update schema"""
     username: Optional[str] = Field(None, min_length=3, max_length=20)
     major: Optional[str] = Field(None, max_length=100)
+    other_majors: Optional[List[str]] = None
+    minor: Optional[str] = Field(None, max_length=100)
+    other_minors: Optional[List[str]] = None
+    concentration: Optional[str] = Field(None, max_length=100)
     year: Optional[int] = Field(None, ge=1, le=10)
     interests: Optional[str] = Field(None, max_length=500)
     current_gpa: Optional[float] = Field(None, ge=0.0, le=4.0)
+    advanced_standing: Optional[List[dict]] = None
     
     @field_validator('username')
     @classmethod
@@ -68,7 +85,7 @@ class UserUpdate(BaseModel):
             raise ValueError('Username must contain only letters, numbers, and underscores')
         return v
     
-    @field_validator('major', 'interests', 'username')
+    @field_validator('major', 'minor', 'concentration', 'interests', 'username')
     @classmethod
     def strip_empty_strings(cls, v):
         """Convert empty strings to None"""
@@ -98,9 +115,14 @@ class UserResponse(BaseModel):
     email: str
     username: Optional[str]
     major: Optional[str]
+    other_majors: Optional[List[str]]
+    minor: Optional[str]
+    other_minors: Optional[List[str]]
+    concentration: Optional[str]
     year: Optional[int]
     interests: Optional[str]
     current_gpa: Optional[float]
+    advanced_standing: Optional[List[dict]]
     created_at: Optional[str]
 
 
@@ -186,7 +208,8 @@ async def update_user(user_id: str, updates: UserUpdate):
     Update user profile
     
     - **user_id**: The user's unique identifier
-    - Updates can include: username, major, year, interests, current_gpa
+    - Updates can include: username, major, other_majors, minor, other_minors, 
+      concentration, year, interests, current_gpa, advanced_standing
     """
     try:
         # Verify user exists first
