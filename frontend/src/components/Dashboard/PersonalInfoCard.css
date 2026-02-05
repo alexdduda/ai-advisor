@@ -40,6 +40,22 @@
   filter: brightness(0) invert(1);
 }
 
+.header-icon-wrapper {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #ED1B2F, #c91625);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(237, 27, 47, 0.3);
+}
+
+.header-icon {
+  font-size: 24px;
+  filter: brightness(0) invert(1);
+}
+
 .header-text {
   flex: 1;
 }
@@ -352,6 +368,9 @@
 /* Edit Mode */
 .edit-mode-container {
   padding: 24px;
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 /* Responsive */

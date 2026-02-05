@@ -106,7 +106,57 @@ export default function EnhancedProfileForm({ profile, onSave, onCancel }) {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    onSave(formData)
+    
+    // Clean the form data before sending
+    const cleanedData = {}
+    
+    // For string fields: send empty string (not null) to clear fields
+    // Supabase/Postgres doesn't update null values the same way
+    cleanedData.username = formData.username?.trim() || ""
+    cleanedData.major = formData.major?.trim() || ""
+    cleanedData.minor = formData.minor?.trim() || ""
+    cleanedData.concentration = formData.concentration?.trim() || ""
+    cleanedData.faculty = formData.faculty?.trim() || ""
+    cleanedData.interests = formData.interests?.trim() || ""
+    
+    // Add year if valid, otherwise null
+    cleanedData.year = formData.year ? parseInt(formData.year) : null
+    
+    // Add GPA if valid, otherwise null
+    if (formData.current_gpa) {
+      const gpa = parseFloat(formData.current_gpa)
+      if (!isNaN(gpa) && gpa >= 0 && gpa <= 4) {
+        cleanedData.current_gpa = gpa
+      } else {
+        cleanedData.current_gpa = null
+      }
+    } else {
+      cleanedData.current_gpa = null
+    }
+    
+    // For arrays: send empty array if cleared, or filtered/deduplicated array if has items
+    if (formData.other_majors?.length > 0) {
+      cleanedData.other_majors = [...new Set(formData.other_majors.filter(m => m?.trim()))]
+    } else {
+      cleanedData.other_majors = []
+    }
+    
+    if (formData.other_minors?.length > 0) {
+      cleanedData.other_minors = [...new Set(formData.other_minors.filter(m => m?.trim()))]
+    } else {
+      cleanedData.other_minors = []
+    }
+    
+    if (formData.advanced_standing?.length > 0) {
+      cleanedData.advanced_standing = formData.advanced_standing.filter(
+        course => course.course_code?.trim() && course.course_title?.trim()
+      )
+    } else {
+      cleanedData.advanced_standing = []
+    }
+    
+    console.log('EnhancedProfileForm: Submitting cleaned data:', cleanedData)
+    onSave(cleanedData)
   }
 
   return (
@@ -117,7 +167,7 @@ export default function EnhancedProfileForm({ profile, onSave, onCancel }) {
         <div className="section-content-wrapper">
           <div className="section-title-group">
             <h3 className="section-title">Basic Information</h3>
-            <p className="section-subtitle">Set Username</p>
+            <p className="section-subtitle">Enter Username</p>
           </div>
 
           <div className="form-row">

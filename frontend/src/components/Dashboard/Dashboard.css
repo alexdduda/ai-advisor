@@ -1070,9 +1070,24 @@ textarea.form-input {
   gap: 2rem;
 }
 
-.profile-avatar-xl {
+.profile-avatar-xl-wrapper {
+  position: relative;
   width: 120px;
   height: 120px;
+  border-radius: 50%;
+  cursor: pointer;
+  overflow: hidden;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.profile-avatar-xl-wrapper:hover {
+  transform: scale(1.05);
+}
+
+.profile-avatar-xl {
+  width: 100%;
+  height: 100%;
   background: white;
   color: #ED1B2F;
   border-radius: 50%;
@@ -1082,7 +1097,65 @@ textarea.form-input {
   font-weight: 700;
   font-size: 3rem;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-  flex-shrink: 0;
+}
+
+.profile-avatar-xl-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.avatar-xl-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  gap: 8px;
+}
+
+.profile-avatar-xl-wrapper:hover .avatar-xl-overlay {
+  opacity: 1;
+}
+
+.camera-xl-icon {
+  font-size: 32px;
+  color: white;
+}
+
+.overlay-xl-text {
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.avatar-xl-loading {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spinner-xl {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #fee2e2;
+  border-top-color: #ED1B2F;
+  border-radius: 50%;
+  animation: spin-xl 0.8s linear infinite;
+}
+
+@keyframes spin-xl {
+  to { transform: rotate(360deg); }
 }
 
 .profile-hero-info {

@@ -24,7 +24,9 @@ export default function SavedCoursesView({
   // Check if a course is favorited
   const isFavorited = (subject, catalog) => {
     const courseCode = `${subject}${catalog}`
-    return favoritesMap.has(courseCode)
+    const result = favoritesMap.has(courseCode)
+    console.log('Checking if favorited:', { subject, catalog, courseCode, result, favoritesMap: Array.from(favoritesMap) })
+    return result
   }
 
   return (
@@ -84,7 +86,7 @@ export default function SavedCoursesView({
                     <h4 className="course-title">{course.course_title}</h4>
                   </div>
 
-                  {/* Icon-only circular buttons at bottom-left */}
+                  {/* Buttons below the bar */}
                   <div className="course-card-actions">
                     {/* Favorite Button */}
                     <button
@@ -162,15 +164,19 @@ export default function SavedCoursesView({
                       )}
                     </div>
                     <h4 className="course-title">{course.course_title}</h4>
-                    <div className="course-meta">
-                      <span className="course-term">{course.term} {course.year}</span>
-                      {course.credits && (
-                        <span className="course-credits"> • {course.credits} credits</span>
-                      )}
-                    </div>
+                    {(course.term || course.year || course.credits) && (
+                      <div className="course-meta">
+                        {(course.term || course.year) && (
+                          <span className="course-term">{course.term} {course.year}</span>
+                        )}
+                        {course.credits && (
+                          <span className="course-credits"> • {course.credits} credits</span>
+                        )}
+                      </div>
+                    )}
                   </div>
 
-                  {/* Both buttons for completed courses */}
+                  {/* Buttons below the bar */}
                   <div className="course-card-actions">
                     {/* Favorite Button */}
                     {onToggleFavorite && (
@@ -194,7 +200,7 @@ export default function SavedCoursesView({
                       </button>
                     )}
 
-                    {/* Completed Button */}
+                    {/* Completed Button - Always shown as completed */}
                     <button
                       className="completed-btn completed"
                       onClick={(e) => {
