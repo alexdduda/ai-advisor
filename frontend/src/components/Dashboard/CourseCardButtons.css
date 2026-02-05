@@ -1,0 +1,134 @@
+/* Course Card Actions - Positioning */
+.course-card {
+  position: relative;
+}
+
+.course-card-actions {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  display: flex;
+  gap: 10px;
+  z-index: 10;
+}
+
+/* Favorite Button */
+.favorite-btn {
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 50%;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  cursor: pointer;
+  color: #666;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.favorite-btn:hover {
+  border-color: #ff6b6b;
+  color: #ff6b6b;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+}
+
+.favorite-btn.favorited {
+  background: #ff6b6b;
+  border-color: #ff6b6b;
+  color: white;
+}
+
+.favorite-btn.favorited:hover {
+  background: #ff5252;
+  border-color: #ff5252;
+  transform: scale(1.1);
+}
+
+.favorite-icon {
+  font-size: 1.25rem;
+}
+
+/* Completed Button - Red circle with white checkmark */
+.completed-btn {
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 50%;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+.completed-btn:hover {
+  border-color: #dc3545;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
+/* Not completed - outline circle */
+.completed-btn:not(.completed) .completed-icon {
+  color: #999;
+  font-size: 1.5rem;
+}
+
+.completed-btn:not(.completed):hover .completed-icon {
+  color: #dc3545;
+}
+
+/* Completed - red circle with white checkmark */
+.completed-btn.completed {
+  background: #dc3545;
+  border-color: #dc3545;
+}
+
+.completed-btn.completed:hover {
+  background: #c82333;
+  border-color: #c82333;
+}
+
+.completed-btn.completed .completed-icon {
+  color: white;
+  font-size: 1.5rem;
+}
+
+.completed-icon {
+  transition: all 0.3s ease;
+}
+
+/* Make sure course card has proper padding for buttons */
+.course-card-content {
+  padding-bottom: 60px; /* Extra space for buttons at bottom */
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .course-card-actions {
+    bottom: 8px;
+    left: 8px;
+    gap: 8px;
+  }
+  
+  .favorite-btn,
+  .completed-btn {
+    width: 38px;
+    height: 38px;
+  }
+  
+  .favorite-icon {
+    font-size: 1.1rem;
+  }
+  
+  .completed-icon {
+    font-size: 1.3rem;
+  }
+}

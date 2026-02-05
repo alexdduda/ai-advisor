@@ -3,10 +3,17 @@ import { useAuth } from '../../contexts/AuthContext'
 import { chatAPI } from '../../lib/api'
 import coursesAPI from '../../lib/professorsAPI'
 import favoritesAPI from '../../lib/favoritesAPI'
+import completedCoursesAPI from '../../lib/completedCoursesAPI'
 import ProfessorRating, { ProfessorRatingCompact } from '../ProfessorRating/ProfessorRating'
+import Forum from '../Forum/Forum'
+import EnhancedProfileForm from './EnhancedProfileForm'
+import BadgesDisplay from './BadgesDisplay'
+import DegreeProgressTracker from './DegreeProgressTracker'
+import PersonalizedInsights from './PersonalizedInsights'
+import SavedCoursesView from './SavedCoursesView'
 import { IoChevronBack, IoChevronForward } from 'react-icons/io5';
 import { MdKeyboardArrowLeft, MdKeyboardArrowRight } from 'react-icons/md';
-import { FaChevronLeft, FaChevronRight, FaHeart, FaRegHeart } from 'react-icons/fa';
+import { FaChevronLeft, FaChevronRight, FaHeart, FaRegHeart, FaCheckCircle } from 'react-icons/fa';
 import './Dashboard.css'
 
 export default function Dashboard() {
@@ -42,18 +49,17 @@ export default function Dashboard() {
   const [searchError, setSearchError] = useState(null)
   const [selectedCourse, setSelectedCourse] = useState(null)
   const [isLoadingCourse, setIsLoadingCourse] = useState(false)
-  const [sortBy, setSortBy] = useState('relevance') // New sort state
+  const [sortBy, setSortBy] = useState('relevance')
 
   // Favorites states
   const [favorites, setFavorites] = useState([])
   const [favoritesMap, setFavoritesMap] = useState(new Set())
   const [isLoadingFavorites, setIsLoadingFavorites] = useState(false)
 
-  // Get current chat tab's messages
-  const getCurrentChatMessages = () => {
-    const currentTab = chatTabs.find(tab => tab.id === activeChatTab)
-    return currentTab ? currentTab.messages : []
-  }
+  // Completed courses state
+  const [completedCourses, setCompletedCourses] = useState([])
+  const [completedCoursesMap, setCompletedCoursesMap] = useState(new Set())
+  const [isLoadingCompleted, setIsLoadingCompleted] = useState(false)
 
   // Drag-able Sidebar
   const [leftToggleY, setLeftToggleY] = useState(20)
@@ -63,69 +69,34 @@ export default function Dashboard() {
   const [dragStartY, setDragStartY] = useState(0)
   const [dragStartPos, setDragStartPos] = useState(0)
 
-  // Left sidebar toggle drag handlers
-  const handleLeftToggleMouseDown = (e) => {
-    if (sidebarOpen) return
-    setIsDraggingLeft(true)
-    setDragStartY(e.clientY)
-    setDragStartPos(leftToggleY)
-    e.preventDefault()
+  // Get current chat tab's messages
+  const getCurrentChatMessages = () => {
+    const currentTab = chatTabs.find(tab => tab.id === activeChatTab)
+    return currentTab ? currentTab.messages : []
   }
 
-  const handleLeftToggleTouchStart = (e) => {
-    if (sidebarOpen) return
-    setIsDraggingLeft(true)
-    setDragStartY(e.touches[0].clientY)
-    setDragStartPos(leftToggleY)
-    e.preventDefault()
-  }
-
-  // Right sidebar toggle drag handlers
-  const handleRightToggleMouseDown = (e) => {
-    if (rightSidebarOpen) return
-    setIsDraggingRight(true)
-    setDragStartY(e.clientY)
-    setDragStartPos(rightToggleY)
-    e.preventDefault()
-  }
-
-  const handleRightToggleTouchStart = (e) => {
-    if (rightSidebarOpen) return
-    setIsDraggingRight(true)
-    setDragStartY(e.touches[0].clientY)
-    setDragStartPos(rightToggleY)
-    e.preventDefault()
-  }
-
-  // Update current chat tab's messages
-  const updateCurrentChatMessages = (newMessages) => {
-    setChatTabs(prevTabs =>
-      prevTabs.map(tab =>
-        tab.id === activeChatTab
-          ? { ...tab, messages: newMessages }
-          : tab
-      )
-    )
-  }
-
-  // Get current chat tab
   const getCurrentChatTab = () => {
     return chatTabs.find(tab => tab.id === activeChatTab)
   }
 
-  // Update current chat tab's session ID
-  const updateCurrentChatSessionId = (sessionId) => {
-    setChatTabs(prevTabs =>
-      prevTabs.map(tab =>
-        tab.id === activeChatTab
-          ? { ...tab, sessionId: sessionId }
-          : tab
+  const updateCurrentChatMessages = (messages) => {
+    setChatTabs(prevTabs => 
+      prevTabs.map(tab => 
+        tab.id === activeChatTab ? { ...tab, messages } : tab
       )
     )
   }
 
-  // Create new chat tab
-  const createNewChatTab = () => {
+  const updateCurrentChatSessionId = (sessionId) => {
+    setChatTabs(prevTabs => 
+      prevTabs.map(tab => 
+        tab.id === activeChatTab ? { ...tab, sessionId } : tab
+      )
+    )
+  }
+
+  // Handle creating a new chat tab
+  const handleNewChatTab = () => {
     const newTab = {
       id: nextChatTabId,
       title: 'New Chat',
@@ -137,21 +108,23 @@ export default function Dashboard() {
     setNextChatTabId(nextChatTabId + 1)
   }
 
-  // Close chat tab
-  const closeChatTab = (tabId, e) => {
+  // Handle closing a chat tab
+  const handleCloseChatTab = (tabId, e) => {
     e.stopPropagation()
+    
     if (chatTabs.length === 1) {
-      setChatTabs([{ id: nextChatTabId, title: 'New Chat', messages: [], sessionId: null }])
-      setActiveChatTab(nextChatTabId)
-      setNextChatTabId(nextChatTabId + 1)
+      setChatTabs([{ id: 1, title: 'New Chat', messages: [], sessionId: null }])
+      setActiveChatTab(1)
       return
     }
 
+    const tabIndex = chatTabs.findIndex(tab => tab.id === tabId)
     const newTabs = chatTabs.filter(tab => tab.id !== tabId)
     setChatTabs(newTabs)
 
-    if (activeChatTab === tabId) {
-      setActiveChatTab(newTabs[newTabs.length - 1].id)
+    if (tabId === activeChatTab) {
+      const newActiveIndex = Math.min(tabIndex, newTabs.length - 1)
+      setActiveChatTab(newTabs[newActiveIndex].id)
     }
   }
 
@@ -188,66 +161,7 @@ export default function Dashboard() {
     setDraggedTab(null)
   }
 
-  // Load historical chat session into new tab
-  const loadHistoricalChat = async (sessionId) => {
-    try {
-      setIsLoadingHistory(true)
-      setRightSidebarOpen(false)
-      
-      const existingTab = chatTabs.find(tab => tab.sessionId === sessionId)
-      if (existingTab) {
-        setActiveChatTab(existingTab.id)
-        setIsLoadingHistory(false)
-        return
-      }
-      
-      const data = await chatAPI.getHistory(user.id, sessionId, 200)
-      
-      if (data.messages && data.messages.length > 0) {
-        const firstUserMessage = data.messages.find(m => m.role === 'user')
-        const title = firstUserMessage 
-          ? (firstUserMessage.content.substring(0, 30) + (firstUserMessage.content.length > 30 ? '...' : ''))
-          : 'Previous Chat'
-
-        const newTab = {
-          id: nextChatTabId,
-          title: title,
-          messages: data.messages,
-          sessionId: sessionId
-        }
-        
-        setChatTabs([...chatTabs, newTab])
-        setActiveChatTab(nextChatTabId)
-        setNextChatTabId(nextChatTabId + 1)
-      }
-    } catch (error) {
-      console.error('Error loading historical chat:', error)
-      setChatError('Failed to load chat history')
-    } finally {
-      setIsLoadingHistory(false)
-    }
-  }
-
-  // Load available sessions from backend
-  const loadChatSessions = async () => {
-    try {
-      const data = await chatAPI.getSessions(user.id, 20)
-      
-      if (data.sessions && data.sessions.length > 0) {
-        const history = data.sessions.map(session => ({
-          id: session.session_id,
-          title: session.last_message || 'Previous Chat',
-          messageCount: session.message_count || 0,
-          lastUpdated: session.last_updated
-        }))
-        setChatHistory(history)
-      }
-    } catch (error) {
-      console.error('Error loading chat sessions:', error)
-    }
-  }
-
-  // Helper function to convert GPA to letter grade
+  // GPA to letter grade conversion
   const gpaToLetterGrade = (gpa) => {
     if (!gpa) return '';
     const numGpa = parseFloat(gpa);
@@ -262,96 +176,410 @@ export default function Dashboard() {
     return 'F';
   };
 
-  // Auto-scroll to bottom of chat
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  // Sort courses
+  const sortCourses = (courses, sortType) => {
+    const sorted = [...courses]
+    
+    switch(sortType) {
+      case 'rating-high':
+        return sorted.sort((a, b) => {
+          const ratingA = a.rmp_rating || 0
+          const ratingB = b.rmp_rating || 0
+          return ratingB - ratingA
+        })
+      
+      case 'rating-low':
+        return sorted.sort((a, b) => {
+          const ratingA = a.rmp_rating || 0
+          const ratingB = b.rmp_rating || 0
+          return ratingA - ratingB
+        })
+      
+      case 'name-az':
+        return sorted.sort((a, b) => {
+          const nameA = `${a.subject} ${a.catalog}`
+          const nameB = `${b.subject} ${b.catalog}`
+          return nameA.localeCompare(nameB)
+        })
+      
+      case 'name-za':
+        return sorted.sort((a, b) => {
+          const nameA = `${a.subject} ${a.catalog}`
+          const nameB = `${b.subject} ${b.catalog}`
+          return nameB.localeCompare(nameA)
+        })
+      
+      case 'instructor-az':
+        return sorted.sort((a, b) => {
+          const instrA = a.instructor || 'ZZZ'
+          const instrB = b.instructor || 'ZZZ'
+          return instrA.localeCompare(instrB)
+        })
+      
+      case 'instructor-za':
+        return sorted.sort((a, b) => {
+          const instrA = a.instructor || ''
+          const instrB = b.instructor || ''
+          return instrB.localeCompare(instrA)
+        })
+      
+      case 'relevance':
+      default:
+        return sorted
+    }
   }
 
-  useEffect(() => {
-    scrollToBottom()
-  }, [chatTabs, activeChatTab])
+  const handleSortChange = (e) => {
+    setSortBy(e.target.value)
+  }
 
-  useEffect(() => {
-    const handleMouseMove = (e) => {
-      if (isDraggingLeft) {
-        const deltaY = e.clientY - dragStartY
-        const newY = Math.max(20, Math.min(window.innerHeight - 56, dragStartPos + deltaY))
-        setLeftToggleY(newY)
-      }
-      if (isDraggingRight) {
-        const deltaY = e.clientY - dragStartY
-        const newY = Math.max(20, Math.min(window.innerHeight - 56, dragStartPos + deltaY))
-        setRightToggleY(newY)
-      }
-    }
+  // Check if favorited
+  const isFavorited = (subject, catalog) => {
+    const courseCode = `${subject}${catalog}`
+    return favoritesMap.has(courseCode)
+  }
 
-    const handleTouchMove = (e) => {
-      if (isDraggingLeft) {
-        const deltaY = e.touches[0].clientY - dragStartY
-        const newY = Math.max(20, Math.min(window.innerHeight - 56, dragStartPos + deltaY))
-        setLeftToggleY(newY)
-      }
-      if (isDraggingRight) {
-        const deltaY = e.touches[0].clientY - dragStartY
-        const newY = Math.max(20, Math.min(window.innerHeight - 56, dragStartPos + deltaY))
-        setRightToggleY(newY)
-      }
-    }
+  // Check if completed
+  const isCompleted = (subject, catalog) => {
+    const courseCode = `${subject} ${catalog}`
+    return completedCoursesMap.has(courseCode)
+  }
 
-    const handleMouseUp = () => {
-      setIsDraggingLeft(false)
-      setIsDraggingRight(false)
-    }
+  // Left sidebar toggle drag handlers
+  const handleLeftToggleMouseDown = (e) => {
+    if (sidebarOpen) return
+    setIsDraggingLeft(true)
+    setDragStartY(e.clientY)
+    setDragStartPos(leftToggleY)
+    e.preventDefault()
+  }
 
-    if (isDraggingLeft || isDraggingRight) {
-      window.addEventListener('mousemove', handleMouseMove)
-      window.addEventListener('mouseup', handleMouseUp)
-      window.addEventListener('touchmove', handleTouchMove)
-      window.addEventListener('touchend', handleMouseUp)
+  const handleLeftToggleTouchStart = (e) => {
+    if (sidebarOpen) return
+    setIsDraggingLeft(true)
+    setDragStartY(e.touches[0].clientY)
+    setDragStartPos(leftToggleY)
+    e.preventDefault()
+  }
 
-      return () => {
-        window.removeEventListener('mousemove', handleMouseMove)
-        window.removeEventListener('mouseup', handleMouseUp)
-        window.removeEventListener('touchmove', handleTouchMove)
-        window.removeEventListener('touchend', handleMouseUp)
-      }
-    }
-  }, [isDraggingLeft, isDraggingRight, dragStartY, dragStartPos, leftToggleY, rightToggleY])
+  // Right sidebar toggle drag handlers
+  const handleRightToggleMouseDown = (e) => {
+    if (rightSidebarOpen) return
+    setIsDraggingRight(true)
+    setDragStartY(e.clientY)
+    setDragStartPos(rightToggleY)
+    e.preventDefault()
+  }
 
-  // Initialize chat on mount
-  useEffect(() => {
-    const initializeChat = async () => {
-      if (!user?.id) return
+  const handleRightToggleTouchStart = (e) => {
+    if (rightSidebarOpen) return
+    setIsDraggingRight(true)
+    setDragStartY(e.touches[0].clientY)
+    setDragStartPos(rightToggleY)
+    e.preventDefault()
+  }
+
+  // Load chat sessions from history
+  const loadChatSessions = async () => {
+    if (!user?.id) return
+    
+    try {
+      setIsLoadingHistory(true)
+      const data = await chatAPI.getSessions(user.id)
+      console.log('Chat sessions response:', data)
       
-      try {
-        setIsLoadingHistory(true)
+      if (data.sessions && Array.isArray(data.sessions)) {
+        setChatHistory(data.sessions)
+      } else {
+        setChatHistory([])
+      }
+    } catch (error) {
+      console.error('Error loading chat sessions:', error)
+      setChatHistory([])
+    } finally {
+      setIsLoadingHistory(false)
+    }
+  }
+
+  // Load a historical chat into a new tab
+  const loadHistoricalChat = async (sessionId) => {
+    try {
+      const data = await chatAPI.getHistory(user.id, sessionId)
+      console.log('History response:', data)
+      
+      const messages = data.messages || []
+      const firstUserMessage = messages.find(m => m.role === 'user')
+      const title = firstUserMessage 
+        ? firstUserMessage.content.substring(0, 30) + '...'
+        : 'Chat Session'
+
+      const newTab = {
+        id: nextChatTabId,
+        title,
+        messages,
+        sessionId
+      }
+
+      setChatTabs([...chatTabs, newTab])
+      setActiveChatTab(nextChatTabId)
+      setNextChatTabId(nextChatTabId + 1)
+      setRightSidebarOpen(false)
+    } catch (error) {
+      console.error('Error loading historical chat:', error)
+      alert('Failed to load chat history')
+    }
+  }
+
+  // Tab change handler
+  const handleTabChange = (tab) => {
+    setActiveTab(tab)
+    setSelectedCourse(null)
+    setSearchResults([])
+    setSearchError(null)
+    if (window.innerWidth < 768) {
+      setSidebarOpen(false)
+    }
+  }
+
+  // Handle sending a message
+  const handleSendMessage = async (e) => {
+    e.preventDefault()
+    if (!chatInput.trim() || isSending) return
+
+    const userMessage = chatInput.trim()
+    setChatInput('')
+    setChatError(null)
+
+    const currentMessages = getCurrentChatMessages()
+    const newMessages = [...currentMessages, { role: 'user', content: userMessage }]
+    updateCurrentChatMessages(newMessages)
+
+    setIsSending(true)
+
+    try {
+      const currentTab = chatTabs.find(tab => tab.id === activeChatTab)
+      const response = await chatAPI.sendMessage(
+        user.id,
+        userMessage,
+        currentTab.sessionId
+      )
+
+      const updatedMessages = [
+        ...newMessages,
+        { role: 'assistant', content: response.response }
+      ]
+      updateCurrentChatMessages(updatedMessages)
+
+      if (!currentTab.sessionId && response.session_id) {
+        updateCurrentChatSessionId(response.session_id)
         
-        await loadChatSessions()
+        if (currentMessages.length === 0) {
+          const title = userMessage.substring(0, 30) + (userMessage.length > 30 ? '...' : '')
+          setChatTabs(prevTabs => 
+            prevTabs.map(tab => 
+              tab.id === activeChatTab ? { ...tab, title } : tab
+            )
+          )
+        }
+
+        loadChatSessions()
+      }
+    } catch (error) {
+      console.error('Error sending message:', error)
+      setChatError('Failed to send message. Please try again.')
+      updateCurrentChatMessages(currentMessages)
+    } finally {
+      setIsSending(false)
+    }
+  }
+
+  // Course search handler
+  const handleCourseSearch = async (e) => {
+    e.preventDefault()
+    if (!searchQuery.trim() || isSearching) return
+
+    setIsSearching(true)
+    setSearchError(null)
+    setSelectedCourse(null)
+
+    try {
+      const data = await coursesAPI.search(searchQuery, null, 50)
+      console.log('Search response:', data)
+      
+      const courses = data.courses || data || []
+      setSearchResults(Array.isArray(courses) ? courses : [])
+      
+      if (courses.length === 0) {
+        setSearchError('No courses found matching your search.')
+      }
+    } catch (error) {
+      console.error('Error searching courses:', error)
+      setSearchError('Failed to search courses. Please try again.')
+      setSearchResults([])
+    } finally {
+      setIsSearching(false)
+    }
+  }
+
+  // Course detail handler
+  const handleCourseClick = async (course) => {
+    setIsLoadingCourse(true)
+    try {
+      const data = await coursesAPI.getDetails(course.subject, course.catalog)
+      console.log('Course details:', data)
+      
+      setSelectedCourse(data.course || data)
+    } catch (error) {
+      console.error('Error loading course details:', error)
+      setSearchError('Failed to load course details.')
+    } finally {
+      setIsLoadingCourse(false)
+    }
+  }
+
+  // Toggle favorite
+  const handleToggleFavorite = async (course) => {
+    if (!user?.id) return
+    
+    const courseCode = `${course.subject}${course.catalog}`
+    const isFav = favoritesMap.has(courseCode)
+    
+    try {
+      if (isFav) {
+        await favoritesAPI.removeFavorite(user.id, courseCode)
+        setFavorites(prev => prev.filter(f => f.course_code !== courseCode))
+        setFavoritesMap(prev => {
+          const newSet = new Set(prev)
+          newSet.delete(courseCode)
+          return newSet
+        })
+      } else {
+        await favoritesAPI.addFavorite(user.id, {
+          course_code: courseCode,
+          course_title: course.title,
+          subject: course.subject,
+          catalog: course.catalog
+        })
         
-        if (chatTabs.length === 1 && chatTabs[0].messages.length === 0) {
-          setChatTabs([{
-            id: 1,
-            title: 'New Chat',
-            messages: [{
-              role: 'assistant',
-              content: 'Hello! I\'m your McGill AI Academic Advisor. How can I help you plan your courses today?'
-            }],
-            sessionId: null
-          }])
+        const newFavorite = {
+          course_code: courseCode,
+          course_title: course.title,
+          subject: course.subject,
+          catalog: course.catalog
         }
         
-      } catch (error) {
-        console.error('Error initializing chat:', error)
-      } finally {
-        setIsLoadingHistory(false)
+        setFavorites(prev => [newFavorite, ...prev])
+        setFavoritesMap(prev => new Set([...prev, courseCode]))
       }
+    } catch (error) {
+      console.error('Error toggling favorite:', error)
+      alert(error.message || 'Failed to update favorites')
     }
+  }
 
-    if (activeTab === 'chat') {
-      initializeChat()
+  // Toggle completed - NEW FUNCTION
+  const handleToggleCompleted = async (course) => {
+    if (!user?.id) return
+    
+    const courseCode = `${course.subject} ${course.catalog}`
+    const isComp = completedCoursesMap.has(courseCode)
+    
+    try {
+      if (isComp) {
+        await completedCoursesAPI.removeCompleted(user.id, courseCode)
+        setCompletedCourses(prev => prev.filter(c => c.course_code !== courseCode))
+        setCompletedCoursesMap(prev => {
+          const newSet = new Set(prev)
+          newSet.delete(courseCode)
+          return newSet
+        })
+      } else {
+        // Ask user for grade
+        const grade = prompt('What grade did you get? (A+, A, A-, B+, B, B-, C+, C, D, F, or leave blank):', 'A');
+        
+        // If user cancels, don't add
+        if (grade === null) return;
+        
+        // Validate grade (optional)
+        const validGrades = ['A+', 'A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D', 'F', ''];
+        const normalizedGrade = grade.trim().toUpperCase();
+        
+        const courseData = {
+          course_code: courseCode,
+          course_title: course.title,
+          subject: course.subject,
+          catalog: String(course.catalog), // Ensure it's a string
+          term: 'Fall', // You could also prompt for this
+          year: new Date().getFullYear(),
+          grade: normalizedGrade || null,
+          credits: 3
+        };
+        console.log('Sending completed course data:', courseData);
+        await completedCoursesAPI.addCompleted(user.id, courseData)
+        
+        const newCompleted = {
+          course_code: courseCode,
+          course_title: course.title,
+          subject: course.subject,
+          catalog: String(course.catalog), // Ensure it's a string
+          term: 'Fall',
+          year: new Date().getFullYear(),
+          grade: normalizedGrade || null,
+          credits: 3
+        }
+        
+        setCompletedCourses(prev => [newCompleted, ...prev])
+        setCompletedCoursesMap(prev => new Set([...prev, courseCode]))
+      }
+    } catch (error) {
+      console.error('Error toggling completed:', error)
+      alert(error.message || 'Failed to update completed courses')
     }
-  }, [user?.id, activeTab])
+  }
 
+  // Load favorites
+  const loadFavorites = async () => {
+    if (!user?.id) return
+    
+    try {
+      setIsLoadingFavorites(true)
+      const data = await favoritesAPI.getFavorites(user.id)
+      setFavorites(data.favorites || [])
+      
+      const favSet = new Set(
+        (data.favorites || []).map(f => f.course_code)
+      )
+      setFavoritesMap(favSet)
+    } catch (error) {
+      console.error('Error loading favorites:', error)
+    } finally {
+      setIsLoadingFavorites(false)
+    }
+  }
+
+  // Load completed courses
+  const loadCompletedCourses = async () => {
+    if (!user?.id) return
+    
+    try {
+      setIsLoadingCompleted(true)
+      const data = await completedCoursesAPI.getCompleted(user.id)
+      setCompletedCourses(data.completed_courses || [])
+      
+      const compSet = new Set(
+        (data.completed_courses || []).map(c => c.course_code)
+      )
+      setCompletedCoursesMap(compSet)
+    } catch (error) {
+      console.error('Error loading completed courses:', error)
+      setCompletedCourses([])
+      setCompletedCoursesMap(new Set())
+    } finally {
+      setIsLoadingCompleted(false)
+    }
+  }
+
+  // Sign out handler
   const handleProfileUpdate = async (e) => {
     e.preventDefault()
     
@@ -397,260 +625,95 @@ export default function Dashboard() {
     }
   }
 
-  const handleSendMessage = async (e) => {
-    e.preventDefault()
-    if (!chatInput.trim() || isSending || !user?.id) return
-    
-    const userMessage = chatInput.trim()
-    const currentMessages = getCurrentChatMessages()
-    const currentTab = getCurrentChatTab()
-    const currentSessionId = currentTab?.sessionId
-    
-    setChatInput('')
-    setChatError(null)
-    
-    const newUserMessage = { role: 'user', content: userMessage }
-    
-    if (currentMessages.length === 0 || (currentMessages.length === 1 && currentMessages[0].role === 'assistant')) {
-      const newTitle = userMessage.length > 30 ? userMessage.substring(0, 30) + '...' : userMessage
-      setChatTabs(prevTabs =>
-        prevTabs.map(tab =>
-          tab.id === activeChatTab ? { ...tab, title: newTitle } : tab
-        )
-      )
-    }
-    
-    updateCurrentChatMessages([...currentMessages, newUserMessage])
-    
-    setIsSending(true)
-    
-    try {
-      const response = await chatAPI.sendMessage(user.id, userMessage, currentSessionId)
-      
-      const assistantMessage = {
-        role: 'assistant',
-        content: response.response
-      }
-      
-      if (!currentSessionId && response.session_id) {
-        updateCurrentChatSessionId(response.session_id)
-        console.log('New session created:', response.session_id)
-      }
-      
-      updateCurrentChatMessages([...currentMessages, newUserMessage, assistantMessage])
-      
-      await loadChatSessions()
-      
-    } catch (error) {
-      console.error('Error sending message:', error)
-      setChatError('Failed to get response. Please try again.')
-      
-      const errorMessage = {
-        role: 'assistant',
-        content: '❌ Sorry, I encountered an error. Please try again or contact support if the issue persists.'
-      }
-      updateCurrentChatMessages([...currentMessages, newUserMessage, errorMessage])
-    } finally {
-      setIsSending(false)
-    }
-  }
-
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSendMessage(e)
-    }
-  }
-
-  // Sort function for course results
-  const sortCourses = (courses, sortType) => {
-    const sorted = [...courses]
-    
-    switch(sortType) {
-      case 'rating-high':
-        return sorted.sort((a, b) => {
-          const ratingA = a.rmp_rating || 0
-          const ratingB = b.rmp_rating || 0
-          return ratingB - ratingA // Highest first
-        })
-      
-      case 'rating-low':
-        return sorted.sort((a, b) => {
-          const ratingA = a.rmp_rating || 0
-          const ratingB = b.rmp_rating || 0
-          return ratingA - ratingB // Lowest first
-        })
-      
-      case 'name-az':
-        return sorted.sort((a, b) => {
-          const nameA = `${a.subject} ${a.catalog}`
-          const nameB = `${b.subject} ${b.catalog}`
-          return nameA.localeCompare(nameB)
-        })
-      
-      case 'name-za':
-        return sorted.sort((a, b) => {
-          const nameA = `${a.subject} ${a.catalog}`
-          const nameB = `${b.subject} ${b.catalog}`
-          return nameB.localeCompare(nameA)
-        })
-      
-      case 'instructor-az':
-        return sorted.sort((a, b) => {
-          const instrA = a.instructor || 'ZZZ'
-          const instrB = b.instructor || 'ZZZ'
-          return instrA.localeCompare(instrB)
-        })
-      
-      case 'instructor-za':
-        return sorted.sort((a, b) => {
-          const instrA = a.instructor || ''
-          const instrB = b.instructor || ''
-          return instrB.localeCompare(instrA)
-        })
-      
-      case 'relevance':
-      default:
-        return sorted // Already sorted by backend
-    }
-  }
-
-  // Handle sort change
-  const handleSortChange = (e) => {
-    setSortBy(e.target.value)
-  }
-
-  // Load favorites when tab changes or user logs in
+  // Auto-scroll to bottom of messages
   useEffect(() => {
-    const loadFavorites = async () => {
-      if (!user?.id || activeTab !== 'courses') return
-      
-      try {
-        setIsLoadingFavorites(true)
-        const data = await favoritesAPI.getFavorites(user.id)
-        setFavorites(data.favorites || [])
-        
-        // Create a Set of favorited course codes for fast lookup
-        const favMap = new Set(data.favorites.map(f => f.course_code))
-        setFavoritesMap(favMap)
-      } catch (error) {
-        console.error('Error loading favorites:', error)
-      } finally {
-        setIsLoadingFavorites(false)
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [chatTabs, activeChatTab])
+
+  // Load initial data
+  useEffect(() => {
+    if (user?.id) {
+      loadChatSessions()
+      loadFavorites()
+      loadCompletedCourses()
+    }
+  }, [user?.id])
+
+  // Update profile form when profile changes
+  useEffect(() => {
+    if (profile) {
+      setProfileForm({
+        major: profile.major || '',
+        year: profile.year || '',
+        interests: profile.interests || '',
+        current_gpa: profile.current_gpa || ''
+      })
+    }
+  }, [profile])
+
+  // Handle window resize for mouse drag
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (isDraggingLeft) {
+        const deltaY = e.clientY - dragStartY
+        const newY = Math.max(0, Math.min(window.innerHeight - 50, dragStartPos + deltaY))
+        setLeftToggleY(newY)
+      }
+      if (isDraggingRight) {
+        const deltaY = e.clientY - dragStartY
+        const newY = Math.max(0, Math.min(window.innerHeight - 50, dragStartPos + deltaY))
+        setRightToggleY(newY)
       }
     }
 
-    loadFavorites()
-  }, [user?.id, activeTab])
+    const handleMouseUp = () => {
+      setIsDraggingLeft(false)
+      setIsDraggingRight(false)
+    }
 
-  // Toggle favorite status
-  const handleToggleFavorite = async (course) => {
-    if (!user?.id) return
-    
-    const courseCode = `${course.subject}${course.catalog}`
-    const isFavorited = favoritesMap.has(courseCode)
-    
-    try {
-      if (isFavorited) {
-        // Remove from favorites
-        await favoritesAPI.removeFavorite(user.id, courseCode)
-        setFavorites(prev => prev.filter(f => f.course_code !== courseCode))
-        setFavoritesMap(prev => {
-          const newSet = new Set(prev)
-          newSet.delete(courseCode)
-          return newSet
-        })
-      } else {
-        // Add to favorites
-        await favoritesAPI.addFavorite(user.id, {
-          course_code: courseCode,
-          course_title: course.title,
-          subject: course.subject,
-          catalog: course.catalog
-        })
-        
-        const newFavorite = {
-          course_code: courseCode,
-          course_title: course.title,
-          subject: course.subject,
-          catalog: course.catalog
-        }
-        
-        setFavorites(prev => [newFavorite, ...prev])
-        setFavoritesMap(prev => new Set([...prev, courseCode]))
+    if (isDraggingLeft || isDraggingRight) {
+      window.addEventListener('mousemove', handleMouseMove)
+      window.addEventListener('mouseup', handleMouseUp)
+      return () => {
+        window.removeEventListener('mousemove', handleMouseMove)
+        window.removeEventListener('mouseup', handleMouseUp)
       }
-    } catch (error) {
-      console.error('Error toggling favorite:', error)
-      alert(error.message || 'Failed to update favorites')
     }
-  }
+  }, [isDraggingLeft, isDraggingRight, dragStartY, dragStartPos])
 
-  // Check if a course is favorited
-  const isFavorited = (subject, catalog) => {
-    const courseCode = `${subject}${catalog}`
-    return favoritesMap.has(courseCode)
-  }
-
-  // OPTIMIZED Course search handler - reduced limit and better grouping
-  const handleCourseSearch = async (e) => {
-    e.preventDefault()
-    if (!searchQuery.trim()) return
-
-    setIsSearching(true)
-    setSearchError(null)
-    setSelectedCourse(null)
-    setSortBy('relevance') // Reset sort on new search
-
-    try {
-      // Reduced limit from 100 to 50 for faster response
-      const data = await coursesAPI.search(searchQuery, null, 50)
-      
-      console.log('Search response:', data) // Debug log
-      
-      // Backend already groups courses, just use them directly
-      const courses = data.courses || []
-      
-      setSearchResults(courses)
-      
-      if (courses.length === 0) {
-        setSearchError('No courses found matching your search.')
+  // Handle touch drag
+  useEffect(() => {
+    const handleTouchMove = (e) => {
+      if (isDraggingLeft) {
+        const deltaY = e.touches[0].clientY - dragStartY
+        const newY = Math.max(0, Math.min(window.innerHeight - 50, dragStartPos + deltaY))
+        setLeftToggleY(newY)
       }
-    } catch (error) {
-      console.error('Course search error:', error)
-      setSearchError('Failed to search courses. Please try again.')
-      setSearchResults([])
-    } finally {
-      setIsSearching(false)
+      if (isDraggingRight) {
+        const deltaY = e.touches[0].clientY - dragStartY
+        const newY = Math.max(0, Math.min(window.innerHeight - 50, dragStartPos + deltaY))
+        setRightToggleY(newY)
+      }
     }
-  }
 
-  // Load course details
-  const handleCourseClick = async (course) => {
-    setIsLoadingCourse(true)
-    setSelectedCourse(null)
-
-    try {
-      const data = await coursesAPI.getDetails(course.subject, course.catalog)
-      console.log('Course details:', data) // Debug log
-      setSelectedCourse(data.course)
-    } catch (error) {
-      console.error('Error loading course details:', error)
-      setSearchError('Failed to load course details.')
-    } finally {
-      setIsLoadingCourse(false)
+    const handleTouchEnd = () => {
+      setIsDraggingLeft(false)
+      setIsDraggingRight(false)
     }
-  }
 
-  const handleTabChange = (tab) => {
-    setActiveTab(tab)
-    if (window.innerWidth < 768) {
-      setSidebarOpen(false)
+    if (isDraggingLeft || isDraggingRight) {
+      window.addEventListener('touchmove', handleTouchMove)
+      window.addEventListener('touchend', handleTouchEnd)
+      return () => {
+        window.removeEventListener('touchmove', handleTouchMove)
+        window.removeEventListener('touchend', handleTouchEnd)
+      }
     }
-  }
+  }, [isDraggingLeft, isDraggingRight, dragStartY, dragStartPos])
 
   return (
     <div className="dashboard">
-      {/* Sidebar */}
+      {/* Left Sidebar */}
       <aside className={`sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
         <div className="sidebar-header">
           {sidebarOpen && (
@@ -709,10 +772,18 @@ export default function Dashboard() {
                 onClick={() => handleTabChange('favorites')}
               >
                 <span className="nav-icon">⭐</span>
-                <span className="nav-label">Favorites</span>
+                <span className="nav-label">Saved</span>
                 {favorites.length > 0 && (
                   <span className="nav-badge">{favorites.length}</span>
                 )}
+              </button>
+              
+              <button 
+                className={`nav-item ${activeTab === 'forum' ? 'active' : ''}`}
+                onClick={() => handleTabChange('forum')}
+              >
+                <span className="nav-icon">💬</span>
+                <span className="nav-label">Forum</span>
               </button>
               
               <button 
@@ -752,7 +823,7 @@ export default function Dashboard() {
 
       {/* Main Content */}
       <main className="main-content">
-        {/* Chat Tabs Bar */}
+        {/* Chat Tabs Bar - WITH DRAG AND DROP */}
         {activeTab === 'chat' && (
           <div className="chat-tabs-bar">
             <div className="chat-tabs-container">
@@ -770,13 +841,13 @@ export default function Dashboard() {
                   <span className="chat-tab-title">{tab.title}</span>
                   <button
                     className="chat-tab-close"
-                    onClick={(e) => closeChatTab(tab.id, e)}
+                    onClick={(e) => handleCloseChatTab(tab.id, e)}
                   >
                     ✕
                   </button>
                 </div>
               ))}
-              <button className="chat-tab-new" onClick={createNewChatTab}>
+              <button className="chat-tab-new" onClick={handleNewChatTab}>
                 +
               </button>
             </div>
@@ -795,7 +866,8 @@ export default function Dashboard() {
             </button>
             <h1 className="page-title">
               {activeTab === 'courses' && '📚 Course Explorer'}
-              {activeTab === 'favorites' && '⭐ My Favorites'}
+              {activeTab === 'favorites' && '⭐ Saved Courses'}
+              {activeTab === 'forum' && '💬 Community Forum'}
               {activeTab === 'profile' && '👤 Your Profile'}
             </h1>
           </header>
@@ -803,7 +875,7 @@ export default function Dashboard() {
 
         {/* Content Area */}
         <div className="content-area">
-          {/* Chat Tab */}
+          {/* CHAT TAB */}
           {activeTab === 'chat' && (
             <div className="chat-container">
               <div className="chat-messages">
@@ -814,19 +886,27 @@ export default function Dashboard() {
                       <div className="message-text">Loading chat history...</div>
                     </div>
                   </div>
+                ) : getCurrentChatMessages().length === 0 ? (
+                  <div className="message assistant">
+                    <div className="message-avatar">🤖</div>
+                    <div className="message-content">
+                      <div className="message-text">
+                        Hello! I'm your McGill AI Academic Advisor. How can I help you plan your courses today?
+                      </div>
+                    </div>
+                  </div>
                 ) : (
-                  getCurrentChatMessages().map((msg, idx) => (
-                    <div key={idx} className={`message ${msg.role}`}>
+                  getCurrentChatMessages().map((message, idx) => (
+                    <div key={idx} className={`message ${message.role}`}>
                       <div className="message-avatar">
-                        {msg.role === 'user' ? user?.email?.[0].toUpperCase() : '🤖'}
+                        {message.role === 'assistant' ? '🤖' : user?.email?.[0].toUpperCase()}
                       </div>
                       <div className="message-content">
-                        <div className="message-text">{msg.content}</div>
+                        <div className="message-text">{message.content}</div>
                       </div>
                     </div>
                   ))
                 )}
-                
                 {isSending && (
                   <div className="message assistant">
                     <div className="message-avatar">🤖</div>
@@ -837,7 +917,6 @@ export default function Dashboard() {
                     </div>
                   </div>
                 )}
-                
                 <div ref={messagesEndRef} />
               </div>
 
@@ -853,7 +932,12 @@ export default function Dashboard() {
                   placeholder="Ask me anything about courses, planning, or McGill academics..."
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
-                  onKeyDown={handleKeyPress}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault()
+                      handleSendMessage(e)
+                    }
+                  }}
                   disabled={isSending}
                   rows={1}
                   style={{ resize: 'none', overflow: 'hidden' }}
@@ -873,7 +957,7 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* Courses Tab */}
+          {/* COURSES TAB - ORIGINAL WITH RMP + MARK AS COMPLETED */}
           {activeTab === 'courses' && (
             <div className="courses-container">
               <form className="search-section" onSubmit={handleCourseSearch}>
@@ -988,21 +1072,35 @@ export default function Dashboard() {
                           )}
                         </div>
                         
-                        {/* Favorite Button */}
-                        <button
-                          className={`favorite-btn ${isFavorited(course.subject, course.catalog) ? 'favorited' : ''}`}
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleToggleFavorite(course)
-                          }}
-                          title={isFavorited(course.subject, course.catalog) ? 'Remove from favorites' : 'Add to favorites'}
-                        >
-                          {isFavorited(course.subject, course.catalog) ? (
-                            <FaHeart className="favorite-icon" />
-                          ) : (
-                            <FaRegHeart className="favorite-icon" />
-                          )}
-                        </button>
+                        <div className="course-card-actions">
+                          {/* Favorite Button - bottom left */}
+                          <button
+                            className={`favorite-btn ${isFavorited(course.subject, course.catalog) ? 'favorited' : ''}`}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleToggleFavorite(course)
+                            }}
+                            title={isFavorited(course.subject, course.catalog) ? 'Remove from favorites' : 'Add to favorites'}
+                          >
+                            {isFavorited(course.subject, course.catalog) ? (
+                              <FaHeart className="favorite-icon" />
+                            ) : (
+                              <FaRegHeart className="favorite-icon" />
+                            )}
+                          </button>
+                          
+                          {/* Mark as Completed Button - to the right of favorite */}
+                          <button
+                            className={`completed-btn ${isCompleted(course.subject, course.catalog) ? 'completed' : ''}`}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleToggleCompleted(course)
+                            }}
+                            title={isCompleted(course.subject, course.catalog) ? 'Mark as not completed' : 'Mark as completed'}
+                          >
+                            <FaCheckCircle className="completed-icon" />
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -1069,46 +1167,45 @@ export default function Dashboard() {
                     )}
                   </div>
 
-                  <div className="course-sections">
-                    <h3 className="sections-header">
-                      Sections ({selectedCourse.num_sections})
-                    </h3>
-                    {selectedCourse.sections.map((section, idx) => (
-                      <div key={idx} className="section-card">
-                        <div className="section-info">
-                          <div className="section-header">
-                            <span className="section-term">{section.term || 'N/A'}</span>
-                            {section.average && (
-                              <span className="section-average">
-                                Average: {section.average} GPA ({gpaToLetterGrade(section.average)})
-                              </span>
+                  {selectedCourse.sections && selectedCourse.sections.length > 0 && (
+                    <div className="course-sections">
+                      <h3 className="sections-header">
+                        Sections ({selectedCourse.sections.length})
+                      </h3>
+                      {selectedCourse.sections.map((section, idx) => (
+                        <div key={idx} className="section-card">
+                          <div className="section-info">
+                            <div className="section-header">
+                              <span className="section-term">{section.term || 'N/A'}</span>
+                              {section.average && (
+                                <span className="section-average">
+                                  Average: {section.average} GPA ({gpaToLetterGrade(section.average)})
+                                </span>
+                              )}
+                            </div>
+                            {section.instructor && section.instructor !== 'TBA' && (
+                              <div className="section-instructor">
+                                <strong>Instructor:</strong> {section.instructor}
+                              </div>
+                            )}
+                            
+                            {/* Show section-specific RMP ratings */}
+                            {section.rmp_rating && (
+                              <div className="section-rmp">
+                                <div className="rmp-inline">
+                                  <span className="rmp-badge">⭐ {section.rmp_rating.toFixed(1)}</span>
+                                  <span className="rmp-badge">📊 Difficulty: {section.rmp_difficulty?.toFixed(1) || 'N/A'}</span>
+                                  {section.rmp_num_ratings && (
+                                    <span className="rmp-badge">📝 {Math.round(section.rmp_num_ratings)} reviews</span>
+                                  )}
+                                </div>
+                              </div>
                             )}
                           </div>
-                          {section.instructor && section.instructor !== 'TBA' && (
-                            <div className="section-instructor">
-                              <strong>Instructor:</strong> {section.instructor}
-                            </div>
-                          )}
-                          
-                          {/* Show section-specific RMP ratings */}
-                          {section.rmp_rating && (
-                            <div className="section-rmp">
-                              <div className="rmp-inline">
-                                <span className="rmp-badge">⭐ {section.rmp_rating.toFixed(1)}</span>
-                                <span className="rmp-badge">📊 Difficulty: {section.rmp_difficulty?.toFixed(1) || 'N/A'}</span>
-                                {section.rmp_num_ratings && (
-                                  <span className="rmp-badge">📝 {Math.round(section.rmp_num_ratings)} reviews</span>
-                                )}
-                                {section.rmp_would_take_again && (
-                                  <span className="rmp-badge">🔄 {Math.round(section.rmp_would_take_again)}% would retake</span>
-                                )}
-                              </div>
-                            </div>
-                          )}
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -1122,84 +1219,36 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* Favorites Tab */}
+          {/* SAVED/FAVORITES TAB */}
           {activeTab === 'favorites' && (
-            <div className="favorites-container">
-              {isLoadingFavorites ? (
-                <div className="loading-container">
-                  <div className="loading-spinner">Loading favorites...</div>
-                </div>
-              ) : favorites.length === 0 ? (
-                <div className="placeholder-content">
-                  <div className="placeholder-icon">⭐</div>
-                  <h3>No Favorites Yet</h3>
-                  <p>Start exploring courses and add your favorites by clicking the heart icon!</p>
-                  <button 
-                    className="btn btn-primary"
-                    onClick={() => setActiveTab('courses')}
-                  >
-                    Browse Courses
-                  </button>
-                </div>
-              ) : (
-                <div className="favorites-list">
-                  <div className="favorites-header">
-                    <h3>My Favorite Courses</h3>
-                    <p className="favorites-count">{favorites.length} course{favorites.length !== 1 ? 's' : ''} saved</p>
-                  </div>
-                  
-                  <div className="course-list">
-                    {favorites.map((favorite) => (
-                      <div 
-                        key={favorite.course_code}
-                        className="course-card"
-                      >
-                        <div className="course-card-content" onClick={async () => {
-                          // Load course details when clicked
-                          setActiveTab('courses')
-                          setTimeout(async () => {
-                            await handleCourseClick({
-                              subject: favorite.subject,
-                              catalog: favorite.catalog,
-                              title: favorite.course_title
-                            })
-                          }, 100)
-                        }}>
-                          <div className="course-header">
-                            <div className="course-code">
-                              {favorite.subject} {favorite.catalog}
-                            </div>
-                          </div>
-                          <h4 className="course-title">{favorite.course_title}</h4>
-                          <div className="course-meta">
-                            📅 Added {new Date(favorite.created_at).toLocaleDateString()}
-                          </div>
-                        </div>
-                        
-                        {/* Remove Favorite Button */}
-                        <button
-                          className="favorite-btn favorited"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleToggleFavorite({
-                              subject: favorite.subject,
-                              catalog: favorite.catalog,
-                              title: favorite.course_title
-                            })
-                          }}
-                          title="Remove from favorites"
-                        >
-                          <FaHeart className="favorite-icon" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
+            <SavedCoursesView
+              favorites={favorites}
+              completedCourses={completedCourses}
+              completedCoursesMap={completedCoursesMap}
+              user={user}
+              onToggleFavorite={handleToggleFavorite}
+              onToggleCompleted={handleToggleCompleted}
+              onCourseClick={async (course) => {
+                setActiveTab('courses')
+                setTimeout(async () => {
+                  await handleCourseClick({
+                    subject: course.subject,
+                    catalog: course.catalog,
+                    title: course.course_title
+                  })
+                }, 100)
+              }}
+              onRefresh={() => {
+                loadFavorites()
+                loadCompletedCourses()
+              }}
+            />
           )}
 
-          {/* Profile Tab - UNCHANGED FROM ORIGINAL */}
+          {/* FORUM TAB */}
+          {activeTab === 'forum' && <Forum />}
+
+          {/* PROFILE TAB */}
           {activeTab === 'profile' && (
             <div className="profile-page">
               <div className="profile-page-header">
@@ -1261,6 +1310,13 @@ export default function Dashboard() {
                             <div className="info-details">
                               <span className="info-label">Major</span>
                               <span className="info-value">{profile?.major || 'Not specified'}</span>
+                              {profile?.other_majors && profile.other_majors.length > 0 && (
+                                <div className="info-tags" style={{marginTop: '6px'}}>
+                                  {profile.other_majors.map((major, idx) => (
+                                    <span key={idx} className="info-tag">{major}</span>
+                                  ))}
+                                </div>
+                              )}
                             </div>
                           </div>
                           <div className="info-item">
@@ -1272,6 +1328,24 @@ export default function Dashboard() {
                               </span>
                             </div>
                           </div>
+                          {(profile?.minor || (profile?.other_minors && profile.other_minors.length > 0)) && (
+                            <div className="info-item">
+                              <span className="info-icon">📘</span>
+                              <div className="info-details">
+                                <span className="info-label">Minor{profile?.other_minors?.length > 0 ? 's' : ''}</span>
+                                {profile?.minor && (
+                                  <span className="info-value">{profile.minor}</span>
+                                )}
+                                {profile?.other_minors && profile.other_minors.length > 0 && (
+                                  <div className="info-tags" style={{marginTop: '6px'}}>
+                                    {profile.other_minors.map((minor, idx) => (
+                                      <span key={idx} className="info-tag">{minor}</span>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
                           <div className="info-item">
                             <span className="info-icon">📧</span>
                             <div className="info-details">
@@ -1288,47 +1362,19 @@ export default function Dashboard() {
                           </div>
                         </div>
                       ) : (
-                        <form className="edit-form" onSubmit={handleProfileUpdate}>
-                          <div className="form-row">
-                            <div className="form-group">
-                              <label className="form-label">Major</label>
-                              <input
-                                type="text"
-                                className="form-input"
-                                placeholder="e.g., Computer Science"
-                                value={profileForm.major}
-                                onChange={(e) => setProfileForm({...profileForm, major: e.target.value})}
-                              />
-                            </div>
-                            <div className="form-group">
-                              <label className="form-label">Year</label>
-                              <select
-                                className="form-input"
-                                value={profileForm.year}
-                                onChange={(e) => setProfileForm({...profileForm, year: e.target.value})}
-                              >
-                                <option value="">Select year</option>
-                                <option value="1">U1</option>
-                                <option value="2">U2</option>
-                                <option value="3">U3</option>
-                                <option value="4">U4</option>
-                                <option value="5">U5+</option>
-                              </select>
-                            </div>
-                          </div>
-                          <div className="form-actions-inline">
-                            <button type="submit" className="btn btn-primary-sm">
-                              💾 Save Changes
-                            </button>
-                            <button 
-                              type="button"
-                              className="btn btn-secondary-sm"
-                              onClick={() => setEditingProfile(false)}
-                            >
-                              ✕ Cancel
-                            </button>
-                          </div>
-                        </form>
+                        <EnhancedProfileForm
+                          profile={profile}
+                          onSave={async (formData) => {
+                            try {
+                              await updateProfile(formData)
+                              setEditingProfile(false)
+                            } catch (error) {
+                              console.error('Error updating profile:', error)
+                              alert('Failed to update profile')
+                            }
+                          }}
+                          onCancel={() => setEditingProfile(false)}
+                        />
                       )}
                     </div>
                   </div>
@@ -1350,21 +1396,6 @@ export default function Dashboard() {
                           <div className="stat-label">Current GPA</div>
                         </div>
                       </div>
-                      {editingProfile && (
-                        <div className="form-group" style={{marginTop: '1rem'}}>
-                          <label className="form-label">Update GPA</label>
-                          <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            max="4.0"
-                            className="form-input"
-                            placeholder="e.g., 3.75"
-                            value={profileForm.current_gpa}
-                            onChange={(e) => setProfileForm({...profileForm, current_gpa: e.target.value})}
-                          />
-                        </div>
-                      )}
                       <div className="performance-tips">
                         <div className="tip-item">
                           <span className="tip-icon">💡</span>
@@ -1383,36 +1414,78 @@ export default function Dashboard() {
                       </div>
                     </div>
                     <div className="card-content">
-                      {!editingProfile ? (
-                        <div className="interests-display">
-                          {profile?.interests ? (
-                            <div className="interests-tags">
-                              {profile.interests.split(',').map((interest, idx) => (
-                                <span key={idx} className="interest-tag">
-                                  {interest.trim()}
-                                </span>
-                              ))}
-                            </div>
-                          ) : (
-                            <p className="empty-state">
-                              <span className="empty-icon">🎯</span>
-                              <span>No interests added yet. Add your academic interests to get personalized recommendations!</span>
-                            </p>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="form-group">
-                          <label className="form-label">Your Interests</label>
-                          <textarea
-                            className="form-input"
-                            placeholder="e.g., Machine Learning, Web Development, Data Science, Finance (comma-separated)"
-                            rows="4"
-                            value={profileForm.interests}
-                            onChange={(e) => setProfileForm({...profileForm, interests: e.target.value})}
-                          />
-                          <p className="form-hint">Separate multiple interests with commas</p>
-                        </div>
-                      )}
+                      <div className="interests-display">
+                        {profile?.interests ? (
+                          <div className="interests-tags">
+                            {profile.interests.split(',').map((interest, idx) => (
+                              <span key={idx} className="interest-tag">
+                                {interest.trim()}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="empty-state">
+                            <span className="empty-icon">🎯</span>
+                            <span>No interests added yet. Add your academic interests to get personalized recommendations!</span>
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Degree Progress */}
+                  <div className="profile-section-card card-full-width">
+                    <div className="card-header">
+                      <div className="card-title-group">
+                        <span className="card-icon">🎯</span>
+                        <h2 className="card-title">Degree Progress</h2>
+                      </div>
+                    </div>
+                    <div className="card-content">
+                      <DegreeProgressTracker 
+                        completedCourses={completedCourses}
+                        profile={profile}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Badges */}
+                  <div className="profile-section-card card-full-width">
+                    <div className="card-header">
+                      <div className="card-title-group">
+                        <span className="card-icon">🏆</span>
+                        <h2 className="card-title">Achievements</h2>
+                      </div>
+                    </div>
+                    <div className="card-content">
+                      <BadgesDisplay 
+                        userData={{
+                          profile,
+                          completedCourses,
+                          savedCourses: favorites,
+                          chatCount: Array.isArray(chatHistory) ? chatHistory.length : 0
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Personalized Insights */}
+                  <div className="profile-section-card card-full-width">
+                    <div className="card-header">
+                      <div className="card-title-group">
+                        <span className="card-icon">💡</span>
+                        <h2 className="card-title">Personalized Insights</h2>
+                      </div>
+                    </div>
+                    <div className="card-content">
+                      <PersonalizedInsights
+                        userData={{
+                          profile,
+                          completedCourses,
+                          savedCourses: favorites,
+                          chatHistory: Array.isArray(chatHistory) ? chatHistory : []
+                        }}
+                      />
                     </div>
                   </div>
 
@@ -1429,24 +1502,18 @@ export default function Dashboard() {
                         <div className="setting-item">
                           <div className="setting-info">
                             <h3 className="setting-title">Account Status</h3>
-                            <p className="setting-description">Your account is active and verified</p>
+                            <p className="setting-description">Your account is active</p>
                           </div>
                           <span className="status-badge status-active">Active</span>
                         </div>
                         <div className="setting-item">
                           <div className="setting-info">
-                            <h3 className="setting-title">Member Since</h3>
-                            <p className="setting-description">
-                              {profile?.created_at 
-                                ? new Date(profile.created_at).toLocaleDateString('en-US', { 
-                                    year: 'numeric', 
-                                    month: 'long', 
-                                    day: 'numeric' 
-                                  })
-                                : 'Recently joined'
-                              }
-                            </p>
+                            <h3 className="setting-title">Sign Out</h3>
+                            <p className="setting-description">Sign out of your McGill AI account</p>
                           </div>
+                          <button className="btn btn-secondary" onClick={signOut}>
+                            Sign Out
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -1492,14 +1559,19 @@ export default function Dashboard() {
               </div>
               <div className="right-sidebar-content">
                 {chatHistory.length > 0 ? (
-                  chatHistory.map(chat => (
+                  chatHistory.map(session => (
                     <div 
-                      key={chat.id} 
+                      key={session.session_id} 
                       className="history-item"
-                      onClick={() => loadHistoricalChat(chat.id)}
+                      onClick={() => loadHistoricalChat(session.session_id)}
                     >
-                      <div className="history-title">{chat.title}</div>
-                      <div className="history-meta">{chat.messageCount} messages</div>
+                      <div className="history-title">
+                        {session.last_message?.substring(0, 50) || 'Chat Session'}
+                        {session.last_message && session.last_message.length > 50 && '...'}
+                      </div>
+                      <div className="history-meta">
+                        {new Date(session.last_updated).toLocaleDateString()}
+                      </div>
                     </div>
                   ))
                 ) : (
