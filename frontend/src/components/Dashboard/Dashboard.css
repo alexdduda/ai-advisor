@@ -2554,3 +2554,126 @@ textarea.form-input {
   top: 12px;
   right: 12px;
 }
+/* ========================================
+   COURSE CARD BUTTONS - Add to Dashboard.css
+   ======================================== */
+
+/* Course Card Structure */
+.course-card {
+  position: relative;
+  background: white;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.2s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.course-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: #dc2626;
+}
+
+.course-card-content {
+  padding-bottom: 50px; /* Space for buttons */
+}
+
+/* Course Card Actions - Bottom Right Position */
+.course-card-actions {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  z-index: 1;
+}
+
+/* Base Button Style */
+.favorite-btn,
+.completed-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: white;
+  border: 2px solid #dc2626;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.favorite-btn:hover,
+.completed-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(220, 38, 38, 0.3);
+}
+
+.favorite-btn:active,
+.completed-btn:active {
+  transform: scale(0.95);
+}
+
+/* Favorite Button States */
+.favorite-btn {
+  background: white;
+  border-color: #dc2626;
+}
+
+.favorite-btn.favorited {
+  background: #dc2626;
+  border-color: #dc2626;
+}
+
+.favorite-icon {
+  font-size: 18px;
+  color: #dc2626;
+}
+
+.favorite-btn.favorited .favorite-icon {
+  color: white;
+}
+
+/* Completed Button States */
+.completed-btn {
+  background: white;
+  border-color: #dc2626;
+}
+
+.completed-btn.completed {
+  background: #dc2626;
+  border-color: #dc2626;
+}
+
+.completed-icon {
+  font-size: 18px;
+  color: #dc2626;
+}
+
+.completed-btn.completed .completed-icon {
+  color: white;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .course-card-actions {
+    bottom: 12px;
+    right: 12px;
+    gap: 8px;
+  }
+
+  .favorite-btn,
+  .completed-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .favorite-icon,
+  .completed-icon {
+    font-size: 16px;
+  }
+}

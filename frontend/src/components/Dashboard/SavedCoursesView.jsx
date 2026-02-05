@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { FaHeart, FaRegHeart, FaCheckCircle } from 'react-icons/fa'
+import './SavedCoursesView.css'
 
 export default function SavedCoursesView({ 
   favorites = [], 
   completedCourses = [],
   completedCoursesMap = new Set(),
+  favoritesMap = new Set(),
   user,
   onToggleFavorite,
   onToggleCompleted,
@@ -17,6 +19,12 @@ export default function SavedCoursesView({
   const isCompleted = (subject, catalog) => {
     const courseCode = `${subject} ${catalog}`
     return completedCoursesMap.has(courseCode)
+  }
+
+  // Check if a course is favorited
+  const isFavorited = (subject, catalog) => {
+    const courseCode = `${subject}${catalog}`
+    return favoritesMap.has(courseCode)
   }
 
   return (
@@ -61,8 +69,12 @@ export default function SavedCoursesView({
                 <div key={idx} className="course-card">
                   <div 
                     className="course-card-content" 
-                    onClick={() => onCourseClick && onCourseClick(course)}
-                    style={{ cursor: 'pointer' }}
+                    onClick={() => {
+                      console.log('Card clicked:', course)
+                      if (onCourseClick) {
+                        onCourseClick(course)
+                      }
+                    }}
                   >
                     <div className="course-header">
                       <div className="course-code">
@@ -72,6 +84,7 @@ export default function SavedCoursesView({
                     <h4 className="course-title">{course.course_title}</h4>
                   </div>
 
+                  {/* Icon-only circular buttons at bottom-left */}
                   <div className="course-card-actions">
                     {/* Favorite Button */}
                     <button
@@ -103,7 +116,7 @@ export default function SavedCoursesView({
                             title: course.course_title
                           })
                         }}
-                        title={isCompleted(course.subject, course.catalog) ? 'Mark as not completed' : 'Mark as completed'}
+                        title={isCompleted(course.subject, course.catalog) ? 'Mark as incomplete' : 'Mark as completed'}
                       >
                         <FaCheckCircle className="completed-icon" />
                       </button>
@@ -131,8 +144,12 @@ export default function SavedCoursesView({
                 <div key={idx} className="course-card completed-course-card">
                   <div 
                     className="course-card-content"
-                    onClick={() => onCourseClick && onCourseClick(course)}
-                    style={{ cursor: 'pointer' }}
+                    onClick={() => {
+                      console.log('Completed card clicked:', course)
+                      if (onCourseClick) {
+                        onCourseClick(course)
+                      }
+                    }}
                   >
                     <div className="course-header">
                       <div className="course-code">
@@ -153,8 +170,31 @@ export default function SavedCoursesView({
                     </div>
                   </div>
 
+                  {/* Both buttons for completed courses */}
                   <div className="course-card-actions">
-                    {/* Completed Button (always shown as completed here) */}
+                    {/* Favorite Button */}
+                    {onToggleFavorite && (
+                      <button
+                        className={`favorite-btn ${isFavorited(course.subject, course.catalog) ? 'favorited' : ''}`}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onToggleFavorite({
+                            subject: course.subject,
+                            catalog: course.catalog,
+                            title: course.course_title
+                          })
+                        }}
+                        title={isFavorited(course.subject, course.catalog) ? 'Remove from favorites' : 'Add to favorites'}
+                      >
+                        {isFavorited(course.subject, course.catalog) ? (
+                          <FaHeart className="favorite-icon" />
+                        ) : (
+                          <FaRegHeart className="favorite-icon" />
+                        )}
+                      </button>
+                    )}
+
+                    {/* Completed Button */}
                     <button
                       className="completed-btn completed"
                       onClick={(e) => {
@@ -167,7 +207,7 @@ export default function SavedCoursesView({
                           })
                         }
                       }}
-                      title="Mark as not completed"
+                      title="Remove from completed"
                     >
                       <FaCheckCircle className="completed-icon" />
                     </button>
