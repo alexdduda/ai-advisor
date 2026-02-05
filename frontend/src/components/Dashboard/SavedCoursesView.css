@@ -39,9 +39,9 @@
 }
 
 .saved-tab.active {
-  color: #2563eb;
-  border-bottom-color: #2563eb;
-  background: #eff6ff;
+  color: #ED1B2F;
+  border-bottom-color: #ED1B2F;
+  background: #fef2f2;
 }
 
 .tab-icon {
@@ -59,15 +59,15 @@
   min-width: 20px;
   height: 20px;
   padding: 0 6px;
-  background: #dbeafe;
-  color: #1e40af;
+  background: #fee2e2;
+  color: #991b1b;
   font-size: 12px;
   font-weight: 600;
   border-radius: 10px;
 }
 
 .saved-tab.active .tab-count {
-  background: #2563eb;
+  background: #ED1B2F;
   color: white;
 }
 
@@ -100,7 +100,7 @@
   max-width: 400px;
 }
 
-/* Course List (reuse existing styles but add specifics) */
+/* Course List */
 .saved-courses-content .course-list,
 .completed-courses-content .course-list {
   display: grid;
@@ -109,14 +109,70 @@
   margin-top: 20px;
 }
 
-/* Completed Course Card Specific Styles */
-.completed-course-card {
-  border-left: 4px solid #10b981;
-  background: #f0fdf4;
+/* Course Card - CRITICAL STYLING */
+.saved-courses-view .course-card {
+  position: relative;
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  transition: all 0.2s ease;
+  min-height: 160px;
 }
 
-.course-grade-badge {
-  background: #10b981;
+.saved-courses-view .course-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+/* Course Card Content - Clickable Area */
+.saved-courses-view .course-card-content {
+  cursor: pointer;
+  padding-bottom: 60px; /* Space for buttons at bottom */
+}
+
+.saved-courses-view .course-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.saved-courses-view .course-code {
+  font-size: 14px;
+  font-weight: 700;
+  color: #ED1B2F;
+  background: #fef2f2;
+  padding: 4px 12px;
+  border-radius: 6px;
+}
+
+.saved-courses-view .course-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Buttons at BOTTOM LEFT */
+.saved-courses-view .course-card-actions {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  display: flex;
+  gap: 10px;
+  z-index: 10;
+}
+
+/* Completed Course Card Specific Styles */
+.saved-courses-view .completed-course-card {
+  border-left: 4px solid #ED1B2F;
+  background: #fef2f2;
+}
+
+.saved-courses-view .course-grade-badge {
+  background: #ED1B2F;
   color: white;
   padding: 4px 12px;
   border-radius: 12px;
@@ -124,7 +180,7 @@
   font-weight: 600;
 }
 
-.course-meta {
+.saved-courses-view .course-meta {
   display: flex;
   align-items: center;
   gap: 4px;
@@ -133,11 +189,11 @@
   margin-top: 8px;
 }
 
-.course-term {
+.saved-courses-view .course-term {
   font-weight: 500;
 }
 
-.course-credits {
+.saved-courses-view .course-credits {
   color: #9ca3af;
 }
 
@@ -164,5 +220,11 @@
   .completed-courses-content .course-list {
     grid-template-columns: 1fr;
     gap: 12px;
+  }
+
+  .saved-courses-view .course-card-actions {
+    bottom: 8px;
+    left: 8px;
+    gap: 8px;
   }
 }

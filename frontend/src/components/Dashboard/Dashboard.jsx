@@ -16,6 +16,20 @@ import { MdKeyboardArrowLeft, MdKeyboardArrowRight } from 'react-icons/md';
 import { FaChevronLeft, FaChevronRight, FaHeart, FaRegHeart, FaCheckCircle } from 'react-icons/fa';
 import './Dashboard.css'
 
+// Course credits lookup - McGill specific
+const COURSE_CREDITS = {
+  'MATH 140': 4, 'MATH 141': 4, 'MATH 150': 4, 'MATH 151': 4,
+  'PHYS 131': 4, 'PHYS 142': 4,
+  'CHEM 110': 4, 'CHEM 120': 4,
+  'BIOL 111': 4, 'BIOL 112': 4,
+  'CHEM 181': 1, 'PHYS 181': 1, 'BIOL 181': 1,
+}
+
+function getCourseCredits(subject, catalog) {
+  const courseCode = `${subject} ${catalog}`.toUpperCase()
+  return COURSE_CREDITS[courseCode] || 3
+}
+
 export default function Dashboard() {
   const { user, profile, signOut, updateProfile } = useAuth()
   const [activeTab, setActiveTab] = useState('chat')
@@ -477,7 +491,7 @@ export default function Dashboard() {
     }
   }
 
-  // Toggle completed - NEW FUNCTION
+  // Toggle completed - UPDATED WITH CREDITS FIX
   const handleToggleCompleted = async (course) => {
     if (!user?.id) return
     
@@ -486,6 +500,7 @@ export default function Dashboard() {
     
     try {
       if (isComp) {
+        // Remove completed course
         await completedCoursesAPI.removeCompleted(user.id, courseCode)
         setCompletedCourses(prev => prev.filter(c => c.course_code !== courseCode))
         setCompletedCoursesMap(prev => {
@@ -494,48 +509,59 @@ export default function Dashboard() {
           return newSet
         })
       } else {
-        // Ask user for grade
-        const grade = prompt('What grade did you get? (A+, A, A-, B+, B, B-, C+, C, D, F, or leave blank):', 'A');
+        // Add completed course
         
-        // If user cancels, don't add
-        if (grade === null) return;
+        // Get correct credits for this course
+        const credits = getCourseCredits(course.subject, course.catalog)
         
-        // Validate grade (optional)
-        const validGrades = ['A+', 'A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D', 'F', ''];
-        const normalizedGrade = grade.trim().toUpperCase();
+        // Ask user for details
+        const currentYear = new Date().getFullYear()
+        const term = prompt('What term? (Fall/Winter/Summer):', 'Fall')
+        if (term === null) return // User cancelled
+        
+        const year = prompt(`What year? (e.g., ${currentYear}):`, currentYear)
+        if (year === null) return // User cancelled
+        
+        const grade = prompt('What grade? (A, A-, B+, B, etc. - or leave blank):', '')
+        if (grade === null) return // User cancelled
+        
+        // Validate and ask about credits
+        let finalCredits = credits
+        const confirmCredits = prompt(
+          `This course is ${credits} credit${credits !== 1 ? 's' : ''}. Is this correct? (Enter different number or press OK):`,
+          credits
+        )
+        if (confirmCredits === null) return // User cancelled
+        if (confirmCredits && !isNaN(confirmCredits)) {
+          finalCredits = parseInt(confirmCredits)
+        }
         
         const courseData = {
           course_code: courseCode,
-          course_title: course.title,
+          course_title: course.title || course.course_title,
           subject: course.subject,
-          catalog: String(course.catalog), // Ensure it's a string
-          term: 'Fall', // You could also prompt for this
-          year: new Date().getFullYear(),
-          grade: normalizedGrade || null,
-          credits: 3
-        };
-        console.log('Sending completed course data:', courseData);
-        await completedCoursesAPI.addCompleted(user.id, courseData)
-        
-        const newCompleted = {
-          course_code: courseCode,
-          course_title: course.title,
-          subject: course.subject,
-          catalog: String(course.catalog), // Ensure it's a string
-          term: 'Fall',
-          year: new Date().getFullYear(),
-          grade: normalizedGrade || null,
-          credits: 3
+          catalog: String(course.catalog),
+          term: term.trim() || 'Fall',
+          year: parseInt(year) || currentYear,
+          grade: grade.trim().toUpperCase() || null,
+          credits: finalCredits
         }
         
-        setCompletedCourses(prev => [newCompleted, ...prev])
+        console.log('Adding completed course:', courseData)
+        await completedCoursesAPI.addCompleted(user.id, courseData)
+        
+        setCompletedCourses(prev => [courseData, ...prev])
         setCompletedCoursesMap(prev => new Set([...prev, courseCode]))
+        
+        // Show confirmation
+        alert(`✓ ${courseCode} marked as completed (${finalCredits} credits)`)
       }
     } catch (error) {
       console.error('Error toggling completed:', error)
       alert(error.message || 'Failed to update completed courses')
     }
   }
+
 
   // Load favorites
   const loadFavorites = async () => {
@@ -1225,6 +1251,7 @@ export default function Dashboard() {
               favorites={favorites}
               completedCourses={completedCourses}
               completedCoursesMap={completedCoursesMap}
+	      favoritesMap={favoritesMap}
               user={user}
               onToggleFavorite={handleToggleFavorite}
               onToggleCompleted={handleToggleCompleted}
