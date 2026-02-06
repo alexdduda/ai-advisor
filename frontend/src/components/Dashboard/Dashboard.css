@@ -1070,9 +1070,24 @@ textarea.form-input {
   gap: 2rem;
 }
 
-.profile-avatar-xl {
+.profile-avatar-xl-wrapper {
+  position: relative;
   width: 120px;
   height: 120px;
+  border-radius: 50%;
+  cursor: pointer;
+  overflow: hidden;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.profile-avatar-xl-wrapper:hover {
+  transform: scale(1.05);
+}
+
+.profile-avatar-xl {
+  width: 100%;
+  height: 100%;
   background: white;
   color: #ED1B2F;
   border-radius: 50%;
@@ -1082,7 +1097,65 @@ textarea.form-input {
   font-weight: 700;
   font-size: 3rem;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-  flex-shrink: 0;
+}
+
+.profile-avatar-xl-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.avatar-xl-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  gap: 8px;
+}
+
+.profile-avatar-xl-wrapper:hover .avatar-xl-overlay {
+  opacity: 1;
+}
+
+.camera-xl-icon {
+  font-size: 32px;
+  color: white;
+}
+
+.overlay-xl-text {
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.avatar-xl-loading {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spinner-xl {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #fee2e2;
+  border-top-color: #ED1B2F;
+  border-radius: 50%;
+  animation: spin-xl 0.8s linear infinite;
+}
+
+@keyframes spin-xl {
+  to { transform: rotate(360deg); }
 }
 
 .profile-hero-info {
@@ -1136,8 +1209,23 @@ textarea.form-input {
 
 .profile-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  grid-template-columns: 2fr 1fr; /* 2/3 and 1/3 split */
   gap: 1.5rem;
+  align-items: start;
+}
+
+/* Specific width classes */
+.profile-card-main {
+  grid-column: 1 / 2; /* Takes 2/3 */
+}
+
+.profile-card-sidebar {
+  grid-column: 2 / 3; /* Takes 1/3 */
+}
+
+/* Full width cards span both columns */
+.card-full-width {
+  grid-column: 1 / -1;
 }
 
 /* Profile Section Cards */
@@ -1740,6 +1828,11 @@ textarea.form-input {
   
   .profile-grid {
     grid-template-columns: 1fr;
+  }
+  
+  .profile-card-main,
+  .profile-card-sidebar {
+    grid-column: 1 / -1;
   }
 }
 
@@ -2519,5 +2612,198 @@ textarea.form-input {
   
   .favorite-icon {
     font-size: 1rem;
+  }
+}
+/* Completed button styles */
+.completed-btn {
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  color: #666;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.completed-btn:hover {
+  color: #28a745;
+  transform: scale(1.1);
+}
+
+.completed-btn.completed {
+  color: #28a745;
+}
+
+.completed-icon {
+  font-size: 1.25rem;
+}
+
+.course-card-actions {
+  display: flex;
+  gap: 8px;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+}
+/* ========================================
+   COURSE CARD BUTTONS - Add to Dashboard.css
+   ======================================== */
+
+/* Course Card Structure */
+.course-card {
+  position: relative;
+  background: white;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.2s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.course-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: #dc2626;
+}
+
+.course-card-content {
+  padding-bottom: 50px; /* Space for buttons */
+}
+
+/* Course Card Actions - Bottom Right Position */
+.course-card-actions {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  z-index: 1;
+}
+
+/* Base Button Style */
+.favorite-btn,
+.completed-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: white;
+  border: 2px solid #dc2626;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.favorite-btn:hover,
+.completed-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(220, 38, 38, 0.3);
+}
+
+.favorite-btn:active,
+.completed-btn:active {
+  transform: scale(0.95);
+}
+
+/* Favorite Button States */
+.favorite-btn {
+  background: white;
+  border-color: #dc2626;
+}
+
+.favorite-btn.favorited {
+  background: #dc2626;
+  border-color: #dc2626;
+}
+
+.favorite-icon {
+  font-size: 18px;
+  color: #dc2626;
+}
+
+.favorite-btn.favorited .favorite-icon {
+  color: white;
+}
+
+/* Completed Button States */
+.completed-btn {
+  background: white;
+  border-color: #dc2626;
+}
+
+.completed-btn.completed {
+  background: #dc2626;
+  border-color: #dc2626;
+}
+
+.completed-icon {
+  font-size: 18px;
+  color: #dc2626;
+}
+
+.completed-btn.completed .completed-icon {
+  color: white;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .course-card-actions {
+    bottom: 12px;
+    right: 12px;
+    gap: 8px;
+  }
+
+  .favorite-btn,
+  .completed-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .favorite-icon,
+  .completed-icon {
+    font-size: 16px;
+  }
+}
+
+/* Sign Out Section */
+.sign-out-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+}
+
+.sign-out-info {
+  flex: 1;
+}
+
+.sign-out-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 4px 0;
+}
+
+.sign-out-description {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .sign-out-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .sign-out-section .btn {
+    width: 100%;
   }
 }

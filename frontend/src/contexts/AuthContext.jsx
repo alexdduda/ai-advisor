@@ -22,6 +22,7 @@ export const AuthProvider = ({ children }) => {
   const mountedRef = useRef(true)
   const loadingProfile = useRef(false)
   const justSignedUp = useRef(false)  // Track if we just completed signup
+  const justUpdatedProfile = useRef(false)  // Track if we just updated profile
 
   const loadProfile = useCallback(async (userId) => {
   if (!mountedRef.current || loadingProfile.current) {
@@ -130,6 +131,9 @@ export const AuthProvider = ({ children }) => {
           if (justSignedUp.current) {
             console.log('Skipping profile load - just signed up')
             justSignedUp.current = false
+          } else if (justUpdatedProfile.current) {
+            console.log('Skipping profile load - just updated profile')
+            justUpdatedProfile.current = false
           } else {
             await loadProfile(session.user.id)
           }
@@ -262,10 +266,20 @@ export const AuthProvider = ({ children }) => {
     try {
       setError(null)
       
+      console.log('AuthContext.updateProfile: Calling API with updates:', JSON.stringify(updates, null, 2))
       const { user: updatedUser } = await usersAPI.updateUser(user.id, updates)
+      console.log('AuthContext.updateProfile: Received updated user:', JSON.stringify(updatedUser, null, 2))
       
       if (mountedRef.current) {
+        console.log('AuthContext.updateProfile: Setting profile state')
+        justUpdatedProfile.current = true  // Prevent reload from overwriting
         setProfile(updatedUser)
+        console.log('AuthContext.updateProfile: Profile state updated successfully')
+        
+        // Reset flag after a short delay
+        setTimeout(() => {
+          justUpdatedProfile.current = false
+        }, 1000)
       }
       
       return { data: updatedUser, error: null }

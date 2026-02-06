@@ -14,7 +14,7 @@ from .exceptions import (
     general_exception_handler
 )
 
-from .routes import chat, courses, users, favorites
+from .routes import chat, courses, users, favorites, completed
 
 # Setup logging
 logger = setup_logging()
@@ -68,6 +68,7 @@ app.include_router(chat.router, prefix=f"{settings.API_PREFIX}/chat", tags=["Cha
 app.include_router(courses.router, prefix=f"{settings.API_PREFIX}/courses", tags=["Courses"])
 app.include_router(users.router, prefix=f"{settings.API_PREFIX}/users", tags=["Users"])
 app.include_router(favorites.router, prefix="/api/favorites", tags=["favorites"]) 
+app.include_router(completed.router, prefix="/api/completed", tags=["completed"])
 
 @app.get("/")
 async def root():
