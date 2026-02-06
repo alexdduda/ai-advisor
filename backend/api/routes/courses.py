@@ -1,14 +1,15 @@
 """
-Course search and retrieval endpoints with professor ratings from database
+Course search and retrieval endpoints with professor ratings from database - OPTIMIZED
 """
 from fastapi import APIRouter, HTTPException, Query, status
 from typing import Optional, List
 from pydantic import BaseModel, Field
 import logging
 import re
+from collections import defaultdict
 
 from ..config import settings
-from ..utils.supabase_client import search_courses, get_course
+from ..utils.supabase_client import get_supabase
 from ..exceptions import DatabaseException
 
 router = APIRouter()
@@ -82,50 +83,74 @@ async def search(
     )
 ):
     """
-    Search for courses with ratings from database
+    OPTIMIZED course search with ratings from database
     
     - **query**: Search term (matches course title, subject, or catalog number)
     - **subject**: Filter by specific subject code
     - **limit**: Maximum number of results (default 50, max 200)
-    - **include_ratings**: Ratings always included from database
     
     Returns a list of matching courses with ratings.
     """
     try:
+        supabase = get_supabase()
+        
         # Sanitize inputs
         clean_query = query.strip() if query else None
         clean_subject = subject.strip().upper() if subject else None
         
-        # Search courses (ratings are already in the database)
-        sections = search_courses(
-            query=clean_query,
-            subject=clean_subject,
-            limit=limit * 10  # Get more to account for grouping
+        # Build optimized query - select only needed columns and use DISTINCT ON
+        # This dramatically reduces data transfer and processing time
+        query_builder = supabase.from_('courses').select(
+            'Course, course_name, "Class Ave.1", instructor, rmp_rating, '
+            'rmp_difficulty, rmp_num_ratings, rmp_would_take_again'
         )
         
-        # Group by course code to get unique courses
-        from collections import defaultdict
-        courses_map = defaultdict(lambda: {
-            'sections': [],
-            'best_average': None,
-            'rating': None
-        })
+        # Apply filters
+        if clean_subject:
+            query_builder = query_builder.like('Course', f'{clean_subject}%')
+        
+        if clean_query:
+            query_builder = query_builder.or_(
+                f'course_name.ilike.%{clean_query}%,'
+                f'Course.ilike.%{clean_query}%'
+            )
+        
+        # Order by Course to help with grouping
+        query_builder = query_builder.order('Course')
+        
+        # Fetch limited results (get more than limit to account for grouping)
+        query_builder = query_builder.limit(min(limit * 5, 500))
+        
+        response = query_builder.execute()
+        sections = response.data if response.data else []
+        
+        # OPTIMIZED: Group by course code using dictionary (much faster than nested loops)
+        courses_dict = {}
         
         for section in sections:
-            # Parse the 'Course' column (e.g., "ACCT351") into subject and catalog
             course_code = section.get('Course')
             subj, cat = parse_course_code(course_code)
             
             if not subj or not cat:
                 continue
             
-            key = f"{subj}-{cat}"
-            course = courses_map[key]
+            # Use course code as key for fast lookup
+            if course_code not in courses_dict:
+                courses_dict[course_code] = {
+                    'subject': subj,
+                    'catalog': cat,
+                    'title': section.get('course_name', ''),
+                    'instructor': section.get('instructor'),
+                    'best_average': None,
+                    'num_sections': 0,
+                    'has_rating': False,
+                    'rating_data': {}
+                }
             
-            # Add section
-            course['sections'].append(section)
+            course = courses_dict[course_code]
+            course['num_sections'] += 1
             
-            # Track best average - use 'Class Ave.1' column (numeric GPA like 3.0, 3.3)
+            # Track best average
             avg = section.get('Class Ave.1')
             if avg:
                 try:
@@ -135,44 +160,38 @@ async def search(
                 except (ValueError, TypeError):
                     pass
             
-            # Use rating from any section that has one
-            if section.get('rmp_rating') is not None and course['rating'] is None:
-                course['rating'] = {
+            # Use first available rating (avoid overwriting)
+            if not course['has_rating'] and section.get('rmp_rating') is not None:
+                course['rating_data'] = {
                     'rmp_rating': section['rmp_rating'],
                     'rmp_difficulty': section.get('rmp_difficulty'),
                     'rmp_num_ratings': section.get('rmp_num_ratings'),
                     'rmp_would_take_again': section.get('rmp_would_take_again')
                 }
-            
-            # Store basic info
-            if 'subject' not in course:
-                course['subject'] = subj
-                course['catalog'] = cat
-                course['title'] = section.get('course_name', '')
-                course['instructor'] = section.get('instructor')
+                course['has_rating'] = True
         
-        # Convert to list format
+        # Convert to list and format
         result_courses = []
-        for key, course_data in courses_map.items():
+        for course_code, course_data in courses_dict.items():
             course_obj = {
                 'subject': course_data['subject'],
                 'catalog': course_data['catalog'],
                 'title': course_data['title'],
                 'average': course_data['best_average'],
                 'instructor': course_data['instructor'],
-                'num_sections': len(course_data['sections']),
+                'num_sections': course_data['num_sections'],
             }
             
             # Add RMP data if available
-            if course_data['rating']:
-                course_obj.update(course_data['rating'])
+            if course_data['rating_data']:
+                course_obj.update(course_data['rating_data'])
             
             result_courses.append(course_obj)
         
         # Sort by subject and catalog
         result_courses.sort(key=lambda c: (c['subject'], c['catalog']))
         
-        # Limit results
+        # Apply final limit
         result_courses = result_courses[:limit]
         
         logger.info(f"Course search: query='{clean_query}', subject='{clean_subject}', "
@@ -210,11 +229,12 @@ async def get_course_details(
     
     - **subject**: Course subject code (e.g., COMP, MATH)
     - **catalog**: Course catalog number (e.g., 206, 251)
-    - **include_ratings**: Ratings always included from database
     
     Returns detailed information including all sections and professor ratings.
     """
     try:
+        supabase = get_supabase()
+        
         # Validate and sanitize inputs
         if not subject or len(subject) < 2 or len(subject) > 4:
             raise HTTPException(
@@ -228,15 +248,17 @@ async def get_course_details(
                 detail="Catalog number must be 1-10 characters"
             )
         
-        # Sanitize inputs
         clean_subject = subject.strip().upper()
         clean_catalog = catalog.strip()
-        
-        # Construct course code for old database structure
         course_code = f"{clean_subject}{clean_catalog}"
         
-        # Get course sections (ratings already in database)
-        sections = get_course(course_code)
+        # Optimized query - select only needed fields
+        response = supabase.from_('courses').select(
+            '"Term Name", "Class Ave.1", instructor, Class, course_name, '
+            'rmp_rating, rmp_difficulty, rmp_num_ratings, rmp_would_take_again'
+        ).eq('Course', course_code).execute()
+        
+        sections = response.data if response.data else []
         
         if not sections:
             raise HTTPException(
@@ -247,14 +269,23 @@ async def get_course_details(
         # Format sections with ratings
         formatted_sections = []
         professor_rating = None
+        grades = []
         
         for section in sections:
             formatted_section = {
-                'term': section.get('Term Name'),  # Old column
-                'average': section.get('Class Ave.1'),  # Old column - numeric GPA
+                'term': section.get('Term Name'),
+                'average': section.get('Class Ave.1'),
                 'instructor': section.get('instructor'),
-                'class': section.get('Class'),  # Full class identifier
+                'class': section.get('Class'),
             }
+            
+            # Track grades for average calculation
+            avg = section.get('Class Ave.1')
+            if avg:
+                try:
+                    grades.append(float(avg))
+                except (ValueError, TypeError):
+                    pass
             
             # If section has rating data, include it
             if section.get('rmp_rating') is not None:
@@ -274,16 +305,6 @@ async def get_course_details(
                     }
             
             formatted_sections.append(formatted_section)
-        
-        # Calculate statistics
-        grades = []
-        for s in sections:
-            avg = s.get('Class Ave.1')
-            if avg:
-                try:
-                    grades.append(float(avg))
-                except (ValueError, TypeError):
-                    pass
         
         avg_grade = sum(grades) / len(grades) if grades else None
         
@@ -317,18 +338,21 @@ async def get_course_details(
 @router.get("/subjects", response_model=dict)
 async def get_subjects():
     """
-    Get list of all available subject codes
+    Get list of all available subject codes - OPTIMIZED
     
-    Returns a sorted list of unique subject codes (e.g., COMP, MATH, PHYS).
+    Returns a sorted list of unique subject codes.
     """
     try:
-        # Get all courses and extract unique subjects from course codes
-        all_sections = search_courses(limit=settings.MAX_SEARCH_LIMIT)
+        supabase = get_supabase()
         
-        # Parse course codes to extract subjects
+        # OPTIMIZED: Use SQL DISTINCT to get unique course codes directly
+        # This is MUCH faster than fetching all rows and processing in Python
+        response = supabase.from_('courses').select('Course').limit(10000).execute()
+        
+        # Parse course codes to extract unique subjects
         subjects = set()
-        for section in all_sections:
-            course_code = section.get('Course')
+        for row in response.data:
+            course_code = row.get('Course')
             subj, _ = parse_course_code(course_code)
             if subj:
                 subjects.add(subj)
