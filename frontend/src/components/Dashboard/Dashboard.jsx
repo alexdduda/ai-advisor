@@ -886,7 +886,11 @@ const handleToggleCompleted = async (course) => {
             <div className="sidebar-footer">
               <div className="user-info">
                 <div className="user-avatar">
-                  {user?.email?.[0].toUpperCase()}
+                  {profileImage ? (
+                    <img src={profileImage} alt="Profile" className="user-avatar-image" />
+                  ) : (
+                    user?.email?.[0].toUpperCase()
+                  )}
                 </div>
                 <div className="user-details">
                   <div className="user-name">{profile?.username || 'User'}</div>
@@ -940,25 +944,6 @@ const handleToggleCompleted = async (course) => {
               </button>
             </div>
           </div>
-        )}
-
-        {/* Header */}
-        {activeTab !== 'chat' && (
-          <header className="dashboard-header">
-            <button 
-              className="mobile-menu-btn"
-              onClick={() => setSidebarOpen(true)}
-              aria-label="Open menu"
-            >
-              ☰
-            </button>
-            <h1 className="page-title">
-              {activeTab === 'courses' && '📚 Course Explorer'}
-              {activeTab === 'favorites' && '⭐ Saved Courses'}
-              {activeTab === 'forum' && '💬 Community Forum'}
-              {activeTab === 'profile' && '👤 Your Profile'}
-            </h1>
-          </header>
         )}
 
         {/* Content Area */}
