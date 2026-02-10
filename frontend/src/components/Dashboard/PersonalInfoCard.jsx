@@ -288,7 +288,7 @@ export default function PersonalInfoCard({ profile, user, onUpdateProfile }) {
                 await new Promise(resolve => setTimeout(resolve, 100))
                 
                 setIsEditing(false)
-                alert('✓ Profile updated successfully!')
+                // Success - alert removed to prevent loop
               } catch (error) {
                 console.error('Error updating profile:', error)
                 alert('Failed to update profile: ' + (error.message || 'Unknown error'))

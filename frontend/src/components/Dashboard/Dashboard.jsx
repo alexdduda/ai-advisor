@@ -884,7 +884,13 @@ const handleToggleCompleted = async (course) => {
             </nav>
 
             <div className="sidebar-footer">
-              <div className="user-info">
+              <button 
+                className="user-info"
+                onClick={() => {
+                  setActiveTab('profile')
+                  setSidebarOpen(false)
+                }}
+              >
                 <div className="user-avatar">
                   {profileImage ? (
                     <img src={profileImage} alt="Profile" className="user-avatar-image" />
@@ -896,7 +902,7 @@ const handleToggleCompleted = async (course) => {
                   <div className="user-name">{profile?.username || 'User'}</div>
                   <div className="user-email">{user?.email}</div>
                 </div>
-              </div>
+              </button>
               <button className="btn btn-signout" onClick={handleSignOut}>
                 Sign Out
               </button>
@@ -915,6 +921,15 @@ const handleToggleCompleted = async (course) => {
 
       {/* Main Content */}
       <main className="main-content">
+        {/* Mobile Menu Button - Always Present */}
+        <button 
+          className="mobile-menu-btn-overlay"
+          onClick={() => setSidebarOpen(true)}
+          aria-label="Open menu"
+        >
+          ☰
+        </button>
+
         {/* Chat Tabs Bar - WITH DRAG AND DROP */}
         {activeTab === 'chat' && (
           <div className="chat-tabs-bar">
