@@ -1,5 +1,9 @@
 """
 Supabase client with improved error handling and typing
+
+Fixes applied:
+  #10 – Complete type hints on all public functions (add_favorite, is_favorited, etc.)
+  #11 – Added check_database_health() for connection health checks
 """
 from supabase import create_client, Client
 from typing import Optional, List, Dict, Any
@@ -31,6 +35,21 @@ def get_supabase() -> Client:
             raise DatabaseException("initialization", str(e))
     
     return _supabase_client
+
+
+# ── FIX #11: Health check for database connection ────────────────────────
+def check_database_health() -> bool:
+    """
+    Verify that the Supabase connection is alive.
+    Returns True if healthy, False otherwise.
+    """
+    try:
+        supabase = get_supabase()
+        supabase.table("users").select("id").limit(1).execute()
+        return True
+    except Exception as e:
+        logger.error(f"Database health check failed: {e}")
+        return False
 
 
 # User Operations
@@ -363,7 +382,7 @@ def delete_chat_history(user_id: str) -> None:
         raise DatabaseException("delete_chat_history", str(e))
 
 
-# Favorites Operations
+# Favorites Operations (FIX #10: complete type hints on all parameters)
 def get_favorites(user_id: str) -> List[Dict[str, Any]]:
     """Get all favorited courses for a user"""
     try:
@@ -380,12 +399,18 @@ def get_favorites(user_id: str) -> List[Dict[str, Any]]:
         raise DatabaseException("get_favorites", str(e))
 
 
-def add_favorite(user_id: str, course_code: str, course_title: str, subject: str, catalog: str) -> Dict[str, Any]:
+def add_favorite(
+    user_id: str,
+    course_code: str,
+    course_title: str,
+    subject: str,
+    catalog: str,
+) -> Dict[str, Any]:
     """Add a course to user's favorites"""
     try:
         supabase = get_supabase()
         
-        favorite_data = {
+        favorite_data: Dict[str, str] = {
             'user_id': user_id,
             'course_code': course_code,
             'course_title': course_title,

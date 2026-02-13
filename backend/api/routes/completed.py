@@ -1,18 +1,39 @@
 """
-Completed courses tracking endpoints
+backend/api/routes/completed.py
+
 """
 from fastapi import APIRouter, HTTPException, Query, status
 from typing import Optional, List
 from pydantic import BaseModel, Field
 import logging
+import re
 from datetime import datetime
 
 from ..config import settings
-from ..utils.supabase_client import get_supabase
-from ..exceptions import DatabaseException
+from ..utils.supabase_client import get_supabase, get_user_by_id
+from ..exceptions import DatabaseException, UserNotFoundException
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
+
+
+# ── Named constants ────────────────────────────────────────────
+VALID_TERMS = {"fall", "winter", "summer"}
+VALID_GRADES = {
+    "A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D", "F", "P", "S",
+    "W",  # Withdrew
+}
+COURSE_CODE_PATTERN = re.compile(r"^[A-Z]{3,4}\s?\d{3}[A-Z]?\d?$", re.IGNORECASE)
+
+
+def normalize_course_code(code: str) -> str:
+    """Normalize course code to 'SUBJ NNN' format with single space."""
+    code = code.strip().upper()
+    # Insert space between letters and digits if missing: "COMP206" → "COMP 206"
+    code = re.sub(r"([A-Z])(\d)", r"\1 \2", code)
+    # Collapse multiple spaces
+    code = re.sub(r"\s+", " ", code)
+    return code
 
 
 class CompletedCourse(BaseModel):
@@ -35,264 +56,248 @@ class CompletedCourseUpdate(BaseModel):
     credits: Optional[int] = Field(None, ge=0, le=12)
 
 
+# ── Validation helpers ──────────────────────────────────────────
+def _validate_user_exists(user_id: str) -> None:
+    """Raise 404 if user_id doesn't map to a real user."""
+    try:
+        get_user_by_id(user_id)
+    except UserNotFoundException:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User not found",
+        )
+
+
+def _validate_course_data(course: CompletedCourse) -> CompletedCourse:
+    """Normalize and validate course fields beyond Pydantic basics."""
+    # Normalize course_code
+    course.course_code = normalize_course_code(course.course_code)
+
+    # Validate term
+    if course.term.lower() not in VALID_TERMS:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Invalid term '{course.term}'. Must be one of: Fall, Winter, Summer",
+        )
+
+    # Validate grade if provided
+    if course.grade and course.grade.upper() not in VALID_GRADES:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Invalid grade '{course.grade}'. Must be one of: {', '.join(sorted(VALID_GRADES))}",
+        )
+
+    # Validate course_code format
+    if not COURSE_CODE_PATTERN.match(course.course_code):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Invalid course code format: '{course.course_code}'",
+        )
+
+    return course
+
+
+async def _check_duplicate(user_id: str, course_code: str) -> bool:
+    """Return True if the user already has this course marked complete."""
+    try:
+        supabase = get_supabase()
+        response = (
+            supabase.table("completed_courses")
+            .select("id")
+            .eq("user_id", user_id)
+            .eq("course_code", course_code)
+            .execute()
+        )
+        return bool(response.data)
+    except Exception:
+        return False
+
+
 @router.get("/{user_id}", response_model=dict)
 async def get_completed_courses(
     user_id: str,
     limit: int = Query(
-        default=200,
+        default=50,
         ge=1,
-        le=500,
-        description="Maximum number of completed courses to return"
-    )
+        le=200,
+        description="Maximum number of completed courses to return",
+    ),
+    cursor: Optional[str] = Query(
+        None,
+        description="Cursor for pagination (created_at timestamp of last item)",
+    ),
 ):
     """
-    Get all completed courses for a user
-    
+    Get all completed courses for a user.
+
     - **user_id**: UUID of the user
     - **limit**: Maximum number of results
-    
-    Returns a list of completed courses sorted by year and term.
+    - **cursor**: ISO timestamp cursor for pagination
     """
+    _validate_user_exists(user_id)
+
     try:
-        # Validate user_id format (basic UUID check)
-        if not user_id or len(user_id) < 10:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid user ID format"
-            )
-        
-        # Query database
         supabase = get_supabase()
-        response = supabase.table('completed_courses') \
-            .select('*') \
-            .eq('user_id', user_id) \
-            .order('year', desc=True) \
-            .order('term') \
-            .limit(limit) \
-            .execute()
-        
-        completed_courses = response.data if response.data else []
-        
-        logger.info(f"Retrieved {len(completed_courses)} completed courses for user {user_id}")
-        
+        query = (
+            supabase.table("completed_courses")
+            .select("*")
+            .eq("user_id", user_id)
+            .order("created_at", desc=True)
+        )
+
+        if cursor:
+            query = query.lt("created_at", cursor)
+
+        query = query.limit(limit)
+        response = query.execute()
+        data = response.data or []
+
+        next_cursor = data[-1]["created_at"] if data else None
+
         return {
-            "completed_courses": completed_courses,
-            "count": len(completed_courses),
-            "user_id": user_id
+            "completed_courses": data,
+            "count": len(data),
+            "next_cursor": next_cursor,
         }
-        
-    except DatabaseException:
+    except HTTPException:
         raise
     except Exception as e:
-        logger.exception(f"Error fetching completed courses for user {user_id}: {e}")
+        logger.exception(f"Error getting completed courses: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An unexpected error occurred while fetching completed courses"
+            detail="Failed to retrieve completed courses",
         )
 
 
 @router.post("/{user_id}", response_model=dict)
-async def add_completed_course(
-    user_id: str,
-    course: CompletedCourse
-):
-    """
-    Add a completed course for a user
-    
-    - **user_id**: UUID of the user
-    - **course**: Course data including code, title, term, year, grade, etc.
-    
-    Returns the created completed course record.
-    """
+async def add_completed_course(user_id: str, course: CompletedCourse):
+    """Add a completed course for a user."""
+    _validate_user_exists(user_id)
+    course = _validate_course_data(course)
+
+    if await _check_duplicate(user_id, course.course_code):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Course {course.course_code} is already marked as completed",
+        )
+
     try:
-        logger.info(f"Received request to add completed course: {course.dict()}")
-        # Validate user_id format
-        if not user_id or len(user_id) < 10:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid user ID format"
-            )
-        
-        # Check if course already exists for this user
         supabase = get_supabase()
-        existing = supabase.table('completed_courses') \
-            .select('*') \
-            .eq('user_id', user_id) \
-            .eq('course_code', course.course_code) \
-            .execute()
-        
-        if existing.data:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Course {course.course_code} is already marked as completed"
-            )
-        
-        # Prepare course data
-        course_data = {
-            'user_id': user_id,
-            'course_code': course.course_code,
-            'course_title': course.course_title,
-            'subject': course.subject.upper(),
-            'catalog': course.catalog,
-            'term': course.term,
-            'year': course.year,
-            'grade': course.grade,
-            'credits': course.credits,
-            'created_at': datetime.utcnow().isoformat()
+        data = {
+            "user_id": user_id,
+            "course_code": course.course_code,
+            "course_title": course.course_title,
+            "subject": course.subject.upper(),
+            "catalog": course.catalog,
+            "term": course.term.capitalize(),
+            "year": course.year,
+            "grade": course.grade.upper() if course.grade else None,
+            "credits": course.credits,
         }
-        
-        # Insert into database
-        response = supabase.table('completed_courses') \
-            .insert(course_data) \
-            .execute()
-        
+
+        response = supabase.table("completed_courses").insert(data).execute()
+
         if not response.data:
-            raise DatabaseException("Failed to insert completed course")
-        
-        created_course = response.data[0]
-        
+            raise DatabaseException("add_completed", "No data returned")
+
         logger.info(f"Added completed course {course.course_code} for user {user_id}")
-        
         return {
-            "success": True,
-            "course": created_course,
-            "message": f"Successfully marked {course.course_code} as completed"
+            "completed_course": response.data[0],
+            "message": "Course marked as completed",
         }
-        
     except HTTPException:
         raise
-    except DatabaseException:
-        raise
     except Exception as e:
-        logger.exception(f"Error adding completed course for user {user_id}: {e}")
+        error_str = str(e)
+        if "duplicate key" in error_str.lower() or "23505" in error_str:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Course already marked as completed",
+            )
+        logger.exception(f"Error adding completed course: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An unexpected error occurred while adding completed course"
+            detail="Failed to add completed course",
         )
 
 
 @router.patch("/{user_id}/{course_code}", response_model=dict)
 async def update_completed_course(
-    user_id: str,
-    course_code: str,
-    updates: CompletedCourseUpdate
+    user_id: str, course_code: str, updates: CompletedCourseUpdate
 ):
-    """
-    Update a completed course (e.g., change grade or term)
-    
-    - **user_id**: UUID of the user
-    - **course_code**: Course code to update (e.g., "COMP 202")
-    - **updates**: Fields to update
-    
-    Returns the updated course record.
-    """
+    """Update a completed course entry."""
+    _validate_user_exists(user_id)
+    course_code = normalize_course_code(course_code)
+
+    # Validate fields
+    if updates.term and updates.term.lower() not in VALID_TERMS:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Invalid term '{updates.term}'",
+        )
+    if updates.grade and updates.grade.upper() not in VALID_GRADES:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Invalid grade '{updates.grade}'",
+        )
+
     try:
-        # Validate inputs
-        if not user_id or len(user_id) < 10:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid user ID format"
-            )
-        
-        if not course_code:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Course code is required"
-            )
-        
-        # Build update dict (only include non-None values)
-        update_data = {k: v for k, v in updates.dict().items() if v is not None}
-        
+        supabase = get_supabase()
+        update_data = {
+            k: v for k, v in updates.model_dump().items() if v is not None
+        }
+
         if not update_data:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="No updates provided"
+                detail="No fields to update",
             )
-        
-        # Update database
-        supabase = get_supabase()
-        response = supabase.table('completed_courses') \
-            .update(update_data) \
-            .eq('user_id', user_id) \
-            .eq('course_code', course_code) \
+
+        response = (
+            supabase.table("completed_courses")
+            .update(update_data)
+            .eq("user_id", user_id)
+            .eq("course_code", course_code)
             .execute()
-        
+        )
+
         if not response.data:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Completed course {course_code} not found for user"
+                detail="Completed course not found",
             )
-        
-        updated_course = response.data[0]
-        
-        logger.info(f"Updated completed course {course_code} for user {user_id}")
-        
+
         return {
-            "success": True,
-            "course": updated_course,
-            "message": f"Successfully updated {course_code}"
+            "completed_course": response.data[0],
+            "message": "Course updated",
         }
-        
     except HTTPException:
         raise
-    except DatabaseException:
-        raise
     except Exception as e:
-        logger.exception(f"Error updating completed course {course_code} for user {user_id}: {e}")
+        logger.exception(f"Error updating completed course: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An unexpected error occurred while updating completed course"
+            detail="Failed to update completed course",
         )
 
 
 @router.delete("/{user_id}/{course_code}", response_model=dict)
-async def remove_completed_course(
-    user_id: str,
-    course_code: str
-):
-    """
-    Remove a completed course
-    
-    - **user_id**: UUID of the user
-    - **course_code**: Course code to remove (e.g., "COMP 202")
-    
-    Returns success confirmation.
-    """
+async def remove_completed_course(user_id: str, course_code: str):
+    """Remove a completed course."""
+    _validate_user_exists(user_id)
+    course_code = normalize_course_code(course_code)
+
     try:
-        # Validate inputs
-        if not user_id or len(user_id) < 10:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid user ID format"
-            )
-        
-        if not course_code:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Course code is required"
-            )
-        
-        # Delete from database
         supabase = get_supabase()
-        response = supabase.table('completed_courses') \
-            .delete() \
-            .eq('user_id', user_id) \
-            .eq('course_code', course_code) \
-            .execute()
-        
+        supabase.table("completed_courses").delete().eq(
+            "user_id", user_id
+        ).eq("course_code", course_code).execute()
+
         logger.info(f"Removed completed course {course_code} for user {user_id}")
-        
-        return {
-            "success": True,
-            "deleted": course_code,
-            "message": f"Successfully removed {course_code} from completed courses"
-        }
-        
-    except DatabaseException:
-        raise
+        return {"message": "Course removed", "course_code": course_code}
     except Exception as e:
-        logger.exception(f"Error removing completed course {course_code} for user {user_id}: {e}")
+        logger.exception(f"Error removing completed course: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An unexpected error occurred while removing completed course"
+            detail="Failed to remove completed course",
         )
