@@ -206,6 +206,20 @@ body {
   background: #F5F5F5;
   border-radius: 10px;
   margin-bottom: 1rem;
+  width: 100%;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.user-info:hover {
+  background: rgba(237, 27, 47, 0.1);
+  transform: translateX(2px);
+}
+
+.user-info:active {
+  transform: scale(0.98);
 }
 
 .user-avatar {
@@ -220,6 +234,17 @@ body {
   font-weight: 600;
   font-size: 1.1rem;
   flex-shrink: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.user-avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 
 .user-details {
@@ -2806,4 +2831,65 @@ textarea.form-input {
   .sign-out-section .btn {
     width: 100%;
   }
+}
+
+/* Dark Mode Support for User Info Button */
+.dark-mode .user-info {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.dark-mode .user-info:hover {
+  background: rgba(237, 27, 47, 0.2);
+}
+
+.dark-mode .user-name {
+  color: #fff;
+}
+
+.dark-mode .user-email {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* Mobile Menu Button Overlay - Always visible on mobile */
+.mobile-menu-btn-overlay {
+  display: none;
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1.5rem;
+  color: #333;
+  cursor: pointer;
+  padding: 0.5rem 0.75rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.mobile-menu-btn-overlay:hover {
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.mobile-menu-btn-overlay:active {
+  transform: scale(0.95);
+}
+
+@media (max-width: 768px) {
+  .mobile-menu-btn-overlay {
+    display: block;
+  }
+}
+
+/* Dark mode support */
+.dark-mode .mobile-menu-btn-overlay {
+  background: rgba(31, 41, 55, 0.95);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.dark-mode .mobile-menu-btn-overlay:hover {
+  background: #1f2937;
 }

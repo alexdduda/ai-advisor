@@ -9,7 +9,6 @@ export default function BadgesDisplay({ userData }) {
   return (
     <div className="badges-section">
       <div className="badges-header">
-        <h3>🏆 Achievements</h3>
         <p className="badges-count">
           {earnedBadges.length} of {allBadges.length} unlocked
         </p>
