@@ -6,10 +6,7 @@ export default function PersonalizedInsights({ userData }) {
 
   return (
     <div className="insights-section">
-      <div className="insights-header">
-        <h3>💡 Personalized Insights</h3>
-        <p className="insights-subtitle">Recommendations based on your profile and activity</p>
-      </div>
+      <p className="insights-subtitle">Recommendations based on your profile and activity</p>
 
       {insights.length > 0 ? (
         <div className="insights-grid">
