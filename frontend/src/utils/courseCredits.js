@@ -3,7 +3,14 @@
  * 
  * Most McGill courses are 3 credits, but some departments have different standards.
  * This utility provides accurate credit values for McGill courses.
+ * 
+ * NOTE: This is the SINGLE SOURCE OF TRUTH for course credit lookups.
+ * Do NOT duplicate this logic elsewhere — always import from here.
  */
+
+// ── Named constants (Fix #22: no more magic numbers) ──────────────────────
+export const DEFAULT_CREDITS = 3
+export const VALID_CREDIT_VALUES = [1, 2, 3, 4, 5, 6, 9, 12]
 
 // Known course credit patterns at McGill
 const COURSE_CREDIT_RULES = {
@@ -53,7 +60,7 @@ const COURSE_CREDIT_RULES = {
   
   // Department defaults (some departments have different standards)
   departments: {
-    'MATH': 3, // Most are 3, except calculus which is 4
+    'MATH': 3,
     'COMP': 3,
     'PHYS': 3,
     'CHEM': 3,
@@ -65,7 +72,6 @@ const COURSE_CREDIT_RULES = {
     'HIST': 3,
     'ENGL': 3,
     'FREN': 3,
-    // Add more as needed
   },
   
   // Special calculus courses are 4 credits
@@ -82,8 +88,8 @@ const COURSE_CREDIT_RULES = {
 /**
  * Get the credit value for a McGill course
  * @param {string} courseCode - Course code (e.g., "COMP 206" or "COMP206")
- * @param {string} subject - Subject code (e.g., "COMP")
- * @param {string} catalog - Catalog number (e.g., "206")
+ * @param {string} [subject] - Subject code (e.g., "COMP")
+ * @param {string} [catalog] - Catalog number (e.g., "206")
  * @returns {number} - Number of credits (default 3)
  */
 export function getCourseCredits(courseCode, subject = null, catalog = null) {
@@ -113,7 +119,7 @@ export function getCourseCredits(courseCode, subject = null, catalog = null) {
   }
   
   // Default to 3 credits (standard at McGill)
-  return 3
+  return DEFAULT_CREDITS
 }
 
 /**
@@ -122,20 +128,17 @@ export function getCourseCredits(courseCode, subject = null, catalog = null) {
  * @returns {boolean} - True if valid
  */
 export function isValidCreditValue(credits) {
-  // McGill courses are typically 1, 2, 3, 4, 6, or 12 credits
-  const validCredits = [1, 2, 3, 4, 5, 6, 9, 12]
-  return validCredits.includes(credits)
+  return VALID_CREDIT_VALUES.includes(credits)
 }
 
 /**
  * Get common credit options for a course
- * @param {string} courseCode - Course code
+ * @param {string} [courseCode=''] - Course code
  * @returns {Array<number>} - Array of common credit values
  */
 export function getCommonCreditOptions(courseCode = '') {
   const detectedCredits = getCourseCredits(courseCode)
   
-  // Return options with detected value first
   const allOptions = [1, 2, 3, 4, 6, 12]
   
   // Move detected value to front
@@ -151,16 +154,19 @@ export function getCommonCreditOptions(courseCode = '') {
  * @returns {string} - Formatted string
  */
 export function formatCredits(credits) {
-  if (!credits) return '3 credits' // Default
+  if (!credits) return `${DEFAULT_CREDITS} credits`
   return `${credits} credit${credits !== 1 ? 's' : ''}`
 }
 
 /**
  * Batch lookup credits for multiple courses
+ *
+ * FIX #1: Renamed from `addCreditsToCoursesitsCourses` → `addCreditsToCourses`
+ *
  * @param {Array<Object>} courses - Array of course objects with courseCode
  * @returns {Array<Object>} - Courses with credits added
  */
-export function addCreditsToCoursesitsCourses(courses) {
+export function addCreditsToCourses(courses) {
   return courses.map(course => ({
     ...course,
     credits: course.credits || getCourseCredits(
@@ -204,6 +210,6 @@ export default {
   isValidCreditValue,
   getCommonCreditOptions,
   formatCredits,
-  addCreditsToCoursesitsCourses,
+  addCreditsToCourses,
   getCreditNotes
 }
