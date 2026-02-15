@@ -14,6 +14,7 @@ import CoursesTab from './CoursesTab'
 import ProfileTab from './ProfileTab'
 import SavedCoursesView from './SavedCoursesView'
 import Forum from '../Forum/Forum'
+import MarkCompleteModal from './MarkCompleteModal'
 
 import './Dashboard.css'
 
@@ -54,6 +55,10 @@ export default function Dashboard() {
   const [favoritesMap, setFavoritesMap] = useState(new Set())
   const [completedCourses, setCompletedCourses] = useState([])
   const [completedCoursesMap, setCompletedCoursesMap] = useState(new Set())
+
+  // ── Mark Complete Modal state ──────────────────────────
+  const [showCompleteCourseModal, setShowCompleteCourseModal] = useState(false)
+  const [courseToComplete, setCourseToComplete] = useState(null)
 
   // ── Utility functions ──────────────────────────────────
   const gpaToLetterGrade = (gpa) => {
@@ -211,22 +216,33 @@ export default function Dashboard() {
   }
 
   // ── Send message ───────────────────────────────────────
-  const handleSendMessage = async (e) => {
+  const handleSendMessage = async (e, attachedFiles = []) => {
     e.preventDefault()
-    if (!chatInput.trim() || isSending) return
+    if ((!chatInput.trim() && attachedFiles.length === 0) || isSending) return
 
     const userMessage = chatInput.trim()
     setChatInput('')
     setChatError(null)
 
     const currentMessages = getCurrentChatMessages()
-    const newMessages = [...currentMessages, { role: 'user', content: userMessage }]
+    
+    // Add user message with files to UI
+    const newUserMessage = {
+      role: 'user',
+      content: userMessage || '(Files attached)',
+      files: attachedFiles.map(f => ({ name: f.name, size: f.size }))
+    }
+    
+    const newMessages = [...currentMessages, newUserMessage]
     updateCurrentChatMessages(newMessages)
 
     setIsSending(true)
     try {
       const currentTab = chatTabs.find((t) => t.id === activeChatTab)
-      const response = await chatAPI.sendMessage(user.id, userMessage, currentTab.sessionId)
+      
+      // For now, send without files (backend integration needed)
+      // TODO: Convert files to base64 and send to backend
+      const response = await chatAPI.sendMessage(user.id, userMessage || '(Files attached)', currentTab.sessionId)
 
       updateCurrentChatMessages([
         ...newMessages,
@@ -322,7 +338,7 @@ export default function Dashboard() {
     }
   }
 
-  // ── Toggle completed ───────────────────────────────────
+  // ── Toggle completed (with modal) ──────────────────────
   const handleToggleCompleted = async (course) => {
     if (!user?.id) return
     const courseCode = `${course.subject} ${course.catalog}`
@@ -330,6 +346,7 @@ export default function Dashboard() {
 
     try {
       if (isComp) {
+        // Remove completed course
         await completedCoursesAPI.removeCompleted(user.id, courseCode)
         setCompletedCourses((prev) => prev.filter((c) => c.course_code !== courseCode))
         setCompletedCoursesMap((prev) => {
@@ -338,44 +355,47 @@ export default function Dashboard() {
           return s
         })
       } else {
+        // Open modal to add completed course
         const credits = getCourseCredits(course.subject, course.catalog)
-        const currentYear = new Date().getFullYear()
-        const term = prompt('What term? (Fall/Winter/Summer):', 'Fall')
-        if (term === null) return
-        const year = prompt(`What year? (e.g., ${currentYear}):`, currentYear)
-        if (year === null) return
-        const grade = prompt('What grade? (A, A-, B+, B, etc. - or leave blank):', '')
-        if (grade === null) return
-
-        let finalCredits = credits
-        const confirmCredits = prompt(
-          `This course is ${credits} credit${credits !== 1 ? 's' : ''}. Is this correct? (Enter different number or press OK):`,
-          credits
-        )
-        if (confirmCredits === null) return
-        if (confirmCredits && !isNaN(confirmCredits)) {
-          finalCredits = parseInt(confirmCredits)
-        }
-
-        const courseData = {
-          course_code: courseCode,
-          course_title: course.title || course.course_title,
+        setCourseToComplete({
+          code: courseCode,
+          title: course.title || course.course_title,
           subject: course.subject,
-          catalog: String(course.catalog),
-          term: term.trim() || 'Fall',
-          year: parseInt(year) || currentYear,
-          grade: grade.trim().toUpperCase() || null,
-          credits: finalCredits,
-        }
-
-        await completedCoursesAPI.addCompleted(user.id, courseData)
-        setCompletedCourses((prev) => [courseData, ...prev])
-        setCompletedCoursesMap((prev) => new Set([...prev, courseCode]))
-        alert(`✓ ${courseCode} marked as completed (${finalCredits} credits)`)
+          catalog: course.catalog,
+          defaultCredits: credits
+        })
+        setShowCompleteCourseModal(true)
       }
     } catch (error) {
       console.error('Error toggling completed:', error)
       alert(error.message || 'Failed to update completed courses')
+    }
+  }
+
+  // ── Handle modal confirmation ──────────────────────────
+  const handleConfirmComplete = async (formData) => {
+    try {
+      const courseData = {
+        course_code: courseToComplete.code,
+        course_title: courseToComplete.title,
+        subject: courseToComplete.subject,
+        catalog: courseToComplete.catalog,
+        term: formData.term,
+        year: parseInt(formData.year),
+        grade: formData.grade || null,
+        credits: formData.credits,
+      }
+
+      await completedCoursesAPI.addCompleted(user.id, courseData)
+      setCompletedCourses((prev) => [courseData, ...prev])
+      setCompletedCoursesMap((prev) => new Set([...prev, courseToComplete.code]))
+      
+      // Close modal
+      setShowCompleteCourseModal(false)
+      setCourseToComplete(null)
+    } catch (error) {
+      console.error('Error marking completed:', error)
+      alert(error.message || 'Failed to mark course as completed')
     }
   }
 
@@ -532,6 +552,18 @@ export default function Dashboard() {
           setIsOpen={setRightSidebarOpen}
           chatHistory={chatHistory}
           onLoadChat={loadHistoricalChat}
+        />
+      )}
+
+      {/* Mark Complete Modal */}
+      {showCompleteCourseModal && courseToComplete && (
+        <MarkCompleteModal
+          course={courseToComplete}
+          onConfirm={handleConfirmComplete}
+          onCancel={() => {
+            setShowCompleteCourseModal(false)
+            setCourseToComplete(null)
+          }}
         />
       )}
     </div>

@@ -1,50 +1,22 @@
-import { useState, useEffect } from 'react'
-import { getCourseCredits, getCommonCreditOptions, formatCredits, getCreditNotes } from '../../utils/courseCredits'
+import { useState } from 'react'
 import './MarkCompleteModal.css'
 
 export default function MarkCompleteModal({ 
   course, 
-  onComplete, 
-  onCancel,
-  existingData = null 
+  onConfirm, 
+  onCancel 
 }) {
-  const [formData, setFormData] = useState({
-    term: existingData?.term || 'Fall',
-    year: existingData?.year || new Date().getFullYear(),
-    grade: existingData?.grade || '',
-    credits: existingData?.credits || getCourseCredits(
-      course.course_code || `${course.subject} ${course.catalog}`,
-      course.subject,
-      course.catalog
-    )
-  })
-
-  const courseCode = course.course_code || `${course.subject} ${course.catalog}`
-  const creditNote = getCreditNotes(courseCode)
-  const creditOptions = getCommonCreditOptions(courseCode)
-
   const currentYear = new Date().getFullYear()
-  const years = Array.from({ length: 10 }, (_, i) => currentYear - i)
-
-  const terms = ['Fall', 'Winter', 'Summer']
-  const grades = [
-    { value: 'A', label: 'A (4.0)' },
-    { value: 'A-', label: 'A- (3.7)' },
-    { value: 'B+', label: 'B+ (3.3)' },
-    { value: 'B', label: 'B (3.0)' },
-    { value: 'B-', label: 'B- (2.7)' },
-    { value: 'C+', label: 'C+ (2.3)' },
-    { value: 'C', label: 'C (2.0)' },
-    { value: 'C-', label: 'C- (1.7)' },
-    { value: 'D', label: 'D (1.0)' },
-    { value: 'F', label: 'F (0.0)' },
-    { value: 'P', label: 'P (Pass)' },
-    { value: 'S', label: 'S (Satisfactory)' },
-  ]
+  const [formData, setFormData] = useState({
+    term: 'Fall',
+    year: currentYear.toString(),
+    grade: '',
+    credits: course.defaultCredits || 3
+  })
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    onComplete(formData)
+    onConfirm(formData)
   }
 
   return (
@@ -52,105 +24,95 @@ export default function MarkCompleteModal({
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2>Mark Course as Completed</h2>
-          <button className="modal-close" onClick={onCancel}>×</button>
+          <button className="modal-close" onClick={onCancel}>✕</button>
         </div>
 
         <div className="modal-body">
           <div className="course-info">
-            <div className="course-code-display">
-              {courseCode}
-            </div>
-            <div className="course-title-display">
-              {course.course_title || course.title}
-            </div>
+            <div className="course-code-display">{course.code}</div>
+            <div className="course-title-display">{course.title}</div>
           </div>
 
-          <form onSubmit={handleSubmit} className="complete-form">
-            {/* Term Selection */}
+          <form onSubmit={handleSubmit}>
             <div className="form-row">
               <div className="form-group">
-                <label htmlFor="term">
-                  Term <span className="required">*</span>
-                </label>
+                <label htmlFor="term">Term *</label>
                 <select
                   id="term"
                   value={formData.term}
                   onChange={(e) => setFormData({ ...formData, term: e.target.value })}
                   required
                 >
-                  {terms.map(term => (
-                    <option key={term} value={term}>{term}</option>
-                  ))}
+                  <option value="Fall">Fall</option>
+                  <option value="Winter">Winter</option>
+                  <option value="Summer">Summer</option>
                 </select>
               </div>
 
               <div className="form-group">
-                <label htmlFor="year">
-                  Year <span className="required">*</span>
-                </label>
-                <select
+                <label htmlFor="year">Year *</label>
+                <input
                   id="year"
+                  type="number"
+                  min="2000"
+                  max={currentYear + 1}
                   value={formData.year}
-                  onChange={(e) => setFormData({ ...formData, year: parseInt(e.target.value) })}
+                  onChange={(e) => setFormData({ ...formData, year: e.target.value })}
                   required
-                >
-                  {years.map(year => (
-                    <option key={year} value={year}>{year}</option>
-                  ))}
-                </select>
+                />
               </div>
             </div>
 
-            {/* Grade Selection */}
-            <div className="form-group">
-              <label htmlFor="grade">
-                Grade <span className="optional">(optional)</span>
-              </label>
-              <select
-                id="grade"
-                value={formData.grade}
-                onChange={(e) => setFormData({ ...formData, grade: e.target.value })}
-              >
-                <option value="">Select grade...</option>
-                {grades.map(grade => (
-                  <option key={grade.value} value={grade.value}>
-                    {grade.label}
-                  </option>
-                ))}
-              </select>
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="grade">Grade (optional)</label>
+                <select
+                  id="grade"
+                  value={formData.grade}
+                  onChange={(e) => setFormData({ ...formData, grade: e.target.value })}
+                >
+                  <option value="">Not specified</option>
+                  <option value="A">A</option>
+                  <option value="A-">A-</option>
+                  <option value="B+">B+</option>
+                  <option value="B">B</option>
+                  <option value="B-">B-</option>
+                  <option value="C+">C+</option>
+                  <option value="C">C</option>
+                  <option value="C-">C-</option>
+                  <option value="D">D</option>
+                  <option value="F">F</option>
+                  <option value="S">S (Satisfactory)</option>
+                  <option value="U">U (Unsatisfactory)</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="credits">Credits *</label>
+                <input
+                  id="credits"
+                  type="number"
+                  min="1"
+                  max="12"
+                  step="1"
+                  value={formData.credits}
+                  onChange={(e) => setFormData({ ...formData, credits: parseInt(e.target.value) })}
+                  required
+                />
+              </div>
             </div>
 
-            {/* Credits Selection */}
-            <div className="form-group">
-              <label htmlFor="credits">
-                Credits <span className="required">*</span>
-              </label>
-              <select
-                id="credits"
-                value={formData.credits}
-                onChange={(e) => setFormData({ ...formData, credits: parseInt(e.target.value) })}
-                required
-              >
-                {creditOptions.map(credits => (
-                  <option key={credits} value={credits}>
-                    {formatCredits(credits)}
-                  </option>
-                ))}
-              </select>
-              {creditNote && (
-                <div className="field-hint">
-                  💡 {creditNote}
-                </div>
-              )}
+            <div className="common-credits-note">
+              <strong>Common credit values:</strong> Most courses are 3 credits. 
+              Lab courses are often 1-2 credits. Some intensive courses may be 4-6 credits.
             </div>
 
-            {/* Action Buttons */}
             <div className="modal-actions">
               <button type="button" className="btn-secondary" onClick={onCancel}>
                 Cancel
               </button>
               <button type="submit" className="btn-primary">
-                ✓ Mark as Completed
+                Mark as Completed
               </button>
             </div>
           </form>
