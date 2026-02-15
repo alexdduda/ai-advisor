@@ -119,11 +119,7 @@ export default function CoursesTab({
                     </div>
                   )}
 
-                  {course.num_sections && (
-                    <div className="course-meta">
-                      📊 {course.num_sections} section{course.num_sections !== 1 ? 's' : ''} available
-                    </div>
-                  )}
+                  {/* REMOVED: Section count display */}
                 </div>
 
                 <div className="course-card-actions">
@@ -180,6 +176,7 @@ export default function CoursesTab({
               </div>
             )}
 
+            {/* Professor Rating - Only at top */}
             {selectedCourse.professor_rating && (
               <div className="course-professor-rating">
                 <h3>📊 Professor Rating: {selectedCourse.professor_rating.instructor}</h3>
@@ -205,39 +202,29 @@ export default function CoursesTab({
             )}
           </div>
 
+          {/* Condensed Sections - No RMP ratings */}
           {selectedCourse.sections && selectedCourse.sections.length > 0 && (
             <div className="course-sections">
               <h3 className="sections-header">Sections ({selectedCourse.sections.length})</h3>
-              {selectedCourse.sections.map((section, idx) => (
-                <div key={idx} className="section-card">
-                  <div className="section-info">
-                    <div className="section-header">
+              <div className="sections-grid">
+                {selectedCourse.sections.map((section, idx) => (
+                  <div key={idx} className="section-card-compact">
+                    <div className="section-compact-header">
                       <span className="section-term">{section.term || 'N/A'}</span>
                       {section.average && (
                         <span className="section-average">
-                          Average: {section.average} GPA ({gpaToLetterGrade(section.average)})
+                          {section.average} ({gpaToLetterGrade(section.average)})
                         </span>
                       )}
                     </div>
                     {section.instructor && section.instructor !== 'TBA' && (
-                      <div className="section-instructor">
-                        <strong>Instructor:</strong> {section.instructor}
-                      </div>
-                    )}
-                    {section.rmp_rating && (
-                      <div className="section-rmp">
-                        <div className="rmp-inline">
-                          <span className="rmp-badge">⭐ {section.rmp_rating.toFixed(1)}</span>
-                          <span className="rmp-badge">📊 Difficulty: {section.rmp_difficulty?.toFixed(1) || 'N/A'}</span>
-                          {section.rmp_num_ratings && (
-                            <span className="rmp-badge">📝 {Math.round(section.rmp_num_ratings)} reviews</span>
-                          )}
-                        </div>
+                      <div className="section-instructor-compact">
+                        {section.instructor}
                       </div>
                     )}
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
         </div>
