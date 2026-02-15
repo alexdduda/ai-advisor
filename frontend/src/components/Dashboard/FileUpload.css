@@ -1,0 +1,149 @@
+.file-upload-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Attach File Button - matches chat send button style */
+.attach-file-btn {
+  background: white;
+  border: 2px solid #E0E0E0;
+  padding: 0.875rem;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #6b7280;
+  transition: all 0.2s ease;
+  font-size: 20px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 50px;
+  height: 50px;
+}
+
+.attach-file-btn:hover {
+  background: #fef2f2;
+  border-color: #ED1B2F;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(237, 27, 47, 0.2);
+}
+
+.attach-file-btn:active {
+  transform: translateY(0);
+}
+
+/* Attached Files List - horizontal inline display */
+.attached-files-list {
+  display: flex;
+  gap: 6px;
+  max-width: 200px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.attached-files-list::-webkit-scrollbar {
+  height: 4px;
+}
+
+.attached-files-list::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 4px;
+}
+
+.attached-file-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  transition: all 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.attached-file-item:hover {
+  border-color: #ED1B2F;
+  box-shadow: 0 2px 8px rgba(237, 27, 47, 0.1);
+}
+
+.file-icon {
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.file-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1f2937;
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-size {
+  font-size: 11px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.remove-file-btn {
+  background: transparent;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  font-size: 12px;
+  flex-shrink: 0;
+  font-weight: bold;
+}
+
+.remove-file-btn:hover {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.remove-file-btn:active {
+  transform: scale(0.9);
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .file-upload-container {
+    gap: 6px;
+  }
+
+  .attach-file-btn {
+    min-width: 44px;
+    height: 44px;
+    padding: 0.75rem;
+    font-size: 18px;
+  }
+
+  .attached-files-list {
+    max-width: 150px;
+  }
+
+  .file-name {
+    max-width: 60px;
+  }
+}

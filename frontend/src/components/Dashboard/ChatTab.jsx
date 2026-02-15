@@ -1,21 +1,41 @@
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useState } from 'react'
+import FileUpload from './FileUpload'
 import './ChatTab.css'
 
 export default function ChatTab({
-  messages,
-  isLoadingHistory,
-  isSending,
-  chatInput,
-  setChatInput,
-  chatError,
-  onSendMessage,
-  userEmail,
+  messages = [],
+  isLoadingHistory = false,
+  isSending = false,
+  chatInput = '',
+  setChatInput = () => {},
+  chatError = null,
+  onSendMessage = () => {},
+  userEmail = '',
 }) {
   const messagesEndRef = useRef(null)
+  const [attachedFiles, setAttachedFiles] = useState([])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, isSending])
+
+  const handleFilesSelected = (files) => {
+    setAttachedFiles(prev => [...prev, ...files])
+  }
+
+  const handleRemoveFile = (index) => {
+    setAttachedFiles(prev => prev.filter((_, i) => i !== index))
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    
+    // Pass files to parent handler
+    await onSendMessage(e, attachedFiles)
+    
+    // Clear files after sending
+    setAttachedFiles([])
+  }
 
   return (
     <div className="chat-container">
@@ -44,6 +64,16 @@ export default function ChatTab({
               </div>
               <div className="message-content">
                 <div className="message-text">{message.content}</div>
+                {/* Show attached files in user messages */}
+                {message.role === 'user' && message.files && message.files.length > 0 && (
+                  <div className="message-files">
+                    {message.files.map((file, i) => (
+                      <div key={i} className="message-file-badge">
+                        📎 {file.name}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           ))
@@ -63,7 +93,14 @@ export default function ChatTab({
 
       {chatError && <div className="error-banner">{chatError}</div>}
 
-      <form className="chat-input-container" onSubmit={onSendMessage}>
+      <form className="chat-input-container" onSubmit={handleSubmit}>
+        {/* File Upload Component */}
+        <FileUpload
+          onFilesSelected={handleFilesSelected}
+          attachedFiles={attachedFiles}
+          onRemoveFile={handleRemoveFile}
+        />
+
         <textarea
           className="chat-input"
           placeholder="Ask me anything about courses, planning, or McGill academics..."
@@ -72,7 +109,7 @@ export default function ChatTab({
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault()
-              onSendMessage(e)
+              handleSubmit(e)
             }
           }}
           disabled={isSending}
@@ -83,10 +120,11 @@ export default function ChatTab({
             e.target.style.height = e.target.scrollHeight + 'px'
           }}
         />
+        
         <button
           type="submit"
           className="btn btn-send"
-          disabled={isSending || !chatInput.trim()}
+          disabled={isSending || (!chatInput.trim() && attachedFiles.length === 0)}
         >
           {isSending ? 'Sending...' : 'Send'}
         </button>
