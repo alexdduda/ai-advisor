@@ -52,7 +52,7 @@
   font-size: 1.25rem;
 }
 
-/* Completed Button - McGill Red circle with white checkmark */
+/* Completed Button - GREEN circle with white checkmark */
 .completed-btn {
   background: white;
   border: 2px solid #e0e0e0;
@@ -70,9 +70,9 @@
 }
 
 .completed-btn:hover {
-  border-color: #ED1B2F;
+  border-color: #28a745;
   transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(237, 27, 47, 0.3);
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
 }
 
 /* Not completed - outline circle */
@@ -82,18 +82,18 @@
 }
 
 .completed-btn:not(.completed):hover .completed-icon {
-  color: #ED1B2F;
+  color: #28a745;
 }
 
-/* Completed - McGill red circle with white checkmark */
+/* Completed - Green circle with white checkmark */
 .completed-btn.completed {
-  background: #ED1B2F;
-  border-color: #ED1B2F;
+  background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+  border-color: #28a745;
 }
 
 .completed-btn.completed:hover {
-  background: #c91625;
-  border-color: #c91625;
+  background: linear-gradient(135deg, #34ce57 0%, #28a745 100%);
+  border-color: #34ce57;
 }
 
 .completed-btn.completed .completed-icon {

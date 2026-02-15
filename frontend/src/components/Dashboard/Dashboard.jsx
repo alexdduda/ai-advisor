@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { chatAPI } from '../../lib/api'
 import coursesAPI from '../../lib/professorsAPI'
@@ -47,14 +47,59 @@ export default function Dashboard() {
   const [searchError, setSearchError] = useState(null)
   const [selectedCourse, setSelectedCourse] = useState(null)
   const [isLoadingCourse, setIsLoadingCourse] = useState(false)
+  const [sortBy, setSortBy] = useState('relevance')
 
   // ── Favorites & completed ──────────────────────────────
   const [favorites, setFavorites] = useState([])
   const [favoritesMap, setFavoritesMap] = useState(new Set())
-  const [isLoadingFavorites, setIsLoadingFavorites] = useState(false)
   const [completedCourses, setCompletedCourses] = useState([])
   const [completedCoursesMap, setCompletedCoursesMap] = useState(new Set())
-  const [isLoadingCompleted, setIsLoadingCompleted] = useState(false)
+
+  // ── Utility functions ──────────────────────────────────
+  const gpaToLetterGrade = (gpa) => {
+    if (!gpa) return ''
+    const n = parseFloat(gpa)
+    if (n >= 3.85) return 'A'
+    if (n >= 3.7) return 'A-'
+    if (n >= 3.3) return 'B+'
+    if (n >= 3.0) return 'B'
+    if (n >= 2.7) return 'B-'
+    if (n >= 2.3) return 'C+'
+    if (n >= 2.0) return 'C'
+    if (n >= 1.0) return 'D'
+    return 'F'
+  }
+
+  const sortCourses = (courses, sortType) => {
+    const sorted = [...courses]
+    switch (sortType) {
+      case 'rating-high':
+        return sorted.sort((a, b) => (b.rmp_rating || 0) - (a.rmp_rating || 0))
+      case 'rating-low':
+        return sorted.sort((a, b) => (a.rmp_rating || 0) - (b.rmp_rating || 0))
+      case 'name-az':
+        return sorted.sort((a, b) =>
+          `${a.subject} ${a.catalog}`.localeCompare(`${b.subject} ${b.catalog}`)
+        )
+      case 'name-za':
+        return sorted.sort((a, b) =>
+          `${b.subject} ${b.catalog}`.localeCompare(`${a.subject} ${a.catalog}`)
+        )
+      case 'instructor-az':
+        return sorted.sort((a, b) =>
+          (a.instructor || 'ZZZ').localeCompare(b.instructor || 'ZZZ')
+        )
+      case 'instructor-za':
+        return sorted.sort((a, b) =>
+          (b.instructor || '').localeCompare(a.instructor || '')
+        )
+      default:
+        return sorted
+    }
+  }
+
+  const isFavorited = (subject, catalog) => favoritesMap.has(`${subject}${catalog}`)
+  const isCompleted = (subject, catalog) => completedCoursesMap.has(`${subject} ${catalog}`)
 
   // ── Helpers ────────────────────────────────────────────
   const getCurrentChatMessages = () => {
@@ -98,7 +143,7 @@ export default function Dashboard() {
   }
 
   // ── Data loaders ───────────────────────────────────────
-  const loadChatSessions = async () => {
+  const loadChatSessions = useCallback(async () => {
     if (!user?.id) return
     try {
       setIsLoadingHistory(true)
@@ -110,7 +155,7 @@ export default function Dashboard() {
     } finally {
       setIsLoadingHistory(false)
     }
-  }
+  }, [user?.id])
 
   const loadHistoricalChat = async (sessionId) => {
     try {
@@ -132,24 +177,20 @@ export default function Dashboard() {
     }
   }
 
-  const loadFavorites = async () => {
+  const loadFavorites = useCallback(async () => {
     if (!user?.id) return
     try {
-      setIsLoadingFavorites(true)
       const data = await favoritesAPI.getFavorites(user.id)
       setFavorites(data.favorites || [])
       setFavoritesMap(new Set((data.favorites || []).map((f) => f.course_code)))
     } catch (error) {
       console.error('Error loading favorites:', error)
-    } finally {
-      setIsLoadingFavorites(false)
     }
-  }
+  }, [user?.id])
 
-  const loadCompletedCourses = async () => {
+  const loadCompletedCourses = useCallback(async () => {
     if (!user?.id) return
     try {
-      setIsLoadingCompleted(true)
       const data = await completedCoursesAPI.getCompleted(user.id)
       setCompletedCourses(data.completed_courses || [])
       setCompletedCoursesMap(new Set((data.completed_courses || []).map((c) => c.course_code)))
@@ -157,10 +198,8 @@ export default function Dashboard() {
       console.error('Error loading completed courses:', error)
       setCompletedCourses([])
       setCompletedCoursesMap(new Set())
-    } finally {
-      setIsLoadingCompleted(false)
     }
-  }
+  }, [user?.id])
 
   // ── Tab change ─────────────────────────────────────────
   const handleTabChange = (tab) => {
@@ -356,7 +395,7 @@ export default function Dashboard() {
       loadFavorites()
       loadCompletedCourses()
     }
-  }, [user?.id])
+  }, [user?.id, loadChatSessions, loadFavorites, loadCompletedCourses])
 
   useEffect(() => {
     if (profile?.profile_image) {
@@ -431,12 +470,16 @@ export default function Dashboard() {
               selectedCourse={selectedCourse}
               setSelectedCourse={setSelectedCourse}
               isLoadingCourse={isLoadingCourse}
-              favoritesMap={favoritesMap}
-              completedCoursesMap={completedCoursesMap}
-              onSearch={handleCourseSearch}
-              onCourseClick={handleCourseClick}
-              onToggleFavorite={handleToggleFavorite}
-              onToggleCompleted={handleToggleCompleted}
+              sortBy={sortBy}
+              setSortBy={setSortBy}
+              sortCourses={sortCourses}
+              isFavorited={isFavorited}
+              isCompleted={isCompleted}
+              handleCourseSearch={handleCourseSearch}
+              handleCourseClick={handleCourseClick}
+              handleToggleFavorite={handleToggleFavorite}
+              handleToggleCompleted={handleToggleCompleted}
+              gpaToLetterGrade={gpaToLetterGrade}
             />
           )}
 
