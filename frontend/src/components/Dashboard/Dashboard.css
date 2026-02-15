@@ -200,29 +200,11 @@ body {
 /* ── Mobile Menu Button ───────────────────────────────────── */
 
 .mobile-menu-btn-overlay {
-  display: none;
-  position: fixed;
-  top: 1rem;
-  left: 1rem;
-  z-index: 100;
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 1.5rem;
-  color: #333;
-  cursor: pointer;
-  padding: 0.5rem 0.75rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: all 0.2s ease;
-}
-
-.mobile-menu-btn-overlay:hover {
-  background: #fff;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: none !important;
+  /* HIDDEN - Using sidebar's own collapse toggle instead */
 }
 
 @media (max-width: 768px) {
-  .mobile-menu-btn-overlay { display: block; }
   .content-area { padding: 1rem; }
 }
 
