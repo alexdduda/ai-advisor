@@ -101,6 +101,19 @@
   transform: scale(0.95);
 }
 
+/* Drag track indicator */
+.right-sidebar-toggle-collapsed.dragging::before {
+  content: '';
+  position: fixed;
+  right: 28px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, transparent 0%, rgba(107, 114, 128, 0.3) 10%, rgba(107, 114, 128, 0.3) 90%, transparent 100%);
+  pointer-events: none;
+  z-index: 89;
+}
+
 /* ── Content ──────────────────────────────────────────────── */
 
 .right-sidebar-content {
@@ -183,4 +196,62 @@
   font-size: 3rem;
   margin-bottom: 15px;
   opacity: 0.5;
+}
+
+/* ── Mobile Responsive ───────────────────────────────────── */
+
+@media (max-width: 768px) {
+  /* On mobile, position the right toggle below the left toggle */
+  .right-sidebar-toggle-collapsed {
+    top: 70px; /* Position below left sidebar toggle */
+  }
+  
+  /* Make right sidebar full width on mobile when open */
+  .right-sidebar {
+    width: 100%;
+    right: -100%;
+  }
+  
+  .right-sidebar.open {
+    right: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .right-sidebar-toggle-collapsed {
+    right: 10px;
+    top: 70px; /* Ensure it stays below left toggle on small screens */
+  }
+}
+
+/* Dark mode */
+.dark-mode .right-sidebar {
+  background: #1f2937;
+  border-left-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .right-sidebar-header {
+  background: linear-gradient(to bottom, #1f2937, #111827);
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .right-sidebar-header h3 {
+  color: #fff;
+}
+
+.dark-mode .history-item {
+  background: #374151;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .history-item:hover {
+  border-color: #ED1B2F;
+}
+
+.dark-mode .history-title {
+  color: #fff;
+}
+
+.dark-mode .history-meta {
+  color: rgba(255, 255, 255, 0.6);
 }

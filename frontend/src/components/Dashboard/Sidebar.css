@@ -27,6 +27,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  min-height: 88px;
 }
 
 .logo-container {
@@ -272,9 +273,26 @@
 
 /* ── Responsive ───────────────────────────────────────────── */
 
+@media (max-width: 768px) {
+  /* On mobile, make sidebar full width when open */
+  .sidebar { 
+    width: 100%;
+    left: -100%;
+  }
+  
+  .sidebar.open {
+    left: 0;
+  }
+}
+
 @media (max-width: 480px) {
-  .sidebar { width: 100%; }
   .logo-name { font-size: 1.1rem; }
+  
+  /* Ensure toggle button is visible and accessible on mobile */
+  .sidebar-toggle-btn-collapsed {
+    left: 10px;
+    top: 20px;
+  }
 }
 
 @media (hover: none) and (pointer: coarse) {
@@ -282,7 +300,24 @@
 }
 
 /* Dark mode */
+.dark-mode .sidebar { 
+  background: #1f2937; 
+  border-right-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .sidebar-header {
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .logo-name { color: #fff; }
+
+.dark-mode .sidebar-footer {
+  border-top-color: rgba(255, 255, 255, 0.1);
+}
+
 .dark-mode .user-info { background: rgba(255, 255, 255, 0.05); }
 .dark-mode .user-info:hover { background: rgba(237, 27, 47, 0.2); }
 .dark-mode .user-name { color: #fff; }
 .dark-mode .user-email { color: rgba(255, 255, 255, 0.6); }
+.dark-mode .btn-signout { background: rgba(255, 255, 255, 0.05); color: rgba(255, 255, 255, 0.8); }
+.dark-mode .btn-signout:hover { background: #ED1B2F; color: white; }
