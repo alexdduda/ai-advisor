@@ -1,12 +1,14 @@
+import { useLanguage } from '../../contexts/LanguageContext'
 import { generateInsights } from '../../utils/academicUtils'
 import './PersonalizedInsights.css'
 
 export default function PersonalizedInsights({ userData }) {
-  const insights = generateInsights(userData)
+  const { t } = useLanguage()
+  const insights = generateInsights(userData, t)
 
   return (
     <div className="insights-section">
-      <p className="insights-subtitle">Recommendations based on your profile and activity</p>
+      <p className="insights-subtitle">{t('profile.insightsSubtitle')}</p>
 
       {insights.length > 0 ? (
         <div className="insights-grid">
@@ -23,7 +25,7 @@ export default function PersonalizedInsights({ userData }) {
       ) : (
         <div className="insights-empty">
           <span className="empty-icon">🎯</span>
-          <p>Complete your profile and interact with the AI advisor to get personalized recommendations!</p>
+          <p>{t('profile.insightsEmpty')}</p>
         </div>
       )}
     </div>

@@ -1,15 +1,18 @@
 import { useMemo } from 'react'
+import { useLanguage } from '../../contexts/LanguageContext'
 import './GPATrendChart.css'
 
 export default function GPATrendChart({ completedCourses, currentGPA }) {
+  const { t } = useLanguage()
+  
   // Calculate GPA per semester from completed courses
   const semesterData = useMemo(() => {
     if (!completedCourses || completedCourses.length === 0) {
       // If no completed courses but there's a current GPA, show just that
       if (currentGPA) {
         return [{
-          label: 'Current',
-          shortLabel: 'Current',
+          label: t('gpa.currentGpaLabel'),
+          shortLabel: t('gpa.current'),
           semesterNumber: 1,
           gpa: parseFloat(currentGPA).toFixed(2),
           courses: 0,
@@ -84,8 +87,8 @@ export default function GPATrendChart({ completedCourses, currentGPA }) {
       
       // Always add current GPA as the final point
       semesters.push({
-        label: 'Current GPA',
-        shortLabel: 'Current',
+        label: t('gpa.currentGpaLabel'),
+        shortLabel: t('gpa.current'),
         semesterNumber: semesters.length + 1,
         gpa: currentGPAValue.toFixed(2),
         courses: 0,
@@ -94,25 +97,7 @@ export default function GPATrendChart({ completedCourses, currentGPA }) {
     }
 
     return semesters
-  }, [completedCourses, currentGPA])
-
-  // Calculate semester GPA from courses (not used for cumulative, but kept for reference)
-  function calculateSemesterGPA(courses) {
-    let totalPoints = 0
-    let totalCredits = 0
-
-    courses.forEach(course => {
-      const gradePoints = getGradePoints(course.grade)
-      const credits = course.credits || 3
-      
-      if (gradePoints !== null) {
-        totalPoints += gradePoints * credits
-        totalCredits += credits
-      }
-    })
-
-    return totalCredits > 0 ? (totalPoints / totalCredits).toFixed(2) : null
-  }
+  }, [completedCourses, currentGPA, t])
 
   // Convert letter grade to grade points
   function getGradePoints(grade) {
@@ -122,37 +107,37 @@ export default function GPATrendChart({ completedCourses, currentGPA }) {
       'A': 4.0, 'A-': 3.7,
       'B+': 3.3, 'B': 3.0, 'B-': 2.7,
       'C+': 2.3, 'C': 2.0, 'C-': 1.7,
-      'D+': 1.3, 'D': 1.0,
-      'F': 0.0
+      'D': 1.0, 'F': 0.0,
+      'S': null, 'U': null
     }
     
-    return gradeMap[grade.toUpperCase()] ?? null
+    return gradeMap[grade] ?? null
   }
 
-  // Get sort key for semester ordering
   function getSortKey(term, year) {
-    const termOrder = { 'Fall': 3, 'Winter': 1, 'Summer': 2 }
-    return year * 10 + (termOrder[term] || 0)
+    const termOrder = { 'Fall': 0, 'Winter': 1, 'Summer': 2 }
+    return year * 10 + (termOrder[term] ?? 0)
   }
-
-  // Find min and max for scaling
-  const maxGPA = 4.0
-  const minGPA = Math.min(...semesterData.map(s => s.gpa).filter(g => g !== null), 0)
-  const range = maxGPA - minGPA
 
   if (semesterData.length === 0) {
     return (
       <div className="gpa-trend-empty">
-        <p>📊 Add semester grades to see your GPA trend</p>
+        <p>📊 {t('gpa.addGradesPrompt')}</p>
       </div>
     )
   }
 
+  const maxGPA = Math.max(...semesterData.map(s => parseFloat(s.gpa)), 4.0)
+  const minGPA = Math.min(...semesterData.map(s => s.gpa).filter(g => g !== null), 0)
+  const range = maxGPA - minGPA
+
   return (
     <div className="gpa-trend-chart">
       <div className="chart-header">
-        <h3 className="chart-title">Cumulative GPA Trend</h3>
-        <span className="chart-subtitle">{semesterData.length} {semesterData.length === 1 ? 'semester' : 'semesters'}</span>
+        <h3 className="chart-title">{t('gpa.trendTitle')}</h3>
+        <span className="chart-subtitle">
+          {semesterData.length} {semesterData.length === 1 ? t('gpa.semester') : t('gpa.semesters')}
+        </span>
       </div>
       
       <div className="chart-container">
@@ -224,7 +209,7 @@ export default function GPATrendChart({ completedCourses, currentGPA }) {
                   }}
                   title={semester.isCurrent 
                     ? `${semester.label}: ${semester.gpa} GPA` 
-                    : `${semester.label}: ${semester.gpa} GPA (${semester.courses} courses)`
+                    : `${semester.label}: ${semester.gpa} GPA (${semester.courses} ${t('gpa.courses')})`
                   }
                 >
                   <div className="point-circle"></div>
@@ -241,7 +226,7 @@ export default function GPATrendChart({ completedCourses, currentGPA }) {
         {semesterData.map((semester, idx) => (
           <div key={idx} className="x-label-group">
             <span className="x-label-main">{semester.shortLabel}</span>
-            <span className="x-label-sub">Sem {semester.semesterNumber}</span>
+            <span className="x-label-sub">{t('gpa.semesterShort')} {semester.semesterNumber}</span>
           </div>
         ))}
       </div>

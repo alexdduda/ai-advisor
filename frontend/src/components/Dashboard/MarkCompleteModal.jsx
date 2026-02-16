@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useLanguage } from '../../contexts/LanguageContext'
 import './MarkCompleteModal.css'
 
 export default function MarkCompleteModal({ 
@@ -6,6 +7,7 @@ export default function MarkCompleteModal({
   onConfirm, 
   onCancel 
 }) {
+  const { t } = useLanguage()
   const currentYear = new Date().getFullYear()
   const [formData, setFormData] = useState({
     term: 'Fall',
@@ -23,7 +25,7 @@ export default function MarkCompleteModal({
     <div className="modal-overlay" onClick={onCancel}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>Mark Course as Completed</h2>
+          <h2>{t('modal.markComplete')}</h2>
           <button className="modal-close" onClick={onCancel}>✕</button>
         </div>
 
@@ -36,21 +38,21 @@ export default function MarkCompleteModal({
           <form onSubmit={handleSubmit}>
             <div className="form-row">
               <div className="form-group">
-                <label htmlFor="term">Term *</label>
+                <label htmlFor="term">{t('modal.term')} *</label>
                 <select
                   id="term"
                   value={formData.term}
                   onChange={(e) => setFormData({ ...formData, term: e.target.value })}
                   required
                 >
-                  <option value="Fall">Fall</option>
-                  <option value="Winter">Winter</option>
-                  <option value="Summer">Summer</option>
+                  <option value="Fall">{t('modal.fall')}</option>
+                  <option value="Winter">{t('modal.winter')}</option>
+                  <option value="Summer">{t('modal.summer')}</option>
                 </select>
               </div>
 
               <div className="form-group">
-                <label htmlFor="year">Year *</label>
+                <label htmlFor="year">{t('modal.year')} *</label>
                 <input
                   id="year"
                   type="number"
@@ -65,13 +67,13 @@ export default function MarkCompleteModal({
 
             <div className="form-row">
               <div className="form-group">
-                <label htmlFor="grade">Grade (optional)</label>
+                <label htmlFor="grade">{t('modal.grade')}</label>
                 <select
                   id="grade"
                   value={formData.grade}
                   onChange={(e) => setFormData({ ...formData, grade: e.target.value })}
                 >
-                  <option value="">Not specified</option>
+                  <option value="">{t('modal.notSpecified')}</option>
                   <option value="A">A</option>
                   <option value="A-">A-</option>
                   <option value="B+">B+</option>
@@ -88,7 +90,7 @@ export default function MarkCompleteModal({
               </div>
 
               <div className="form-group">
-                <label htmlFor="credits">Credits *</label>
+                <label htmlFor="credits">{t('profileForm.credits')} *</label>
                 <input
                   id="credits"
                   type="number"
@@ -109,10 +111,10 @@ export default function MarkCompleteModal({
 
             <div className="modal-actions">
               <button type="button" className="btn-secondary" onClick={onCancel}>
-                Cancel
+                {t('common.cancel')}
               </button>
               <button type="submit" className="btn-primary">
-                Mark as Completed
+                {t('courses.markCompleted')}
               </button>
             </div>
           </form>

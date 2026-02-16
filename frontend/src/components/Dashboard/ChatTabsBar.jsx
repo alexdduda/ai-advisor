@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useLanguage } from '../../contexts/LanguageContext'
 import './ChatTabsBar.css'
 
 export default function ChatTabsBar({
@@ -9,6 +10,7 @@ export default function ChatTabsBar({
   onNewTab,
   onReorder,
 }) {
+  const { t } = useLanguage()
   const [draggedTab, setDraggedTab] = useState(null)
 
   const handleDragStart = (e, tabId) => {
@@ -50,7 +52,9 @@ export default function ChatTabsBar({
             onDrop={(e) => handleDrop(e, tab.id)}
             onDragEnd={handleDragEnd}
           >
-            <span className="chat-tab-title">{tab.title}</span>
+            <span className="chat-tab-title">
+              {tab.title.startsWith('chat.') ? t(tab.title) : tab.title}
+            </span>
             <button
               className="chat-tab-close"
               onClick={(e) => {

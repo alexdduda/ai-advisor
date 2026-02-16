@@ -1,7 +1,9 @@
 import { useState, useMemo } from 'react'
+import { useLanguage } from '../../contexts/LanguageContext'
 import './TargetGPACalculator.css'
 
 export default function TargetGPACalculator({ currentGPA, completedCredits, totalCreditsRequired = 120 }) {
+  const { t } = useLanguage()
   const [targetGPA, setTargetGPA] = useState('')
   const [showResult, setShowResult] = useState(false)
 
@@ -37,10 +39,6 @@ export default function TargetGPACalculator({ currentGPA, completedCredits, tota
       return { error: 'You have already completed all required credits' }
     }
 
-    // Calculate required GPA
-    // Formula: target_gpa = (current_gpa * completed_credits + required_gpa * remaining_credits) / total_credits
-    // Solving for required_gpa: required_gpa = (target_gpa * total_credits - current_gpa * completed_credits) / remaining_credits
-    
     const requiredGPA = (target * totalCreditsRequired - current * completed) / remaining
 
     // Check if it's achievable
@@ -48,7 +46,7 @@ export default function TargetGPACalculator({ currentGPA, completedCredits, tota
       return {
         isAchievable: false,
         requiredGPA: requiredGPA.toFixed(2),
-        message: `Impossible to achieve. Even with a perfect 4.0 GPA for all remaining courses, your final GPA would only be ${((current * completed + 4.0 * remaining) / totalCreditsRequired).toFixed(2)}`
+        message: `${t('gpa.impossibleMessage')} ${((current * completed + 4.0 * remaining) / totalCreditsRequired).toFixed(2)}`
       }
     }
 
@@ -56,24 +54,24 @@ export default function TargetGPACalculator({ currentGPA, completedCredits, tota
       return {
         isAchievable: true,
         requiredGPA: '0.00',
-        message: `You've already exceeded your target! Your current GPA of ${current.toFixed(2)} will reach ${target.toFixed(2)} even if you score 0.0 in remaining courses.`
+        message: t('gpa.alreadyExceeded').replace('{current}', current.toFixed(2)).replace('{target}', target.toFixed(2))
       }
     }
 
     // Calculate scenarios
     const scenarios = [
       {
-        label: 'Conservative (B average)',
+        label: t('gpa.scenarioConservative'),
         gpa: 3.0,
         finalGPA: ((current * completed + 3.0 * remaining) / totalCreditsRequired).toFixed(2)
       },
       {
-        label: 'Strong (A- average)',
+        label: t('gpa.scenarioStrong'),
         gpa: 3.7,
         finalGPA: ((current * completed + 3.7 * remaining) / totalCreditsRequired).toFixed(2)
       },
       {
-        label: 'Perfect (A average)',
+        label: t('gpa.scenarioPerfect'),
         gpa: 4.0,
         finalGPA: ((current * completed + 4.0 * remaining) / totalCreditsRequired).toFixed(2)
       }
@@ -89,14 +87,14 @@ export default function TargetGPACalculator({ currentGPA, completedCredits, tota
       scenarios,
       difficulty: getDifficulty(requiredGPA)
     }
-  }, [currentGPA, targetGPA, completedCredits, totalCreditsRequired])
+  }, [currentGPA, targetGPA, completedCredits, totalCreditsRequired, t])
 
   function getDifficulty(requiredGPA) {
-    if (requiredGPA <= 2.5) return { level: 'Easy', color: '#10b981', emoji: '😊' }
-    if (requiredGPA <= 3.0) return { level: 'Moderate', color: '#3b82f6', emoji: '💪' }
-    if (requiredGPA <= 3.5) return { level: 'Challenging', color: '#f59e0b', emoji: '📚' }
-    if (requiredGPA <= 3.8) return { level: 'Difficult', color: '#ef4444', emoji: '🔥' }
-    return { level: 'Very Difficult', color: '#dc2626', emoji: '🎯' }
+    if (requiredGPA <= 2.5) return { level: t('gpa.difficultyEasy'), color: '#10b981', emoji: '😊' }
+    if (requiredGPA <= 3.0) return { level: t('gpa.difficultyModerate'), color: '#3b82f6', emoji: '💪' }
+    if (requiredGPA <= 3.5) return { level: t('gpa.difficultyChallenging'), color: '#f59e0b', emoji: '📚' }
+    if (requiredGPA <= 3.8) return { level: t('gpa.difficultyDifficult'), color: '#ef4444', emoji: '🔥' }
+    return { level: t('gpa.difficultyVeryDifficult'), color: '#dc2626', emoji: '🎯' }
   }
 
   const handleCalculate = () => {
@@ -110,26 +108,62 @@ export default function TargetGPACalculator({ currentGPA, completedCredits, tota
     setShowResult(false)
   }
 
+  function getLetterGrade(gpa) {
+    if (gpa >= 3.85) return 'A (Excellent)'
+    if (gpa >= 3.5) return 'A- to A (Very Good)'
+    if (gpa >= 3.15) return 'B+ (Good)'
+    if (gpa >= 2.85) return 'B (Satisfactory)'
+    if (gpa >= 2.5) return 'B- to B (Acceptable)'
+    if (gpa >= 2.15) return 'C+ (Below Average)'
+    if (gpa >= 1.85) return 'C (Minimal Pass)'
+    return 'Below C (Needs Improvement)'
+  }
+
+  function getTips(requiredGPA) {
+    const tips = []
+    
+    if (requiredGPA >= 3.7) {
+      tips.push('Focus on your strongest subjects for higher grades')
+      tips.push('Consider taking fewer courses per semester to maintain quality')
+      tips.push('Form study groups with high-performing classmates')
+      tips.push('Attend all office hours and seek help early')
+    } else if (requiredGPA >= 3.3) {
+      tips.push('Maintain consistent study habits throughout the semester')
+      tips.push('Start assignments early to allow time for revisions')
+      tips.push('Attend review sessions before exams')
+    } else if (requiredGPA >= 2.7) {
+      tips.push('Stay on top of coursework and avoid falling behind')
+      tips.push('Review material regularly, not just before exams')
+      tips.push('Take advantage of tutoring resources')
+    } else {
+      tips.push('You have a comfortable cushion - maintain good habits')
+      tips.push('Consider challenging yourself with interesting electives')
+      tips.push('Focus on learning, not just grades')
+    }
+    
+    return tips
+  }
+
   return (
     <div className="target-gpa-calculator">
       <div className="calculator-header">
-        <h3 className="calculator-title">🎯 Target GPA Calculator</h3>
-        <p className="calculator-subtitle">Calculate what you need to achieve your goal</p>
+        <h3 className="calculator-title">🎯 {t('gpa.targetGpa')} {t('common.calculator')}</h3>
+        <p className="calculator-subtitle">{t('gpa.calculatorSubtitle')}</p>
       </div>
 
       <div className="calculator-body">
         {/* Current Stats */}
         <div className="current-stats">
           <div className="stat-box">
-            <span className="stat-label">Current GPA</span>
+            <span className="stat-label">{t('gpa.currentGpa')}</span>
             <span className="stat-value">{currentGPA || '--'}</span>
           </div>
           <div className="stat-box">
-            <span className="stat-label">Credits Completed</span>
+            <span className="stat-label">{t('gpa.creditsCompleted')}</span>
             <span className="stat-value">{completedCredits || 0}</span>
           </div>
           <div className="stat-box">
-            <span className="stat-label">Credits Remaining</span>
+            <span className="stat-label">{t('gpa.creditsRemaining')}</span>
             <span className="stat-value">{totalCreditsRequired - (completedCredits || 0)}</span>
           </div>
         </div>
@@ -137,7 +171,7 @@ export default function TargetGPACalculator({ currentGPA, completedCredits, tota
         {/* Input Section */}
         <div className="input-section">
           <label className="input-label">
-            <span className="label-text">Target GPA</span>
+            <span className="label-text">{t('gpa.targetGpa')}</span>
             <input
               type="number"
               min="0"
@@ -158,7 +192,7 @@ export default function TargetGPACalculator({ currentGPA, completedCredits, tota
             disabled={!targetGPA || !currentGPA || !completedCredits}
             className="calculate-btn"
           >
-            Calculate Required GPA
+            {t('gpa.calculateRequired')}
           </button>
         </div>
 
@@ -175,7 +209,7 @@ export default function TargetGPACalculator({ currentGPA, completedCredits, tota
                 {/* Main Result */}
                 <div className="main-result">
                   <div className="result-header">
-                    <span className="result-label">Required GPA for Remaining Courses</span>
+                    <span className="result-label">{t('gpa.requiredGpa')}</span>
                     {calculation.difficulty && (
                       <span 
                         className="difficulty-badge"
@@ -187,19 +221,19 @@ export default function TargetGPACalculator({ currentGPA, completedCredits, tota
                   </div>
                   <div className="result-value">{calculation.requiredGPA}</div>
                   <div className="result-details">
-                    To reach <strong>{calculation.targetGPA}</strong> GPA with <strong>{calculation.remainingCredits}</strong> credits remaining
+                    {t('gpa.toReach')} <strong>{calculation.targetGPA}</strong> {t('gpa.withRemaining')} <strong>{calculation.remainingCredits}</strong> {t('gpa.creditsRemaining')}
                   </div>
                 </div>
 
                 {/* Letter Grade Equivalent */}
                 <div className="grade-equivalent">
-                  <span className="grade-label">Equivalent to maintaining approximately:</span>
+                  <span className="grade-label">{t('gpa.equivalentGrade')}</span>
                   <span className="grade-value">{getLetterGrade(parseFloat(calculation.requiredGPA))}</span>
                 </div>
 
                 {/* Scenarios */}
                 <div className="scenarios-section">
-                  <h4 className="scenarios-title">📊 What if scenarios</h4>
+                  <h4 className="scenarios-title">📊 {t('gpa.whatIfScenarios')}</h4>
                   <div className="scenarios-list">
                     {calculation.scenarios.map((scenario, idx) => (
                       <div key={idx} className="scenario-item">
@@ -208,7 +242,7 @@ export default function TargetGPACalculator({ currentGPA, completedCredits, tota
                           <span className="scenario-gpa">{scenario.gpa.toFixed(1)}</span>
                         </div>
                         <div className="scenario-result">
-                          Final GPA: <strong>{scenario.finalGPA}</strong>
+                          {t('gpa.finalGpa')}: <strong>{scenario.finalGPA}</strong>
                           {parseFloat(scenario.finalGPA) >= parseFloat(calculation.targetGPA) ? (
                             <span className="check-icon">✓</span>
                           ) : (
@@ -222,7 +256,7 @@ export default function TargetGPACalculator({ currentGPA, completedCredits, tota
 
                 {/* Tips */}
                 <div className="tips-section">
-                  <h4 className="tips-title">💡 Tips to Reach Your Goal</h4>
+                  <h4 className="tips-title">💡 {t('gpa.tipsToReach')}</h4>
                   <ul className="tips-list">
                     {getTips(parseFloat(calculation.requiredGPA)).map((tip, idx) => (
                       <li key={idx}>{tip}</li>
@@ -231,16 +265,16 @@ export default function TargetGPACalculator({ currentGPA, completedCredits, tota
                 </div>
 
                 <button onClick={handleReset} className="reset-btn">
-                  Calculate Another Target
+                  {t('gpa.calculateAnother')}
                 </button>
               </>
             ) : (
               <div className="impossible-result">
                 <span className="impossible-icon">🚫</span>
-                <h4>Target Not Achievable</h4>
+                <h4>{t('gpa.notAchievable')}</h4>
                 <p>{calculation.message}</p>
                 <button onClick={handleReset} className="reset-btn">
-                  Try Different Target
+                  {t('gpa.tryDifferent')}
                 </button>
               </div>
             )}
@@ -249,40 +283,4 @@ export default function TargetGPACalculator({ currentGPA, completedCredits, tota
       </div>
     </div>
   )
-}
-
-function getLetterGrade(gpa) {
-  if (gpa >= 3.85) return 'A (Excellent)'
-  if (gpa >= 3.5) return 'A- to A (Very Good)'
-  if (gpa >= 3.15) return 'B+ (Good)'
-  if (gpa >= 2.85) return 'B (Satisfactory)'
-  if (gpa >= 2.5) return 'B- to B (Acceptable)'
-  if (gpa >= 2.15) return 'C+ (Below Average)'
-  if (gpa >= 1.85) return 'C (Minimal Pass)'
-  return 'Below C (Needs Improvement)'
-}
-
-function getTips(requiredGPA) {
-  const tips = []
-  
-  if (requiredGPA >= 3.7) {
-    tips.push('Focus on your strongest subjects for higher grades')
-    tips.push('Consider taking fewer courses per semester to maintain quality')
-    tips.push('Form study groups with high-performing classmates')
-    tips.push('Attend all office hours and seek help early')
-  } else if (requiredGPA >= 3.3) {
-    tips.push('Maintain consistent study habits throughout the semester')
-    tips.push('Start assignments early to allow time for revisions')
-    tips.push('Attend review sessions before exams')
-  } else if (requiredGPA >= 2.7) {
-    tips.push('Stay on top of coursework and avoid falling behind')
-    tips.push('Review material regularly, not just before exams')
-    tips.push('Take advantage of tutoring resources')
-  } else {
-    tips.push('You have a comfortable cushion - maintain good habits')
-    tips.push('Consider challenging yourself with interesting electives')
-    tips.push('Focus on learning, not just grades')
-  }
-  
-  return tips
 }
