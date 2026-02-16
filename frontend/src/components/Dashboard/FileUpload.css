@@ -12,7 +12,7 @@
   padding: 0.875rem;
   border-radius: 8px;
   cursor: pointer;
-  color: #6b7280;
+  color: #1f2937; /* Dark color for the icon */
   transition: all 0.2s ease;
   font-size: 20px;
   flex-shrink: 0;
@@ -26,6 +26,7 @@
 .attach-file-btn:hover {
   background: #fef2f2;
   border-color: #ED1B2F;
+  color: #ED1B2F; /* Red on hover */
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(237, 27, 47, 0.2);
 }
@@ -72,6 +73,7 @@
 
 .file-icon {
   font-size: 16px;
+  color: #4b5563; /* Medium gray color for file type icons */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -112,9 +114,8 @@
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
-  font-size: 12px;
+  font-size: 14px; /* Slightly larger for better visibility */
   flex-shrink: 0;
-  font-weight: bold;
 }
 
 .remove-file-btn:hover {
