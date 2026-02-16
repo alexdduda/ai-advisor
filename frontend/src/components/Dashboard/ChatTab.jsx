@@ -1,4 +1,5 @@
 import { useRef, useEffect, useState } from 'react'
+import { HiPaperClip } from 'react-icons/hi'
 import FileUpload from './FileUpload'
 import './ChatTab.css'
 
@@ -126,7 +127,9 @@ export default function ChatTab({
       {isDragging && (
         <div className="drag-overlay">
           <div className="drag-overlay-content">
-            <div className="drag-icon">📎</div>
+            <div className="drag-icon">
+              <HiPaperClip />
+            </div>
             <div className="drag-text">Drop files here to attach</div>
             <div className="drag-subtext">PDF, Images, Text files (max 32MB)</div>
           </div>
@@ -158,66 +161,46 @@ export default function ChatTab({
               </div>
               <div className="message-content">
                 <div className="message-text">{message.content}</div>
-                {/* Show attached files in user messages */}
-                {message.role === 'user' && message.files && message.files.length > 0 && (
-                  <div className="message-files">
-                    {message.files.map((file, i) => (
-                      <div key={i} className="message-file-badge">
-                        📎 {file.name}
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
             </div>
           ))
         )}
+        
         {isSending && (
           <div className="message assistant">
             <div className="message-avatar">🤖</div>
             <div className="message-content">
-              <div className="message-text">
-                <span className="typing-indicator">●●●</span>
+              <div className="message-text typing-indicator">
+                <span></span>
+                <span></span>
+                <span></span>
               </div>
             </div>
           </div>
         )}
+        
         <div ref={messagesEndRef} />
       </div>
 
       {chatError && <div className="error-banner">{chatError}</div>}
 
       <form className="chat-input-container" onSubmit={handleSubmit}>
-        {/* File Upload Component */}
         <FileUpload
           onFilesSelected={handleFilesSelected}
           attachedFiles={attachedFiles}
           onRemoveFile={handleRemoveFile}
         />
-
-        <textarea
+        <input
+          type="text"
           className="chat-input"
-          placeholder="Ask me anything about courses, planning, or McGill academics..."
+          placeholder="Ask about courses, requirements, or degree planning..."
           value={chatInput}
           onChange={(e) => setChatInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault()
-              handleSubmit(e)
-            }
-          }}
           disabled={isSending}
-          rows={1}
-          style={{ resize: 'none', overflow: 'hidden' }}
-          onInput={(e) => {
-            e.target.style.height = 'auto'
-            e.target.style.height = e.target.scrollHeight + 'px'
-          }}
         />
-        
         <button
           type="submit"
-          className="btn btn-send"
+          className="btn-send"
           disabled={isSending || (!chatInput.trim() && attachedFiles.length === 0)}
         >
           {isSending ? 'Sending...' : 'Send'}
