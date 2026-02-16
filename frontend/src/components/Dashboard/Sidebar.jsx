@@ -1,4 +1,4 @@
-import { FaChevronLeft, FaChevronRight } from 'react-icons/fa'
+import { FaChevronLeft, FaChevronRight, FaComments, FaBook, FaStar, FaUser } from 'react-icons/fa'
 import './Sidebar.css'
 
 export default function Sidebar({
@@ -57,11 +57,11 @@ export default function Sidebar({
           <>
             <nav className="sidebar-nav">
               {[
-                { key: 'chat', icon: '💬', label: 'AI Chat' },
-                { key: 'courses', icon: '📚', label: 'Courses' },
-                { key: 'favorites', icon: '⭐', label: 'Saved', badge: favorites.length || null },
-                { key: 'forum', icon: '💬', label: 'Forum' },
-                { key: 'profile', icon: '👤', label: 'Profile' },
+                { key: 'chat', icon: <FaComments />, label: 'AI Chat' },
+                { key: 'courses', icon: <FaBook />, label: 'Courses' },
+                { key: 'favorites', icon: <FaStar />, label: 'Saved', badge: favorites.length || null },
+                { key: 'forum', icon: <FaComments />, label: 'Forum' },
+                { key: 'profile', icon: <FaUser />, label: 'Profile' },
               ].map(({ key, icon, label, badge }) => (
                 <button
                   key={key}

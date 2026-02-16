@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { FaHeart, FaRegHeart, FaCheckCircle } from 'react-icons/fa'
+import { FaHeart, FaRegHeart, FaCheckCircle, FaStar } from 'react-icons/fa'
 import './SavedCoursesView.css'
 
 export default function SavedCoursesView({ 
@@ -7,11 +7,9 @@ export default function SavedCoursesView({
   completedCourses = [],
   completedCoursesMap = new Set(),
   favoritesMap = new Set(),
-  user,
   onToggleFavorite,
   onToggleCompleted,
   onCourseClick,
-  onRefresh 
 }) {
   const [activeView, setActiveView] = useState('saved') // 'saved' or 'completed'
 
@@ -37,7 +35,7 @@ export default function SavedCoursesView({
           className={`saved-tab ${activeView === 'saved' ? 'active' : ''}`}
           onClick={() => setActiveView('saved')}
         >
-          <span className="tab-icon">⭐</span>
+          <span className="tab-icon"><FaStar className="tab-icon" /></span>
           <span className="tab-label">Saved Courses</span>
           {favorites.length > 0 && (
             <span className="tab-count">{favorites.length}</span>
@@ -61,7 +59,7 @@ export default function SavedCoursesView({
         <div className="saved-courses-content">
           {favorites.length === 0 ? (
             <div className="empty-state">
-              <div className="empty-icon">⭐</div>
+              <div className="empty-icon"><FaStar className="empty-icon" /></div>
               <h3>No Saved Courses Yet</h3>
               <p>Save courses from the Course Explorer to see them here</p>
             </div>

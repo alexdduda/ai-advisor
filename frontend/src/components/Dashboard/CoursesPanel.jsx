@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import coursesAPI           from '../../lib/professorsAPI'
-import ProfessorRating     from '../ProfessorRating/ProfessorRating'
+import coursesAPI from '../../lib/professorsAPI'
+import ProfessorRating from '../ProfessorRating/ProfessorRating'
 import { gpaToLetterGrade } from '../../utils/gpaUtils'
+import { FaChartBar, FaBook } from 'react-icons/fa'
 import './CoursesPanel.css'
 
 export default function CoursesPanel() {
@@ -113,7 +114,7 @@ export default function CoursesPanel() {
                 <h4 className="course-title">{course.title}</h4>
                 {course.sections && (
                   <div className="course-meta">
-                    📊 {course.sections.length} section{course.sections.length !== 1 ? 's' : ''} available
+                    <FaChartBar className="meta-icon" /> {course.sections.length} section{course.sections.length !== 1 ? 's' : ''} available
                   </div>
                 )}
               </div>
@@ -177,7 +178,7 @@ export default function CoursesPanel() {
       {/* Empty / placeholder */}
       {!searchResults.length && !selectedCourse && !searchError && !isSearching && (
         <div className="placeholder-content">
-          <div className="placeholder-icon">📚</div>
+          <div className="placeholder-icon"><FaBook className="placeholder-icon" /></div>
           <h3>Course Explorer with Professor Ratings</h3>
           <p>Search through McGill courses with historical grade data and live RateMyProfessor ratings.</p>
         </div>

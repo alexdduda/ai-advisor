@@ -1,6 +1,8 @@
 import { useState, useRef } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
-import { FaCamera } from 'react-icons/fa'
+import { FaCamera, FaChartBar, FaLightbulb, FaSave } from 'react-icons/fa'
+import { HiMiniSparkles } from "react-icons/hi2";
+import { IoMdPerson } from "react-icons/io";
 import './ProfilePanel.css'
 
 export default function ProfilePanel() {
@@ -142,7 +144,7 @@ export default function ProfilePanel() {
           <div className="profile-section-card">
             <div className="card-header">
               <div className="card-title-group">
-                <span className="card-icon">👤</span>
+                <span className="card-icon"><IoMdPerson /></span>
                 <h2 className="card-title">Personal Information</h2>
               </div>
               {!editing && (
@@ -153,10 +155,10 @@ export default function ProfilePanel() {
             <div className="card-content">
               {!editing ? (
                 <div className="info-grid">
-                  <InfoItem icon="🎓" label="Major"         value={profile?.major || 'Not specified'} />
-                  <InfoItem icon="📅" label="Academic Year" value={profile?.year ? `U${profile.year}` : 'Not specified'} />
-                  <InfoItem icon="📧" label="Email"         value={user?.email} />
-                  <InfoItem icon="👤" label="Username"      value={profile?.username || 'Not set'} />
+                  <InfoItem icon={<FaGraduationCap />} label="Major"         value={profile?.major || 'Not specified'} />
+                  <InfoItem icon={<FaCalendarAlt />} label="Academic Year" value={profile?.year ? `U${profile.year}` : 'Not specified'} />
+                  <InfoItem icon={<FaEnvelope />} label="Email"         value={user?.email} />
+                  <InfoItem icon={<FaUser />} label="Username"      value={profile?.username || 'Not set'} />
                 </div>
               ) : (
                 <form className="edit-form" onSubmit={handleUpdate}>
@@ -178,7 +180,7 @@ export default function ProfilePanel() {
                     </div>
                   </div>
                   <div className="form-actions-inline">
-                    <button type="submit" className="btn btn-primary-sm">💾 Save Changes</button>
+                    <button type="submit" className="btn btn-primary-sm"><FaSave className="save-icon" /> Save Changes</button>
                     <button type="button" className="btn btn-secondary-sm" onClick={() => setEditing(false)}>✕ Cancel</button>
                   </div>
                 </form>
@@ -190,7 +192,7 @@ export default function ProfilePanel() {
           <div className="profile-section-card">
             <div className="card-header">
               <div className="card-title-group">
-                <span className="card-icon">📊</span>
+                <span className="card-icon"><FaChartBar /></span>
                 <h2 className="card-title">Academic Performance</h2>
               </div>
             </div>
@@ -210,7 +212,7 @@ export default function ProfilePanel() {
               )}
               <div className="performance-tips">
                 <div className="tip-item">
-                  <span className="tip-icon">💡</span>
+                  <span className="tip-icon"><FaLightbulb /></span>
                   <p className="tip-text">Keep your GPA updated for better course recommendations</p>
                 </div>
               </div>
@@ -221,7 +223,7 @@ export default function ProfilePanel() {
           <div className="profile-section-card card-full-width">
             <div className="card-header">
               <div className="card-title-group">
-                <span className="card-icon">✨</span>
+                <span className="card-icon"><HiMiniSparkles /></span>
                 <h2 className="card-title">Interests &amp; Preferences</h2>
               </div>
             </div>
@@ -236,7 +238,7 @@ export default function ProfilePanel() {
                     </div>
                   ) : (
                     <p className="empty-state">
-                      <span className="empty-icon">🎯</span>
+                      <span className="empty-icon"><FaBullseye /></span>
                       <span>No interests added yet. Add your academic interests to get personalised recommendations!</span>
                     </p>
                   )}
@@ -257,7 +259,7 @@ export default function ProfilePanel() {
           <div className="profile-section-card card-full-width">
             <div className="card-header">
               <div className="card-title-group">
-                <span className="card-icon">⚙️</span>
+                <span className="card-icon"><FaCog /></span>
                 <h2 className="card-title">Account Settings</h2>
               </div>
             </div>

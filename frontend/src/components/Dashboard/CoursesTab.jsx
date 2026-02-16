@@ -1,4 +1,6 @@
-import { FaHeart, FaRegHeart, FaCheckCircle } from 'react-icons/fa'
+import { FaHeart, FaRegHeart, FaCheckCircle, FaStar, FaBook, FaUser, FaChartBar } from 'react-icons/fa'
+import { GrPowerCycle } from "react-icons/gr"
+import { MdOutlineRateReview } from "react-icons/md"
 import './CoursesTab.css'
 
 export default function CoursesTab({
@@ -65,12 +67,12 @@ export default function CoursesTab({
                 onChange={(e) => setSortBy(e.target.value)}
               >
                 <option value="relevance">Relevance</option>
-                <option value="rating-high">⭐ Rating (High to Low)</option>
-                <option value="rating-low">⭐ Rating (Low to High)</option>
-                <option value="name-az">📚 Course Name (A-Z)</option>
-                <option value="name-za">📚 Course Name (Z-A)</option>
-                <option value="instructor-az">👤 Professor (A-Z)</option>
-                <option value="instructor-za">👤 Professor (Z-A)</option>
+                <option value="rating-high">Rating (High to Low)</option>
+                <option value="rating-low">Rating (Low to High)</option>
+                <option value="name-az">Course Name (A-Z)</option>
+                <option value="name-za">Course Name (Z-A)</option>
+                <option value="instructor-az">Professor (A-Z)</option>
+                <option value="instructor-za">Professor (Z-A)</option>
               </select>
             </div>
           </div>
@@ -91,26 +93,26 @@ export default function CoursesTab({
 
                   {course.instructor && (
                     <div className="course-instructor-section">
-                      <div className="instructor-name">👤 {course.instructor}</div>
+                      <div className="instructor-name"><FaUser /> {course.instructor}</div>
                       {course.rmp_rating && (
                         <div className="rmp-compact">
                           <div className="rmp-stat">
-                            <span className="rmp-label">⭐ Rating:</span>
+                            <span className="rmp-label"><FaStar /> Rating:</span>
                             <span className="rmp-value">{course.rmp_rating.toFixed(1)}/5.0</span>
                           </div>
                           <div className="rmp-stat">
-                            <span className="rmp-label">📊 Difficulty:</span>
+                            <span className="rmp-label"><FaChartBar /> Difficulty:</span>
                             <span className="rmp-value">{course.rmp_difficulty?.toFixed(1) || 'N/A'}/5.0</span>
                           </div>
                           {course.rmp_num_ratings && (
                             <div className="rmp-stat">
-                              <span className="rmp-label">📝 Reviews:</span>
+                              <span className="rmp-label"><MdOutlineRateReview /> Reviews:</span>
                               <span className="rmp-value">{Math.round(course.rmp_num_ratings)}</span>
                             </div>
                           )}
                           {course.rmp_would_take_again && (
                             <div className="rmp-stat">
-                              <span className="rmp-label">🔄 Would retake:</span>
+                              <span className="rmp-label"><GrPowerCycle /> Would retake:</span>
                               <span className="rmp-value">{Math.round(course.rmp_would_take_again)}%</span>
                             </div>
                           )}
@@ -119,11 +121,7 @@ export default function CoursesTab({
                     </div>
                   )}
 
-                  {course.num_sections && (
-                    <div className="course-meta">
-                      📊 {course.num_sections} section{course.num_sections !== 1 ? 's' : ''} available
-                    </div>
-                  )}
+                  {/* REMOVED: Section count display */}
                 </div>
 
                 <div className="course-card-actions">
@@ -180,9 +178,10 @@ export default function CoursesTab({
               </div>
             )}
 
+            {/* Professor Rating - Only at top */}
             {selectedCourse.professor_rating && (
               <div className="course-professor-rating">
-                <h3>📊 Professor Rating: {selectedCourse.professor_rating.instructor}</h3>
+                <h3><FaChartBar /> Professor Rating: {selectedCourse.professor_rating.instructor}</h3>
                 <div className="rmp-stats-grid">
                   <div className="rmp-stat-card">
                     <div className="rmp-stat-value">{selectedCourse.professor_rating.rmp_rating?.toFixed(1) || 'N/A'}</div>
@@ -205,39 +204,29 @@ export default function CoursesTab({
             )}
           </div>
 
+          {/* Condensed Sections - No RMP ratings */}
           {selectedCourse.sections && selectedCourse.sections.length > 0 && (
             <div className="course-sections">
               <h3 className="sections-header">Sections ({selectedCourse.sections.length})</h3>
-              {selectedCourse.sections.map((section, idx) => (
-                <div key={idx} className="section-card">
-                  <div className="section-info">
-                    <div className="section-header">
+              <div className="sections-grid">
+                {selectedCourse.sections.map((section, idx) => (
+                  <div key={idx} className="section-card-compact">
+                    <div className="section-compact-header">
                       <span className="section-term">{section.term || 'N/A'}</span>
                       {section.average && (
                         <span className="section-average">
-                          Average: {section.average} GPA ({gpaToLetterGrade(section.average)})
+                          {section.average} ({gpaToLetterGrade(section.average)})
                         </span>
                       )}
                     </div>
                     {section.instructor && section.instructor !== 'TBA' && (
-                      <div className="section-instructor">
-                        <strong>Instructor:</strong> {section.instructor}
-                      </div>
-                    )}
-                    {section.rmp_rating && (
-                      <div className="section-rmp">
-                        <div className="rmp-inline">
-                          <span className="rmp-badge">⭐ {section.rmp_rating.toFixed(1)}</span>
-                          <span className="rmp-badge">📊 Difficulty: {section.rmp_difficulty?.toFixed(1) || 'N/A'}</span>
-                          {section.rmp_num_ratings && (
-                            <span className="rmp-badge">📝 {Math.round(section.rmp_num_ratings)} reviews</span>
-                          )}
-                        </div>
+                      <div className="section-instructor-compact">
+                        {section.instructor}
                       </div>
                     )}
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
         </div>
@@ -246,7 +235,7 @@ export default function CoursesTab({
       {/* Empty state */}
       {searchResults.length === 0 && !selectedCourse && !searchError && !isSearching && (
         <div className="placeholder-content">
-          <div className="placeholder-icon">📚</div>
+          <div className="placeholder-icon"><FaBook /></div>
           <h3>Course Explorer with Professor Ratings</h3>
           <p>Search through McGill courses with historical grade data and live RateMyProfessor ratings.</p>
         </div>
