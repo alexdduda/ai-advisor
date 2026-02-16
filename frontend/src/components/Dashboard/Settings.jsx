@@ -1,10 +1,15 @@
 import { useState } from 'react'
+import { useLanguage } from '../../contexts/LanguageContext'
+import { useTheme } from '../../contexts/ThemeContext'
 import './Settings.css'
 
 export default function Settings({ user, profile, onUpdateSettings }) {
+  const { language, setLanguage, t } = useLanguage()
+  const { theme, setTheme } = useTheme()
+  
   const [settings, setSettings] = useState({
     // Theme
-    theme: localStorage.getItem('theme') || 'light',
+    theme: theme || 'light',
     
     // Notifications
     emailNotifications: JSON.parse(localStorage.getItem('emailNotifications') ?? 'true'),
@@ -16,18 +21,24 @@ export default function Settings({ user, profile, onUpdateSettings }) {
     shareProgress: JSON.parse(localStorage.getItem('shareProgress') ?? 'false'),
     
     // Preferences
-    language: localStorage.getItem('language') || 'en',
+    language: language || 'en',
     timezone: localStorage.getItem('timezone') || Intl.DateTimeFormat().resolvedOptions().timeZone
   })
 
   const [showExportModal, setShowExportModal] = useState(false)
 
   // Handle theme toggle
-  const handleThemeChange = (theme) => {
-    setSettings(prev => ({ ...prev, theme }))
-    localStorage.setItem('theme', theme)
-    document.documentElement.setAttribute('data-theme', theme)
-    if (onUpdateSettings) onUpdateSettings({ theme })
+  const handleThemeChange = (newTheme) => {
+    setSettings(prev => ({ ...prev, theme: newTheme }))
+    setTheme(newTheme)
+    if (onUpdateSettings) onUpdateSettings({ theme: newTheme })
+  }
+
+  // Handle language change
+  const handleLanguageChange = (newLang) => {
+    setSettings(prev => ({ ...prev, language: newLang }))
+    setLanguage(newLang)
+    if (onUpdateSettings) onUpdateSettings({ language: newLang })
   }
 
   // Handle notification toggles
@@ -69,14 +80,14 @@ export default function Settings({ user, profile, onUpdateSettings }) {
     URL.revokeObjectURL(url)
     
     setShowExportModal(false)
-    alert('✓ Data exported successfully!')
+    alert(t('settings.dataExported'))
   }
 
   return (
     <div className="settings-container">
       <div className="settings-header">
-        <h2 className="settings-title">⚙️ Settings</h2>
-        <p className="settings-subtitle">Customize your McGill Advisor experience</p>
+        <h2 className="settings-title">⚙️ {t('settings.title')}</h2>
+        <p className="settings-subtitle">{t('settings.subtitle')}</p>
       </div>
 
       <div className="settings-sections">
@@ -84,32 +95,32 @@ export default function Settings({ user, profile, onUpdateSettings }) {
         <div className="settings-section">
           <div className="section-header">
             <span className="section-icon">🎨</span>
-            <h3 className="section-title">Appearance</h3>
+            <h3 className="section-title">{t('settings.appearance')}</h3>
           </div>
           <div className="section-content">
             <div className="setting-item">
               <div className="setting-info">
-                <label className="setting-label">Theme</label>
-                <p className="setting-description">Choose your preferred color scheme</p>
+                <label className="setting-label">{t('settings.theme')}</label>
+                <p className="setting-description">{t('settings.themeDescription')}</p>
               </div>
               <div className="theme-toggle">
                 <button
                   className={`theme-btn ${settings.theme === 'light' ? 'active' : ''}`}
                   onClick={() => handleThemeChange('light')}
                 >
-                  ☀️ Light
+                  ☀️ {t('settings.light')}
                 </button>
                 <button
                   className={`theme-btn ${settings.theme === 'dark' ? 'active' : ''}`}
                   onClick={() => handleThemeChange('dark')}
                 >
-                  🌙 Dark
+                  🌙 {t('settings.dark')}
                 </button>
                 <button
                   className={`theme-btn ${settings.theme === 'auto' ? 'active' : ''}`}
                   onClick={() => handleThemeChange('auto')}
                 >
-                  🔄 Auto
+                  🔄 {t('settings.auto')}
                 </button>
               </div>
             </div>
@@ -120,13 +131,13 @@ export default function Settings({ user, profile, onUpdateSettings }) {
         <div className="settings-section">
           <div className="section-header">
             <span className="section-icon">🔔</span>
-            <h3 className="section-title">Notifications</h3>
+            <h3 className="section-title">{t('settings.notifications')}</h3>
           </div>
           <div className="section-content">
             <div className="setting-item">
               <div className="setting-info">
-                <label className="setting-label">Email Notifications</label>
-                <p className="setting-description">Receive updates via email</p>
+                <label className="setting-label">{t('settings.emailNotifications')}</label>
+                <p className="setting-description">{t('settings.emailNotificationsDesc')}</p>
               </div>
               <label className="toggle-switch">
                 <input
@@ -140,8 +151,8 @@ export default function Settings({ user, profile, onUpdateSettings }) {
 
             <div className="setting-item">
               <div className="setting-info">
-                <label className="setting-label">Deadline Reminders</label>
-                <p className="setting-description">Get notified about upcoming deadlines</p>
+                <label className="setting-label">{t('settings.deadlineReminders')}</label>
+                <p className="setting-description">{t('settings.deadlineRemindersDesc')}</p>
               </div>
               <label className="toggle-switch">
                 <input
@@ -155,8 +166,8 @@ export default function Settings({ user, profile, onUpdateSettings }) {
 
             <div className="setting-item">
               <div className="setting-info">
-                <label className="setting-label">Course Updates</label>
-                <p className="setting-description">Notifications about course changes</p>
+                <label className="setting-label">{t('settings.courseUpdates')}</label>
+                <p className="setting-description">{t('settings.courseUpdatesDesc')}</p>
               </div>
               <label className="toggle-switch">
                 <input
@@ -174,29 +185,29 @@ export default function Settings({ user, profile, onUpdateSettings }) {
         <div className="settings-section">
           <div className="section-header">
             <span className="section-icon">🔒</span>
-            <h3 className="section-title">Privacy & Data</h3>
+            <h3 className="section-title">{t('settings.privacyData')}</h3>
           </div>
           <div className="section-content">
             <div className="setting-item">
               <div className="setting-info">
-                <label className="setting-label">Profile Visibility</label>
-                <p className="setting-description">Who can see your profile</p>
+                <label className="setting-label">{t('settings.profileVisibility')}</label>
+                <p className="setting-description">{t('settings.profileVisibilityDesc')}</p>
               </div>
               <select
                 className="setting-select"
                 value={settings.profileVisibility}
                 onChange={(e) => handlePrivacyChange('profileVisibility', e.target.value)}
               >
-                <option value="private">Private</option>
-                <option value="friends">Friends Only</option>
-                <option value="public">Public</option>
+                <option value="private">{t('settings.private')}</option>
+                <option value="friends">{t('settings.friendsOnly')}</option>
+                <option value="public">{t('settings.public')}</option>
               </select>
             </div>
 
             <div className="setting-item">
               <div className="setting-info">
-                <label className="setting-label">Share Academic Progress</label>
-                <p className="setting-description">Allow others to view your progress</p>
+                <label className="setting-label">{t('settings.shareProgress')}</label>
+                <p className="setting-description">{t('settings.shareProgressDesc')}</p>
               </div>
               <label className="toggle-switch">
                 <input
@@ -210,14 +221,14 @@ export default function Settings({ user, profile, onUpdateSettings }) {
 
             <div className="setting-item">
               <div className="setting-info">
-                <label className="setting-label">Export Your Data</label>
-                <p className="setting-description">Download all your data as JSON</p>
+                <label className="setting-label">{t('settings.exportYourData')}</label>
+                <p className="setting-description">{t('settings.exportDataDesc')}</p>
               </div>
               <button
                 className="export-btn"
                 onClick={() => setShowExportModal(true)}
               >
-                📥 Export Data
+                📥 {t('settings.exportData')}
               </button>
             </div>
           </div>
@@ -227,28 +238,28 @@ export default function Settings({ user, profile, onUpdateSettings }) {
         <div className="settings-section">
           <div className="section-header">
             <span className="section-icon">⚡</span>
-            <h3 className="section-title">Preferences</h3>
+            <h3 className="section-title">{t('settings.preferences')}</h3>
           </div>
           <div className="section-content">
             <div className="setting-item">
               <div className="setting-info">
-                <label className="setting-label">Language</label>
-                <p className="setting-description">Interface language</p>
+                <label className="setting-label">{t('settings.language')}</label>
+                <p className="setting-description">{t('settings.languageDesc')}</p>
               </div>
               <select
                 className="setting-select"
                 value={settings.language}
-                onChange={(e) => handlePrivacyChange('language', e.target.value)}
+                onChange={(e) => handleLanguageChange(e.target.value)}
               >
-                <option value="en">English</option>
-                <option value="fr">Français</option>
+                <option value="en">{t('common.english')}</option>
+                <option value="fr">{t('common.french')}</option>
               </select>
             </div>
 
             <div className="setting-item">
               <div className="setting-info">
-                <label className="setting-label">Timezone</label>
-                <p className="setting-description">Your local timezone</p>
+                <label className="setting-label">{t('settings.timezone')}</label>
+                <p className="setting-description">{t('settings.timezoneDesc')}</p>
               </div>
               <select
                 className="setting-select"
@@ -273,17 +284,16 @@ export default function Settings({ user, profile, onUpdateSettings }) {
       {showExportModal && (
         <div className="modal-overlay" onClick={() => setShowExportModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3 className="modal-title">Export Your Data</h3>
+            <h3 className="modal-title">{t('settings.exportYourData')}</h3>
             <p className="modal-text">
-              This will download all your profile data, courses, and settings as a JSON file. 
-              You can use this for backup or to transfer your data.
+              {t('settings.exportModalText')}
             </p>
             <div className="modal-actions">
               <button className="modal-btn cancel-btn" onClick={() => setShowExportModal(false)}>
-                Cancel
+                {t('common.cancel')}
               </button>
               <button className="modal-btn confirm-btn" onClick={handleExportData}>
-                Download JSON
+                {t('settings.downloadJson')}
               </button>
             </div>
           </div>

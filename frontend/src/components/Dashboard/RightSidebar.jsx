@@ -1,4 +1,5 @@
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa'
+import { useLanguage } from '../../contexts/LanguageContext'
 import './RightSidebar.css'
 
 export default function RightSidebar({
@@ -7,6 +8,8 @@ export default function RightSidebar({
   chatHistory,
   onLoadChat,
 }) {
+  const { t } = useLanguage()
+  
   return (
     <aside className={`right-sidebar ${isOpen ? 'open' : 'closed'}`}>
       {!isOpen && (
@@ -14,7 +17,7 @@ export default function RightSidebar({
           <button
             className="right-sidebar-toggle-collapsed"
             onClick={() => setIsOpen(true)}
-            title="Show chat history"
+            title={t('chat.showHistory')}
           >
             <FaChevronLeft size={20} />
           </button>
@@ -24,11 +27,11 @@ export default function RightSidebar({
       {isOpen && (
         <>
           <div className="right-sidebar-header">
-            <h3>Chat History</h3>
+            <h3>{t('chat.historyTitle')}</h3>
             <button
               className="right-sidebar-close"
               onClick={() => setIsOpen(false)}
-              aria-label="Close history"
+              aria-label={t('chat.closeHistory')}
             >
               <FaChevronRight size={20} />
             </button>
@@ -42,7 +45,7 @@ export default function RightSidebar({
                   onClick={() => onLoadChat(session.session_id)}
                 >
                   <div className="history-title">
-                    {session.last_message?.substring(0, 50) || 'Chat Session'}
+                    {session.last_message?.substring(0, 50) || t('chat.chatSession')}
                     {session.last_message && session.last_message.length > 50 && '...'}
                   </div>
                   <div className="history-meta">
@@ -52,7 +55,7 @@ export default function RightSidebar({
               ))
             ) : (
               <div className="history-empty">
-                <p>No previous chats</p>
+                <p>{t('chat.noPreviousChats')}</p>
               </div>
             )}
           </div>

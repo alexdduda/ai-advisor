@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState } from 'react'
 import { HiPaperClip } from 'react-icons/hi'
+import { useLanguage } from '../../contexts/LanguageContext'
 import FileUpload from './FileUpload'
 import './ChatTab.css'
 
@@ -13,6 +14,7 @@ export default function ChatTab({
   onSendMessage = () => {},
   userEmail = '',
 }) {
+  const { t } = useLanguage()
   const messagesEndRef = useRef(null)
   const chatContainerRef = useRef(null)
   const [attachedFiles, setAttachedFiles] = useState([])
@@ -130,8 +132,8 @@ export default function ChatTab({
             <div className="drag-icon">
               <HiPaperClip />
             </div>
-            <div className="drag-text">Drop files here to attach</div>
-            <div className="drag-subtext">PDF, Images, Text files (max 32MB)</div>
+            <div className="drag-text">{t('chat.dropFiles')}</div>
+            <div className="drag-subtext">{t('chat.dropFilesSubtext')}</div>
           </div>
         </div>
       )}
@@ -141,7 +143,7 @@ export default function ChatTab({
           <div className="message assistant">
             <div className="message-avatar">🤖</div>
             <div className="message-content">
-              <div className="message-text">Loading chat history...</div>
+              <div className="message-text">{t('chat.loadingHistory')}</div>
             </div>
           </div>
         ) : messages.length === 0 ? (
@@ -149,7 +151,7 @@ export default function ChatTab({
             <div className="message-avatar">🤖</div>
             <div className="message-content">
               <div className="message-text">
-                Hello! I'm your McGill AI Academic Advisor. How can I help you plan your courses today?
+                {t('chat.welcomeMessage')}
               </div>
             </div>
           </div>
@@ -160,6 +162,15 @@ export default function ChatTab({
                 {message.role === 'assistant' ? '🤖' : userEmail?.[0]?.toUpperCase() || '?'}
               </div>
               <div className="message-content">
+                {message.files && message.files.length > 0 && (
+                  <div className="message-files">
+                    {message.files.map((file, fileIdx) => (
+                      <div key={fileIdx} className="message-file-chip">
+                        📎 {file.name}
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <div className="message-text">{message.content}</div>
               </div>
             </div>
@@ -171,9 +182,7 @@ export default function ChatTab({
             <div className="message-avatar">🤖</div>
             <div className="message-content">
               <div className="message-text typing-indicator">
-                <span></span>
-                <span></span>
-                <span></span>
+                <span></span><span></span><span></span>
               </div>
             </div>
           </div>
@@ -193,7 +202,7 @@ export default function ChatTab({
         <input
           type="text"
           className="chat-input"
-          placeholder="Ask about courses, requirements, or degree planning..."
+          placeholder={t('chat.placeholder')}
           value={chatInput}
           onChange={(e) => setChatInput(e.target.value)}
           disabled={isSending}
@@ -203,7 +212,7 @@ export default function ChatTab({
           className="btn-send"
           disabled={isSending || (!chatInput.trim() && attachedFiles.length === 0)}
         >
-          {isSending ? 'Sending...' : 'Send'}
+          {isSending ? t('chat.sending') : t('chat.send')}
         </button>
       </form>
     </div>

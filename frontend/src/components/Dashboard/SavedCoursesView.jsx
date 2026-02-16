@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { FaHeart, FaRegHeart, FaCheckCircle } from 'react-icons/fa'
+import { useLanguage } from '../../contexts/LanguageContext'
 import './SavedCoursesView.css'
 
 export default function SavedCoursesView({ 
@@ -13,6 +14,7 @@ export default function SavedCoursesView({
   onCourseClick,
   onRefresh 
 }) {
+  const { t } = useLanguage()
   const [activeView, setActiveView] = useState('saved') // 'saved' or 'completed'
 
   // Check if a course is completed
@@ -38,7 +40,7 @@ export default function SavedCoursesView({
           onClick={() => setActiveView('saved')}
         >
           <span className="tab-icon">⭐</span>
-          <span className="tab-label">Saved Courses</span>
+          <span className="tab-label">{t('saved.savedCourses')}</span>
           {favorites.length > 0 && (
             <span className="tab-count">{favorites.length}</span>
           )}
@@ -49,7 +51,7 @@ export default function SavedCoursesView({
           onClick={() => setActiveView('completed')}
         >
           <span className="tab-icon">✓</span>
-          <span className="tab-label">Completed</span>
+          <span className="tab-label">{t('saved.completed')}</span>
           {completedCourses.length > 0 && (
             <span className="tab-count">{completedCourses.length}</span>
           )}

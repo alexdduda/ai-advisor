@@ -1,8 +1,11 @@
 import { useMemo } from 'react'
+import { useLanguage } from '../../contexts/LanguageContext'
 import { FACULTY_CREDIT_REQUIREMENTS, PROGRAM_CREDIT_REQUIREMENTS } from '../../utils/mcgillData'
 import './DegreeProgressTracker.css'
 
 export default function DegreeProgressTracker({ completedCourses = [], profile = {} }) {
+  const { t } = useLanguage()
+  
   const stats = useMemo(() => {
     // Calculate completed course credits
     const completedCredits = completedCourses.reduce((sum, course) => {
@@ -49,7 +52,7 @@ export default function DegreeProgressTracker({ completedCourses = [], profile =
       {/* Progress Bar */}
       <div className="progress-section">
         <div className="progress-header">
-          <h3 className="progress-title">Degree Completion</h3>
+          <h3 className="progress-title">{t('degree.completion')}</h3>
           <span className="progress-percentage">{Math.round(stats.progressPercentage)}%</span>
         </div>
         <div className="progress-bar-container">
@@ -61,8 +64,8 @@ export default function DegreeProgressTracker({ completedCourses = [], profile =
           </div>
         </div>
         <div className="progress-labels">
-          <span className="progress-label">{stats.totalEarnedCredits} credits earned</span>
-          <span className="progress-label">{stats.totalRequired} credits required</span>
+          <span className="progress-label">{stats.totalEarnedCredits} {t('degree.creditsEarned')}</span>
+          <span className="progress-label">{stats.totalRequired} {t('degree.creditsRequired')}</span>
         </div>
       </div>
 
@@ -71,10 +74,10 @@ export default function DegreeProgressTracker({ completedCourses = [], profile =
         <div className="credit-item">
           <div className="credit-icon">📚</div>
           <div className="credit-details">
-            <div className="credit-label">Completed Courses</div>
+            <div className="credit-label">{t('degree.completedCourses')}</div>
             <div className="credit-value">
-              {stats.completedCredits} credits
-              <span className="credit-count">({stats.completedCourseCount} courses)</span>
+              {stats.completedCredits} {t('courses.credits').toLowerCase()}
+              <span className="credit-count">({stats.completedCourseCount} {t('nav.courses').toLowerCase()})</span>
             </div>
           </div>
         </div>
@@ -83,10 +86,10 @@ export default function DegreeProgressTracker({ completedCourses = [], profile =
           <div className="credit-item highlight">
             <div className="credit-icon">⚡</div>
             <div className="credit-details">
-              <div className="credit-label">Advanced Standing</div>
+              <div className="credit-label">{t('degree.advancedStanding')}</div>
               <div className="credit-value">
-                {stats.advancedStandingCredits} credits
-                <span className="credit-count">({stats.advancedStandingCourseCount} courses)</span>
+                {stats.advancedStandingCredits} {t('courses.credits').toLowerCase()}
+                <span className="credit-count">({stats.advancedStandingCourseCount} {t('nav.courses').toLowerCase()})</span>
               </div>
             </div>
           </div>
@@ -95,16 +98,16 @@ export default function DegreeProgressTracker({ completedCourses = [], profile =
         <div className="credit-item total">
           <div className="credit-icon">✓</div>
           <div className="credit-details">
-            <div className="credit-label">Total Earned</div>
-            <div className="credit-value">{stats.totalEarnedCredits} credits</div>
+            <div className="credit-label">{t('degree.totalEarned')}</div>
+            <div className="credit-value">{stats.totalEarnedCredits} {t('courses.credits').toLowerCase()}</div>
           </div>
         </div>
 
         <div className="credit-item remaining">
           <div className="credit-icon">🎯</div>
           <div className="credit-details">
-            <div className="credit-label">Remaining</div>
-            <div className="credit-value">{stats.remainingCredits} credits</div>
+            <div className="credit-label">{t('degree.remaining')}</div>
+            <div className="credit-value">{stats.remainingCredits} {t('courses.credits').toLowerCase()}</div>
           </div>
         </div>
       </div>
@@ -115,32 +118,32 @@ export default function DegreeProgressTracker({ completedCourses = [], profile =
           <div className="milestone-marker">
             {stats.totalEarnedCredits >= Math.round(stats.totalRequired * 0.25) ? '✓' : '○'}
           </div>
-          <div className="milestone-text">{Math.round(stats.totalRequired * 0.25)} credits - 1/4 of the way there!</div>
+          <div className="milestone-text">{Math.round(stats.totalRequired * 0.25)} {t('courses.credits').toLowerCase()} - {t('degree.milestone25')}</div>
         </div>
         <div className={`milestone ${stats.totalEarnedCredits >= Math.round(stats.totalRequired * 0.5) ? 'completed' : ''}`}>
           <div className="milestone-marker">
             {stats.totalEarnedCredits >= Math.round(stats.totalRequired * 0.5) ? '✓' : '○'}
           </div>
-          <div className="milestone-text">{Math.round(stats.totalRequired * 0.5)} credits - Halfway done! 🎉</div>
+          <div className="milestone-text">{Math.round(stats.totalRequired * 0.5)} {t('courses.credits').toLowerCase()} - {t('degree.milestone50')}</div>
         </div>
         <div className={`milestone ${stats.totalEarnedCredits >= Math.round(stats.totalRequired * 0.75) ? 'completed' : ''}`}>
           <div className="milestone-marker">
             {stats.totalEarnedCredits >= Math.round(stats.totalRequired * 0.75) ? '✓' : '○'}
           </div>
-          <div className="milestone-text">{Math.round(stats.totalRequired * 0.75)} credits - Almost there! 💪</div>
+          <div className="milestone-text">{Math.round(stats.totalRequired * 0.75)} {t('courses.credits').toLowerCase()} - {t('degree.milestone75')}</div>
         </div>
         <div className={`milestone ${stats.totalEarnedCredits >= stats.totalRequired ? 'completed' : ''}`}>
           <div className="milestone-marker">
             {stats.totalEarnedCredits >= stats.totalRequired ? '✓' : '○'}
           </div>
-          <div className="milestone-text">{stats.totalRequired} credits - Graduation! 🎓</div>
+          <div className="milestone-text">{stats.totalRequired} {t('courses.credits').toLowerCase()} - {t('degree.milestone100')}</div>
         </div>
       </div>
 
       {stats.advancedStandingCredits > 0 && (
         <div className="info-note">
           <span className="info-icon">💡</span>
-          <span>Your {stats.advancedStandingCredits} AP/IB/transfer credits give you a head start!</span>
+          <span>{t('degree.creditsHeadStart').replace('{count}', stats.advancedStandingCredits)}</span>
         </div>
       )}
     </div>

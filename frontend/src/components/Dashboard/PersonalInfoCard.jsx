@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
 import { FaEdit, FaChevronDown, FaChevronUp, FaCheck, FaTimes } from 'react-icons/fa'
+import { useLanguage } from '../../contexts/LanguageContext'
 import EnhancedProfileForm from './EnhancedProfileForm'
 import './PersonalInfoCard.css'
 
 export default function PersonalInfoCard({ profile, user, onUpdateProfile }) {
+  const { t } = useLanguage()
   const [isEditing, setIsEditing] = useState(false)
   const [expandedSections, setExpandedSections] = useState({
     academic: true,
@@ -44,8 +46,8 @@ export default function PersonalInfoCard({ profile, user, onUpdateProfile }) {
             <span className="header-icon">👤</span>
           </div>
           <div className="header-text">
-            <h2 className="card-title-modern">Personal Information</h2>
-            <p className="card-subtitle">Manage your profile details</p>
+            <h2 className="card-title-modern">{t('profile.personalInfo')}</h2>
+            <p className="card-subtitle">{t('profile.manageDetails')}</p>
           </div>
         </div>
         
@@ -54,10 +56,10 @@ export default function PersonalInfoCard({ profile, user, onUpdateProfile }) {
             <button 
               className="btn-edit-modern"
               onClick={() => setIsEditing(true)}
-              title="Edit Profile"
+              title={t('profile.editProfile')}
             >
               <FaEdit />
-              <span>Edit Profile</span>
+              <span>{t('profile.editProfile')}</span>
             </button>
           )}
         </div>
@@ -66,7 +68,7 @@ export default function PersonalInfoCard({ profile, user, onUpdateProfile }) {
       {/* Profile Completeness Bar */}
       <div className="completeness-section">
         <div className="completeness-header">
-          <span className="completeness-label">Profile Completeness</span>
+          <span className="completeness-label">{t('profile.completeness')}</span>
           <span className="completeness-percentage">{completeness}%</span>
         </div>
         <div className="completeness-bar">
@@ -82,7 +84,7 @@ export default function PersonalInfoCard({ profile, user, onUpdateProfile }) {
         </div>
         {completeness < 100 && (
           <p className="completeness-hint">
-            Complete your profile to get better course recommendations
+            {t('profileForm.completeBetterRecs')}
           </p>
         )}
       </div>
@@ -98,7 +100,7 @@ export default function PersonalInfoCard({ profile, user, onUpdateProfile }) {
             >
               <div className="section-header-left">
                 <span className="section-icon">🎓</span>
-                <h3 className="section-title">Academic Information</h3>
+                <h3 className="section-title">{t('profile.academicInfo')}</h3>
               </div>
               {expandedSections.academic ? <FaChevronUp /> : <FaChevronDown />}
             </button>
@@ -108,16 +110,16 @@ export default function PersonalInfoCard({ profile, user, onUpdateProfile }) {
                 <div className="info-grid-modern">
                   {/* Major */}
                   <div className="info-field">
-                    <label className="field-label">Primary Major</label>
+                    <label className="field-label">{t('profile.major')}</label>
                     <div className="field-value">
-                      {profile?.major || <span className="text-muted">Not specified</span>}
+                      {profile?.major || <span className="text-muted">{t('profile.notSpecified')}</span>}
                     </div>
                   </div>
 
                   {/* Additional Majors */}
                   {profile?.other_majors && profile.other_majors.length > 0 && (
                     <div className="info-field">
-                      <label className="field-label">Additional Majors</label>
+                      <label className="field-label">{t('profile.additionalMajors')}</label>
                       <div className="field-tags">
                         {profile.other_majors.map((major, idx) => (
                           <span key={idx} className="tag tag-major">{major}</span>
@@ -129,7 +131,7 @@ export default function PersonalInfoCard({ profile, user, onUpdateProfile }) {
                   {/* Minor */}
                   {profile?.minor && (
                     <div className="info-field">
-                      <label className="field-label">Primary Minor</label>
+                      <label className="field-label">{t('profile.primaryMinor')}</label>
                       <div className="field-value">{profile.minor}</div>
                     </div>
                   )}
@@ -137,7 +139,7 @@ export default function PersonalInfoCard({ profile, user, onUpdateProfile }) {
                   {/* Additional Minors */}
                   {profile?.other_minors && profile.other_minors.length > 0 && (
                     <div className="info-field">
-                      <label className="field-label">Additional Minors</label>
+                      <label className="field-label">{t('profile.additionalMinors')}</label>
                       <div className="field-tags">
                         {profile.other_minors.map((minor, idx) => (
                           <span key={idx} className="tag tag-minor">{minor}</span>
@@ -149,27 +151,27 @@ export default function PersonalInfoCard({ profile, user, onUpdateProfile }) {
                   {/* Concentration */}
                   {profile?.concentration && (
                     <div className="info-field">
-                      <label className="field-label">Concentration</label>
+                      <label className="field-label">{t('profile.concentration')}</label>
                       <div className="field-value">{profile.concentration}</div>
                     </div>
                   )}
 
                   {/* Faculty */}
                   <div className="info-field">
-                    <label className="field-label">Faculty</label>
+                    <label className="field-label">{t('profile.faculty')}</label>
                     <div className="field-value">
-                      {profile?.faculty || <span className="text-muted">Not specified</span>}
+                      {profile?.faculty || <span className="text-muted">{t('profile.notSpecified')}</span>}
                     </div>
                   </div>
 
                   {/* Year */}
                   <div className="info-field">
-                    <label className="field-label">Academic Year</label>
+                    <label className="field-label">{t('profile.year')}</label>
                     <div className="field-value">
                       {profile?.year ? (
                         <span className="year-badge">U{profile.year}</span>
                       ) : (
-                        <span className="text-muted">Not specified</span>
+                        <span className="text-muted">{t('profile.notSpecified')}</span>
                       )}
                     </div>
                   </div>
@@ -186,7 +188,7 @@ export default function PersonalInfoCard({ profile, user, onUpdateProfile }) {
             >
               <div className="section-header-left">
                 <span className="section-icon">📧</span>
-                <h3 className="section-title">Contact Information</h3>
+                <h3 className="section-title">{t('profile.contactInfo')}</h3>
               </div>
               {expandedSections.contact ? <FaChevronUp /> : <FaChevronDown />}
             </button>
@@ -195,18 +197,18 @@ export default function PersonalInfoCard({ profile, user, onUpdateProfile }) {
               <div className="section-content">
                 <div className="info-grid-modern">
                   <div className="info-field">
-                    <label className="field-label">Username</label>
+                    <label className="field-label">{t('profile.username')}</label>
                     <div className="field-value">
-                      {profile?.username || <span className="text-muted">Not set</span>}
+                      {profile?.username || <span className="text-muted">{t('profile.notSet')}</span>}
                     </div>
                   </div>
 
                   <div className="info-field">
-                    <label className="field-label">Email Address</label>
+                    <label className="field-label">{t('profile.email')}</label>
                     <div className="field-value email-value">
                       {user?.email}
                       <span className="verified-badge">
-                        <FaCheck /> Verified
+                        <FaCheck /> {t('profileForm.verified')}
                       </span>
                     </div>
                   </div>
@@ -223,7 +225,7 @@ export default function PersonalInfoCard({ profile, user, onUpdateProfile }) {
             >
               <div className="section-header-left">
                 <span className="section-icon">✨</span>
-                <h3 className="section-title">Additional Information</h3>
+                <h3 className="section-title">{t('profile.additionalInfo')}</h3>
               </div>
               {expandedSections.additional ? <FaChevronUp /> : <FaChevronDown />}
             </button>
@@ -233,7 +235,7 @@ export default function PersonalInfoCard({ profile, user, onUpdateProfile }) {
                 <div className="info-grid-modern">
                   {/* Interests */}
                   <div className="info-field full-width">
-                    <label className="field-label">Academic Interests</label>
+                    <label className="field-label">{t('profile.academicInterests')}</label>
                     {profile?.interests ? (
                       <div className="field-tags">
                         {profile.interests.split(',').map((interest, idx) => (
@@ -244,7 +246,7 @@ export default function PersonalInfoCard({ profile, user, onUpdateProfile }) {
                       </div>
                     ) : (
                       <div className="field-value">
-                        <span className="text-muted">No interests added</span>
+                        <span className="text-muted">{t('profileForm.noInterestsAdded')}</span>
                       </div>
                     )}
                   </div>
@@ -253,9 +255,9 @@ export default function PersonalInfoCard({ profile, user, onUpdateProfile }) {
                   {profile?.advanced_standing && profile.advanced_standing.length > 0 && (
                     <div className="info-field full-width">
                       <label className="field-label">
-                        Advanced Standing 
+                        {t('profileForm.advancedStanding')}
                         <span className="credits-badge">
-                          {profile.advanced_standing.reduce((sum, c) => sum + (c.credits || 0), 0)} credits
+                          {profile.advanced_standing.reduce((sum, c) => sum + (c.credits || 0), 0)} {t('profileForm.credits').toLowerCase()}
                         </span>
                       </label>
                       <div className="advanced-standing-list">

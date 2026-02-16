@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
+import { useLanguage } from '../../contexts/LanguageContext'
 import { MAJORS, MINORS, FACULTIES } from '../../utils/mcgillData'
 import './EnhancedProfileForm.css'
 
 export default function EnhancedProfileForm({ profile, onSave, onCancel }) {
+  const { t } = useLanguage()
   const [formData, setFormData] = useState({
     username: '',
     major: '',
@@ -168,15 +170,15 @@ export default function EnhancedProfileForm({ profile, onSave, onCancel }) {
         <div className="section-number">1</div>
         <div className="section-content-wrapper">
           <div className="section-title-group">
-            <h3 className="section-title">Basic Information</h3>
-            <p className="section-subtitle">Enter Username</p>
+            <h3 className="section-title">{t('profileForm.basicInfo')}</h3>
+            <p className="section-subtitle">{t('profileForm.enterUsername')}</p>
           </div>
 
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="username">
-                Username
-                <span className="optional-badge">Optional</span>
+                {t('profile.username')}
+                <span className="optional-badge">{t('profileForm.optional')}</span>
               </label>
               <input
                 type="text"
@@ -184,7 +186,7 @@ export default function EnhancedProfileForm({ profile, onSave, onCancel }) {
                 name="username"
                 value={formData.username}
                 onChange={handleChange}
-                placeholder="Your display name"
+                placeholder={t('profileForm.displayName')}
               />
             </div>
           </div>
@@ -196,14 +198,14 @@ export default function EnhancedProfileForm({ profile, onSave, onCancel }) {
         <div className="section-number">2</div>
         <div className="section-content-wrapper">
           <div className="section-title-group">
-            <h3 className="section-title">Academic Information</h3>
-            <p className="section-subtitle">Your faculty, program, and year of study</p>
+            <h3 className="section-title">{t('profileForm.academicInfo')}</h3>
+            <p className="section-subtitle">{t('profileForm.academicInfoDesc')}</p>
           </div>
 
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="faculty">
-                Faculty <span className="required-star">*</span>
+                {t('profile.faculty')} <span className="required-star">*</span>
               </label>
               <select
                 id="faculty"
@@ -212,7 +214,7 @@ export default function EnhancedProfileForm({ profile, onSave, onCancel }) {
                 onChange={handleChange}
                 required
               >
-                <option value="">Select your faculty</option>
+                <option value="">{t('profileForm.selectFaculty')}</option>
                 {FACULTIES.map(faculty => (
                   <option key={faculty} value={faculty}>{faculty}</option>
                 ))}
@@ -220,14 +222,14 @@ export default function EnhancedProfileForm({ profile, onSave, onCancel }) {
             </div>
 
             <div className="form-group">
-              <label htmlFor="year">Academic Year</label>
+              <label htmlFor="year">{t('profile.year')}</label>
               <select
                 id="year"
                 name="year"
                 value={formData.year}
                 onChange={handleChange}
               >
-                <option value="">Select year</option>
+                <option value="">{t('profileForm.selectYear')}</option>
                 <option value="0">U0</option>
                 <option value="1">U1</option>
                 <option value="2">U2</option>
@@ -241,7 +243,7 @@ export default function EnhancedProfileForm({ profile, onSave, onCancel }) {
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="major">
-                Primary Major <span className="required-star">*</span>
+                {t('profile.major')} <span className="required-star">*</span>
               </label>
               <select
                 id="major"
@@ -250,7 +252,7 @@ export default function EnhancedProfileForm({ profile, onSave, onCancel }) {
                 onChange={handleChange}
                 required
               >
-                <option value="">Select your major</option>
+                <option value="">{t('profileForm.selectMajor')}</option>
                 {MAJORS.map(major => (
                   <option key={major} value={major}>{major}</option>
                 ))}
@@ -258,14 +260,14 @@ export default function EnhancedProfileForm({ profile, onSave, onCancel }) {
             </div>
 
             <div className="form-group">
-              <label htmlFor="minor">Minor</label>
+              <label htmlFor="minor">{t('profile.minor')}</label>
               <select
                 id="minor"
                 name="minor"
                 value={formData.minor}
                 onChange={handleChange}
               >
-                <option value="">Select a minor (optional)</option>
+                <option value="">{t('profileForm.selectMinor')}</option>
                 {MINORS.map(minor => (
                   <option key={minor} value={minor}>{minor}</option>
                 ))}
@@ -276,8 +278,8 @@ export default function EnhancedProfileForm({ profile, onSave, onCancel }) {
           {/* Additional Majors */}
           <div className="form-group">
             <label>
-              Additional Majors
-              <span className="helper-text">For double/joint majors</span>
+              {t('profile.additionalMajors')}
+              <span className="helper-text">{t('profileForm.forDoubleMajors')}</span>
             </label>
             <div className="multi-select-container">
               {formData.other_majors.map(major => (
@@ -297,7 +299,7 @@ export default function EnhancedProfileForm({ profile, onSave, onCancel }) {
                 onClick={() => setShowMajorDropdown(!showMajorDropdown)}
                 className="add-more-btn"
               >
-                + Add Major
+                + {t('profile.major')}
               </button>
             </div>
             
@@ -322,8 +324,8 @@ export default function EnhancedProfileForm({ profile, onSave, onCancel }) {
           {/* Additional Minors */}
           <div className="form-group">
             <label>
-              Additional Minors
-              <span className="helper-text">If you have multiple minors</span>
+              {t('profile.additionalMinors')}
+              <span className="helper-text">{t('profileForm.multipleMinors')}</span>
             </label>
             <div className="multi-select-container">
               {formData.other_minors.map(minor => (
@@ -343,7 +345,7 @@ export default function EnhancedProfileForm({ profile, onSave, onCancel }) {
                 onClick={() => setShowMinorDropdown(!showMinorDropdown)}
                 className="add-more-btn"
               >
-                + Add Minor
+                + {t('profile.minor')}
               </button>
             </div>
             
@@ -367,7 +369,7 @@ export default function EnhancedProfileForm({ profile, onSave, onCancel }) {
 
           <div className="form-group">
             <label htmlFor="concentration">
-              Concentration / Specialization
+              {t('profile.concentration')}
               <span className="helper-text">e.g., AI/ML, Software Systems</span>
             </label>
             <input
@@ -387,15 +389,15 @@ export default function EnhancedProfileForm({ profile, onSave, onCancel }) {
         <div className="section-number">3</div>
         <div className="section-content-wrapper">
           <div className="section-title-group">
-            <h3 className="section-title">Performance & Interests</h3>
-            <p className="section-subtitle">Help us personalize your experience</p>
+            <h3 className="section-title">{t('profileForm.performanceInterests')}</h3>
+            <p className="section-subtitle">{t('profileForm.performanceInterestsDesc')}</p>
           </div>
 
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="current_gpa">
-                Current GPA
-                <span className="helper-text">Scale of 0.0 - 4.0</span>
+                {t('profile.currentGpa')}
+                <span className="helper-text">{t('profileForm.gpaScale')}</span>
               </label>
               <input
                 type="number"
@@ -413,8 +415,8 @@ export default function EnhancedProfileForm({ profile, onSave, onCancel }) {
 
           <div className="form-group">
             <label htmlFor="interests">
-              Academic Interests
-              <span className="helper-text">Separate with commas</span>
+              {t('profile.academicInterests')}
+              <span className="helper-text">{t('profileForm.separateCommas')}</span>
             </label>
             <textarea
               id="interests"
@@ -434,22 +436,22 @@ export default function EnhancedProfileForm({ profile, onSave, onCancel }) {
         <div className="section-content-wrapper">
           <div className="section-header">
             <div className="section-title-group">
-              <h3 className="section-title">Advanced Standing</h3>
-              <p className="section-subtitle">AP, IB, or transfer credits</p>
+              <h3 className="section-title">{t('profileForm.advancedStanding')}</h3>
+              <p className="section-subtitle">{t('profileForm.advancedStandingDesc')}</p>
             </div>
             <button
               type="button"
               onClick={() => setShowAdvancedStanding(!showAdvancedStanding)}
               className="toggle-section-btn"
             >
-              {showAdvancedStanding ? '− Hide' : '+ Add Credits'}
+              {showAdvancedStanding ? '− Hide' : `+ ${t('profileForm.addCourse')}`}
             </button>
           </div>
 
           {formData.advanced_standing.length > 0 && (
             <div className="credits-summary">
               <strong>{formData.advanced_standing.length} course{formData.advanced_standing.length !== 1 ? 's' : ''}</strong> • 
-              <strong> {formData.advanced_standing.reduce((sum, c) => sum + (c.credits || 0), 0)} credits</strong> from AP/IB/transfer
+              <strong> {formData.advanced_standing.reduce((sum, c) => sum + (c.credits || 0), 0)} {t('profileForm.credits').toLowerCase()}</strong> from AP/IB/transfer
             </div>
           )}
 
@@ -470,7 +472,7 @@ export default function EnhancedProfileForm({ profile, onSave, onCancel }) {
                         type="button"
                         onClick={() => handleRemoveAdvancedCourse(index)}
                         className="remove-chip-btn"
-                        title="Remove"
+                        title={t('profileForm.removeCourse')}
                       >
                         ✕
                       </button>
@@ -508,11 +510,11 @@ export default function EnhancedProfileForm({ profile, onSave, onCancel }) {
                   }))}
                   className="credits-select"
                 >
-                  <option value="3">3 credits</option>
-                  <option value="4">4 credits</option>
-                  <option value="6">6 credits</option>
-                  <option value="1">1 credit</option>
-                  <option value="2">2 credits</option>
+                  <option value="3">3 {t('profileForm.credits').toLowerCase()}</option>
+                  <option value="4">4 {t('profileForm.credits').toLowerCase()}</option>
+                  <option value="6">6 {t('profileForm.credits').toLowerCase()}</option>
+                  <option value="1">1 {t('profileForm.credits').toLowerCase()}</option>
+                  <option value="2">2 {t('profileForm.credits').toLowerCase()}</option>
                 </select>
                 <button
                   type="button"
@@ -520,7 +522,7 @@ export default function EnhancedProfileForm({ profile, onSave, onCancel }) {
                   className="add-course-btn"
                   disabled={!newAdvancedCourse.course_code}
                 >
-                  Add
+                  {t('profileForm.addCourse')}
                 </button>
               </div>
 
@@ -535,10 +537,10 @@ export default function EnhancedProfileForm({ profile, onSave, onCancel }) {
       {/* Form Actions */}
       <div className="form-actions">
         <button type="button" onClick={onCancel} className="btn btn-cancel">
-          Cancel
+          {t('common.cancel')}
         </button>
         <button type="submit" className="btn btn-primary">
-          Save Profile
+          {t('common.saveChanges')}
         </button>
       </div>
     </form>

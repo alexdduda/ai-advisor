@@ -5,6 +5,7 @@ import coursesAPI from '../../lib/professorsAPI'
 import favoritesAPI from '../../lib/favoritesAPI'
 import completedCoursesAPI from '../../lib/completedCoursesAPI'
 import { getCourseCredits } from '../../utils/courseCredits'
+import { useLanguage } from '../../contexts/LanguageContext'
 
 import Sidebar from './Sidebar'
 import RightSidebar from './RightSidebar'
@@ -20,6 +21,7 @@ import './Dashboard.css'
 
 export default function Dashboard() {
   const { user, profile, signOut, updateProfile } = useAuth()
+  const { t } = useLanguage()
 
   // ── Layout state ───────────────────────────────────────
   const [activeTab, setActiveTab] = useState('chat')
@@ -29,7 +31,7 @@ export default function Dashboard() {
 
   // ── Chat tabs state ────────────────────────────────────
   const [chatTabs, setChatTabs] = useState([
-    { id: 1, title: 'New Chat', messages: [], sessionId: null },
+    { id: 1, title: 'chat.newChat', messages: [], sessionId: null },
   ])
   const [activeChatTab, setActiveChatTab] = useState(1)
   const [nextChatTabId, setNextChatTabId] = useState(2)
@@ -126,7 +128,7 @@ export default function Dashboard() {
 
   // ── Chat tab management ────────────────────────────────
   const handleNewChatTab = () => {
-    const newTab = { id: nextChatTabId, title: 'New Chat', messages: [], sessionId: null }
+    const newTab = { id: nextChatTabId, title: 'chat.newChat', messages: [], sessionId: null }
     setChatTabs([...chatTabs, newTab])
     setActiveChatTab(nextChatTabId)
     setNextChatTabId(nextChatTabId + 1)
@@ -134,7 +136,7 @@ export default function Dashboard() {
 
   const handleCloseChatTab = (tabId) => {
     if (chatTabs.length === 1) {
-      setChatTabs([{ id: 1, title: 'New Chat', messages: [], sessionId: null }])
+      setChatTabs([{ id: 1, title: 'chat.newChat', messages: [], sessionId: null }])
       setActiveChatTab(1)
       return
     }

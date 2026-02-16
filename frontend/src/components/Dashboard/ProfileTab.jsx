@@ -1,4 +1,5 @@
 import { FaCamera } from 'react-icons/fa'
+import { useLanguage } from '../../contexts/LanguageContext'
 import PersonalInfoCard from './PersonalInfoCard'
 import BadgesDisplay from './BadgesDisplay'
 import DegreeProgressTracker from './DegreeProgressTracker'
@@ -24,6 +25,8 @@ export default function ProfileTab({
   favorites,
   chatHistory,
 }) {
+  const { t } = useLanguage()
+  
   return (
     <div className="profile-page">
       <div className="profile-page-header">
@@ -39,7 +42,7 @@ export default function ProfileTab({
               )}
               <div className="avatar-xl-overlay">
                 <FaCamera className="camera-xl-icon" />
-                <span className="overlay-xl-text">Change Photo</span>
+                <span className="overlay-xl-text">{t('profile.changePhoto')}</span>
               </div>
               {isUploadingImage && (
                 <div className="avatar-xl-loading">
@@ -55,10 +58,10 @@ export default function ProfileTab({
               style={{ display: 'none' }}
             />
             <div className="profile-hero-info">
-              <h1 className="profile-display-name">{profile?.username || 'McGill Student'}</h1>
+              <h1 className="profile-display-name">{profile?.username || t('profile.mcgillStudent')}</h1>
               <div className="profile-badges">
                 <span className="badge badge-year">
-                  {profile?.year ? `Year ${profile.year}` : 'Year not set'}
+                  {profile?.year ? t('profile.yearLabel').replace('{year}', profile.year) : t('profile.yearNotSet')}
                 </span>
                 {profile?.major && (
                   <span className="badge badge-major">{profile.major}</span>
@@ -85,20 +88,20 @@ export default function ProfileTab({
             <div className="card-header">
               <div className="card-title-group">
                 <span className="card-icon">📊</span>
-                <h2 className="card-title">Academic Performance</h2>
+                <h2 className="card-title">{t('profile.academicPerformance')}</h2>
               </div>
             </div>
             <div className="card-content">
               <div className="stat-showcase">
                 <div className="stat-item">
                   <div className="stat-value-large">{profile?.current_gpa || '--'}</div>
-                  <div className="stat-label">Current GPA</div>
+                  <div className="stat-label">{t('profile.currentGpa')}</div>
                 </div>
               </div>
               <div className="performance-tips">
                 <div className="tip-item">
                   <span className="tip-icon">💡</span>
-                  <p className="tip-text">Keep your GPA updated for better course recommendations</p>
+                  <p className="tip-text">{t('profile.gpaTip')}</p>
                 </div>
               </div>
               <GPATrendChart
@@ -113,7 +116,7 @@ export default function ProfileTab({
             <div className="card-header">
               <div className="card-title-group">
                 <span className="card-icon">🎯</span>
-                <h2 className="card-title">Degree Progress</h2>
+                <h2 className="card-title">{t('profile.degreeProgress')}</h2>
               </div>
             </div>
             <div className="card-content">
@@ -141,7 +144,7 @@ export default function ProfileTab({
             <div className="card-header">
               <div className="card-title-group">
                 <span className="card-icon">✨</span>
-                <h2 className="card-title">Interests & Preferences</h2>
+                <h2 className="card-title">{t('profile.interestsPreferences')}</h2>
               </div>
             </div>
             <div className="card-content">
@@ -155,7 +158,7 @@ export default function ProfileTab({
                 ) : (
                   <p className="empty-state">
                     <span className="empty-icon">🎯</span>
-                    <span>No interests added yet. Add your academic interests to get personalized recommendations!</span>
+                    <span>{t('profile.noInterests')}</span>
                   </p>
                 )}
               </div>
@@ -167,7 +170,7 @@ export default function ProfileTab({
             <div className="card-header">
               <div className="card-title-group">
                 <span className="card-icon">🏆</span>
-                <h2 className="card-title">Achievements</h2>
+                <h2 className="card-title">{t('profile.achievements')}</h2>
               </div>
             </div>
             <div className="card-content">
@@ -187,7 +190,7 @@ export default function ProfileTab({
             <div className="card-header">
               <div className="card-title-group">
                 <span className="card-icon">💡</span>
-                <h2 className="card-title">Personalized Insights</h2>
+                <h2 className="card-title">{t('profile.personalizedInsights')}</h2>
               </div>
             </div>
             <div className="card-content">
@@ -216,11 +219,11 @@ export default function ProfileTab({
             <div className="card-content">
               <div className="sign-out-section">
                 <div className="sign-out-info">
-                  <h3 className="sign-out-title">Sign Out</h3>
-                  <p className="sign-out-description">Sign out of your McGill AI Advisor account</p>
+                  <h3 className="sign-out-title">{t('profile.signOutTitle')}</h3>
+                  <p className="sign-out-description">{t('profile.signOutDescription')}</p>
                 </div>
                 <button className="btn btn-secondary" onClick={signOut}>
-                  Sign Out
+                  {t('sidebar.signOut')}
                 </button>
               </div>
             </div>
