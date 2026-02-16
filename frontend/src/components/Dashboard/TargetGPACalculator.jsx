@@ -1,4 +1,8 @@
 import { useState, useMemo } from 'react'
+import { FaBullseye, FaLightbulb, FaBan, FaSmile, FaFire } from 'react-icons/fa'
+import { FaDumbbell } from 'react-icons/fa6'
+import { FaBook } from 'react-icons/fa'
+import { HiMiniSparkles } from "react-icons/hi2";
 import './TargetGPACalculator.css'
 
 export default function TargetGPACalculator({ currentGPA, completedCredits, totalCreditsRequired = 120 }) {
@@ -92,11 +96,11 @@ export default function TargetGPACalculator({ currentGPA, completedCredits, tota
   }, [currentGPA, targetGPA, completedCredits, totalCreditsRequired])
 
   function getDifficulty(requiredGPA) {
-    if (requiredGPA <= 2.5) return { level: 'Easy', color: '#10b981', emoji: '😊' }
-    if (requiredGPA <= 3.0) return { level: 'Moderate', color: '#3b82f6', emoji: '💪' }
-    if (requiredGPA <= 3.5) return { level: 'Challenging', color: '#f59e0b', emoji: '📚' }
-    if (requiredGPA <= 3.8) return { level: 'Difficult', color: '#ef4444', emoji: '🔥' }
-    return { level: 'Very Difficult', color: '#dc2626', emoji: '🎯' }
+    if (requiredGPA <= 2.5) return { level: 'Easy', color: '#10b981', emoji: <FaSmile className="difficulty-emoji" /> }
+    if (requiredGPA <= 3.0) return { level: 'Moderate', color: '#3b82f6', emoji: <FaDumbbell className="difficulty-emoji" /> }
+    if (requiredGPA <= 3.5) return { level: 'Challenging', color: '#f59e0b', emoji: <FaBook className="difficulty-emoji" /> }
+    if (requiredGPA <= 3.8) return { level: 'Difficult', color: '#ef4444', emoji: <FaFire className="difficulty-emoji" /> }
+    return { level: 'Very Difficult', color: '#dc2626', emoji: <FaBullseye className="difficulty-emoji" /> }
   }
 
   const handleCalculate = () => {
@@ -113,7 +117,7 @@ export default function TargetGPACalculator({ currentGPA, completedCredits, tota
   return (
     <div className="target-gpa-calculator">
       <div className="calculator-header">
-        <h3 className="calculator-title">🎯 Target GPA Calculator</h3>
+        <h3 className="calculator-title"><FaBullseye className="calculator-icon" /> Target GPA Calculator</h3>
         <p className="calculator-subtitle">Calculate what you need to achieve your goal</p>
       </div>
 
@@ -167,7 +171,7 @@ export default function TargetGPACalculator({ currentGPA, completedCredits, tota
           <div className="results-section">
             {calculation.error ? (
               <div className="error-message">
-                <span className="error-icon">⚠️</span>
+                <span className="error-icon"><FaLightbulb className="error-icon" /></span>
                 <p>{calculation.error}</p>
               </div>
             ) : calculation.isAchievable ? (
@@ -199,7 +203,7 @@ export default function TargetGPACalculator({ currentGPA, completedCredits, tota
 
                 {/* Scenarios */}
                 <div className="scenarios-section">
-                  <h4 className="scenarios-title">📊 What if scenarios</h4>
+                  <h4 className="scenarios-title"><HiMiniSparkles className="scenarios-icon" /> What if scenarios</h4>
                   <div className="scenarios-list">
                     {calculation.scenarios.map((scenario, idx) => (
                       <div key={idx} className="scenario-item">
@@ -222,7 +226,7 @@ export default function TargetGPACalculator({ currentGPA, completedCredits, tota
 
                 {/* Tips */}
                 <div className="tips-section">
-                  <h4 className="tips-title">💡 Tips to Reach Your Goal</h4>
+                  <h4 className="tips-title"><FaLightbulb className="tips-icon" /> Tips to Reach Your Goal</h4>
                   <ul className="tips-list">
                     {getTips(parseFloat(calculation.requiredGPA)).map((tip, idx) => (
                       <li key={idx}>{tip}</li>
@@ -236,7 +240,7 @@ export default function TargetGPACalculator({ currentGPA, completedCredits, tota
               </>
             ) : (
               <div className="impossible-result">
-                <span className="impossible-icon">🚫</span>
+                <span className="impossible-icon"><FaBan className="impossible-icon" /></span>
                 <h4>Target Not Achievable</h4>
                 <p>{calculation.message}</p>
                 <button onClick={handleReset} className="reset-btn">

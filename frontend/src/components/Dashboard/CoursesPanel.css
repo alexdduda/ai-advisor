@@ -55,7 +55,12 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-.placeholder-icon  { font-size: 4rem; margin-bottom: 1rem; }
+.placeholder-icon { 
+  font-size: 4rem; 
+  color: #9ca3af;
+  margin-bottom: 1rem;
+}
+
 .placeholder-content h3 { font-size: 1.5rem; color: #333; margin-bottom: 0.5rem; }
 .placeholder-content p  { color: #666; font-size: 1.1rem; max-width: 600px; margin: 0 auto; line-height: 1.6; }
 
@@ -132,6 +137,14 @@
   color: #666;
   margin-top: 0.5rem;
   font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.meta-icon {
+  color: #6b7280;
+  font-size: 14px;
 }
 
 /* ── Back button ─────────────────────────────────────────────────── */

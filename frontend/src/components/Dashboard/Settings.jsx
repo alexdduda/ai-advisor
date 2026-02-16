@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { FaCog, FaPalette, FaBell, FaLock, FaBolt, FaSun, FaMoon, FaSyncAlt, FaDownload } from 'react-icons/fa'
 import './Settings.css'
 
 export default function Settings({ user, profile, onUpdateSettings }) {
@@ -69,13 +70,13 @@ export default function Settings({ user, profile, onUpdateSettings }) {
     URL.revokeObjectURL(url)
     
     setShowExportModal(false)
-    alert('✓ Data exported successfully!')
+    alert('Data exported successfully!')
   }
 
   return (
     <div className="settings-container">
       <div className="settings-header">
-        <h2 className="settings-title">⚙️ Settings</h2>
+        <h2 className="settings-title"><FaCog className="settings-title-icon" /> Settings</h2>
         <p className="settings-subtitle">Customize your McGill Advisor experience</p>
       </div>
 
@@ -83,7 +84,7 @@ export default function Settings({ user, profile, onUpdateSettings }) {
         {/* Theme Section */}
         <div className="settings-section">
           <div className="section-header">
-            <span className="section-icon">🎨</span>
+            <span className="section-icon"><FaPalette /></span>
             <h3 className="section-title">Appearance</h3>
           </div>
           <div className="section-content">
@@ -97,19 +98,19 @@ export default function Settings({ user, profile, onUpdateSettings }) {
                   className={`theme-btn ${settings.theme === 'light' ? 'active' : ''}`}
                   onClick={() => handleThemeChange('light')}
                 >
-                  ☀️ Light
+                  <FaSun className="theme-btn-icon" /> Light
                 </button>
                 <button
                   className={`theme-btn ${settings.theme === 'dark' ? 'active' : ''}`}
                   onClick={() => handleThemeChange('dark')}
                 >
-                  🌙 Dark
+                  <FaMoon className="theme-btn-icon" /> Dark
                 </button>
                 <button
                   className={`theme-btn ${settings.theme === 'auto' ? 'active' : ''}`}
                   onClick={() => handleThemeChange('auto')}
                 >
-                  🔄 Auto
+                  <FaSyncAlt className="theme-btn-icon" /> Auto
                 </button>
               </div>
             </div>
@@ -119,7 +120,7 @@ export default function Settings({ user, profile, onUpdateSettings }) {
         {/* Notifications Section */}
         <div className="settings-section">
           <div className="section-header">
-            <span className="section-icon">🔔</span>
+            <span className="section-icon"><FaBell /></span>
             <h3 className="section-title">Notifications</h3>
           </div>
           <div className="section-content">
@@ -173,7 +174,7 @@ export default function Settings({ user, profile, onUpdateSettings }) {
         {/* Privacy Section */}
         <div className="settings-section">
           <div className="section-header">
-            <span className="section-icon">🔒</span>
+            <span className="section-icon"><FaLock /></span>
             <h3 className="section-title">Privacy & Data</h3>
           </div>
           <div className="section-content">
@@ -217,7 +218,7 @@ export default function Settings({ user, profile, onUpdateSettings }) {
                 className="export-btn"
                 onClick={() => setShowExportModal(true)}
               >
-                📥 Export Data
+                <FaDownload className="export-btn-icon" /> Export Data
               </button>
             </div>
           </div>
@@ -226,7 +227,7 @@ export default function Settings({ user, profile, onUpdateSettings }) {
         {/* Preferences Section */}
         <div className="settings-section">
           <div className="section-header">
-            <span className="section-icon">⚡</span>
+            <span className="section-icon"><FaBolt /></span>
             <h3 className="section-title">Preferences</h3>
           </div>
           <div className="section-content">

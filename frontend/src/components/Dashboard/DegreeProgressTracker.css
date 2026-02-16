@@ -118,10 +118,28 @@
 
 .credit-icon {
   font-size: 24px;
+  color: #4b5563; /* Medium gray/black color for icons */
   display: flex;
   align-items: center;
   justify-content: center;
   min-width: 40px;
+}
+
+/* Specific icon colors for different credit items */
+.credit-item .credit-icon {
+  color: #3b82f6; /* Blue for regular items */
+}
+
+.credit-item.highlight .credit-icon {
+  color: #f59e0b; /* Orange for advanced standing */
+}
+
+.credit-item.total .credit-icon {
+  color: #10b981; /* Green for total */
+}
+
+.credit-item.remaining .credit-icon {
+  color: #6b7280; /* Gray for remaining */
 }
 
 .credit-details {
@@ -197,10 +215,20 @@
   transition: all 0.2s;
 }
 
+/* Icon colors in milestone markers */
+.milestone-check,
+.milestone-circle {
+  color: inherit; /* Inherit from parent milestone-marker */
+}
+
 .milestone.completed .milestone-marker {
   background: #10b981;
   color: white;
   border-color: #059669;
+}
+
+.milestone.completed .milestone-check {
+  color: white; /* White checkmark on green background */
 }
 
 .milestone-text {
@@ -208,11 +236,33 @@
   font-weight: 500;
   color: #4b5563;
   flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .milestone.completed .milestone-text {
   color: #065f46;
   font-weight: 600;
+}
+
+/* Celebration icons in milestone text */
+.milestone-graduation-icon {
+  color: #f59e0b; /* Gold/orange graduation cap */
+  display: inline-block;
+  font-size: 16px;
+}
+
+.milestone-party-icon {
+  color: #ec4899; /* Pink party popper */
+  display: inline-block;
+  font-size: 16px;
+}
+
+.milestone-biceps-icon {
+  color: #8b5cf6; /* Purple biceps */
+  display: inline-block;
+  font-size: 16px;
 }
 
 /* Info Note */
@@ -231,6 +281,7 @@
 
 .info-icon {
   font-size: 20px;
+  color: #f59e0b; /* Orange for info icon */
 }
 
 /* Responsive */
