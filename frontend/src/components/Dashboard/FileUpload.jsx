@@ -1,4 +1,5 @@
 import { useRef } from 'react'
+import { HiPaperClip, HiDocument, HiPhotograph, HiDocumentText, HiX } from 'react-icons/hi'
 import './FileUpload.css'
 
 export default function FileUpload({ onFilesSelected, attachedFiles, onRemoveFile }) {
@@ -43,9 +44,9 @@ export default function FileUpload({ onFilesSelected, attachedFiles, onRemoveFil
   }
 
   const getFileIcon = (fileType) => {
-    if (fileType === 'application/pdf') return '📄'
-    if (fileType.startsWith('image/')) return '🖼️'
-    return '📝'
+    if (fileType === 'application/pdf') return <HiDocument />
+    if (fileType.startsWith('image/')) return <HiPhotograph />
+    return <HiDocumentText />
   }
 
   const formatFileSize = (bytes) => {
@@ -71,7 +72,7 @@ export default function FileUpload({ onFilesSelected, attachedFiles, onRemoveFil
         onClick={() => fileInputRef.current?.click()}
         title="Attach files (PDF, Images, Text)"
       >
-        📎
+        <HiPaperClip />
       </button>
 
       {attachedFiles && attachedFiles.length > 0 && (
@@ -89,7 +90,7 @@ export default function FileUpload({ onFilesSelected, attachedFiles, onRemoveFil
                 onClick={() => onRemoveFile(index)}
                 title="Remove file"
               >
-                ✕
+                <HiX />
               </button>
             </div>
           ))}
