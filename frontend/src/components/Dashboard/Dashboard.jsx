@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { chatAPI } from '../../lib/api'
 import coursesAPI from '../../lib/professorsAPI'
@@ -28,6 +28,8 @@ export default function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [rightSidebarOpen, setRightSidebarOpen] = useState(false)
   const [profileImage, setProfileImage] = useState(profile?.profile_image || null)
+  const [isUploadingImage, setIsUploadingImage] = useState(false)
+  const fileInputRef = useRef(null)
 
   // ── Chat tabs state ────────────────────────────────────
   const [chatTabs, setChatTabs] = useState([
@@ -410,6 +412,48 @@ export default function Dashboard() {
     }
   }
 
+  // ── Profile image upload ───────────────────────────────
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file')
+      return
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image size must be less than 5MB')
+      return
+    }
+
+    setIsUploadingImage(true)
+
+    try {
+      // Create a FileReader to convert to base64
+      const reader = new FileReader()
+      reader.onloadend = async () => {
+        const base64Image = reader.result
+        
+        // Update profile with new image
+        await updateProfile({ profile_image: base64Image })
+        setProfileImage(base64Image)
+      }
+      reader.readAsDataURL(file)
+    } catch (error) {
+      console.error('Error uploading image:', error)
+      alert('Failed to upload image. Please try again.')
+    } finally {
+      setIsUploadingImage(false)
+    }
+  }
+
   // ── Effects ────────────────────────────────────────────
   useEffect(() => {
     if (user?.id) {
@@ -538,10 +582,15 @@ export default function Dashboard() {
               user={user}
               profile={profile}
               updateProfile={updateProfile}
+              signOut={handleSignOut}
+              profileImage={profileImage}
+              isUploadingImage={isUploadingImage}
+              fileInputRef={fileInputRef}
+              handleImageUpload={handleImageUpload}
+              handleAvatarClick={handleAvatarClick}
               completedCourses={completedCourses}
               favorites={favorites}
               chatHistory={chatHistory}
-              onSignOut={handleSignOut}
             />
           )}
         </div>
