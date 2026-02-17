@@ -1,4 +1,4 @@
-/* Degree Progress Tracker Styles */
+/* Degree Progress Tracker Styles - Cool Colors + Dark Mode */
 
 .degree-progress-tracker {
   display: flex;
@@ -29,21 +29,26 @@
 .progress-percentage {
   font-size: 24px;
   font-weight: 700;
-  color: #3b82f6;
+  color: #dc2626;  /* Red instead of blue */
 }
 
 .progress-bar-container {
   height: 24px;
-  background: var(--bg-tertiary);
+  background: var(--gray-200);
   border-radius: 12px;
   overflow: hidden;
   position: relative;
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
 }
 
+[data-theme="dark"] .progress-bar-container {
+  background: var(--gray-700);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
 .progress-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
+  background: linear-gradient(90deg, #dc2626 0%, #b91c1c 100%);  /* Red gradient */
   border-radius: 12px;
   transition: width 0.8s ease;
   position: relative;
@@ -74,10 +79,10 @@
   display: flex;
   justify-content: space-between;
   font-size: 13px;
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
 }
 
-/* Credits Breakdown */
+/* Credits Breakdown - COOLER COLORS + DARK MODE */
 .credits-breakdown {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -89,30 +94,54 @@
   align-items: center;
   gap: 12px;
   padding: 16px;
-  background: var(--bg-secondary);
-  border: 1.5px solid #e5e7eb;
+  background: var(--card-bg);
+  border: 1.5px solid var(--border-color);
   border-radius: 12px;
   transition: all 0.2s;
 }
 
 .credit-item:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 12px var(--shadow-md);
 }
 
+/* Completed Courses - Cool Blue */
+.credit-item:nth-child(1) {
+  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+  border-color: #0ea5e9;
+}
+
+[data-theme="dark"] .credit-item:nth-child(1) {
+  background: linear-gradient(135deg, #0c4a6e 0%, #075985 100%);
+  border-color: #0ea5e9;
+}
+
+/* Advanced Standing - Cool Amber/Gold */
 .credit-item.highlight {
-  background: var(--bg-tertiary);
-  border-color: #fbbf24;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-color: #f59e0b;
 }
 
+[data-theme="dark"] .credit-item.highlight {
+  background: linear-gradient(135deg, #78350f 0%, #92400e 100%);
+  border-color: #f59e0b;
+}
+
+/* Total Earned - Cool Teal/Cyan */
 .credit-item.total {
-  background: var(--bg-tertiary);
-  border-color: #3b82f6;
+  background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+  border-color: #14b8a6;
 }
 
+[data-theme="dark"] .credit-item.total {
+  background: linear-gradient(135deg, #134e4a 0%, #115e59 100%);
+  border-color: #14b8a6;
+}
+
+/* Remaining - Cool Gray */
 .credit-item.remaining {
-  background: var(--bg-primary);
-  border-color: var(--border-secondary);
+  background: var(--card-bg);
+  border-color: var(--border-color);
   border-style: dashed;
 }
 
@@ -122,6 +151,35 @@
   align-items: center;
   justify-content: center;
   min-width: 40px;
+}
+
+/* Icon colors - cooler tones */
+.credit-item:nth-child(1) .credit-icon {
+  color: #0284c7; /* Cool blue */
+}
+
+[data-theme="dark"] .credit-item:nth-child(1) .credit-icon {
+  color: #38bdf8; /* Light cyan */
+}
+
+.credit-item.highlight .credit-icon {
+  color: #f59e0b; /* Amber */
+}
+
+[data-theme="dark"] .credit-item.highlight .credit-icon {
+  color: #fbbf24; /* Lighter amber */
+}
+
+.credit-item.total .credit-icon {
+  color: #0d9488; /* Teal */
+}
+
+[data-theme="dark"] .credit-item.total .credit-icon {
+  color: #2dd4bf; /* Light teal */
+}
+
+.credit-item.remaining .credit-icon {
+  color: var(--text-tertiary);
 }
 
 .credit-details {
@@ -134,7 +192,7 @@
 .credit-label {
   font-size: 12px;
   font-weight: 600;
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -151,10 +209,10 @@
 .credit-count {
   font-size: 13px;
   font-weight: 500;
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
 }
 
-/* Milestones */
+/* Milestones - COOLER COLORS + DARK MODE */
 .milestones {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -166,20 +224,30 @@
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
-  background: var(--bg-primary);
-  border: 1.5px solid #e5e7eb;
+  background: #f0f2f4;        /* Light: slightly darker than page, clearly visible */
+  border: 1.5px solid #b0b7c0; /* Stronger outline so uncompleted stand out */
   border-radius: 10px;
   transition: all 0.2s;
 }
 
+[data-theme="dark"] .milestone {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+}
+
 .milestone.completed {
   background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-  border-color: var(--success-primary);
+  border-color: #10b981;
+}
+
+[data-theme="dark"] .milestone.completed {
+  background: linear-gradient(135deg, #064e3b 0%, #065f46 100%);
+  border-color: #10b981;
 }
 
 .milestone:hover {
   transform: translateY(-1px);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 6px var(--shadow-sm);
 }
 
 .milestone-marker {
@@ -191,16 +259,29 @@
   justify-content: center;
   font-size: 16px;
   font-weight: 700;
-  background: var(--bg-tertiary);
-  color: var(--text-muted);
-  border: 2px solid var(--border-primary);
+  background: var(--gray-100);
+  color: var(--text-tertiary);
+  border: 2px solid var(--border-color);
   transition: all 0.2s;
 }
 
+[data-theme="dark"] .milestone-marker {
+  background: var(--gray-700);
+}
+
+.milestone-check,
+.milestone-circle {
+  color: inherit;
+}
+
 .milestone.completed .milestone-marker {
-  background: var(--success-primary);
+  background: #10b981;
   color: white;
-  border-color: var(--success-text);
+  border-color: #059669;
+}
+
+.milestone.completed .milestone-check {
+  color: white;
 }
 
 .milestone-text {
@@ -208,6 +289,9 @@
   font-weight: 500;
   color: var(--text-secondary);
   flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .milestone.completed .milestone-text {
@@ -215,22 +299,55 @@
   font-weight: 600;
 }
 
-/* Info Note */
+[data-theme="dark"] .milestone.completed .milestone-text {
+  color: #6ee7b7;
+}
+
+/* Celebration icons */
+.milestone-graduation-icon {
+  color: #f59e0b;
+  display: inline-block;
+  font-size: 16px;
+}
+
+.milestone-party-icon {
+  color: #ec4899;
+  display: inline-block;
+  font-size: 16px;
+}
+
+.milestone-biceps-icon {
+  color: #8b5cf6;
+  display: inline-block;
+  font-size: 16px;
+}
+
+/* Info Note - COOLER AMBER + DARK MODE */
 .info-note {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 14px 16px;
-  background: var(--bg-tertiary);
-  border-left: 4px solid var(--warning-primary);
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-left: 4px solid #f59e0b;
   border-radius: 8px;
   font-size: 14px;
-  color: var(--text-secondary);
+  color: #92400e;
   font-weight: 500;
+}
+
+[data-theme="dark"] .info-note {
+  background: linear-gradient(135deg, #78350f 0%, #92400e 100%);
+  color: #fde68a;
 }
 
 .info-icon {
   font-size: 20px;
+  color: #f59e0b;
+}
+
+[data-theme="dark"] .info-icon {
+  color: #fbbf24;
 }
 
 /* Responsive */

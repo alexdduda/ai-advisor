@@ -204,24 +204,20 @@ export default function Sidebar({
               {popupOpen && (
                 <div className="sidebar-popup" ref={popupRef}>
                   <button className="sidebar-popup-item" onClick={handleSettingsClick}>
-                    <span className="sidebar-popup-icon">⚙️</span>
                     <span className="sidebar-popup-label">{t('sidebar.settings')}</span>
                   </button>
                   <button className="sidebar-popup-item" onClick={handleLanguageToggle}>
-                    <span className="sidebar-popup-icon">🌐</span>
                     <span className="sidebar-popup-label">
                       {language === 'en' ? 'Français' : 'English'}
                     </span>
                   </button>
                   <button className="sidebar-popup-item" onClick={handleThemeClick}>
-                    <span className="sidebar-popup-icon">🎨</span>
                     <span className="sidebar-popup-label">
                       {t('sidebar.colorTheme')}: {themeLabel}
                     </span>
                   </button>
                   <div className="sidebar-popup-divider" />
                   <button className="sidebar-popup-item sidebar-popup-item--danger" onClick={handleLogOut}>
-                    <span className="sidebar-popup-icon">🚪</span>
                     <span className="sidebar-popup-label">{t('sidebar.logOut')}</span>
                   </button>
                   <div className="sidebar-popup-arrow" />

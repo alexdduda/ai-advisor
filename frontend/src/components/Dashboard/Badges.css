@@ -1,9 +1,10 @@
-/* Badges Section */
+/* Badges Section - Cool Colors + Dark Mode */
+
 .badges-section {
-  background: var(--bg-primary);
+  background: var(--card-bg);
   padding: 2rem;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
   margin-bottom: 2rem;
 }
 
@@ -39,20 +40,33 @@
   position: relative;
 }
 
+/* Earned badges - Cool blue/cyan gradient */
 .badge-card.earned {
-  background: var(--card-bg);
-  border: 2px solid var(--warning-primary);
+  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+  border: 2px solid #0ea5e9;
 }
 
+[data-theme="dark"] .badge-card.earned {
+  background: linear-gradient(135deg, #0c4a6e 0%, #075985 100%);
+  border: 2px solid #0ea5e9;
+}
+
+/* Locked badges - Darker in light mode, lighter in dark mode */
 .badge-card.locked {
-  background: var(--bg-secondary);
-  border: 2px solid #E0E0E0;
-  opacity: 0.6;
+  background: #e5e7eb;  /* Darker than light background */
+  border: 2px solid #d1d5db;
+  opacity: 0.8;
+}
+
+[data-theme="dark"] .badge-card.locked {
+  background: #4b5563;  /* Lighter than dark background */
+  border: 2px solid #6b7280;
+  opacity: 0.7;
 }
 
 .badge-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
 }
 
 .badge-icon {
@@ -81,15 +95,16 @@
   line-height: 1.4;
 }
 
+/* Checkmark - Cool teal/emerald */
 .badge-checkmark {
   position: absolute;
   top: 0.5rem;
   right: 0.5rem;
   width: 24px;
   height: 24px;
-  background: #4CAF50;
+  background: #10b981;
   color: white;
-  border-radius: 50%;
+  border-radius: 50%;;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -97,9 +112,17 @@
   font-weight: bold;
 }
 
+[data-theme="dark"] .badge-checkmark {
+  background: #059669;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .badges-grid {
     grid-template-columns: 1fr;
+  }
+  
+  .badges-section {
+    padding: 1.5rem;
   }
 }
