@@ -15,11 +15,6 @@ export default function Sidebar({
   profile,
   profileImage,
   onSignOut,
-  // Drag
-  leftToggleY,
-  isDraggingLeft,
-  handleLeftToggleMouseDown,
-  handleLeftToggleTouchStart,
 }) {
   const [popupOpen, setPopupOpen] = useState(false)
   const popupRef = useRef(null)
@@ -27,6 +22,81 @@ export default function Sidebar({
 
   const { theme, setTheme } = useTheme()
   const { language, setLanguage, t } = useLanguage()
+
+  // Draggable toggle button position (in pixels, like the original)
+  const [leftToggleY, setLeftToggleY] = useState(() => {
+    const saved = localStorage.getItem('leftSidebarButtonY')
+    return saved ? parseFloat(saved) : window.innerHeight / 2
+  })
+  
+  const [isDraggingLeft, setIsDraggingLeft] = useState(false)
+
+  // Save position to localStorage
+  useEffect(() => {
+    localStorage.setItem('leftSidebarButtonY', leftToggleY.toString())
+  }, [leftToggleY])
+
+  const handleLeftToggleMouseDown = (e) => {
+    setIsDraggingLeft(true)
+    e.preventDefault()
+  }
+
+  const handleLeftToggleTouchStart = (e) => {
+    setIsDraggingLeft(true)
+  }
+
+  const handleMouseMove = (e) => {
+    if (!isDraggingLeft) return
+    
+    const windowHeight = window.innerHeight
+    const newY = e.clientY
+    
+    // Constrain between 10% and 90% of window height
+    const minY = windowHeight * 0.1
+    const maxY = windowHeight * 0.9
+    const constrainedY = Math.min(Math.max(newY, minY), maxY)
+    
+    setLeftToggleY(constrainedY)
+  }
+
+  const handleTouchMove = (e) => {
+    if (!isDraggingLeft) return
+    
+    const windowHeight = window.innerHeight
+    const touch = e.touches[0]
+    const newY = touch.clientY
+    
+    const minY = windowHeight * 0.1
+    const maxY = windowHeight * 0.9
+    const constrainedY = Math.min(Math.max(newY, minY), maxY)
+    
+    setLeftToggleY(constrainedY)
+  }
+
+  const handleMouseUp = () => {
+    setIsDraggingLeft(false)
+  }
+
+  const handleTouchEnd = () => {
+    setIsDraggingLeft(false)
+  }
+
+  // Mouse event listeners for dragging
+  useEffect(() => {
+    if (isDraggingLeft) {
+      document.addEventListener('mousemove', handleMouseMove)
+      document.addEventListener('mouseup', handleMouseUp)
+      document.addEventListener('touchmove', handleTouchMove)
+      document.addEventListener('touchend', handleTouchEnd)
+      
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove)
+        document.removeEventListener('mouseup', handleMouseUp)
+        document.removeEventListener('touchmove', handleTouchMove)
+        document.removeEventListener('touchend', handleTouchEnd)
+      }
+    }
+  }, [isDraggingLeft])
 
   // Close popup on outside click
   useEffect(() => {
@@ -71,7 +141,12 @@ export default function Sidebar({
   }
 
   const handleLanguageToggle = () => {
-    setLanguage(language === 'en' ? 'fr' : 'en')
+    const cycleLanguage = () => {
+      if (language === 'en') setLanguage('fr')
+      else if (language === 'fr') setLanguage('zh')
+      else setLanguage('en')
+    }
+    cycleLanguage()
     setPopupOpen(false)
   }
 
@@ -154,7 +229,7 @@ export default function Sidebar({
                   <button className="sidebar-popup-item" onClick={handleLanguageToggle}>
                     <span className="sidebar-popup-icon"><MdLanguage /></span>
                     <span className="sidebar-popup-label">
-                      {language === 'en' ? 'Français' : 'English'}
+                      {language === 'en' ? 'Français' : language === 'fr' ? '中文' : 'English'}
                     </span>
                   </button>
                   <button className="sidebar-popup-item" onClick={handleThemeClick}>
@@ -172,7 +247,7 @@ export default function Sidebar({
                 </div>
               )}
 
-              {/* User Info Button (trigger) */}
+              {/* User Profile Button */}
               <button
                 className="user-info"
                 ref={triggerRef}

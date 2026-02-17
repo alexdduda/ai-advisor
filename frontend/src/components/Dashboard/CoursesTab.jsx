@@ -257,7 +257,7 @@ export default function CoursesTab({
       {/* Empty state */}
       {searchResults.length === 0 && !selectedCourse && !searchError && !isSearching && (
         <div className="placeholder-content">
-          <div className="placeholder-icon"><FaBook /></div>
+          <div className="placeholder-icon"><FaBook style={{ color: "#ED1B2F" }} /></div>
           <h3>{t('courses.explorerTitle')}</h3>
           <p>{t('courses.explorerDesc')}</p>
         </div>
