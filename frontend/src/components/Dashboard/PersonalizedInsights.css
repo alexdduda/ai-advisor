@@ -1,14 +1,15 @@
-/* Personalized Insights Section */
+/* Personalized Insights Section - Cool Colors + Dark Mode */
+
 .insights-section {
-  background: var(--bg-primary);
+  background: var(--card-bg);
   padding: 2rem;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
   margin-bottom: 2rem;
 }
 
 .insights-header {
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;  /* Increased from 1.5rem */
 }
 
 .insights-header h3 {
@@ -19,7 +20,7 @@
 
 .insights-subtitle {
   color: var(--text-secondary);
-  margin: 0;
+  margin: 0 0 1.5rem 0;  /* Added bottom margin */
   font-size: 0.95rem;
 }
 
@@ -36,37 +37,69 @@
   border-radius: 12px;
   border-left: 4px solid;
   transition: all 0.2s ease;
+  background: var(--card-bg);
 }
 
 .insight-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
 }
 
-/* Different insight types */
+/* Different insight types - COOLER COLORS + DARK MODE */
+
+/* Interests - Cool amber/gold */
 .insight-card.insight-interests {
-  background: var(--card-bg);
-  border-left-color: #FFD700;
+  background: #fef3c7;
+  border-left-color: #f59e0b;
 }
 
+[data-theme="dark"] .insight-card.insight-interests {
+  background: #78350f;
+  border-left-color: #fbbf24;
+}
+
+/* Peer recommendations - Cool blue/cyan */
 .insight-card.insight-peer {
-  background: var(--card-bg);
-  border-left-color: #2196F3;
+  background: #dbeafe;
+  border-left-color: #3b82f6;
 }
 
+[data-theme="dark"] .insight-card.insight-peer {
+  background: #1e3a8a;
+  border-left-color: #60a5fa;
+}
+
+/* Chat insights - Cool purple/indigo */
 .insight-card.insight-chat {
-  background: var(--card-bg);
-  border-left-color: #9C27B0;
+  background: #e0e7ff;
+  border-left-color: #6366f1;
 }
 
+[data-theme="dark"] .insight-card.insight-chat {
+  background: #312e81;
+  border-left-color: #818cf8;
+}
+
+/* Achievement - Cool teal/emerald */
 .insight-card.insight-achievement {
-  background: var(--card-bg);
-  border-left-color: #4CAF50;
+  background: #d1fae5;
+  border-left-color: #10b981;
 }
 
+[data-theme="dark"] .insight-card.insight-achievement {
+  background: #064e3b;
+  border-left-color: #34d399;
+}
+
+/* Progress - Cool rose/pink */
 .insight-card.insight-progress {
-  background: var(--card-bg);
-  border-left-color: var(--accent-primary);
+  background: #fce7f3;
+  border-left-color: #ec4899;
+}
+
+[data-theme="dark"] .insight-card.insight-progress {
+  background: #831843;
+  border-left-color: #f472b6;
 }
 
 .insight-icon {
@@ -95,13 +128,14 @@
 .insights-empty {
   text-align: center;
   padding: 3rem 2rem;
-  color: var(--text-muted);
+  color: var(--text-tertiary);
 }
 
 .insights-empty .empty-icon {
   font-size: 3rem;
   display: block;
   margin-bottom: 1rem;
+  opacity: 0.5;
 }
 
 .insights-empty p {
@@ -113,5 +147,9 @@
 @media (max-width: 768px) {
   .insights-grid {
     grid-template-columns: 1fr;
+  }
+  
+  .insights-section {
+    padding: 1.5rem;
   }
 }

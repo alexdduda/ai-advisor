@@ -1,14 +1,14 @@
 /* ============================================
-   COURSES PANEL
-   Search, result list, detail view, sections.
+   COURSES PANEL - Full Dark Mode Support
    ============================================ */
 
-/* ── Search ──────────────────────────────────────────────────────── */
 .courses-container {
   max-width: 1200px;
   margin: 0 auto;
   width: 100%;
 }
+
+/* ── Search ──────────────────────────────────────────────── */
 
 .search-section {
   display: flex;
@@ -19,19 +19,20 @@
 .search-input {
   flex: 1;
   padding: 1rem 1.25rem;
-  border: 2px solid #E0E0E0;
+  border: 2px solid var(--border-color);
   border-radius: 10px;
   font-size: 1rem;
-  background: var(--bg-primary);
+  background: #f0f2f4;
   color: var(--text-primary);
   font-family: inherit;
 }
 
-.search-input:focus { outline: none; border-color: var(--accent-primary); }
+.search-input::placeholder { color: var(--text-tertiary); }
+.search-input:focus { outline: none; border-color: #ED1B2F; }
 
 .btn-search {
   padding: 1rem 2rem;
-  background: linear-gradient(135deg, var(--accent-primary) 0%, #B01B2E 100%);
+  background: linear-gradient(135deg, #ED1B2F 0%, #B01B2E 100%);
   color: white;
   border: none;
   border-radius: 10px;
@@ -46,25 +47,34 @@
   transform: translateY(-2px);
 }
 
-/* ── Placeholder (empty state) ───────────────────────────────────── */
+/* ── Placeholder ─────────────────────────────────────────── */
+
 .placeholder-content {
-  background: var(--bg-primary);
+  background: #f0f2f4;
+  border: 1px solid #d1d5db;
   padding: 4rem 2rem;
   border-radius: 12px;
   text-align: center;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-.placeholder-icon  { font-size: 4rem; margin-bottom: 1rem; }
+.placeholder-icon {
+  font-size: 4rem;
+  color: var(--text-tertiary);
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
 .placeholder-content h3 { font-size: 1.5rem; color: var(--text-primary); margin-bottom: 0.5rem; }
 .placeholder-content p  { color: var(--text-secondary); font-size: 1.1rem; max-width: 600px; margin: 0 auto; line-height: 1.6; }
 
-/* ── Search Results ──────────────────────────────────────────────── */
+/* ── Search Results ──────────────────────────────────────── */
+
 .search-results { animation: fadeIn 0.3s ease; }
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0);    }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .results-header {
@@ -80,21 +90,22 @@
   margin-bottom: 2rem;
 }
 
-/* ── Course Card ─────────────────────────────────────────────────── */
+/* ── Course Card ─────────────────────────────────────────── */
+
 .course-card {
-  background: var(--bg-primary);
+  background: #f0f2f4;
   padding: 1.5rem;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   cursor: pointer;
   transition: all 0.2s ease;
-  border: 2px solid transparent;
+  border: 2px solid #d1d5db;
 }
 
 .course-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-  border-color: var(--accent-primary);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  border-color: #ED1B2F;
 }
 
 .course-header {
@@ -107,21 +118,26 @@
 .course-code {
   font-size: 1.1rem;
   font-weight: 700;
-  color: var(--accent-primary);
+  color: #ED1B2F;
 }
 
 .course-average {
   padding: 0.25rem 0.75rem;
-  background: #E8F5E9;
-  color: #2E7D32;
+  background: #dcfce7;
+  color: #166534;
   border-radius: 20px;
   font-size: 0.875rem;
   font-weight: 600;
 }
 
+[data-theme="dark"] .course-average {
+  background: #14532d;
+  color: #86efac;
+}
+
 .course-title {
   font-size: 1.1rem;
-  color: var(--accent-primary);
+  color: var(--text-primary);
   margin: 0 0 0.75rem 0;
   font-weight: 600;
   line-height: 1.4;
@@ -132,14 +148,20 @@
   color: var(--text-secondary);
   margin-top: 0.5rem;
   font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-/* ── Back button ─────────────────────────────────────────────────── */
+.meta-icon { color: var(--text-tertiary); font-size: 14px; }
+
+/* ── Back button ─────────────────────────────────────────── */
+
 .btn-back {
   padding: 0.75rem 1.5rem;
-  background: var(--bg-secondary);
+  background: #e4e7ea;
   color: var(--text-secondary);
-  border: none;
+  border: 1px solid #c9cdd2;
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
@@ -148,13 +170,18 @@
   margin-bottom: 1.5rem;
 }
 
-.btn-back:hover { background: #E0E0E0; color: var(--text-primary); }
+.btn-back:hover {
+  border-color: var(--text-secondary);
+  color: var(--text-primary);
+}
 
-/* ── Course Detail ───────────────────────────────────────────────── */
+/* ── Course Detail ───────────────────────────────────────── */
+
 .course-details { animation: fadeIn 0.3s ease; }
 
 .course-details-header {
-  background: var(--bg-primary);
+  background: #f0f2f4;
+  border: 1px solid #d1d5db;
   padding: 2rem;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
@@ -171,19 +198,26 @@
 .course-stat-badge {
   display: inline-block;
   padding: 0.5rem 1rem;
-  background: linear-gradient(135deg, var(--accent-primary) 0%, #B01B2E 100%);
+  background: linear-gradient(135deg, #ED1B2F 0%, #B01B2E 100%);
   color: white;
   border-radius: 20px;
   font-size: 0.95rem;
   font-weight: 600;
 }
 
-/* ── Sections List ───────────────────────────────────────────────── */
+/* ── Sections List ───────────────────────────────────────── */
+
 .course-sections {
-  background: var(--bg-primary);
+  background: #f0f2f4;
+  border: 1px solid #d1d5db;
   padding: 2rem;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="dark"] .course-sections {
+  background: #0a1120;
+  border-color: #2d3f55;
 }
 
 .sections-header {
@@ -192,20 +226,24 @@
   margin: 0 0 1.5rem 0;
   font-weight: 700;
   padding-bottom: 1rem;
-  border-bottom: 2px solid #E0E0E0;
+  border-bottom: 2px solid var(--border-color);
 }
 
 .section-card {
   padding: 1.5rem;
-  background: #F8F9FA;
+  background: #e4e7ea;
+  border: 1px solid #c9cdd2;
   border-radius: 12px;
   margin-bottom: 1.5rem;
-  border-left: 4px solid var(--accent-primary);
+  border-left: 4px solid #ED1B2F;
+}
+
+[data-theme="dark"] .section-card {
+  background: var(--gray-800, #1f2937);
 }
 
 .section-card:last-child { margin-bottom: 0; }
-
-.section-info   { margin-bottom: 1rem; }
+.section-info { margin-bottom: 1rem; }
 
 .section-header {
   display: flex;
@@ -216,25 +254,70 @@
 
 .section-term {
   font-weight: 600;
-  color: var(--accent-primary);
+  color: #ED1B2F;
   font-size: 1rem;
 }
 
 .section-average {
   padding: 0.25rem 0.75rem;
-  background: #E8F5E9;
-  color: #2E7D32;
+  background: #dcfce7;
+  color: #166534;
   border-radius: 20px;
   font-size: 0.875rem;
   font-weight: 600;
 }
 
-.section-instructor       { color: var(--text-secondary); font-size: 0.95rem; margin-top: 0.5rem; }
+[data-theme="dark"] .section-average {
+  background: #14532d;
+  color: #86efac;
+}
+
+.section-instructor { color: var(--text-secondary); font-size: 0.95rem; margin-top: 0.5rem; }
 .section-instructor strong { color: var(--text-primary); }
 
-/* ============================================
-   RESPONSIVE – COURSES
-   ============================================ */
+/* ── Dark Mode Overrides ─────────────────────────────────── */
+
+[data-theme="dark"] .course-card {
+  background: #0a1120;
+  border-color: #2d3f55;
+}
+
+[data-theme="dark"] .course-details-header {
+  background: #0a1120;
+  border-color: #2d3f55;
+}
+
+[data-theme="dark"] .placeholder-content {
+  background: #0a1120;
+  border-color: #2d3f55;
+}
+
+[data-theme="dark"] .section-card {
+  background: #040d1a;
+  border-color: #1a2d45;
+  border-left: 4px solid #ED1B2F;
+}
+
+[data-theme="dark"] .btn-back {
+  background: #040d1a;
+  border-color: #1a2d45;
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .search-input {
+  background: #0a1120;
+  border-color: #2d3f55;
+  color: #e2e8f0;
+}
+
+[data-theme="dark"] .course-average,
+[data-theme="dark"] .section-average {
+  background: #14532d;
+  color: #86efac;
+}
+
+
+/* ── Responsive ──────────────────────────────────────────── */
 
 @media (max-width: 768px) {
   .search-section         { flex-direction: column; }
@@ -246,7 +329,7 @@
 }
 
 @media (max-width: 480px) {
-  .search-input           { font-size: 16px; /* prevents iOS zoom */ }
+  .search-input           { font-size: 16px; }
   .course-card            { padding: 1rem; }
   .course-code            { font-size: 1rem; }
   .course-title           { font-size: 1rem; }

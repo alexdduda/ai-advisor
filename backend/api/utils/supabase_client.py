@@ -140,15 +140,16 @@ def create_user(user_data: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def update_user(user_id: str, updates: Dict[str, Any]) -> Dict[str, Any]:
-    """Update user"""
+    """Update user - FIXED to allow None values to clear fields"""
     try:
         supabase = get_supabase()
         
-        # Remove None values
-        cleaned_updates = {k: v for k, v in updates.items() if v is not None}
+        # DO NOT remove None values - we need them to clear fields in the database!
+        # The old code was: cleaned_updates = {k: v for k, v in updates.items() if v is not None}
+        # This prevented clearing fields by sending null
         
         response = supabase.table('users')\
-            .update(cleaned_updates)\
+            .update(updates)\
             .eq('id', user_id)\
             .execute()
         

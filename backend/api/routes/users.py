@@ -66,14 +66,15 @@ class UserCreate(BaseModel):
 
 
 class UserUpdate(BaseModel):
-    """User update schema"""
+    """User update schema - FIXED to properly handle null values for clearing fields"""
     username: Optional[str] = Field(None, min_length=3, max_length=20)
     major: Optional[str] = Field(None, max_length=100)
     other_majors: Optional[List[str]] = None
     minor: Optional[str] = Field(None, max_length=100)
     other_minors: Optional[List[str]] = None
     concentration: Optional[str] = Field(None, max_length=100)
-    year: Optional[int] = Field(None, ge=1, le=10)
+    faculty: Optional[str] = Field(None, max_length=100)
+    year: Optional[int] = Field(None, ge=0, le=10)
     interests: Optional[str] = Field(None, max_length=500)
     current_gpa: Optional[float] = Field(None, ge=0.0, le=4.0)
     advanced_standing: Optional[List[dict]] = None
@@ -85,29 +86,8 @@ class UserUpdate(BaseModel):
             raise ValueError('Username must contain only letters, numbers, and underscores')
         return v
     
-    @field_validator('major', 'minor', 'concentration', 'interests', 'username')
-    @classmethod
-    def strip_empty_strings(cls, v):
-        """Convert empty strings to None"""
-        if v is not None and isinstance(v, str) and not v.strip():
-            return None
-        return v if v is None else v.strip()
-    
-    @field_validator('year')
-    @classmethod
-    def validate_year(cls, v):
-        """Convert empty string or 0 to None"""
-        if v == 0 or v == '':
-            return None
-        return v
-    
-    @field_validator('current_gpa')
-    @classmethod
-    def validate_gpa(cls, v):
-        """Convert empty string to None"""
-        if v == '' or v is None:
-            return None
-        return v
+    # REMOVED the strip_empty_strings validator - we handle this in the update logic instead
+
 
 class UserResponse(BaseModel):
     """User response schema"""
@@ -119,6 +99,7 @@ class UserResponse(BaseModel):
     minor: Optional[str]
     other_minors: Optional[List[str]]
     concentration: Optional[str]
+    faculty: Optional[str]
     year: Optional[int]
     interests: Optional[str]
     current_gpa: Optional[float]
@@ -205,18 +186,46 @@ async def get_user(user_id: str):
 @router.patch("/{user_id}", response_model=dict)
 async def update_user(user_id: str, updates: UserUpdate):
     """
-    Update user profile
+    Update user profile - FIXED to properly handle null values
     
     - **user_id**: The user's unique identifier
     - Updates can include: username, major, other_majors, minor, other_minors, 
-      concentration, year, interests, current_gpa, advanced_standing
+      concentration, faculty, year, interests, current_gpa, advanced_standing
+    - Sending null explicitly clears optional fields
     """
     try:
+        logger.info(f"=== UPDATE USER REQUEST ===")
+        logger.info(f"User ID: {user_id}")
+        logger.info(f"Updates received: {updates.dict()}")
+        
         # Verify user exists first
         get_user_by_id(user_id)
         
-        # Update user
-        update_data = updates.dict(exclude_none=True)
+        # FIXED: Use dict() instead of dict(exclude_none=True) to include null values
+        # This allows us to explicitly clear fields by sending null
+        update_data = {}
+        raw_data = updates.dict()
+        
+        for field, value in raw_data.items():
+            # Skip unset fields (not in the request)
+            if field not in updates.__fields_set__:
+                continue
+            
+            # For string fields: trim whitespace
+            if isinstance(value, str):
+                value = value.strip()
+                # Empty string after trim -> convert to None
+                if not value:
+                    value = None
+            
+            # For numeric fields: 0 or empty string -> None
+            if field in ['year', 'current_gpa'] and value == 0:
+                value = None
+            
+            # Add to update data (including None values to clear fields)
+            update_data[field] = value
+        
+        logger.info(f"Processed update data: {update_data}")
         
         if not update_data:
             raise HTTPException(
@@ -226,7 +235,7 @@ async def update_user(user_id: str, updates: UserUpdate):
         
         updated_user = update_user_db(user_id, update_data)
         
-        logger.info(f"User updated successfully: {user_id}")
+        logger.info(f"✓ User updated successfully: {user_id}")
         return {
             "user": updated_user,
             "message": "User profile updated successfully"
@@ -239,7 +248,7 @@ async def update_user(user_id: str, updates: UserUpdate):
     except HTTPException:
         raise
     except Exception as e:
-        logger.exception(f"Unexpected error updating user: {e}")
+        logger.exception(f"✗ Unexpected error updating user: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An unexpected error occurred while updating user profile"
