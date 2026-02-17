@@ -15,6 +15,14 @@
   font-weight: 700;
   color: var(--text-primary);
   margin: 0 0 4px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.calculator-icon {
+  color: #ED1B2F;
+  font-size: 20px;
 }
 
 .calculator-subtitle {
@@ -176,6 +184,14 @@
   font-size: 12px;
   font-weight: 700;
   color: white;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.difficulty-emoji {
+  color: white;
+  font-size: 14px;
 }
 
 .result-value {
@@ -230,6 +246,14 @@
   font-weight: 700;
   color: var(--text-primary);
   margin: 0 0 12px 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.scenarios-icon {
+  color: #f59e0b;
+  font-size: 16px;
 }
 
 .scenarios-list {
@@ -303,6 +327,14 @@
   font-weight: 700;
   color: var(--text-secondary);
   margin: 0 0 12px 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tips-icon {
+  color: #f59e0b;
+  font-size: 16px;
 }
 
 .tips-list {
@@ -342,8 +374,9 @@
 .error-icon,
 .impossible-icon {
   font-size: 48px;
+  color: #dc2626;
   display: block;
-  margin-bottom: 12px;
+  margin: 0 auto 12px;
 }
 
 .impossible-result h4 {

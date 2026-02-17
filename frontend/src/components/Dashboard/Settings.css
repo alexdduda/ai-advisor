@@ -21,6 +21,14 @@
   color: var(--text-primary);
   margin: 0 0 6px 0;
   width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.settings-title-icon {
+  font-size: 22px;
+  color: #ED1B2F;
 }
 
 .settings-subtitle {
@@ -64,13 +72,17 @@
 }
 
 .section-icon {
-  font-size: 20px;
+  font-size: 18px;
   flex-shrink: 0;
   width: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
+<<<<<<< HEAD
   color: var(--text-secondary);
+=======
+  color: #ED1B2F;
+>>>>>>> upstream/main
 }
 
 .section-title {
@@ -152,6 +164,13 @@
   cursor: pointer;
   transition: all 0.2s;
   white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.theme-btn-icon {
+  font-size: 14px;
 }
 
 .theme-btn:hover {
@@ -327,6 +346,13 @@ select:disabled {
   cursor: pointer;
   transition: all 0.2s;
   white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.export-btn-icon {
+  font-size: 14px;
 }
 
 .export-btn:hover {
@@ -403,10 +429,20 @@ select:disabled {
   line-height: 1.5;
 }
 
+<<<<<<< HEAD
 .modal-actions {
   display: flex;
   gap: 12px;
   justify-content: flex-end;
+=======
+[data-theme="dark"] .settings-title-icon {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .settings-subtitle,
+[data-theme="dark"] .setting-description {
+  color: #d1d5db;
+>>>>>>> upstream/main
 }
 
 .modal-btn-cancel {
@@ -425,6 +461,7 @@ select:disabled {
   background: var(--btn-secondary-hover);
 }
 
+<<<<<<< HEAD
 .modal-btn-confirm {
   padding: 10px 20px;
   background: var(--error-primary);
@@ -440,6 +477,23 @@ select:disabled {
 .modal-btn-confirm:hover {
   background: var(--error-hover);
   box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+=======
+[data-theme="dark"] .section-icon {
+  color: #f87171;
+}
+
+[data-theme="dark"] .theme-toggle {
+  background: #111827;
+}
+
+[data-theme="dark"] .theme-btn {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .theme-btn.active {
+  background: #374151;
+  color: #f87171;
+>>>>>>> upstream/main
 }
 
 @keyframes fadeIn {
@@ -479,11 +533,37 @@ select:disabled {
   }
   
   .theme-btn {
+<<<<<<< HEAD
     flex: 1;
     text-align: center;
   }
   
   select {
     min-width: 100%;
+=======
+    width: 100%;
+    justify-content: center;
+  }
+
+  .setting-select,
+  .export-btn {
+    width: 100%;
+  }
+
+  .export-btn {
+    justify-content: center;
+  }
+
+  .section-content {
+    padding: 16px;
+  }
+
+  .section-header {
+    padding: 12px 16px;
+  }
+
+  .modal-content {
+    padding: 24px;
+>>>>>>> upstream/main
   }
 }

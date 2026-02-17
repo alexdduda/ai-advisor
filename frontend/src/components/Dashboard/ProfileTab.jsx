@@ -1,4 +1,5 @@
-import { FaCamera } from 'react-icons/fa'
+import { FaCamera, FaChartBar, FaBullseye, FaLightbulb, FaTrophy } from 'react-icons/fa'
+import { HiMiniSparkles } from 'react-icons/hi2'
 import { useLanguage } from '../../contexts/LanguageContext'
 import PersonalInfoCard from './PersonalInfoCard'
 import BadgesDisplay from './BadgesDisplay'
@@ -87,7 +88,7 @@ export default function ProfileTab({
           <div className="profile-section-card profile-card-sidebar">
             <div className="card-header">
               <div className="card-title-group">
-                <span className="card-icon">📊</span>
+                <span className="card-icon"><FaChartBar /></span>
                 <h2 className="card-title">{t('profile.academicPerformance')}</h2>
               </div>
             </div>
@@ -100,7 +101,7 @@ export default function ProfileTab({
               </div>
               <div className="performance-tips">
                 <div className="tip-item">
-                  <span className="tip-icon">💡</span>
+                  <span className="tip-icon"><FaLightbulb /></span>
                   <p className="tip-text">{t('profile.gpaTip')}</p>
                 </div>
               </div>
@@ -115,7 +116,7 @@ export default function ProfileTab({
           <div className="profile-section-card card-full-width">
             <div className="card-header">
               <div className="card-title-group">
-                <span className="card-icon">🎯</span>
+                <span className="card-icon"><FaBullseye /></span>
                 <h2 className="card-title">{t('profile.degreeProgress')}</h2>
               </div>
             </div>
@@ -143,7 +144,7 @@ export default function ProfileTab({
           <div className="profile-section-card card-full-width">
             <div className="card-header">
               <div className="card-title-group">
-                <span className="card-icon">✨</span>
+                <span className="card-icon"><HiMiniSparkles /></span>
                 <h2 className="card-title">{t('profile.interestsPreferences')}</h2>
               </div>
             </div>
@@ -157,7 +158,7 @@ export default function ProfileTab({
                   </div>
                 ) : (
                   <p className="empty-state">
-                    <span className="empty-icon">🎯</span>
+                    <span className="empty-icon"><FaBullseye /></span>
                     <span>{t('profile.noInterests')}</span>
                   </p>
                 )}
@@ -169,7 +170,7 @@ export default function ProfileTab({
           <div className="profile-section-card card-full-width">
             <div className="card-header">
               <div className="card-title-group">
-                <span className="card-icon">🏆</span>
+                <span className="card-icon"><FaTrophy /></span>
                 <h2 className="card-title">{t('profile.achievements')}</h2>
               </div>
             </div>
@@ -189,7 +190,7 @@ export default function ProfileTab({
           <div className="profile-section-card card-full-width">
             <div className="card-header">
               <div className="card-title-group">
-                <span className="card-icon">💡</span>
+                <span className="card-icon"><FaLightbulb /></span>
                 <h2 className="card-title">{t('profile.personalizedInsights')}</h2>
               </div>
             </div>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { FaEdit, FaChevronDown, FaChevronUp, FaCheck, FaTimes } from 'react-icons/fa'
+import { FaEdit, FaChevronDown, FaChevronUp, FaCheck, FaUser, FaEnvelope, FaGraduationCap } from 'react-icons/fa'
+import { HiMiniSparkles } from 'react-icons/hi2'
 import { useLanguage } from '../../contexts/LanguageContext'
 import EnhancedProfileForm from './EnhancedProfileForm'
 import './PersonalInfoCard.css'
@@ -43,7 +44,7 @@ export default function PersonalInfoCard({ profile, user, onUpdateProfile }) {
       <div className="card-header-modern">
         <div className="header-left">
           <div className="header-icon-wrapper">
-            <span className="header-icon">👤</span>
+            <span className="header-icon"><FaUser /></span>
           </div>
           <div className="header-text">
             <h2 className="card-title-modern">{t('profile.personalInfo')}</h2>
@@ -99,7 +100,7 @@ export default function PersonalInfoCard({ profile, user, onUpdateProfile }) {
               onClick={() => toggleSection('academic')}
             >
               <div className="section-header-left">
-                <span className="section-icon">🎓</span>
+                <span className="section-icon"><FaGraduationCap /></span>
                 <h3 className="section-title">{t('profile.academicInfo')}</h3>
               </div>
               {expandedSections.academic ? <FaChevronUp /> : <FaChevronDown />}
@@ -187,7 +188,7 @@ export default function PersonalInfoCard({ profile, user, onUpdateProfile }) {
               onClick={() => toggleSection('contact')}
             >
               <div className="section-header-left">
-                <span className="section-icon">📧</span>
+                <span className="section-icon"><FaEnvelope /></span>
                 <h3 className="section-title">{t('profile.contactInfo')}</h3>
               </div>
               {expandedSections.contact ? <FaChevronUp /> : <FaChevronDown />}
@@ -224,7 +225,7 @@ export default function PersonalInfoCard({ profile, user, onUpdateProfile }) {
               onClick={() => toggleSection('additional')}
             >
               <div className="section-header-left">
-                <span className="section-icon">✨</span>
+                <span className="section-icon"><HiMiniSparkles /></span>
                 <h3 className="section-title">{t('profile.additionalInfo')}</h3>
               </div>
               {expandedSections.additional ? <FaChevronUp /> : <FaChevronDown />}

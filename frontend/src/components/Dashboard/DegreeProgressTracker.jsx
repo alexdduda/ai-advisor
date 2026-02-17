@@ -1,6 +1,9 @@
 import { useMemo } from 'react'
 import { useLanguage } from '../../contexts/LanguageContext'
 import { FACULTY_CREDIT_REQUIREMENTS, PROGRAM_CREDIT_REQUIREMENTS } from '../../utils/mcgillData'
+import { FaBook, FaBolt, FaCheck, FaBullseye, FaRegCircle, FaGraduationCap, FaLightbulb } from 'react-icons/fa'
+import { GiPartyPopper } from 'react-icons/gi'
+import { LuBicepsFlexed } from 'react-icons/lu'
 import './DegreeProgressTracker.css'
 
 export default function DegreeProgressTracker({ completedCourses = [], profile = {} }) {
@@ -72,7 +75,7 @@ export default function DegreeProgressTracker({ completedCourses = [], profile =
       {/* Credit Breakdown */}
       <div className="credits-breakdown">
         <div className="credit-item">
-          <div className="credit-icon">📚</div>
+          <div className="credit-icon"><FaBook /></div>
           <div className="credit-details">
             <div className="credit-label">{t('degree.completedCourses')}</div>
             <div className="credit-value">
@@ -84,7 +87,7 @@ export default function DegreeProgressTracker({ completedCourses = [], profile =
 
         {stats.advancedStandingCredits > 0 && (
           <div className="credit-item highlight">
-            <div className="credit-icon">⚡</div>
+            <div className="credit-icon"><FaBolt /></div>
             <div className="credit-details">
               <div className="credit-label">{t('degree.advancedStanding')}</div>
               <div className="credit-value">
@@ -96,7 +99,7 @@ export default function DegreeProgressTracker({ completedCourses = [], profile =
         )}
 
         <div className="credit-item total">
-          <div className="credit-icon">✓</div>
+          <div className="credit-icon"><FaCheck /></div>
           <div className="credit-details">
             <div className="credit-label">{t('degree.totalEarned')}</div>
             <div className="credit-value">{stats.totalEarnedCredits} {t('courses.credits').toLowerCase()}</div>
@@ -104,7 +107,7 @@ export default function DegreeProgressTracker({ completedCourses = [], profile =
         </div>
 
         <div className="credit-item remaining">
-          <div className="credit-icon">🎯</div>
+          <div className="credit-icon"><FaBullseye /></div>
           <div className="credit-details">
             <div className="credit-label">{t('degree.remaining')}</div>
             <div className="credit-value">{stats.remainingCredits} {t('courses.credits').toLowerCase()}</div>
@@ -116,25 +119,25 @@ export default function DegreeProgressTracker({ completedCourses = [], profile =
       <div className="milestones">
         <div className={`milestone ${stats.totalEarnedCredits >= Math.round(stats.totalRequired * 0.25) ? 'completed' : ''}`}>
           <div className="milestone-marker">
-            {stats.totalEarnedCredits >= Math.round(stats.totalRequired * 0.25) ? '✓' : '○'}
+            {stats.totalEarnedCredits >= Math.round(stats.totalRequired * 0.25) ? <FaCheck className="milestone-check" /> : <FaRegCircle className="milestone-circle" />}
           </div>
           <div className="milestone-text">{Math.round(stats.totalRequired * 0.25)} {t('courses.credits').toLowerCase()} - {t('degree.milestone25')}</div>
         </div>
         <div className={`milestone ${stats.totalEarnedCredits >= Math.round(stats.totalRequired * 0.5) ? 'completed' : ''}`}>
           <div className="milestone-marker">
-            {stats.totalEarnedCredits >= Math.round(stats.totalRequired * 0.5) ? '✓' : '○'}
+            {stats.totalEarnedCredits >= Math.round(stats.totalRequired * 0.5) ? <FaCheck className="milestone-check" /> : <FaRegCircle className="milestone-circle" />}
           </div>
           <div className="milestone-text">{Math.round(stats.totalRequired * 0.5)} {t('courses.credits').toLowerCase()} - {t('degree.milestone50')}</div>
         </div>
         <div className={`milestone ${stats.totalEarnedCredits >= Math.round(stats.totalRequired * 0.75) ? 'completed' : ''}`}>
           <div className="milestone-marker">
-            {stats.totalEarnedCredits >= Math.round(stats.totalRequired * 0.75) ? '✓' : '○'}
+            {stats.totalEarnedCredits >= Math.round(stats.totalRequired * 0.75) ? <FaCheck className="milestone-check" /> : <FaRegCircle className="milestone-circle" />}
           </div>
           <div className="milestone-text">{Math.round(stats.totalRequired * 0.75)} {t('courses.credits').toLowerCase()} - {t('degree.milestone75')}</div>
         </div>
         <div className={`milestone ${stats.totalEarnedCredits >= stats.totalRequired ? 'completed' : ''}`}>
           <div className="milestone-marker">
-            {stats.totalEarnedCredits >= stats.totalRequired ? '✓' : '○'}
+            {stats.totalEarnedCredits >= stats.totalRequired ? <FaCheck className="milestone-check" /> : <FaRegCircle className="milestone-circle" />}
           </div>
           <div className="milestone-text">{stats.totalRequired} {t('courses.credits').toLowerCase()} - {t('degree.milestone100')}</div>
         </div>
@@ -142,7 +145,7 @@ export default function DegreeProgressTracker({ completedCourses = [], profile =
 
       {stats.advancedStandingCredits > 0 && (
         <div className="info-note">
-          <span className="info-icon">💡</span>
+          <span className="info-icon"><FaLightbulb /></span>
           <span>{t('degree.creditsHeadStart').replace('{count}', stats.advancedStandingCredits)}</span>
         </div>
       )}

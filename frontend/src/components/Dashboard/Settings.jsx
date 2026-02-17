@@ -1,15 +1,17 @@
 import { useState } from 'react'
+import { FaCog, FaPalette, FaBell, FaLock, FaBolt, FaSun, FaMoon, FaSyncAlt, FaDownload } from 'react-icons/fa'
 import { useLanguage } from '../../contexts/LanguageContext'
 import { useTheme } from '../../contexts/ThemeContext'
 import './Settings.css'
 
 export default function Settings({ user, profile, onUpdateSettings }) {
-  // Use contexts directly - NO local state for theme/language
   const { language, setLanguage, t } = useLanguage()
   const { theme, setTheme } = useTheme()
   
-  // Local state ONLY for notifications, privacy, timezone (not theme/language)
   const [settings, setSettings] = useState({
+    // Theme
+    theme: theme || 'light',
+    
     // Notifications
     emailNotifications: JSON.parse(localStorage.getItem('emailNotifications') ?? 'true'),
     deadlineReminders: JSON.parse(localStorage.getItem('deadlineReminders') ?? 'true'),
@@ -19,20 +21,23 @@ export default function Settings({ user, profile, onUpdateSettings }) {
     profileVisibility: localStorage.getItem('profileVisibility') || 'private',
     shareProgress: JSON.parse(localStorage.getItem('shareProgress') ?? 'false'),
     
-    // Preferences (not theme/language - those are in context)
+    // Preferences
+    language: language || 'en',
     timezone: localStorage.getItem('timezone') || Intl.DateTimeFormat().resolvedOptions().timeZone
   })
 
   const [showExportModal, setShowExportModal] = useState(false)
 
-  // Handle theme change - calls context setter directly
+  // Handle theme toggle
   const handleThemeChange = (newTheme) => {
+    setSettings(prev => ({ ...prev, theme: newTheme }))
     setTheme(newTheme)
     if (onUpdateSettings) onUpdateSettings({ theme: newTheme })
   }
 
-  // Handle language change - calls context setter directly
+  // Handle language change
   const handleLanguageChange = (newLang) => {
+    setSettings(prev => ({ ...prev, language: newLang }))
     setLanguage(newLang)
     if (onUpdateSettings) onUpdateSettings({ language: newLang })
   }
@@ -60,11 +65,7 @@ export default function Settings({ user, profile, onUpdateSettings }) {
         id: user?.id
       },
       profile: profile,
-      settings: {
-        ...settings,
-        theme: theme,  // Get from context
-        language: language  // Get from context
-      },
+      settings: settings,
       exportDate: new Date().toISOString()
     }
 
@@ -86,15 +87,15 @@ export default function Settings({ user, profile, onUpdateSettings }) {
   return (
     <div className="settings-container">
       <div className="settings-header">
-        <h2 className="settings-title">⚙️ {t('settings.title')}</h2>
+        <h2 className="settings-title"><FaCog className="settings-title-icon" /> {t('settings.title')}</h2>
         <p className="settings-subtitle">{t('settings.subtitle')}</p>
       </div>
 
       <div className="settings-sections">
-        {/* Theme Section - uses context value directly */}
+        {/* Theme Section */}
         <div className="settings-section">
           <div className="section-header">
-            <span className="section-icon">🎨</span>
+            <span className="section-icon"><FaPalette /></span>
             <h3 className="section-title">{t('settings.appearance')}</h3>
           </div>
           <div className="section-content">
@@ -105,22 +106,22 @@ export default function Settings({ user, profile, onUpdateSettings }) {
               </div>
               <div className="theme-toggle">
                 <button
-                  className={`theme-btn ${theme === 'light' ? 'active' : ''}`}
+                  className={`theme-btn ${settings.theme === 'light' ? 'active' : ''}`}
                   onClick={() => handleThemeChange('light')}
                 >
-                  ☀️ {t('settings.light')}
+                  <FaSun className="theme-btn-icon" /> {t('settings.light')}
                 </button>
                 <button
-                  className={`theme-btn ${theme === 'dark' ? 'active' : ''}`}
+                  className={`theme-btn ${settings.theme === 'dark' ? 'active' : ''}`}
                   onClick={() => handleThemeChange('dark')}
                 >
-                  🌙 {t('settings.dark')}
+                  <FaMoon className="theme-btn-icon" /> {t('settings.dark')}
                 </button>
                 <button
-                  className={`theme-btn ${theme === 'auto' ? 'active' : ''}`}
+                  className={`theme-btn ${settings.theme === 'auto' ? 'active' : ''}`}
                   onClick={() => handleThemeChange('auto')}
                 >
-                  🔄 {t('settings.auto')}
+                  <FaSyncAlt className="theme-btn-icon" /> {t('settings.auto')}
                 </button>
               </div>
             </div>
@@ -130,7 +131,7 @@ export default function Settings({ user, profile, onUpdateSettings }) {
         {/* Notifications Section */}
         <div className="settings-section">
           <div className="section-header">
-            <span className="section-icon">🔔</span>
+            <span className="section-icon"><FaBell /></span>
             <h3 className="section-title">{t('settings.notifications')}</h3>
           </div>
           <div className="section-content">
@@ -184,7 +185,7 @@ export default function Settings({ user, profile, onUpdateSettings }) {
         {/* Privacy Section */}
         <div className="settings-section">
           <div className="section-header">
-            <span className="section-icon">🔒</span>
+            <span className="section-icon"><FaLock /></span>
             <h3 className="section-title">{t('settings.privacyData')}</h3>
           </div>
           <div className="section-content">
@@ -228,16 +229,16 @@ export default function Settings({ user, profile, onUpdateSettings }) {
                 className="export-btn"
                 onClick={() => setShowExportModal(true)}
               >
-                📥 {t('settings.exportData')}
+                <FaDownload className="export-btn-icon" /> {t('settings.exportData')}
               </button>
             </div>
           </div>
         </div>
 
-        {/* Preferences Section - language uses context directly */}
+        {/* Preferences Section */}
         <div className="settings-section">
           <div className="section-header">
-            <span className="section-icon">⚡</span>
+            <span className="section-icon"><FaBolt /></span>
             <h3 className="section-title">{t('settings.preferences')}</h3>
           </div>
           <div className="section-content">
@@ -248,7 +249,7 @@ export default function Settings({ user, profile, onUpdateSettings }) {
               </div>
               <select
                 className="setting-select"
-                value={language}
+                value={settings.language}
                 onChange={(e) => handleLanguageChange(e.target.value)}
               >
                 <option value="en">{t('common.english')}</option>

@@ -45,7 +45,11 @@
   width: 48px;
   height: 48px;
   border-radius: 12px;
+<<<<<<< HEAD
   background: linear-gradient(135deg, var(--accent-primary), #c91625);
+=======
+  background: linear-gradient(135deg, #ED1B2F, #c91625);
+>>>>>>> upstream/main
   display: flex;
   align-items: center;
   justify-content: center;
@@ -54,7 +58,11 @@
 
 .header-icon {
   font-size: 24px;
+<<<<<<< HEAD
   filter: brightness(0) invert(1);
+=======
+  color: white;
+>>>>>>> upstream/main
 }
 
 .header-text {
@@ -92,6 +100,10 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
+}
+
+.btn-edit-modern svg {
+  color: white;
 }
 
 .btn-edit-modern:hover {
@@ -185,6 +197,15 @@
 
 .section-icon {
   font-size: 20px;
+  color: #ED1B2F;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.section-header svg:not(.section-icon svg) {
+  color: #6b7280;
+  font-size: 16px;
 }
 
 .section-title {
@@ -315,6 +336,11 @@
   border-radius: 12px;
   font-size: 12px;
   font-weight: 600;
+}
+
+.verified-badge svg {
+  color: #065f46;
+  font-size: 12px;
 }
 
 .credits-badge {
