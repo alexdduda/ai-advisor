@@ -4,13 +4,12 @@ import { useTheme } from '../../contexts/ThemeContext'
 import './Settings.css'
 
 export default function Settings({ user, profile, onUpdateSettings }) {
+  // Use contexts directly - NO local state for theme/language
   const { language, setLanguage, t } = useLanguage()
   const { theme, setTheme } = useTheme()
   
+  // Local state ONLY for notifications, privacy, timezone (not theme/language)
   const [settings, setSettings] = useState({
-    // Theme
-    theme: theme || 'light',
-    
     // Notifications
     emailNotifications: JSON.parse(localStorage.getItem('emailNotifications') ?? 'true'),
     deadlineReminders: JSON.parse(localStorage.getItem('deadlineReminders') ?? 'true'),
@@ -20,23 +19,20 @@ export default function Settings({ user, profile, onUpdateSettings }) {
     profileVisibility: localStorage.getItem('profileVisibility') || 'private',
     shareProgress: JSON.parse(localStorage.getItem('shareProgress') ?? 'false'),
     
-    // Preferences
-    language: language || 'en',
+    // Preferences (not theme/language - those are in context)
     timezone: localStorage.getItem('timezone') || Intl.DateTimeFormat().resolvedOptions().timeZone
   })
 
   const [showExportModal, setShowExportModal] = useState(false)
 
-  // Handle theme toggle
+  // Handle theme change - calls context setter directly
   const handleThemeChange = (newTheme) => {
-    setSettings(prev => ({ ...prev, theme: newTheme }))
     setTheme(newTheme)
     if (onUpdateSettings) onUpdateSettings({ theme: newTheme })
   }
 
-  // Handle language change
+  // Handle language change - calls context setter directly
   const handleLanguageChange = (newLang) => {
-    setSettings(prev => ({ ...prev, language: newLang }))
     setLanguage(newLang)
     if (onUpdateSettings) onUpdateSettings({ language: newLang })
   }
@@ -64,7 +60,11 @@ export default function Settings({ user, profile, onUpdateSettings }) {
         id: user?.id
       },
       profile: profile,
-      settings: settings,
+      settings: {
+        ...settings,
+        theme: theme,  // Get from context
+        language: language  // Get from context
+      },
       exportDate: new Date().toISOString()
     }
 
@@ -91,7 +91,7 @@ export default function Settings({ user, profile, onUpdateSettings }) {
       </div>
 
       <div className="settings-sections">
-        {/* Theme Section */}
+        {/* Theme Section - uses context value directly */}
         <div className="settings-section">
           <div className="section-header">
             <span className="section-icon">🎨</span>
@@ -105,19 +105,19 @@ export default function Settings({ user, profile, onUpdateSettings }) {
               </div>
               <div className="theme-toggle">
                 <button
-                  className={`theme-btn ${settings.theme === 'light' ? 'active' : ''}`}
+                  className={`theme-btn ${theme === 'light' ? 'active' : ''}`}
                   onClick={() => handleThemeChange('light')}
                 >
                   ☀️ {t('settings.light')}
                 </button>
                 <button
-                  className={`theme-btn ${settings.theme === 'dark' ? 'active' : ''}`}
+                  className={`theme-btn ${theme === 'dark' ? 'active' : ''}`}
                   onClick={() => handleThemeChange('dark')}
                 >
                   🌙 {t('settings.dark')}
                 </button>
                 <button
-                  className={`theme-btn ${settings.theme === 'auto' ? 'active' : ''}`}
+                  className={`theme-btn ${theme === 'auto' ? 'active' : ''}`}
                   onClick={() => handleThemeChange('auto')}
                 >
                   🔄 {t('settings.auto')}
@@ -234,7 +234,7 @@ export default function Settings({ user, profile, onUpdateSettings }) {
           </div>
         </div>
 
-        {/* Preferences Section */}
+        {/* Preferences Section - language uses context directly */}
         <div className="settings-section">
           <div className="section-header">
             <span className="section-icon">⚡</span>
@@ -248,7 +248,7 @@ export default function Settings({ user, profile, onUpdateSettings }) {
               </div>
               <select
                 className="setting-select"
-                value={settings.language}
+                value={language}
                 onChange={(e) => handleLanguageChange(e.target.value)}
               >
                 <option value="en">{t('common.english')}</option>

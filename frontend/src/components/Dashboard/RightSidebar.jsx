@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa'
 import { useLanguage } from '../../contexts/LanguageContext'
 import './RightSidebar.css'
@@ -10,18 +11,68 @@ export default function RightSidebar({
 }) {
   const { t } = useLanguage()
   
+  // Load saved position from localStorage or default to 50%
+  const [buttonPosition, setButtonPosition] = useState(() => {
+    const saved = localStorage.getItem('rightSidebarButtonPosition')
+    return saved ? parseFloat(saved) : 50
+  })
+  
+  const [isDragging, setIsDragging] = useState(false)
+
+  // Save position to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('rightSidebarButtonPosition', buttonPosition.toString())
+  }, [buttonPosition])
+
+  const handleMouseDown = (e) => {
+    setIsDragging(true)
+    e.preventDefault()
+  }
+
+  const handleMouseMove = (e) => {
+    if (!isDragging) return
+    
+    const windowHeight = window.innerHeight
+    const newPosition = (e.clientY / windowHeight) * 100
+    
+    // Constrain between 10% and 90%
+    const constrainedPosition = Math.min(Math.max(newPosition, 10), 90)
+    setButtonPosition(constrainedPosition)
+  }
+
+  const handleMouseUp = () => {
+    setIsDragging(false)
+  }
+
+  // Add/remove mouse event listeners
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove)
+      document.addEventListener('mouseup', handleMouseUp)
+      
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove)
+        document.removeEventListener('mouseup', handleMouseUp)
+      }
+    }
+  }, [isDragging])
+
   return (
     <aside className={`right-sidebar ${isOpen ? 'open' : 'closed'}`}>
       {!isOpen && (
-        <div className="right-sidebar-header-collapsed">
-          <button
-            className="right-sidebar-toggle-collapsed"
-            onClick={() => setIsOpen(true)}
-            title={t('chat.showHistory')}
-          >
-            <FaChevronLeft size={20} />
-          </button>
-        </div>
+        <button
+          className={`right-sidebar-toggle-collapsed ${isDragging ? 'dragging' : ''}`}
+          style={{ top: `${buttonPosition}%` }}
+          onMouseDown={handleMouseDown}
+          onClick={(e) => {
+            if (!isDragging) {
+              setIsOpen(true)
+            }
+          }}
+          aria-label={t('chat.showHistory')}
+        >
+          <FaChevronLeft size={20} />
+        </button>
       )}
 
       {isOpen && (

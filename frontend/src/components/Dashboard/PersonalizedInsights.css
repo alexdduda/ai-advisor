@@ -1,6 +1,6 @@
 /* Personalized Insights Section */
 .insights-section {
-  background: white;
+  background: var(--bg-primary);
   padding: 2rem;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -14,11 +14,11 @@
 .insights-header h3 {
   margin: 0 0 0.5rem 0;
   font-size: 1.5rem;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .insights-subtitle {
-  color: #666;
+  color: var(--text-secondary);
   margin: 0;
   font-size: 0.95rem;
 }
@@ -45,28 +45,28 @@
 
 /* Different insight types */
 .insight-card.insight-interests {
-  background: #FFF9E6;
+  background: var(--card-bg);
   border-left-color: #FFD700;
 }
 
 .insight-card.insight-peer {
-  background: #E3F2FD;
+  background: var(--card-bg);
   border-left-color: #2196F3;
 }
 
 .insight-card.insight-chat {
-  background: #F3E5F5;
+  background: var(--card-bg);
   border-left-color: #9C27B0;
 }
 
 .insight-card.insight-achievement {
-  background: #E8F5E9;
+  background: var(--card-bg);
   border-left-color: #4CAF50;
 }
 
 .insight-card.insight-progress {
-  background: #FFE0E6;
-  border-left-color: #ED1B2F;
+  background: var(--card-bg);
+  border-left-color: var(--accent-primary);
 }
 
 .insight-icon {
@@ -82,12 +82,12 @@
   margin: 0 0 0.5rem 0;
   font-size: 1.1rem;
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .insight-text {
   margin: 0;
-  color: #666;
+  color: var(--text-secondary);
   line-height: 1.5;
   font-size: 0.95rem;
 }
@@ -95,7 +95,7 @@
 .insights-empty {
   text-align: center;
   padding: 3rem 2rem;
-  color: #999;
+  color: var(--text-muted);
 }
 
 .insights-empty .empty-icon {

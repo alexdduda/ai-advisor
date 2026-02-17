@@ -1,5 +1,7 @@
+/* Target GPA Calculator - FIXED for Dark Mode */
+
 .target-gpa-calculator {
-  background: white;
+  background: var(--bg-primary);
   border-radius: 12px;
   padding: 20px;
 }
@@ -11,13 +13,13 @@
 .calculator-title {
   font-size: 18px;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--text-primary);
   margin: 0 0 4px 0;
 }
 
 .calculator-subtitle {
   font-size: 14px;
-  color: #6b7280;
+  color: var(--text-tertiary);
   margin: 0;
 }
 
@@ -39,14 +41,14 @@
   flex-direction: column;
   align-items: center;
   padding: 12px;
-  background: #f9fafb;
+  background: var(--bg-secondary);
   border-radius: 8px;
-  border: 2px solid #e5e7eb;
+  border: 2px solid var(--border-primary);
 }
 
 .stat-label {
   font-size: 12px;
-  color: #6b7280;
+  color: var(--text-tertiary);
   font-weight: 600;
   text-align: center;
   margin-bottom: 4px;
@@ -55,7 +57,7 @@
 .stat-value {
   font-size: 24px;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--text-primary);
 }
 
 /* Input Section */
@@ -71,35 +73,38 @@
   gap: 6px;
 }
 
+/* FIXED: Label text color for dark mode */
 .label-text {
   font-size: 14px;
   font-weight: 600;
-  color: #374151;
+  color: var(--text-primary);
 }
 
 .gpa-input {
   padding: 12px 16px;
-  border: 2px solid #e5e7eb;
+  border: 2px solid var(--border-primary);
   border-radius: 8px;
   font-size: 16px;
   font-weight: 600;
+  background: var(--input-bg);
+  color: var(--input-text);
   transition: all 0.2s;
 }
 
 .gpa-input:focus {
   outline: none;
-  border-color: #ED1B2F;
+  border-color: var(--accent-primary);
   box-shadow: 0 0 0 3px rgba(237, 27, 47, 0.1);
 }
 
 .gpa-input::placeholder {
-  color: #9ca3af;
+  color: var(--text-muted);
   font-weight: 400;
 }
 
 .calculate-btn {
   padding: 14px 20px;
-  background: #ED1B2F;
+  background: var(--accent-primary);
   color: white;
   border: none;
   border-radius: 8px;
@@ -116,7 +121,7 @@
 }
 
 .calculate-btn:disabled {
-  background: #d1d5db;
+  background: var(--bg-quaternary);
   cursor: not-allowed;
 }
 
@@ -126,7 +131,7 @@
   flex-direction: column;
   gap: 16px;
   padding-top: 16px;
-  border-top: 2px solid #e5e7eb;
+  border-top: 2px solid var(--border-primary);
   animation: slideIn 0.3s ease-out;
 }
 
@@ -143,7 +148,7 @@
 
 /* Main Result */
 .main-result {
-  background: linear-gradient(135deg, #ED1B2F 0%, #c91625 100%);
+  background: linear-gradient(135deg, var(--accent-primary) 0%, #c91625 100%);
   color: white;
   padding: 20px;
   border-radius: 12px;
@@ -196,26 +201,26 @@
   align-items: center;
   gap: 8px;
   padding: 16px;
-  background: #fef2f2;
+  background: var(--card-bg);
   border-radius: 8px;
-  border: 2px solid #fee2e2;
+  border: 2px solid var(--border-primary);
 }
 
 .grade-label {
   font-size: 13px;
-  color: #6b7280;
+  color: var(--text-tertiary);
   font-weight: 600;
 }
 
 .grade-value {
   font-size: 20px;
   font-weight: 700;
-  color: #dc2626;
+  color: var(--accent-primary);
 }
 
 /* Scenarios */
 .scenarios-section {
-  background: #f9fafb;
+  background: var(--bg-secondary);
   padding: 16px;
   border-radius: 8px;
 }
@@ -223,7 +228,7 @@
 .scenarios-title {
   font-size: 14px;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--text-primary);
   margin: 0 0 12px 0;
 }
 
@@ -234,10 +239,10 @@
 }
 
 .scenario-item {
-  background: white;
+  background: var(--bg-primary);
   padding: 12px;
   border-radius: 8px;
-  border: 2px solid #e5e7eb;
+  border: 2px solid var(--border-primary);
 }
 
 .scenario-header {
@@ -247,16 +252,17 @@
   margin-bottom: 6px;
 }
 
+/* FIXED: Scenario label color for dark mode */
 .scenario-label {
   font-size: 13px;
   font-weight: 600;
-  color: #374151;
+  color: var(--text-primary);
 }
 
 .scenario-gpa {
   font-size: 14px;
   font-weight: 700;
-  color: #6b7280;
+  color: var(--text-tertiary);
 }
 
 .scenario-result {
@@ -264,38 +270,38 @@
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  color: #6b7280;
+  color: var(--text-tertiary);
 }
 
 .scenario-result strong {
-  color: #1f2937;
+  color: var(--text-primary);
   font-weight: 700;
 }
 
 .check-icon {
-  color: #10b981;
+  color: var(--success-primary);
   font-weight: 700;
   font-size: 16px;
 }
 
 .cross-icon {
-  color: #ef4444;
+  color: var(--error-primary);
   font-weight: 700;
   font-size: 16px;
 }
 
 /* Tips */
 .tips-section {
-  background: #fffbeb;
+  background: var(--bg-tertiary);
   padding: 16px;
   border-radius: 8px;
-  border: 2px solid #fef3c7;
+  border: 2px solid var(--border-primary);
 }
 
 .tips-title {
   font-size: 14px;
   font-weight: 700;
-  color: #92400e;
+  color: var(--text-secondary);
   margin: 0 0 12px 0;
 }
 
@@ -310,7 +316,7 @@
 
 .tips-list li {
   font-size: 13px;
-  color: #78350f;
+  color: var(--text-secondary);
   padding-left: 20px;
   position: relative;
 }
@@ -319,17 +325,17 @@
   content: '→';
   position: absolute;
   left: 0;
-  color: #f59e0b;
+  color: var(--warning-primary);
   font-weight: 700;
 }
 
 /* Error & Impossible */
 .error-message,
 .impossible-result {
-  background: #fef2f2;
+  background: var(--card-bg);
   padding: 20px;
   border-radius: 8px;
-  border: 2px solid #fee2e2;
+  border: 2px solid var(--border-primary);
   text-align: center;
 }
 
@@ -343,19 +349,19 @@
 .impossible-result h4 {
   font-size: 18px;
   font-weight: 700;
-  color: #dc2626;
+  color: var(--error-primary);
   margin: 0 0 8px 0;
 }
 
 .impossible-result p {
   font-size: 14px;
-  color: #6b7280;
+  color: var(--text-tertiary);
   margin: 0 0 16px 0;
 }
 
 .error-message p {
   font-size: 14px;
-  color: #dc2626;
+  color: var(--error-primary);
   font-weight: 600;
   margin: 0;
 }
@@ -363,9 +369,9 @@
 /* Reset Button */
 .reset-btn {
   padding: 12px 20px;
-  background: white;
-  color: #374151;
-  border: 2px solid #e5e7eb;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border: 2px solid var(--border-primary);
   border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
@@ -374,8 +380,8 @@
 }
 
 .reset-btn:hover {
-  background: #f9fafb;
-  border-color: #d1d5db;
+  background: var(--bg-secondary);
+  border-color: var(--border-secondary);
 }
 
 /* Responsive */
