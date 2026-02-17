@@ -1,4 +1,6 @@
-import { FaHeart, FaRegHeart, FaCheckCircle } from 'react-icons/fa'
+import { FaHeart, FaRegHeart, FaCheckCircle, FaStar, FaBook, FaUser, FaChartBar } from 'react-icons/fa'
+import { GrPowerCycle } from 'react-icons/gr'
+import { MdOutlineRateReview } from 'react-icons/md'
 import { useLanguage } from '../../contexts/LanguageContext'
 import './CoursesTab.css'
 
@@ -97,26 +99,26 @@ export default function CoursesTab({
 
                   {course.instructor && (
                     <div className="course-instructor-section">
-                      <div className="instructor-name">👤 {course.instructor}</div>
+                      <div className="instructor-name"><FaUser /> {course.instructor}</div>
                       {course.rmp_rating && (
                         <div className="rmp-compact">
                           <div className="rmp-stat">
-                            <span className="rmp-label">⭐ {t('courses.rating')}:</span>
+                            <span className="rmp-label"><FaStar /> {t('courses.rating')}:</span>
                             <span className="rmp-value">{course.rmp_rating.toFixed(1)}/5.0</span>
                           </div>
                           <div className="rmp-stat">
-                            <span className="rmp-label">📊 {t('courses.difficulty')}:</span>
+                            <span className="rmp-label"><FaChartBar /> {t('courses.difficulty')}:</span>
                             <span className="rmp-value">{course.rmp_difficulty?.toFixed(1) || t('common.na')}/5.0</span>
                           </div>
                           {course.rmp_num_ratings && (
                             <div className="rmp-stat">
-                              <span className="rmp-label">📝 {t('courses.reviews')}:</span>
+                              <span className="rmp-label"><MdOutlineRateReview /> {t('courses.reviews')}:</span>
                               <span className="rmp-value">{Math.round(course.rmp_num_ratings)}</span>
                             </div>
                           )}
                           {course.rmp_would_take_again && (
                             <div className="rmp-stat">
-                              <span className="rmp-label">🔄 {t('courses.wouldRetake')}:</span>
+                              <span className="rmp-label"><GrPowerCycle /> {t('courses.wouldRetake')}:</span>
                               <span className="rmp-value">{Math.round(course.rmp_would_take_again)}%</span>
                             </div>
                           )}
@@ -127,7 +129,7 @@ export default function CoursesTab({
 
                   {course.num_sections && (
                     <div className="course-meta">
-                      📊 {course.num_sections === 1 
+                      <FaChartBar className="meta-icon" /> {course.num_sections === 1 
                         ? t('courses.sectionsAvailable').replace('{count}', course.num_sections)
                         : t('courses.sectionsAvailablePlural').replace('{count}', course.num_sections)
                       }
@@ -191,7 +193,7 @@ export default function CoursesTab({
 
             {selectedCourse.professor_rating && (
               <div className="course-professor-rating">
-                <h3>📊 {t('courses.professorRating')}: {selectedCourse.professor_rating.instructor}</h3>
+                <h3><FaChartBar /> {t('courses.professorRating')}: {selectedCourse.professor_rating.instructor}</h3>
                 <div className="rmp-stats-grid">
                   <div className="rmp-stat-card">
                     <div className="rmp-stat-value">{selectedCourse.professor_rating.rmp_rating?.toFixed(1) || t('common.na')}</div>
@@ -236,8 +238,8 @@ export default function CoursesTab({
                     {section.rmp_rating && (
                       <div className="section-rmp">
                         <div className="rmp-inline">
-                          <span className="rmp-badge">⭐ {section.rmp_rating.toFixed(1)}</span>
-                          <span className="rmp-badge">📊 {t('courses.difficulty')}: {section.rmp_difficulty?.toFixed(1) || t('common.na')}</span>
+                          <span className="rmp-badge"><FaStar /> {section.rmp_rating.toFixed(1)}</span>
+                          <span className="rmp-badge"><FaChartBar /> {t('courses.difficulty')}: {section.rmp_difficulty?.toFixed(1) || t('common.na')}</span>
                           {section.rmp_num_ratings && (
                             <span className="rmp-badge">📝 {Math.round(section.rmp_num_ratings)} {t('courses.reviews').toLowerCase()}</span>
                           )}
@@ -255,7 +257,7 @@ export default function CoursesTab({
       {/* Empty state */}
       {searchResults.length === 0 && !selectedCourse && !searchError && !isSearching && (
         <div className="placeholder-content">
-          <div className="placeholder-icon">📚</div>
+          <div className="placeholder-icon"><FaBook /></div>
           <h3>{t('courses.explorerTitle')}</h3>
           <p>{t('courses.explorerDesc')}</p>
         </div>

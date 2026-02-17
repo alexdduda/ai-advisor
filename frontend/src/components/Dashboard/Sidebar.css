@@ -152,7 +152,27 @@
   color: white;
 }
 
-.nav-icon { font-size: 1.25rem; flex-shrink: 0; }
+/* Nav icon — sized and aligned for react-icons SVGs */
+.nav-icon {
+  font-size: 1.125rem;
+  flex-shrink: 0;
+  width: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+/* Give inactive icons the McGill red tint */
+.nav-item:not(.active) .nav-icon {
+  color: #ED1B2F;
+}
+
+/* Active state — icons go white with the rest of the text */
+.nav-item.active .nav-icon {
+  color: white;
+}
+
 .nav-label { font-weight: 500; }
 
 .nav-badge {
@@ -410,6 +430,14 @@
 }
 
 .dark-mode .logo-name { color: #fff; }
+
+.dark-mode .nav-item { color: rgba(255, 255, 255, 0.6); }
+.dark-mode .nav-item:hover { background: rgba(255, 255, 255, 0.05); color: #fff; }
+
+/* Dark mode — inactive icon color */
+.dark-mode .nav-item:not(.active) .nav-icon {
+  color: #f87171;
+}
 
 .dark-mode .sidebar-footer {
   border-top-color: rgba(255, 255, 255, 0.1);

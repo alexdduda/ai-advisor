@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useAuth }        from '../../contexts/AuthContext'
 import { chatAPI }        from '../../lib/api'
+import { FaRobot } from 'react-icons/fa'
 import './ChatPanel.css'
 
 export default function ChatPanel({
@@ -105,7 +106,7 @@ export default function ChatPanel({
         <div className="chat-messages">
           {isLoadingHistory ? (
             <div className="message assistant">
-              <div className="message-avatar">🤖</div>
+              <div className="message-avatar"><FaRobot /></div>
               <div className="message-content">
                 <div className="message-text">Loading chat history...</div>
               </div>
@@ -114,7 +115,7 @@ export default function ChatPanel({
             messages.map((msg, idx) => (
               <div key={idx} className={`message ${msg.role}`}>
                 <div className="message-avatar">
-                  {msg.role === 'user' ? user?.email?.[0].toUpperCase() : '🤖'}
+                  {msg.role === 'user' ? user?.email?.[0].toUpperCase() : <FaRobot />}
                 </div>
                 <div className="message-content">
                   <div className="message-text">{msg.content}</div>
@@ -125,7 +126,7 @@ export default function ChatPanel({
 
           {isSending && (
             <div className="message assistant">
-              <div className="message-avatar">🤖</div>
+              <div className="message-avatar"><FaRobot /></div>
               <div className="message-content">
                 <div className="message-text">
                   <span className="typing-indicator">●●●</span>

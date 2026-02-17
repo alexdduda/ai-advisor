@@ -2,6 +2,7 @@ import { useRef, useEffect, useState } from 'react'
 import { HiPaperClip } from 'react-icons/hi'
 import { useLanguage } from '../../contexts/LanguageContext'
 import FileUpload from './FileUpload'
+import { FaRobot } from 'react-icons/fa'
 import './ChatTab.css'
 
 export default function ChatTab({
@@ -141,14 +142,14 @@ export default function ChatTab({
       <div className="chat-messages">
         {isLoadingHistory ? (
           <div className="message assistant">
-            <div className="message-avatar">🤖</div>
+            <div className="message-avatar"><FaRobot /></div>
             <div className="message-content">
               <div className="message-text">{t('chat.loadingHistory')}</div>
             </div>
           </div>
         ) : messages.length === 0 ? (
           <div className="message assistant">
-            <div className="message-avatar">🤖</div>
+            <div className="message-avatar"><FaRobot /></div>
             <div className="message-content">
               <div className="message-text">
                 {t('chat.welcomeMessage')}
@@ -159,7 +160,7 @@ export default function ChatTab({
           messages.map((message, idx) => (
             <div key={idx} className={`message ${message.role}`}>
               <div className="message-avatar">
-                {message.role === 'assistant' ? '🤖' : userEmail?.[0]?.toUpperCase() || '?'}
+                {message.role === 'assistant' ? <FaRobot /> : userEmail?.[0]?.toUpperCase() || '?'}
               </div>
               <div className="message-content">
                 {message.files && message.files.length > 0 && (
@@ -179,7 +180,7 @@ export default function ChatTab({
         
         {isSending && (
           <div className="message assistant">
-            <div className="message-avatar">🤖</div>
+            <div className="message-avatar"><FaRobot /></div>
             <div className="message-content">
               <div className="message-text typing-indicator">
                 <span></span><span></span><span></span>

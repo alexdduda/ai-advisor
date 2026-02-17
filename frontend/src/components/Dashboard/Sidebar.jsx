@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
-import { FaChevronLeft, FaChevronRight } from 'react-icons/fa'
+import { FaChevronLeft, FaChevronRight, FaComments, FaBook, FaStar, FaUser, FaCog, FaPalette, FaSignOutAlt } from 'react-icons/fa'
+import { MdLanguage } from 'react-icons/md'
 import { useTheme } from '../../contexts/ThemeContext'
 import { useLanguage } from '../../contexts/LanguageContext'
 import './Sidebar.css'
@@ -14,6 +15,11 @@ export default function Sidebar({
   profile,
   profileImage,
   onSignOut,
+  // Drag
+  leftToggleY,
+  isDraggingLeft,
+  handleLeftToggleMouseDown,
+  handleLeftToggleTouchStart,
 }) {
   const [popupOpen, setPopupOpen] = useState(false)
   const popupRef = useRef(null)
@@ -21,19 +27,6 @@ export default function Sidebar({
 
   const { theme, setTheme } = useTheme()
   const { language, setLanguage, t } = useLanguage()
-
-  // Load saved position from localStorage or default to 20px from top
-  const [leftToggleY, setLeftToggleY] = useState(() => {
-    const saved = localStorage.getItem('leftSidebarButtonPosition')
-    return saved ? parseInt(saved) : 20
-  })
-  
-  const [isDraggingLeft, setIsDraggingLeft] = useState(false)
-
-  // Save position to localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem('leftSidebarButtonPosition', leftToggleY.toString())
-  }, [leftToggleY])
 
   // Close popup on outside click
   useEffect(() => {
@@ -56,55 +49,6 @@ export default function Sidebar({
   useEffect(() => {
     if (!sidebarOpen) setPopupOpen(false)
   }, [sidebarOpen])
-
-  // Handle drag for left toggle button
-  const handleLeftToggleMouseDown = (e) => {
-    e.stopPropagation()
-    setIsDraggingLeft(true)
-  }
-
-  const handleLeftToggleTouchStart = (e) => {
-    e.stopPropagation()
-    setIsDraggingLeft(true)
-  }
-
-  useEffect(() => {
-    if (!isDraggingLeft) return
-
-    const handleMouseMove = (e) => {
-      const newY = e.clientY
-      const windowHeight = window.innerHeight
-      
-      // Constrain between 20px and windowHeight - 56px
-      const constrainedY = Math.min(Math.max(newY, 20), windowHeight - 56)
-      setLeftToggleY(constrainedY)
-    }
-
-    const handleTouchMove = (e) => {
-      const touch = e.touches[0]
-      const newY = touch.clientY
-      const windowHeight = window.innerHeight
-      
-      const constrainedY = Math.min(Math.max(newY, 20), windowHeight - 56)
-      setLeftToggleY(constrainedY)
-    }
-
-    const handleEnd = () => {
-      setIsDraggingLeft(false)
-    }
-
-    document.addEventListener('mousemove', handleMouseMove)
-    document.addEventListener('mouseup', handleEnd)
-    document.addEventListener('touchmove', handleTouchMove)
-    document.addEventListener('touchend', handleEnd)
-
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove)
-      document.removeEventListener('mouseup', handleEnd)
-      document.removeEventListener('touchmove', handleTouchMove)
-      document.removeEventListener('touchend', handleEnd)
-    }
-  }, [isDraggingLeft])
 
   const cycleTheme = () => {
     const next = theme === 'light' ? 'dark' : theme === 'dark' ? 'auto' : 'light'
@@ -181,11 +125,11 @@ export default function Sidebar({
           <>
             <nav className="sidebar-nav">
               {[
-                { key: 'chat', icon: '💬', label: t('nav.chat') },
-                { key: 'courses', icon: '📚', label: t('nav.courses') },
-                { key: 'favorites', icon: '⭐', label: t('nav.saved'), badge: favorites.length || null },
-                { key: 'forum', icon: '💬', label: t('nav.forum') },
-                { key: 'profile', icon: '👤', label: t('nav.profile') },
+                { key: 'chat', icon: <FaComments />, label: t('nav.chat') },
+                { key: 'courses', icon: <FaBook />, label: t('nav.courses') },
+                { key: 'favorites', icon: <FaStar />, label: t('nav.saved'), badge: favorites.length || null },
+                { key: 'forum', icon: <FaComments />, label: t('nav.forum') },
+                { key: 'profile', icon: <FaUser />, label: t('nav.profile') },
               ].map(({ key, icon, label, badge }) => (
                 <button
                   key={key}
@@ -204,20 +148,24 @@ export default function Sidebar({
               {popupOpen && (
                 <div className="sidebar-popup" ref={popupRef}>
                   <button className="sidebar-popup-item" onClick={handleSettingsClick}>
+                    <span className="sidebar-popup-icon"><FaCog /></span>
                     <span className="sidebar-popup-label">{t('sidebar.settings')}</span>
                   </button>
                   <button className="sidebar-popup-item" onClick={handleLanguageToggle}>
+                    <span className="sidebar-popup-icon"><MdLanguage /></span>
                     <span className="sidebar-popup-label">
                       {language === 'en' ? 'Français' : 'English'}
                     </span>
                   </button>
                   <button className="sidebar-popup-item" onClick={handleThemeClick}>
+                    <span className="sidebar-popup-icon"><FaPalette /></span>
                     <span className="sidebar-popup-label">
                       {t('sidebar.colorTheme')}: {themeLabel}
                     </span>
                   </button>
                   <div className="sidebar-popup-divider" />
                   <button className="sidebar-popup-item sidebar-popup-item--danger" onClick={handleLogOut}>
+                    <span className="sidebar-popup-icon"><FaSignOutAlt /></span>
                     <span className="sidebar-popup-label">{t('sidebar.logOut')}</span>
                   </button>
                   <div className="sidebar-popup-arrow" />
