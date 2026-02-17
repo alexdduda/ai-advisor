@@ -22,7 +22,7 @@
 .progress-title {
   font-size: 16px;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--text-primary);
   margin: 0;
 }
 
@@ -34,7 +34,7 @@
 
 .progress-bar-container {
   height: 24px;
-  background: #f3f4f6;
+  background: var(--bg-tertiary);
   border-radius: 12px;
   overflow: hidden;
   position: relative;
@@ -74,7 +74,7 @@
   display: flex;
   justify-content: space-between;
   font-size: 13px;
-  color: #6b7280;
+  color: var(--text-tertiary);
 }
 
 /* Credits Breakdown */
@@ -89,7 +89,7 @@
   align-items: center;
   gap: 12px;
   padding: 16px;
-  background: #f9fafb;
+  background: var(--bg-secondary);
   border: 1.5px solid #e5e7eb;
   border-radius: 12px;
   transition: all 0.2s;
@@ -101,18 +101,18 @@
 }
 
 .credit-item.highlight {
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  background: var(--bg-tertiary);
   border-color: #fbbf24;
 }
 
 .credit-item.total {
-  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  background: var(--bg-tertiary);
   border-color: #3b82f6;
 }
 
 .credit-item.remaining {
-  background: #ffffff;
-  border-color: #d1d5db;
+  background: var(--bg-primary);
+  border-color: var(--border-secondary);
   border-style: dashed;
 }
 
@@ -134,7 +134,7 @@
 .credit-label {
   font-size: 12px;
   font-weight: 600;
-  color: #6b7280;
+  color: var(--text-tertiary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -142,7 +142,7 @@
 .credit-value {
   font-size: 18px;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--text-primary);
   display: flex;
   align-items: baseline;
   gap: 6px;
@@ -151,7 +151,7 @@
 .credit-count {
   font-size: 13px;
   font-weight: 500;
-  color: #6b7280;
+  color: var(--text-tertiary);
 }
 
 /* Milestones */
@@ -166,7 +166,7 @@
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
-  background: white;
+  background: var(--bg-primary);
   border: 1.5px solid #e5e7eb;
   border-radius: 10px;
   transition: all 0.2s;
@@ -174,7 +174,7 @@
 
 .milestone.completed {
   background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-  border-color: #10b981;
+  border-color: var(--success-primary);
 }
 
 .milestone:hover {
@@ -191,22 +191,22 @@
   justify-content: center;
   font-size: 16px;
   font-weight: 700;
-  background: #f3f4f6;
-  color: #9ca3af;
-  border: 2px solid #e5e7eb;
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
+  border: 2px solid var(--border-primary);
   transition: all 0.2s;
 }
 
 .milestone.completed .milestone-marker {
-  background: #10b981;
+  background: var(--success-primary);
   color: white;
-  border-color: #059669;
+  border-color: var(--success-text);
 }
 
 .milestone-text {
   font-size: 14px;
   font-weight: 500;
-  color: #4b5563;
+  color: var(--text-secondary);
   flex: 1;
 }
 
@@ -221,11 +221,11 @@
   align-items: center;
   gap: 10px;
   padding: 14px 16px;
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-  border-left: 4px solid #f59e0b;
+  background: var(--bg-tertiary);
+  border-left: 4px solid var(--warning-primary);
   border-radius: 8px;
   font-size: 14px;
-  color: #92400e;
+  color: var(--text-secondary);
   font-weight: 500;
 }
 

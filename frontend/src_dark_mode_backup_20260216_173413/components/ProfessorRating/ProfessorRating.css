@@ -1,0 +1,227 @@
+/* Professor Rating Component Styles */
+
+.professor-rating {
+  background: white;
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-left: 4px solid #E0E0E0;
+  margin: 1rem 0;
+  transition: all 0.2s ease;
+}
+
+.professor-rating:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+/* Rating quality color coding */
+.professor-rating.rating-excellent {
+  border-left-color: #4CAF50;
+}
+
+.professor-rating.rating-good {
+  border-left-color: #8BC34A;
+}
+
+.professor-rating.rating-average {
+  border-left-color: #FFC107;
+}
+
+.professor-rating.rating-poor {
+  border-left-color: #F44336;
+}
+
+/* Header */
+.professor-header {
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #E0E0E0;
+}
+
+.professor-name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 0.25rem;
+}
+
+.professor-department {
+  font-size: 0.875rem;
+  color: #666;
+  font-weight: 500;
+}
+
+/* Stats Grid */
+.rating-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.rating-stat {
+  text-align: center;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #999;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.stat-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #333;
+  line-height: 1;
+}
+
+.stat-max {
+  font-size: 1rem;
+  color: #999;
+  margin-left: 2px;
+}
+
+/* Quality rating colors */
+.stat-quality-excellent {
+  color: #4CAF50;
+}
+
+.stat-quality-good {
+  color: #8BC34A;
+}
+
+.stat-quality-average {
+  color: #FFC107;
+}
+
+.stat-quality-poor {
+  color: #F44336;
+}
+
+.stat-percent {
+  color: #ED1B2F;
+}
+
+/* Footer */
+.rating-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #E0E0E0;
+}
+
+.rating-count {
+  font-size: 0.875rem;
+  color: #666;
+  font-style: italic;
+}
+
+.rmp-link {
+  font-size: 0.875rem;
+  color: #ED1B2F;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+
+.rmp-link:hover {
+  color: #B01B2E;
+  text-decoration: underline;
+}
+
+/* Unavailable State */
+.professor-rating-unavailable {
+  background: #F5F5F5;
+  border-left-color: #CCC;
+  padding: 0.75rem;
+  text-align: center;
+}
+
+.rating-unavailable-text {
+  color: #999;
+  font-size: 0.875rem;
+  font-style: italic;
+}
+
+/* Compact Version */
+.rating-compact {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.rating-compact.rating-excellent {
+  background: #E8F5E9;
+  color: #2E7D32;
+}
+
+.rating-compact.rating-good {
+  background: #F1F8E9;
+  color: #558B2F;
+}
+
+.rating-compact.rating-average {
+  background: #FFF9C4;
+  color: #F57F17;
+}
+
+.rating-compact.rating-poor {
+  background: #FFEBEE;
+  color: #C62828;
+}
+
+.rating-count-compact {
+  font-size: 0.75rem;
+  opacity: 0.8;
+  margin-left: 2px;
+}
+
+.rating-compact-unavailable {
+  color: #999;
+  font-size: 0.75rem;
+  font-style: italic;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .professor-rating {
+    padding: 1rem;
+  }
+
+  .professor-name {
+    font-size: 1.1rem;
+  }
+
+  .rating-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+  }
+
+  .rating-footer {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .rating-stats {
+    grid-template-columns: 1fr;
+  }
+}

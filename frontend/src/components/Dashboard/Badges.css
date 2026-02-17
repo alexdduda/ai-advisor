@@ -1,6 +1,6 @@
 /* Badges Section */
 .badges-section {
-  background: white;
+  background: var(--bg-primary);
   padding: 2rem;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -14,11 +14,11 @@
 .badges-header h3 {
   margin: 0 0 0.5rem 0;
   font-size: 1.5rem;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .badges-count {
-  color: #666;
+  color: var(--text-secondary);
   font-size: 0.95rem;
   margin: 0;
 }
@@ -40,12 +40,12 @@
 }
 
 .badge-card.earned {
-  background: linear-gradient(135deg, #FFF9E6 0%, #FFF4D6 100%);
-  border: 2px solid #FFD700;
+  background: var(--card-bg);
+  border: 2px solid var(--warning-primary);
 }
 
 .badge-card.locked {
-  background: #F5F5F5;
+  background: var(--bg-secondary);
   border: 2px solid #E0E0E0;
   opacity: 0.6;
 }
@@ -71,13 +71,13 @@
 
 .badge-name {
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary);
   margin-bottom: 0.25rem;
 }
 
 .badge-description {
   font-size: 0.85rem;
-  color: #666;
+  color: var(--text-secondary);
   line-height: 1.4;
 }
 

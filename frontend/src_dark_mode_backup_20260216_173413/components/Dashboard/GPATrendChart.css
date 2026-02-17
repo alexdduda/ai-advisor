@@ -1,0 +1,252 @@
+.gpa-trend-chart {
+  padding: 16px 0;
+}
+
+.gpa-trend-empty {
+  text-align: center;
+  padding: 24px;
+  color: #6b7280;
+  font-size: 14px;
+  background: #f9fafb;
+  border-radius: 8px;
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.chart-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+}
+
+.chart-subtitle {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.chart-container {
+  display: flex;
+  gap: 8px;
+  height: 180px;
+  position: relative;
+}
+
+/* Y-axis */
+.y-axis {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 8px 0;
+  min-width: 32px;
+}
+
+.y-label {
+  font-size: 11px;
+  color: #9ca3af;
+  font-weight: 600;
+  text-align: right;
+}
+
+/* Chart area */
+.chart-area {
+  flex: 1;
+  position: relative;
+  background: #f9fafb;
+  border-radius: 8px;
+  overflow: visible; /* Changed from hidden to visible */
+  padding: 16px 8px 8px 8px; /* Added top padding for labels */
+}
+
+/* Grid lines */
+.grid-lines {
+  position: absolute;
+  top: 16px; /* Adjusted for padding */
+  left: 0;
+  right: 0;
+  bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 0;
+}
+
+.grid-line {
+  height: 1px;
+  background: #e5e7eb;
+}
+
+/* SVG Chart */
+.chart-svg {
+  position: absolute;
+  top: 16px; /* Adjusted for padding */
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  width: calc(100% - 16px);
+  height: calc(100% - 24px);
+}
+
+.trend-line {
+  fill: none;
+  stroke: #ED1B2F;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.trend-area {
+  fill: rgba(237, 27, 47, 0.1);
+  stroke: none;
+}
+
+/* Data points */
+.data-points {
+  position: absolute;
+  top: 16px; /* Adjusted for padding */
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+}
+
+.data-point {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  z-index: 10;
+}
+
+.point-circle {
+  width: 10px;
+  height: 10px;
+  background: white;
+  border: 3px solid #ED1B2F;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s;
+}
+
+/* Current GPA point - larger and highlighted */
+.current-point .point-circle {
+  width: 14px;
+  height: 14px;
+  border-width: 4px;
+  box-shadow: 0 3px 8px rgba(237, 27, 47, 0.3);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 3px 8px rgba(237, 27, 47, 0.3);
+  }
+  50% {
+    box-shadow: 0 3px 12px rgba(237, 27, 47, 0.5);
+  }
+}
+
+.data-point:hover .point-circle {
+  transform: scale(1.3);
+  box-shadow: 0 4px 8px rgba(237, 27, 47, 0.3);
+}
+
+.current-point:hover .point-circle {
+  box-shadow: 0 5px 12px rgba(237, 27, 47, 0.5);
+}
+
+.point-label {
+  position: absolute;
+  top: -28px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1f2937;
+  color: white;
+  padding: 3px 7px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  opacity: 1; /* Always visible now */
+  pointer-events: none;
+  transition: all 0.2s;
+}
+
+.data-point:hover .point-label {
+  opacity: 1;
+  top: -32px;
+  transform: translateX(-50%) scale(1.1);
+}
+
+/* X-axis */
+.x-axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  margin-left: 40px;
+  padding: 0 8px;
+  gap: 4px;
+}
+
+.x-label-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  gap: 2px;
+}
+
+.x-label-main {
+  font-size: 11px;
+  color: #1f2937;
+  font-weight: 700;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.x-label-sub {
+  font-size: 10px;
+  color: #9ca3af;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .chart-container {
+    height: 160px;
+  }
+  
+  .y-axis {
+    min-width: 28px;
+  }
+  
+  .y-label {
+    font-size: 10px;
+  }
+  
+  .x-label-main {
+    font-size: 10px;
+  }
+  
+  .x-label-sub {
+    font-size: 9px;
+  }
+  
+  .chart-title {
+    font-size: 13px;
+  }
+  
+  .chart-subtitle {
+    font-size: 11px;
+  }
+  
+  .point-label {
+    font-size: 10px;
+    padding: 2px 5px;
+  }
+}
