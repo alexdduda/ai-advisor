@@ -5,27 +5,31 @@ import {
   FaTrash, FaEdit, FaEnvelope, FaMobileAlt, FaCheck
 } from 'react-icons/fa'
 import { useLanguage } from '../../contexts/LanguageContext'
+import useNotificationPrefs from '../../hooks/useNotificationPrefs'
 import './CalendarTab.css'
 
+// ── McGill Academic Dates 2025–26 ────────────────────────────────
 const MCGILL_ACADEMIC_DATES = [
-  { id: 'acad-1',  titleKey: 'cal.fallBegins',        date: '2025-09-02', type: 'academic' },
-  { id: 'acad-2',  titleKey: 'cal.addDropFall',       date: '2025-09-16', type: 'academic' },
-  { id: 'acad-3',  titleKey: 'cal.thanksgiving',      date: '2025-10-13', type: 'academic' },
-  { id: 'acad-4',  titleKey: 'cal.fallReadingWeek',   date: '2025-10-27', type: 'academic' },
-  { id: 'acad-5',  titleKey: 'cal.withdrawalFall',    date: '2025-11-03', type: 'academic' },
-  { id: 'acad-6',  titleKey: 'cal.lastDayFall',       date: '2025-12-03', type: 'academic' },
-  { id: 'acad-7',  titleKey: 'cal.fallExamsBegin',    date: '2025-12-08', type: 'academic' },
-  { id: 'acad-8',  titleKey: 'cal.fallExamsEnd',      date: '2025-12-20', type: 'academic' },
-  { id: 'acad-9',  titleKey: 'cal.winterBegins',      date: '2026-01-05', type: 'academic' },
-  { id: 'acad-10', titleKey: 'cal.addDropWinter',     date: '2026-01-19', type: 'academic' },
-  { id: 'acad-11', titleKey: 'cal.winterReadingWeek', date: '2026-02-16', type: 'academic' },
-  { id: 'acad-12', titleKey: 'cal.withdrawalWinter',  date: '2026-03-09', type: 'academic' },
-  { id: 'acad-13', titleKey: 'cal.goodFriday',        date: '2026-04-03', type: 'academic' },
-  { id: 'acad-14', titleKey: 'cal.lastDayWinter',     date: '2026-04-14', type: 'academic' },
-  { id: 'acad-15', titleKey: 'cal.winterExamsBegin',  date: '2026-04-16', type: 'academic' },
-  { id: 'acad-16', titleKey: 'cal.winterExamsEnd',    date: '2026-04-30', type: 'academic' },
-  { id: 'acad-17', titleKey: 'cal.registration',      date: '2026-03-23', type: 'academic' },
-  { id: 'acad-18', titleKey: 'cal.convocation',       date: '2026-06-02', type: 'academic' },
+  { id: 'acad-1',  titleKey: 'cal.fallBegins',           date: '2025-09-02', type: 'academic' },
+  { id: 'acad-2',  titleKey: 'cal.addDropFall',          date: '2025-09-16', type: 'academic' },
+  { id: 'acad-3',  titleKey: 'cal.thanksgiving',         date: '2025-10-13', type: 'academic' },
+  { id: 'acad-4',  titleKey: 'cal.fallMidterms',         date: '2025-10-13', type: 'academic' },
+  { id: 'acad-5',  titleKey: 'cal.fallReadingWeek',      date: '2025-10-27', type: 'academic' },
+  { id: 'acad-6',  titleKey: 'cal.withdrawalFall',       date: '2025-11-03', type: 'academic' },
+  { id: 'acad-7',  titleKey: 'cal.lastDayFall',          date: '2025-12-03', type: 'academic' },
+  { id: 'acad-8',  titleKey: 'cal.fallExamsBegin',       date: '2025-12-08', type: 'academic' },
+  { id: 'acad-9',  titleKey: 'cal.fallExamsEnd',         date: '2025-12-20', type: 'academic' },
+  { id: 'acad-10', titleKey: 'cal.winterBegins',         date: '2026-01-05', type: 'academic' },
+  { id: 'acad-11', titleKey: 'cal.addDropWinter',        date: '2026-01-19', type: 'academic' },
+  { id: 'acad-12', titleKey: 'cal.winterMidterms',       date: '2026-02-09', type: 'academic' },
+  { id: 'acad-13', titleKey: 'cal.winterReadingWeek',    date: '2026-02-16', type: 'academic' },
+  { id: 'acad-14', titleKey: 'cal.withdrawalWinter',     date: '2026-03-09', type: 'academic' },
+  { id: 'acad-15', titleKey: 'cal.goodFriday',           date: '2026-04-03', type: 'academic' },
+  { id: 'acad-16', titleKey: 'cal.lastDayWinter',        date: '2026-04-14', type: 'academic' },
+  { id: 'acad-17', titleKey: 'cal.winterExamsBegin',     date: '2026-04-16', type: 'academic' },
+  { id: 'acad-18', titleKey: 'cal.winterExamsEnd',       date: '2026-04-30', type: 'academic' },
+  { id: 'acad-19', titleKey: 'cal.registration',         date: '2026-03-23', type: 'academic' },
+  { id: 'acad-20', titleKey: 'cal.convocation',          date: '2026-06-02', type: 'academic' },
 ]
 
 const STUDENT_UNION_EVENTS = [
@@ -49,37 +53,64 @@ function toDateStr(year, month, day) {
   return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 }
 function daysUntil(dateStr) {
-  const today = new Date(); today.setHours(0,0,0,0)
+  const today = new Date(); today.setHours(0, 0, 0, 0)
   return Math.round((new Date(dateStr + 'T00:00:00') - today) / 86400000)
 }
 
-function EventModal({ event, onSave, onDelete, onClose, t }) {
+// ── Event Modal ──────────────────────────────────────────────────
+function EventModal({ event, onSave, onDelete, onClose, t, notifPrefs, user }) {
   const today = new Date().toISOString().split('T')[0]
-  const [form, setForm] = useState({
-    title: event?.title || '',
-    date: event?.date || today,
-    time: event?.time || '',
-    type: event?.type || 'personal',
+
+  // Build default notification state from global prefs
+  const defaultNotif = () => ({
+    notifyEnabled: notifPrefs.method !== 'none',
+    notifyEmail:   notifPrefs.method === 'email' || notifPrefs.method === 'both',
+    notifySMS:     notifPrefs.method === 'sms'   || notifPrefs.method === 'both',
+    notifySameDay: notifPrefs.timing.sameDay,
+    notify1Day:    notifPrefs.timing.oneDay,
+    notify7Days:   notifPrefs.timing.oneWeek,
+    notifyEmail_addr: notifPrefs.email || user?.email || '',
+    notifyPhone:   notifPrefs.phone || '',
+  })
+
+  const [form, setForm] = useState(() => ({
+    title:    event?.title    || '',
+    date:     event?.date     || today,
+    time:     event?.time     || '',
+    type:     event?.type     || 'personal',
     category: event?.category || '',
     description: event?.description || '',
-    notifyEmail: event?.notifyEmail ?? true,
-    notifySMS: event?.notifySMS ?? false,
-    notify7Days: event?.notify7Days ?? true,
-    notify1Day: event?.notify1Day ?? true,
-    notifyEmail_addr: event?.notifyEmail_addr || '',
-    notifyPhone: event?.notifyPhone || '',
-  })
+    ...(event?.id && !event?.titleKey
+      ? {
+          notifyEnabled:    event.notifyEnabled    ?? true,
+          notifyEmail:      event.notifyEmail      ?? true,
+          notifySMS:        event.notifySMS        ?? false,
+          notifySameDay:    event.notifySameDay    ?? false,
+          notify1Day:       event.notify1Day       ?? true,
+          notify7Days:      event.notify7Days      ?? true,
+          notifyEmail_addr: event.notifyEmail_addr ?? '',
+          notifyPhone:      event.notifyPhone      ?? '',
+        }
+      : defaultNotif()
+    ),
+  }))
+
   const isEdit = !!event?.id && !event?.titleKey
   const typeConfig = {
     union:    { color: '#7c3aed', bg: '#f5f3ff', label: t('calendar.unionEvents') },
     club:     { color: '#0891b2', bg: '#ecfeff', label: t('calendar.clubEvents') },
     personal: { color: '#059669', bg: '#ecfdf5', label: t('calendar.personalEvents') },
   }
+
   const handleSubmit = (e) => {
     e.preventDefault()
     if (!form.title.trim() || !form.date) return
     onSave({ ...form, id: event?.id || `user-${Date.now()}` })
   }
+
+  const f = (key) => (val) => setForm(p => ({ ...p, [key]: val }))
+  const toggle = (key) => setForm(p => ({ ...p, [key]: !p[key] }))
+
   return (
     <div className="cal-modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="cal-modal">
@@ -88,20 +119,26 @@ function EventModal({ event, onSave, onDelete, onClose, t }) {
           <button className="cal-modal-close" onClick={onClose}><FaTimes /></button>
         </div>
         <form className="cal-modal-body" onSubmit={handleSubmit}>
+
+          {/* Title */}
           <div className="cal-field">
             <label>{t('calendar.eventTitle')} *</label>
-            <input type="text" value={form.title} onChange={e => setForm(f=>({...f,title:e.target.value}))} placeholder={t('calendar.eventTitlePlaceholder')} required />
+            <input type="text" value={form.title} onChange={e => f('title')(e.target.value)} placeholder={t('calendar.eventTitlePlaceholder')} required />
           </div>
+
+          {/* Date & time */}
           <div className="cal-field-row">
             <div className="cal-field">
               <label>{t('calendar.date')} *</label>
-              <input type="date" value={form.date} onChange={e => setForm(f=>({...f,date:e.target.value}))} required />
+              <input type="date" value={form.date} onChange={e => f('date')(e.target.value)} required />
             </div>
             <div className="cal-field">
               <label>{t('calendar.time')}</label>
-              <input type="time" value={form.time} onChange={e => setForm(f=>({...f,time:e.target.value}))} />
+              <input type="time" value={form.time} onChange={e => f('time')(e.target.value)} />
             </div>
           </div>
+
+          {/* Type */}
           <div className="cal-field">
             <label>{t('calendar.eventType')}</label>
             <div className="cal-type-grid">
@@ -109,59 +146,84 @@ function EventModal({ event, onSave, onDelete, onClose, t }) {
                 <button key={key} type="button"
                   className={`cal-type-btn ${form.type === key ? 'selected' : ''}`}
                   style={form.type === key ? { borderColor: cfg.color, background: cfg.bg, color: cfg.color } : {}}
-                  onClick={() => setForm(f=>({...f,type:key}))}>
+                  onClick={() => f('type')(key)}>
                   {cfg.label}
                 </button>
               ))}
             </div>
           </div>
+
           <div className="cal-field">
             <label>{t('calendar.groupCategory')}</label>
-            <input type="text" value={form.category} onChange={e => setForm(f=>({...f,category:e.target.value}))} placeholder={t('calendar.groupPlaceholder')} />
+            <input type="text" value={form.category} onChange={e => f('category')(e.target.value)} placeholder={t('calendar.groupPlaceholder')} />
           </div>
           <div className="cal-field">
             <label>{t('calendar.description')}</label>
-            <textarea value={form.description} onChange={e => setForm(f=>({...f,description:e.target.value}))} rows={2} placeholder={t('calendar.descPlaceholder')} />
+            <textarea value={form.description} onChange={e => f('description')(e.target.value)} rows={2} placeholder={t('calendar.descPlaceholder')} />
           </div>
+
+          {/* ── Notifications ── */}
           <div className="cal-section-divider"><FaBell /> {t('calendar.reminders')}</div>
+
+          {/* On/off master toggle */}
           <div className="cal-field">
-            <label>{t('calendar.notifyVia')}</label>
-            <div className="cal-notify-row">
-              <label className="cal-checkbox-label">
-                <input type="checkbox" checked={form.notifyEmail} onChange={e => setForm(f=>({...f,notifyEmail:e.target.checked}))} />
-                <FaEnvelope /> {t('calendar.email')}
-              </label>
-              <label className="cal-checkbox-label">
-                <input type="checkbox" checked={form.notifySMS} onChange={e => setForm(f=>({...f,notifySMS:e.target.checked}))} />
-                <FaMobileAlt /> {t('calendar.sms')}
-              </label>
-            </div>
+            <label className="cal-checkbox-label cal-notif-master">
+              <input type="checkbox" checked={form.notifyEnabled} onChange={() => toggle('notifyEnabled')} />
+              <span className={`cal-notif-toggle ${form.notifyEnabled ? 'on' : 'off'}`}>
+                {form.notifyEnabled ? t('calendar.notifOn') : t('calendar.notifOff')}
+              </span>
+              {t('calendar.enableNotifications')}
+            </label>
           </div>
-          {form.notifyEmail && (
+
+          {form.notifyEnabled && (<>
+            {/* Method */}
             <div className="cal-field">
-              <label>{t('calendar.emailAddress')}</label>
-              <input type="email" value={form.notifyEmail_addr} onChange={e => setForm(f=>({...f,notifyEmail_addr:e.target.value}))} placeholder="your@email.com" />
+              <label>{t('calendar.notifyVia')}</label>
+              <div className="cal-notify-row">
+                <label className="cal-checkbox-label">
+                  <input type="checkbox" checked={form.notifyEmail} onChange={() => toggle('notifyEmail')} />
+                  <FaEnvelope /> {t('calendar.email')}
+                </label>
+                <label className="cal-checkbox-label">
+                  <input type="checkbox" checked={form.notifySMS} onChange={() => toggle('notifySMS')} />
+                  <FaMobileAlt /> {t('calendar.sms')}
+                </label>
+              </div>
             </div>
-          )}
-          {form.notifySMS && (
+
+            {form.notifyEmail && (
+              <div className="cal-field">
+                <label>{t('calendar.emailAddress')}</label>
+                <input type="email" value={form.notifyEmail_addr} onChange={e => f('notifyEmail_addr')(e.target.value)} placeholder={user?.email || 'your@email.com'} />
+              </div>
+            )}
+            {form.notifySMS && (
+              <div className="cal-field">
+                <label>{t('calendar.phoneNumber')}</label>
+                <input type="tel" value={form.notifyPhone} onChange={e => f('notifyPhone')(e.target.value)} placeholder="+1 (514) 555-0100" />
+              </div>
+            )}
+
+            {/* Timing */}
             <div className="cal-field">
-              <label>{t('calendar.phoneNumber')}</label>
-              <input type="tel" value={form.notifyPhone} onChange={e => setForm(f=>({...f,notifyPhone:e.target.value}))} placeholder="+1 (514) 555-0100" />
+              <label>{t('calendar.whenToRemind')}</label>
+              <div className="cal-notify-row cal-notify-wrap">
+                {[
+                  { key: 'notifySameDay', label: t('calendar.remindSameDay') },
+                  { key: 'notify1Day',    label: t('calendar.remind1Day') },
+                  { key: 'notify7Days',   label: t('calendar.remind7Days') },
+                ].map(({ key, label }) => (
+                  <label key={key} className={`cal-timing-chip ${form[key] ? 'active' : ''}`}>
+                    <input type="checkbox" checked={form[key]} onChange={() => toggle(key)} />
+                    {form[key] && <FaCheck size={9} />} {label}
+                  </label>
+                ))}
+              </div>
             </div>
-          )}
-          <div className="cal-field">
-            <label>{t('calendar.whenToRemind')}</label>
-            <div className="cal-notify-row">
-              <label className="cal-checkbox-label">
-                <input type="checkbox" checked={form.notify7Days} onChange={e => setForm(f=>({...f,notify7Days:e.target.checked}))} />
-                {t('calendar.remind7Days')}
-              </label>
-              <label className="cal-checkbox-label">
-                <input type="checkbox" checked={form.notify1Day} onChange={e => setForm(f=>({...f,notify1Day:e.target.checked}))} />
-                {t('calendar.remind1Day')}
-              </label>
-            </div>
-          </div>
+          </>)}
+
+          {/* Actions */}
           <div className="cal-modal-actions">
             {isEdit && (
               <button type="button" className="cal-btn-danger" onClick={() => onDelete(event.id)}>
@@ -181,19 +243,15 @@ function EventModal({ event, onSave, onDelete, onClose, t }) {
   )
 }
 
-function EventPopup({ event, onClose, onEdit, canEdit, t, language, formatDate }) {
-  const typeConfig = {
-    academic: { color: '#ed1b2f', bg: '#fef2f2', icon: <FaGraduationCap />, label: t('calendar.academicDates') },
-    union:    { color: '#7c3aed', bg: '#f5f3ff', icon: <FaUsers />,         label: t('calendar.unionEvents') },
-    club:     { color: '#0891b2', bg: '#ecfeff', icon: <FaUsers />,         label: t('calendar.clubEvents') },
-    personal: { color: '#059669', bg: '#ecfdf5', icon: <FaUser />,          label: t('calendar.personalEvents') },
-  }
+// ── Event Popup ──────────────────────────────────────────────────
+function EventPopup({ event, onClose, onEdit, canEdit, t, language, formatDate, typeConfig }) {
   const cfg = typeConfig[event.type] || typeConfig.personal
   const days = daysUntil(event.date)
   const countdownText = days < 0
     ? `${Math.abs(days)}${t('calendar.daysAgo')}`
     : days === 0 ? t('calendar.today2')
     : `${t('calendar.inDays')} ${days}${t('calendar.inDaysSuffix')}`
+
   return (
     <div className="cal-event-popup">
       <div className="cal-event-popup-header" style={{ borderColor: cfg.color }}>
@@ -214,8 +272,20 @@ function EventPopup({ event, onClose, onEdit, canEdit, t, language, formatDate }
           </span>
         </div>
         {event.description && <p className="cal-event-popup-desc">{event.description}</p>}
-        {event.notifyEmail && event.notify7Days && (
-          <div className="cal-event-popup-notif"><FaBell size={11} /> {t('calendar.reminderSet')}</div>
+        {event.notifyEnabled && (
+          <div className="cal-event-popup-notif">
+            <FaBell size={11} />
+            {[
+              event.notifyEmail && t('calendar.email'),
+              event.notifySMS   && t('calendar.sms'),
+            ].filter(Boolean).join(' + ')}
+            {' — '}
+            {[
+              event.notifySameDay && t('calendar.remindSameDay'),
+              event.notify1Day    && t('calendar.remind1Day'),
+              event.notify7Days   && t('calendar.remind7Days'),
+            ].filter(Boolean).join(', ')}
+          </div>
         )}
       </div>
       {canEdit && (
@@ -227,8 +297,10 @@ function EventPopup({ event, onClose, onEdit, canEdit, t, language, formatDate }
   )
 }
 
-export default function CalendarTab() {
+// ── Main ─────────────────────────────────────────────────────────
+export default function CalendarTab({ user }) {
   const { t, language } = useLanguage()
+  const [notifPrefs] = useNotificationPrefs(user?.email)
   const today = new Date()
 
   const MONTHS = language === 'fr' ? MONTHS_FR : MONTHS_EN
@@ -241,11 +313,11 @@ export default function CalendarTab() {
     personal: { color: '#059669', bg: '#ecfdf5', icon: <FaUser />,          label: t('calendar.personalEvents') },
   }
 
-  const tEvent = (event) => ({
-    ...event,
-    title:       event.titleKey    ? t(event.titleKey)    : (event.title    || ''),
-    category:    event.categoryKey ? t(event.categoryKey) : (event.category || ''),
-    description: event.descKey     ? t(event.descKey)     : (event.description || ''),
+  const tEvent = (ev) => ({
+    ...ev,
+    title:       ev.titleKey    ? t(ev.titleKey)    : ev.title    || '',
+    category:    ev.categoryKey ? t(ev.categoryKey) : ev.category || '',
+    description: ev.descKey     ? t(ev.descKey)     : ev.description || '',
   })
 
   const formatDate = (dateStr) => {
@@ -270,7 +342,6 @@ export default function CalendarTab() {
     localStorage.setItem('mcgill_calendar_events', JSON.stringify(userEvents))
   }, [userEvents])
 
-  // Re-translate static events when language changes
   const allEvents = useMemo(() => [
     ...MCGILL_ACADEMIC_DATES.map(tEvent),
     ...STUDENT_UNION_EVENTS.map(tEvent),
@@ -278,6 +349,8 @@ export default function CalendarTab() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   ], [userEvents, language])
 
+  // Filter out event types the user has muted in notification prefs (for announcements)
+  // Calendar still shows all — only notification delivery is filtered
   const filteredEvents = useMemo(() =>
     allEvents.filter(e => filter[e.type] !== false),
     [allEvents, filter]
@@ -314,7 +387,7 @@ export default function CalendarTab() {
       setUserEvents(prev => [...prev, event])
     }
     setShowModal(false); setEditEvent(null)
-    if (event.notifyEmail || event.notifySMS) {
+    if (event.notifyEnabled) {
       setNotifSaved(true)
       setTimeout(() => setNotifSaved(false), 3000)
     }
@@ -335,7 +408,7 @@ export default function CalendarTab() {
 
   const upcomingEvents = useMemo(() => {
     const todayStr = today.toISOString().split('T')[0]
-    return [...filteredEvents].filter(e => e.date >= todayStr).sort((a,b) => a.date.localeCompare(b.date)).slice(0, 30)
+    return [...filteredEvents].filter(e => e.date >= todayStr).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 30)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filteredEvents])
 
@@ -484,7 +557,7 @@ export default function CalendarTab() {
                     <div className="cal-announce-countdown" style={{ color: days === 0 ? '#ef4444' : isUrgent ? '#f59e0b' : cfg.color }}>
                       {countdownLabel(days)}
                     </div>
-                    {event.notifyEmail && (
+                    {event.notifyEnabled && (
                       <div className="cal-announce-notif"><FaBell size={10} /> {t('calendar.remindersSet')}</div>
                     )}
                   </div>
@@ -503,9 +576,7 @@ export default function CalendarTab() {
             onClose={() => setPopupEvent(null)}
             canEdit={userEvents.some(e => e.id === popupEvent.id)}
             onEdit={() => { setEditEvent(popupEvent); setPopupEvent(null); setShowModal(true) }}
-            t={t}
-            language={language}
-            formatDate={formatDate}
+            t={t} language={language} formatDate={formatDate} typeConfig={typeConfig}
           />
         </div>
       )}
@@ -517,7 +588,7 @@ export default function CalendarTab() {
           onSave={handleSaveEvent}
           onDelete={handleDeleteEvent}
           onClose={() => { setShowModal(false); setEditEvent(null); setPreselectedDate(null) }}
-          t={t}
+          t={t} notifPrefs={notifPrefs} user={user}
         />
       )}
     </div>
