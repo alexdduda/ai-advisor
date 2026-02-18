@@ -1,569 +1,610 @@
-/* ============================================
-   SETTINGS PAGE - Dark Mode Ready
-   ============================================ */
+/* ============================================================
+   SETTINGS — Redesigned
+   ============================================================ */
 
 .settings-container {
+  width: 100%;
   max-width: 100%;
-  margin: 0;
-  padding: 24px;
+  padding: 28px 28px 48px;
   box-sizing: border-box;
   overflow-x: hidden;
 }
 
+/* ── Page Header ──────────────────────────────────────────── */
 .settings-header {
-  margin-bottom: 24px;
-  width: 100%;
+  margin-bottom: 32px;
 }
 
 .settings-title {
-  font-size: 24px;
-  font-weight: 700;
+  font-size: 26px;
+  font-weight: 800;
   color: var(--text-primary);
-  margin: 0 0 6px 0;
-  width: 100%;
+  margin: 0 0 6px;
   display: flex;
   align-items: center;
   gap: 10px;
+  letter-spacing: -0.3px;
 }
 
 .settings-title-icon {
+  color: var(--accent-primary);
   font-size: 22px;
-  color: #ED1B2F;
 }
 
 .settings-subtitle {
   font-size: 14px;
   color: var(--text-tertiary);
   margin: 0;
-  width: 100%;
 }
 
+/* ── Sections Stack ────────────────────────────────────────── */
 .settings-sections {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
   width: 100%;
   max-width: 100%;
-  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
-/* Section Styling */
+/* ── Section Card ──────────────────────────────────────────── */
 .settings-section {
   background: var(--card-bg);
-  border-radius: 12px;
-  border: 2px solid var(--card-border);
-  overflow: hidden;
+  border: 1.5px solid var(--card-border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  transition: border-color 0.3s ease;
+  overflow: hidden;
+}
+
+.settings-section:hover {
+  box-shadow: var(--shadow-md);
 }
 
 .section-header {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 16px 20px;
+  padding: 14px 20px;
   background: var(--bg-secondary);
-  border-bottom: 2px solid var(--border-primary);
-  min-height: 56px;
-  box-sizing: border-box;
-  width: 100%;
+  border-bottom: 1.5px solid var(--border-primary);
+}
+
+.section-header .section-title {
+  flex: 1;
+  min-width: 0;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .section-icon {
-  font-size: 18px;
-  flex-shrink: 0;
-  width: 24px;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 8px;
+  background: var(--accent-lighter);
+  color: var(--accent-primary);
   display: flex;
   align-items: center;
   justify-content: center;
-<<<<<<< HEAD
-  color: var(--text-secondary);
-=======
-  color: #ED1B2F;
->>>>>>> upstream/main
+  font-size: 15px;
+  flex-shrink: 0;
 }
 
 .section-title {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
   color: var(--text-primary);
   margin: 0;
+  letter-spacing: -0.1px;
   flex: 1;
-  white-space: nowrap;
-  overflow: visible;
+  min-width: 0;
 }
 
 .section-content {
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  box-sizing: border-box;
-  width: 100%;
-  background: var(--card-bg);
-}
-
-/* Setting Item */
-.setting-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 24px;
-  min-height: 60px;
-  box-sizing: border-box;
+  padding: 8px 0;
   width: 100%;
   max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+/* ── Setting Row ───────────────────────────────────────────── */
+.setting-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border-primary);
+  transition: background 0.15s;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+.setting-item:last-child {
+  border-bottom: none;
+}
+
+.setting-item:hover {
+  background: var(--bg-secondary);
+}
+
+.setting-item--block {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.setting-item--block:hover {
+  background: transparent;
 }
 
 .setting-info {
   flex: 1;
   min-width: 0;
-  max-width: 60%;
-  box-sizing: border-box;
-}
-
-.setting-control {
-  flex-shrink: 0;
-  box-sizing: border-box;
 }
 
 .setting-label {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--text-primary);
   display: block;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .setting-description {
-  font-size: 13px;
+  font-size: 12.5px;
   color: var(--text-tertiary);
   margin: 0;
-  line-height: 1.4;
+  line-height: 1.45;
 }
 
-/* Theme Toggle */
+/* ── Theme Buttons ─────────────────────────────────────────── */
 .theme-toggle {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   background: var(--bg-tertiary);
-  padding: 4px;
-  border-radius: 8px;
+  padding: 3px;
+  border-radius: 10px;
 }
 
 .theme-btn {
-  padding: 8px 16px;
+  padding: 7px 14px;
   border: none;
   background: transparent;
-  border-radius: 6px;
-  font-size: 14px;
+  border-radius: 7px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--text-tertiary);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.18s;
   white-space: nowrap;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
 }
 
-.theme-btn-icon {
-  font-size: 14px;
-}
+.theme-btn-icon { font-size: 12px; }
 
 .theme-btn:hover {
-  background: var(--bg-hover);
   color: var(--text-secondary);
+  background: var(--bg-hover);
 }
 
 .theme-btn.active {
   background: var(--card-bg);
   color: var(--accent-primary);
   box-shadow: var(--shadow-sm);
+  font-weight: 700;
 }
 
-/* Toggle Switch */
+/* ── Toggle Switch ─────────────────────────────────────────── */
 .toggle-switch {
   position: relative;
   display: inline-block;
-  width: 52px;
-  height: 28px;
+  width: 46px;
+  height: 26px;
   flex-shrink: 0;
 }
 
-.toggle-switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
 
 .toggle-slider {
   position: absolute;
+  inset: 0;
+  background: var(--border-secondary);
+  border-radius: 26px;
   cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: var(--border-secondary);
-  transition: 0.3s;
-  border-radius: 28px;
+  transition: 0.25s;
 }
 
-.toggle-slider:before {
+.toggle-slider::before {
+  content: '';
   position: absolute;
-  content: "";
-  height: 20px;
-  width: 20px;
+  width: 18px;
+  height: 18px;
   left: 4px;
   bottom: 4px;
-  background-color: var(--bg-primary);
-  transition: 0.3s;
+  background: #fff;
   border-radius: 50%;
+  transition: 0.25s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
 }
 
 .toggle-switch input:checked + .toggle-slider {
-  background-color: var(--accent-primary);
+  background: var(--accent-primary);
 }
 
-.toggle-switch input:checked + .toggle-slider:before {
-  transform: translateX(24px);
+.toggle-switch input:checked + .toggle-slider::before {
+  transform: translateX(20px);
 }
 
-/* Select Dropdown */
-select {
-  padding: 10px 14px;
+/* ── Selects ───────────────────────────────────────────────── */
+.setting-select {
+  padding: 8px 12px;
   background: var(--input-bg);
   color: var(--input-text);
-  border: 1px solid var(--input-border);
+  border: 1.5px solid var(--input-border);
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: border-color 0.15s;
   outline: none;
-  min-width: 200px;
+  min-width: 180px;
+  font-family: inherit;
 }
 
-select:hover {
-  border-color: var(--input-border-hover);
+.setting-select:hover { border-color: var(--input-border-hover); }
+.setting-select:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(237,27,47,0.1);
 }
 
-select:focus {
-  border-color: var(--input-border-focus);
-  box-shadow: 0 0 0 3px rgba(237, 27, 47, 0.1);
-}
-
-select option {
-  background: var(--card-bg);
-  color: var(--text-primary);
-  padding: 8px;
-}
-
-/* Input Fields */
-input[type="text"],
-input[type="email"],
-input[type="number"],
-textarea {
-  padding: 10px 14px;
+/* ── Text Input ────────────────────────────────────────────── */
+.setting-input {
+  width: 100%;
+  padding: 9px 13px;
   background: var(--input-bg);
   color: var(--input-text);
-  border: 1px solid var(--input-border);
+  border: 1.5px solid var(--input-border);
   border-radius: 8px;
-  font-size: 14px;
-  transition: all 0.2s;
+  font-size: 13.5px;
+  transition: border-color 0.15s;
   outline: none;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.setting-input:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(237,27,47,0.1);
+}
+
+.setting-input::placeholder { color: var(--input-placeholder); }
+
+/* ── Notification Method Grid ──────────────────────────────── */
+.notif-method-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
   width: 100%;
   box-sizing: border-box;
 }
 
-input::placeholder,
-textarea::placeholder {
-  color: var(--input-placeholder);
+@media (max-width: 600px) {
+  .notif-method-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
-input:hover,
-textarea:hover {
-  border-color: var(--input-border-hover);
+.notif-method-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 8px;
+  border: 1.5px solid var(--card-border);
+  border-radius: 10px;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.18s;
 }
 
-input:focus,
-textarea:focus {
-  border-color: var(--input-border-focus);
-  box-shadow: 0 0 0 3px rgba(237, 27, 47, 0.1);
+.notif-method-btn:hover {
+  border-color: var(--accent-primary);
+  background: var(--accent-lighter);
+  color: var(--accent-primary);
 }
 
-input:disabled,
-textarea:disabled,
-select:disabled {
-  background: var(--input-disabled-bg);
-  color: var(--input-disabled-text);
-  cursor: not-allowed;
-}
-
-/* Save Button */
-.save-button {
-  padding: 12px 24px;
-  background: var(--btn-primary-bg);
-  color: var(--btn-primary-text);
-  border: none;
-  border-radius: 8px;
-  font-size: 15px;
+.notif-method-btn.active {
+  border-color: var(--accent-primary);
+  background: var(--accent-lighter);
+  color: var(--accent-primary);
   font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 0 0 3px rgba(237,27,47,0.08);
 }
 
-.save-button:hover {
-  background: var(--btn-primary-hover);
-  box-shadow: var(--shadow-accent);
-  transform: translateY(-1px);
-}
-
-.save-button:active {
-  background: var(--btn-primary-active);
-  transform: translateY(0);
-}
-
-.save-button:disabled {
-  background: var(--btn-disabled-bg);
-  color: var(--btn-disabled-text);
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* Export Button - FIXED for Dark Mode */
-.export-btn {
-  padding: 10px 20px;
-  background: var(--btn-primary-bg);
-  color: var(--btn-primary-text);
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  white-space: nowrap;
+.notif-method-icon {
+  font-size: 16px;
   display: flex;
   align-items: center;
+  gap: 4px;
+}
+
+.notif-method-check {
+  font-size: 10px;
+  margin-left: 3px;
+}
+
+/* ── Timing Chips ──────────────────────────────────────────── */
+.notif-timing-grid {
+  display: flex;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
-.export-btn-icon {
-  font-size: 14px;
+.notif-timing-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 14px;
+  border: 1.5px solid var(--card-border);
+  border-radius: 999px;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  user-select: none;
 }
 
-.export-btn:hover {
-  background: var(--btn-primary-hover);
-  transform: translateY(-1px);
+.notif-timing-chip input { display: none; }
+
+.notif-timing-chip:hover {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+.notif-timing-chip.active {
+  border-color: var(--accent-primary);
+  background: var(--accent-lighter);
+  color: var(--accent-primary);
+  font-weight: 700;
+}
+
+/* ── Event Type Chips ──────────────────────────────────────── */
+.notif-type-grid {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.notif-type-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border: 1.5px solid var(--card-border);
+  border-radius: 999px;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  user-select: none;
+}
+
+.notif-type-chip input { display: none; }
+
+.notif-type-chip:hover {
+  filter: brightness(0.95);
+}
+
+.notif-type-chip.active {
+  font-weight: 700;
+}
+
+/* ── Save button ───────────────────────────────────────────── */
+.notif-save-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 22px;
+  background: var(--accent-primary);
+  color: #fff;
+  border: none;
+  border-radius: 9px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s;
+  margin-left: auto;
   box-shadow: var(--shadow-accent);
 }
 
-/* Danger Zone */
-.danger-zone {
-  border: 2px solid var(--error-primary) !important;
+.notif-save-btn:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(237,27,47,0.35);
 }
 
-.danger-zone .section-header {
-  background: var(--error-light);
-  border-bottom: 2px solid var(--error-primary);
-}
-
-.danger-zone .section-title {
-  color: var(--error-text);
-}
-
-.delete-button {
-  padding: 10px 20px;
-  background: var(--error-primary);
-  color: var(--text-inverse);
-  border: none;
+/* ── Export Button ─────────────────────────────────────────── */
+.export-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 18px;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  border: 1.5px solid var(--card-border);
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.18s;
+  white-space: nowrap;
+  font-family: inherit;
 }
 
-.delete-button:hover {
-  background: var(--error-hover);
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+.export-btn-icon { font-size: 13px; }
+
+.export-btn:hover {
+  background: var(--accent-lighter);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
 }
 
-/* Confirmation Modal */
+/* ── Modal ─────────────────────────────────────────────────── */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: var(--overlay-bg);
+  background: rgba(0,0,0,0.45);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 9999;
-  animation: fadeIn 0.2s ease;
+  backdrop-filter: blur(2px);
+  animation: fadeIn 0.18s ease;
 }
 
 .modal-content {
-  background: var(--modal-bg);
-  border: 1px solid var(--modal-border);
+  background: var(--card-bg);
+  border: 1.5px solid var(--card-border);
   border-radius: 16px;
-  padding: 24px;
-  max-width: 500px;
+  padding: 28px;
+  max-width: 440px;
   width: 90%;
   box-shadow: var(--shadow-2xl);
   animation: slideUp 0.2s ease;
 }
 
 .modal-title {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 700;
   color: var(--text-primary);
-  margin: 0 0 12px 0;
+  margin: 0 0 10px;
 }
 
-.modal-message {
-  font-size: 15px;
+.modal-text {
+  font-size: 14px;
   color: var(--text-secondary);
-  margin: 0 0 24px 0;
-  line-height: 1.5;
+  margin: 0 0 22px;
+  line-height: 1.55;
 }
 
-<<<<<<< HEAD
 .modal-actions {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   justify-content: flex-end;
-=======
-[data-theme="dark"] .settings-title-icon {
-  color: #9ca3af;
 }
 
-[data-theme="dark"] .settings-subtitle,
-[data-theme="dark"] .setting-description {
-  color: #d1d5db;
->>>>>>> upstream/main
-}
-
-.modal-btn-cancel {
-  padding: 10px 20px;
-  background: var(--btn-secondary-bg);
-  color: var(--btn-secondary-text);
-  border: 1px solid var(--border-primary);
+.modal-btn {
+  padding: 9px 20px;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
-}
-
-.modal-btn-cancel:hover {
-  background: var(--btn-secondary-hover);
-}
-
-<<<<<<< HEAD
-.modal-btn-confirm {
-  padding: 10px 20px;
-  background: var(--error-primary);
-  color: var(--text-inverse);
+  transition: all 0.15s;
   border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
+  font-family: inherit;
 }
 
-.modal-btn-confirm:hover {
-  background: var(--error-hover);
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
-=======
-[data-theme="dark"] .section-icon {
-  color: #f87171;
+.cancel-btn {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  border: 1.5px solid var(--card-border);
 }
 
-[data-theme="dark"] .theme-toggle {
-  background: #111827;
+.cancel-btn:hover {
+  background: var(--bg-quaternary);
 }
 
-[data-theme="dark"] .theme-btn {
-  color: #9ca3af;
+.confirm-btn {
+  background: var(--accent-primary);
+  color: #fff;
+  box-shadow: var(--shadow-accent);
 }
 
-[data-theme="dark"] .theme-btn.active {
-  background: #374151;
-  color: #f87171;
->>>>>>> upstream/main
+.confirm-btn:hover {
+  background: var(--accent-hover);
 }
 
+/* ── Animations ────────────────────────────────────────────── */
 @keyframes fadeIn {
   from { opacity: 0; }
-  to { opacity: 1; }
+  to   { opacity: 1; }
 }
 
 @keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .settings-container {
-    padding: 16px;
-  }
-  
+/* ── Responsive ────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .settings-container { padding: 20px 16px 40px; }
+
   .setting-item {
     flex-direction: column;
     align-items: flex-start;
-    gap: 12px;
-  }
-  
-  .setting-info {
-    max-width: 100%;
-  }
-  
-  .theme-toggle {
-    width: 100%;
-  }
-  
-  .theme-btn {
-<<<<<<< HEAD
-    flex: 1;
-    text-align: center;
-  }
-  
-  select {
-    min-width: 100%;
-=======
-    width: 100%;
-    justify-content: center;
+    gap: 10px;
   }
 
-  .setting-select,
-  .export-btn {
-    width: 100%;
-  }
+  .setting-info { max-width: 100%; }
 
-  .export-btn {
-    justify-content: center;
-  }
+  .theme-toggle { width: 100%; }
+  .theme-btn { flex: 1; justify-content: center; }
 
-  .section-content {
-    padding: 16px;
-  }
+  .setting-select { width: 100%; min-width: unset; }
+  .export-btn { width: 100%; justify-content: center; }
+  .section-content { padding: 6px 0; }
+  .section-header { padding: 12px 16px; }
+  .setting-item { padding: 12px 16px; }
+}
 
-  .section-header {
-    padding: 12px 16px;
-  }
+/* ── Settings header row with autosave badge ─────────────── */
+.settings-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
 
-  .modal-content {
-    padding: 24px;
->>>>>>> upstream/main
-  }
+.settings-autosave-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  background: #ecfdf5;
+  color: #059669;
+  border: 1.5px solid #a7f3d0;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  animation: fadeInPop 0.2s ease;
+  flex-shrink: 0;
+  margin-top: 6px;
+}
+
+[data-theme='dark'] .settings-autosave-badge {
+  background: #064e3b;
+  color: #6ee7b7;
+  border-color: #065f46;
+}
+
+@keyframes fadeInPop {
+  from { opacity: 0; transform: scale(0.85); }
+  to   { opacity: 1; transform: scale(1); }
 }
