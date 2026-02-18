@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { FaChevronLeft, FaChevronRight, FaComments, FaBook, FaStar, FaUser, FaCog, FaPalette, FaSignOutAlt } from 'react-icons/fa'
+import { FaChevronLeft, FaChevronRight, FaComments, FaBook, FaStar, FaUser, FaCog, FaPalette, FaSignOutAlt, FaCalendarAlt } from 'react-icons/fa'
 import { MdLanguage } from 'react-icons/md'
 import { useTheme } from '../../contexts/ThemeContext'
 import { useLanguage } from '../../contexts/LanguageContext'
@@ -143,7 +143,6 @@ export default function Sidebar({
   const handleLanguageToggle = () => {
     const cycleLanguage = () => {
       if (language === 'en') setLanguage('fr')
-      else if (language === 'fr') setLanguage('zh')
       else setLanguage('en')
     }
     cycleLanguage()
@@ -203,6 +202,7 @@ export default function Sidebar({
                 { key: 'chat', icon: <FaComments />, label: t('nav.chat') },
                 { key: 'courses', icon: <FaBook />, label: t('nav.courses') },
                 { key: 'favorites', icon: <FaStar />, label: t('nav.saved'), badge: favorites.length || null },
+                { key: 'calendar', icon: <FaCalendarAlt />, label: t('nav.calendar') },
                 { key: 'forum', icon: <FaComments />, label: t('nav.forum') },
                 { key: 'profile', icon: <FaUser />, label: t('nav.profile') },
               ].map(({ key, icon, label, badge }) => (
@@ -229,7 +229,7 @@ export default function Sidebar({
                   <button className="sidebar-popup-item" onClick={handleLanguageToggle}>
                     <span className="sidebar-popup-icon"><MdLanguage /></span>
                     <span className="sidebar-popup-label">
-                      {language === 'en' ? 'Français' : language === 'fr' ? '中文' : 'English'}
+                      {language === 'en' ? 'Français' : 'English'}
                     </span>
                   </button>
                   <button className="sidebar-popup-item" onClick={handleThemeClick}>
