@@ -16,6 +16,7 @@ import ProfileTab from './ProfileTab'
 import SavedCoursesView from './SavedCoursesView'
 import Forum from '../Forum/Forum'
 import MarkCompleteModal from './MarkCompleteModal'
+import CalendarTab from './CalendarTab'
 
 import './Dashboard.css'
 
@@ -576,6 +577,10 @@ export default function Dashboard() {
           )}
 
           {activeTab === 'forum' && <Forum />}
+
+          {activeTab === 'calendar' && (
+            <CalendarTab user={user} />
+          )}
 
           {activeTab === 'profile' && (
             <ProfileTab
