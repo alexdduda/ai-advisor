@@ -2,12 +2,14 @@ import { useState, useEffect, useMemo } from 'react'
 import {
   FaChevronLeft, FaChevronRight, FaPlus, FaTimes, FaBell,
   FaCalendarAlt, FaBullhorn, FaGraduationCap, FaUser,
-  FaTrash, FaEdit, FaCheck
+  FaTrash, FaEdit, FaCheck, FaClipboardList
 } from 'react-icons/fa'
 import { useLanguage } from '../../contexts/LanguageContext'
 import { useTimezone } from '../../contexts/TimezoneContext'
 import useNotificationPrefs from '../../hooks/useNotificationPrefs'
 import { scheduleNotification, deleteEvent as deleteEventAPI } from '../../services/notificationService'
+import { lookupExam, formatExamTime } from '../../utils/examSchedule2026'
+import currentCoursesAPI from '../../lib/currentCoursesAPI'
 import './CalendarTab.css'
 
 // ── McGill Academic Dates 2025–26 (source: Senate-approved dates, March 2025) ──
@@ -274,8 +276,49 @@ export default function CalendarTab({ user }) {
 
   const typeConfig = {
     academic: { color: '#ed1b2f', bg: '#fef2f2', icon: <FaGraduationCap />, label: t('calendar.academicDates') },
+    exam:     { color: '#7c3aed', bg: '#f5f3ff', icon: <FaClipboardList />, label: language === 'fr' ? 'Examens finaux' : 'Final Exams' },
     personal: { color: '#059669', bg: '#ecfdf5', icon: <FaUser />,          label: t('calendar.personalEvents') },
   }
+
+  // ── Fetch current courses and build exam events ───────────────────────────
+  const [examEvents, setExamEvents] = useState([])
+
+  useEffect(() => {
+    if (!user?.id) return
+    let cancelled = false
+    currentCoursesAPI.getCurrent(user.id).then(data => {
+      if (cancelled) return
+      const courses = data?.current_courses || []
+      const events = []
+      courses.forEach((course, idx) => {
+        const exam = lookupExam(course.course_code)
+        if (!exam) return
+        const timeStr = exam.start ? formatExamTime(exam.start) : ''
+        const endStr  = exam.end   ? formatExamTime(exam.end)   : ''
+        const campusLabel = exam.campus === 'D.T.' ? 'Downtown Campus'
+                          : exam.campus === 'MAC'  ? 'MacDonald Campus'
+                          : ''
+        const formatLabel = exam.type === 'ONLINE' ? '(Online)' : campusLabel ? `@ ${campusLabel}` : ''
+        events.push({
+          id: `exam-${course.course_code}-${idx}`,
+          title: `${course.course_code} – Final Exam`,
+          date: exam.date,
+          time: timeStr,
+          type: 'exam',
+          category: 'Winter 2026 Finals',
+          description: [
+            course.course_title || exam.title,
+            timeStr && endStr ? `${timeStr} – ${endStr}` : timeStr,
+            formatLabel,
+          ].filter(Boolean).join(' · '),
+          readOnly: true,
+        })
+      })
+      setExamEvents(events)
+    }).catch(() => {/* silently ignore */})
+    return () => { cancelled = true }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id])
 
   const tEvent = (ev) => ({
     ...ev,
@@ -295,7 +338,7 @@ export default function CalendarTab({ user }) {
   const [userEvents, setUserEvents] = useState(() => {
     try { return JSON.parse(localStorage.getItem('mcgill_calendar_events') || '[]') } catch { return [] }
   })
-  const [filter, setFilter] = useState({ academic: true, personal: true })
+  const [filter, setFilter] = useState({ academic: true, exam: true, personal: true })
   const [showModal, setShowModal] = useState(false)
   const [editEvent, setEditEvent] = useState(null)
   const [preselectedDate, setPreselectedDate] = useState(null)
@@ -308,9 +351,10 @@ export default function CalendarTab({ user }) {
 
   const allEvents = useMemo(() => [
     ...MCGILL_ACADEMIC_DATES.map(tEvent),
+    ...examEvents,
     ...userEvents,
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  ], [userEvents, language])
+  ], [userEvents, examEvents, language])
 
   // Filter out event types the user has muted in notification prefs (for announcements)
   // Calendar still shows all — only notification delivery is filtered
