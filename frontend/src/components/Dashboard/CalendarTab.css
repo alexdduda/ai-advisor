@@ -922,3 +922,61 @@
   color: var(--accent-primary);
   font-weight: 700;
 }
+
+/* ── Toast notification ──────────────────────────────────── */
+.cal-toast {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 9999;
+  background: #111827;
+  color: #fff;
+  padding: 11px 20px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 600;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+  animation: slideUpToast 0.25s ease;
+}
+.cal-toast.warn { background: #92400e; }
+@keyframes slideUpToast {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Loading state ───────────────────────────────────────── */
+.cal-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-tertiary);
+  font-size: 14px;
+  padding: 20px;
+}
+
+/* ── Spinner ─────────────────────────────────────────────── */
+.cal-spin {
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ── Email info line in notification modal ── */
+.cal-field-email-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--text-tertiary);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: 7px;
+  padding: 7px 12px;
+  margin-top: 2px;
+}
+.cal-field-email-info strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}

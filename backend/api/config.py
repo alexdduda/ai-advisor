@@ -28,6 +28,13 @@ class Settings(BaseSettings):
     SUPABASE_URL: str
     SUPABASE_SERVICE_KEY: str
 
+    # ── Notifications ──────────────────────────────────────────────
+    RESEND_API_KEY: str = ""
+    TWILIO_ACCOUNT_SID: str = ""
+    TWILIO_AUTH_TOKEN: str = ""
+    TWILIO_FROM_NUMBER: str = ""
+    CRON_SECRET: str = ""
+
     # ── AI ───────────────────────────────────────────────────────────────
     ANTHROPIC_API_KEY: str
     CLAUDE_MODEL: str = "claude-sonnet-4-20250514"

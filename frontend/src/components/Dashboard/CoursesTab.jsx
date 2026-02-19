@@ -22,11 +22,13 @@ export default function CoursesTab({
   sortBy,
   setSortBy,
   sortCourses,
-  // Favorites / Completed
+  // Favorites / Completed / Current
   isFavorited,
   isCompleted,
+  isCurrent,
   handleToggleFavorite,
   handleToggleCompleted,
+  handleToggleCurrent,
   // Utility
   gpaToLetterGrade,
 }) {
@@ -156,6 +158,13 @@ export default function CoursesTab({
                   >
                     <FaCheckCircle className="completed-icon" />
                   </button>
+                  <button
+                    className={`current-btn ${isCurrent(course.subject, course.catalog) ? 'current' : ''}`}
+                    onClick={(e) => { e.stopPropagation(); handleToggleCurrent(course) }}
+                    title={isCurrent(course.subject, course.catalog) ? 'Remove from current courses' : 'Add to current courses'}
+                  >
+                    <FaBook className="current-icon" />
+                  </button>
                 </div>
               </div>
             ))}
@@ -265,3 +274,4 @@ export default function CoursesTab({
     </div>
   )
 }
+

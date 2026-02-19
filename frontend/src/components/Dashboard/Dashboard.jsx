@@ -4,6 +4,7 @@ import { chatAPI } from '../../lib/api'
 import coursesAPI from '../../lib/professorsAPI'
 import favoritesAPI from '../../lib/favoritesAPI'
 import completedCoursesAPI from '../../lib/completedCoursesAPI'
+import currentCoursesAPI from '../../lib/currentCoursesAPI'
 import { getCourseCredits } from '../../utils/courseCredits'
 import { useLanguage } from '../../contexts/LanguageContext'
 
@@ -60,6 +61,8 @@ export default function Dashboard() {
   const [favoritesMap, setFavoritesMap] = useState(new Set())
   const [completedCourses, setCompletedCourses] = useState([])
   const [completedCoursesMap, setCompletedCoursesMap] = useState(new Set())
+  const [currentCourses, setCurrentCourses] = useState([])
+  const [currentCoursesMap, setCurrentCoursesMap] = useState(new Set())
 
   // ── Mark Complete Modal state ──────────────────────────
   const [showCompleteCourseModal, setShowCompleteCourseModal] = useState(false)
@@ -110,6 +113,7 @@ export default function Dashboard() {
 
   const isFavorited = (subject, catalog) => favoritesMap.has(`${subject}${catalog}`)
   const isCompleted = (subject, catalog) => completedCoursesMap.has(`${subject} ${catalog}`)
+  const isCurrent = (subject, catalog) => currentCoursesMap.has(`${subject} ${catalog}`)
 
   // ── Helpers ────────────────────────────────────────────
   const getCurrentChatMessages = () => {
@@ -208,6 +212,20 @@ export default function Dashboard() {
       console.error('Error loading completed courses:', error)
       setCompletedCourses([])
       setCompletedCoursesMap(new Set())
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id])
+
+  const loadCurrentCourses = useCallback(async () => {
+    if (!user?.id) return
+    try {
+      const data = await currentCoursesAPI.getCurrent(user.id)
+      setCurrentCourses(data.current_courses || [])
+      setCurrentCoursesMap(new Set((data.current_courses || []).map((c) => c.course_code)))
+    } catch (error) {
+      console.error('Error loading current courses:', error)
+      setCurrentCourses([])
+      setCurrentCoursesMap(new Set())
     }
   }, [user?.id])
 
@@ -404,6 +422,35 @@ export default function Dashboard() {
     }
   }
 
+  // ── Toggle current courses ──────────────────────────────
+  const handleToggleCurrent = async (course) => {
+    if (!user?.id) return
+    const courseCode = `${course.subject} ${course.catalog}`
+    const isCurrentlyEnrolled = currentCoursesMap.has(courseCode)
+
+    try {
+      if (isCurrentlyEnrolled) {
+        await currentCoursesAPI.removeCurrent(user.id, courseCode)
+        setCurrentCourses((prev) => prev.filter((c) => c.course_code !== courseCode))
+        setCurrentCoursesMap((prev) => { const s = new Set(prev); s.delete(courseCode); return s })
+      } else {
+        const courseData = {
+          course_code: courseCode,
+          course_title: course.title || course.course_title || '',
+          subject: course.subject,
+          catalog: course.catalog,
+          credits: course.credits || 3,
+        }
+        await currentCoursesAPI.addCurrent(user.id, courseData)
+        setCurrentCourses((prev) => [courseData, ...prev])
+        setCurrentCoursesMap((prev) => new Set([...prev, courseCode]))
+      }
+    } catch (error) {
+      console.error('Error toggling current course:', error)
+      alert(error.message || 'Failed to update current courses')
+    }
+  }
+
   // ── Sign out ───────────────────────────────────────────
   const handleSignOut = async () => {
     try {
@@ -461,8 +508,9 @@ export default function Dashboard() {
       loadChatSessions()
       loadFavorites()
       loadCompletedCourses()
+      loadCurrentCourses()
     }
-  }, [user?.id, loadChatSessions, loadFavorites, loadCompletedCourses])
+  }, [user?.id, loadChatSessions, loadFavorites, loadCompletedCourses, loadCurrentCourses])
 
   useEffect(() => {
     if (profile?.profile_image) {
@@ -546,6 +594,8 @@ export default function Dashboard() {
               handleCourseClick={handleCourseClick}
               handleToggleFavorite={handleToggleFavorite}
               handleToggleCompleted={handleToggleCompleted}
+              handleToggleCurrent={handleToggleCurrent}
+              isCurrent={isCurrent}
               gpaToLetterGrade={gpaToLetterGrade}
             />
           )}
@@ -559,6 +609,9 @@ export default function Dashboard() {
               user={user}
               onToggleFavorite={handleToggleFavorite}
               onToggleCompleted={handleToggleCompleted}
+              onToggleCurrent={handleToggleCurrent}
+              currentCourses={currentCourses}
+              currentCoursesMap={currentCoursesMap}
               onCourseClick={async (course) => {
                 setActiveTab('courses')
                 setTimeout(async () => {
@@ -572,6 +625,7 @@ export default function Dashboard() {
               onRefresh={() => {
                 loadFavorites()
                 loadCompletedCourses()
+                loadCurrentCourses()
               }}
             />
           )}
@@ -625,3 +679,4 @@ export default function Dashboard() {
     </div>
   )
 }
+
