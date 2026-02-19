@@ -56,7 +56,7 @@
   transform: translateY(-2px);
 }
 
-/* ── Sort Controls ────────────────────────────────────────── */
+/* â”€â”€ Sort Controls â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 .results-header-bar {
   display: flex;
@@ -111,7 +111,7 @@
   color: #e2e8f0;
 }
 
-/* ── Search Results ───────────────────────────────────────── */
+/* â”€â”€ Search Results â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 .search-results { animation: fadeIn 0.3s ease; }
 
@@ -126,7 +126,7 @@
   margin-bottom: 2rem;
 }
 
-/* ── Course Card ──────────────────────────────────────────── */
+/* â”€â”€ Course Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 .course-card {
   position: relative;
@@ -208,7 +208,7 @@
   font-size: 14px;
 }
 
-/* ── Course Card Actions ──────────────────────────────────── */
+/* â”€â”€ Course Card Actions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 .course-card-actions {
   position: absolute;
@@ -221,7 +221,8 @@
 }
 
 .favorite-btn,
-.completed-btn {
+.completed-btn,
+.current-btn {
   width: 40px;
   height: 40px;
   border: 2px solid var(--border-color);
@@ -239,7 +240,8 @@
 .favorite-btn { border-color: #dc2626; }
 
 [data-theme="dark"] .favorite-btn,
-[data-theme="dark"] .completed-btn {
+[data-theme="dark"] .completed-btn,
+[data-theme="dark"] .current-btn {
   background: #040d1a;
   border-color: #2d3f55;
 }
@@ -255,8 +257,15 @@
   border-color: #28a745;
 }
 
+.current-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
+  border-color: #2563eb;
+}
+
 .favorite-btn:active,
-.completed-btn:active { transform: scale(0.95); }
+.completed-btn:active,
+.current-btn:active { transform: scale(0.95); }
 
 .favorite-btn.favorited {
   background: #dc2626;
@@ -275,7 +284,16 @@
 .completed-btn:hover .completed-icon { color: #28a745; }
 .completed-btn.completed .completed-icon { color: white; }
 
-/* ── RMP (RateMyProfessor) ────────────────────────────────── */
+.current-btn.current {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  border-color: #2563eb;
+}
+
+.current-icon { font-size: 16px; color: var(--text-tertiary); }
+.current-btn:hover .current-icon { color: #2563eb; }
+.current-btn.current .current-icon { color: white; }
+
+/* â”€â”€ RMP (RateMyProfessor) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 .course-instructor-section {
   margin-top: 1rem;
@@ -414,7 +432,7 @@
 .rmp-badge:hover { transform: translateY(-1px); box-shadow: 0 4px 8px rgba(237, 27, 47, 0.3); }
 .rmp-star-icon { color: #fbbf24; }
 
-/* ── Course Details ───────────────────────────────────────── */
+/* â”€â”€ Course Details â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 .course-details { animation: fadeIn 0.3s ease; }
 
@@ -449,7 +467,7 @@
   font-weight: 600;
 }
 
-/* ── Sections List ────────────────────────────────────────── */
+/* â”€â”€ Sections List â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 .course-sections {
   background: #f0f2f4;  /* Light: slightly darker than white */
@@ -521,7 +539,7 @@
 .section-instructor { color: var(--text-secondary); font-size: 0.95rem; margin-top: 0.5rem; }
 .section-instructor strong { color: var(--text-primary); }
 
-/* ── Condensed Sections Grid ──────────────────────────────── */
+/* â”€â”€ Condensed Sections Grid â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 .sections-grid {
   display: grid;
@@ -562,7 +580,7 @@
   font-weight: 500;
 }
 
-/* ── Placeholder ──────────────────────────────────────────── */
+/* â”€â”€ Placeholder â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 .placeholder-content {
   background: #f0f2f4;
@@ -591,7 +609,7 @@
 .placeholder-content h3 { font-size: 1.5rem; color: var(--text-primary); margin-bottom: 0.5rem; }
 .placeholder-content p { color: var(--text-secondary); font-size: 1.1rem; max-width: 600px; margin: 0 auto; line-height: 1.6; }
 
-/* ── Back button ──────────────────────────────────────────── */
+/* â”€â”€ Back button â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 .btn-back {
   padding: 0.75rem 1.5rem;
@@ -617,7 +635,7 @@
   color: var(--text-primary);
 }
 
-/* ── Responsive ───────────────────────────────────────────── */
+/* â”€â”€ Responsive â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 @media (max-width: 768px) {
   .search-section { flex-direction: column; }

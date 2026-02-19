@@ -1,45 +1,49 @@
 import { useState, useEffect, useMemo } from 'react'
 import {
   FaChevronLeft, FaChevronRight, FaPlus, FaTimes, FaBell,
-  FaCalendarAlt, FaBullhorn, FaGraduationCap, FaUsers, FaUser,
-  FaTrash, FaEdit, FaEnvelope, FaMobileAlt, FaCheck
+  FaCalendarAlt, FaBullhorn, FaGraduationCap, FaUser,
+  FaTrash, FaEdit, FaCheck
 } from 'react-icons/fa'
 import { useLanguage } from '../../contexts/LanguageContext'
+import { useTimezone } from '../../contexts/TimezoneContext'
 import useNotificationPrefs from '../../hooks/useNotificationPrefs'
+import { scheduleNotification, deleteEvent as deleteEventAPI } from '../../services/notificationService'
 import './CalendarTab.css'
 
-// ── McGill Academic Dates 2025–26 ────────────────────────────────
+// ── McGill Academic Dates 2025–26 (source: Senate-approved dates, March 2025) ──
 const MCGILL_ACADEMIC_DATES = [
-  { id: 'acad-1',  titleKey: 'cal.fallBegins',           date: '2025-09-02', type: 'academic' },
-  { id: 'acad-2',  titleKey: 'cal.addDropFall',          date: '2025-09-16', type: 'academic' },
-  { id: 'acad-3',  titleKey: 'cal.thanksgiving',         date: '2025-10-13', type: 'academic' },
-  { id: 'acad-4',  titleKey: 'cal.fallMidterms',         date: '2025-10-13', type: 'academic' },
-  { id: 'acad-5',  titleKey: 'cal.fallReadingWeek',      date: '2025-10-27', type: 'academic' },
-  { id: 'acad-6',  titleKey: 'cal.withdrawalFall',       date: '2025-11-03', type: 'academic' },
-  { id: 'acad-7',  titleKey: 'cal.lastDayFall',          date: '2025-12-03', type: 'academic' },
-  { id: 'acad-8',  titleKey: 'cal.fallExamsBegin',       date: '2025-12-08', type: 'academic' },
-  { id: 'acad-9',  titleKey: 'cal.fallExamsEnd',         date: '2025-12-20', type: 'academic' },
-  { id: 'acad-10', titleKey: 'cal.winterBegins',         date: '2026-01-05', type: 'academic' },
-  { id: 'acad-11', titleKey: 'cal.addDropWinter',        date: '2026-01-19', type: 'academic' },
-  { id: 'acad-12', titleKey: 'cal.winterMidterms',       date: '2026-02-09', type: 'academic' },
-  { id: 'acad-13', titleKey: 'cal.winterReadingWeek',    date: '2026-02-16', type: 'academic' },
-  { id: 'acad-14', titleKey: 'cal.withdrawalWinter',     date: '2026-03-09', type: 'academic' },
-  { id: 'acad-15', titleKey: 'cal.goodFriday',           date: '2026-04-03', type: 'academic' },
-  { id: 'acad-16', titleKey: 'cal.lastDayWinter',        date: '2026-04-14', type: 'academic' },
-  { id: 'acad-17', titleKey: 'cal.winterExamsBegin',     date: '2026-04-16', type: 'academic' },
-  { id: 'acad-18', titleKey: 'cal.winterExamsEnd',       date: '2026-04-30', type: 'academic' },
-  { id: 'acad-19', titleKey: 'cal.registration',         date: '2026-03-23', type: 'academic' },
-  { id: 'acad-20', titleKey: 'cal.convocation',          date: '2026-06-02', type: 'academic' },
-]
+  // ── Fall 2025 ──
+  { id: 'f-01', title: 'Deadline to Register (avoid penalty)',         date: '2025-08-14', type: 'academic', category: 'Fall 2025' },
+  { id: 'f-02', title: 'Fall Classes Begin',                           date: '2025-08-27', type: 'academic', category: 'Fall 2025' },
+  { id: 'f-03', title: 'Labour Day (no classes)',                      date: '2025-09-01', type: 'academic', category: 'Fall 2025' },
+  { id: 'f-04', title: 'Deadline to Cancel Registration',              date: '2025-08-31', type: 'academic', category: 'Fall 2025' },
+  { id: 'f-05', title: 'Add/Drop Deadline',                            date: '2025-09-09', type: 'academic', category: 'Fall 2025' },
+  { id: 'f-06', title: 'Withdrawal with Refund Deadline',              date: '2025-09-16', type: 'academic', category: 'Fall 2025' },
+  { id: 'f-07', title: 'Thanksgiving (no classes)',                    date: '2025-10-13', type: 'academic', category: 'Fall 2025' },
+  { id: 'f-08', title: 'Fall Reading Break Begins',                    date: '2025-10-14', type: 'academic', category: 'Fall 2025' },
+  { id: 'f-09', title: 'Fall Reading Break Ends',                      date: '2025-10-17', type: 'academic', category: 'Fall 2025' },
+  { id: 'f-10', title: 'Withdrawal WITHOUT Refund Deadline',           date: '2025-10-28', type: 'academic', category: 'Fall 2025' },
+  { id: 'f-11', title: 'Fall Classes End / Makeup Day (Monday sched)', date: '2025-12-03', type: 'academic', category: 'Fall 2025' },
+  { id: 'f-12', title: 'Study Day',                                    date: '2025-12-04', type: 'academic', category: 'Fall 2025' },
+  { id: 'f-13', title: 'Fall Exams Begin',                             date: '2025-12-05', type: 'academic', category: 'Fall 2025' },
+  { id: 'f-14', title: 'Holiday Break Begins (offices closed)',        date: '2025-12-25', type: 'academic', category: 'Fall 2025' },
+  { id: 'f-15', title: 'Fall Exams End',                               date: '2025-12-19', type: 'academic', category: 'Fall 2025' },
 
-const STUDENT_UNION_EVENTS = [
-  { id: 'su-1', titleKey: 'cal.ssmuGA',       date: '2026-02-26', type: 'union', categoryKey: 'cal.catSSMU',   descKey: 'cal.descSSMUGA'    },
-  { id: 'su-2', titleKey: 'cal.froshWeek',    date: '2025-09-01', type: 'union', categoryKey: 'cal.catSSMU',   descKey: 'cal.descFrosh'     },
-  { id: 'su-3', titleKey: 'cal.hackathon',    date: '2025-10-18', type: 'club',  categoryKey: 'cal.catCSClub', descKey: 'cal.descHack'      },
-  { id: 'su-4', titleKey: 'cal.careerFair',   date: '2026-02-05', type: 'club',  categoryKey: 'cal.catEUS',    descKey: 'cal.descCareer'    },
-  { id: 'su-5', titleKey: 'cal.symposium',    date: '2026-03-12', type: 'club',  categoryKey: 'cal.catArts',   descKey: 'cal.descSymp'      },
-  { id: 'su-6', titleKey: 'cal.foodFestival', date: '2026-03-27', type: 'union', categoryKey: 'cal.catSSMU',   descKey: 'cal.descFood'      },
-  { id: 'su-7', titleKey: 'cal.studyBreak',   date: '2026-04-10', type: 'union', categoryKey: 'cal.catSSMU',   descKey: 'cal.descStudyBreak'},
+  // ── Winter 2026 ──
+  { id: 'w-01', title: 'Deadline to Cancel Registration',              date: '2025-12-31', type: 'academic', category: 'Winter 2026' },
+  { id: 'w-02', title: 'Holiday Break Ends',                           date: '2026-01-02', type: 'academic', category: 'Winter 2026' },
+  { id: 'w-03', title: 'Winter Classes Begin',                         date: '2026-01-05', type: 'academic', category: 'Winter 2026' },
+  { id: 'w-04', title: 'Add/Drop Deadline',                            date: '2026-01-20', type: 'academic', category: 'Winter 2026' },
+  { id: 'w-05', title: 'Withdrawal with Refund Deadline',              date: '2026-01-27', type: 'academic', category: 'Winter 2026' },
+  { id: 'w-06', title: 'Winter Reading Break Begins',                  date: '2026-03-02', type: 'academic', category: 'Winter 2026' },
+  { id: 'w-07', title: 'Winter Reading Break Ends',                    date: '2026-03-06', type: 'academic', category: 'Winter 2026' },
+  { id: 'w-08', title: 'Withdrawal WITHOUT Refund Deadline',           date: '2026-03-10', type: 'academic', category: 'Winter 2026' },
+  { id: 'w-09', title: 'Good Friday (no classes)',                     date: '2026-04-03', type: 'academic', category: 'Winter 2026' },
+  { id: 'w-10', title: 'Easter Monday (no classes)',                   date: '2026-04-06', type: 'academic', category: 'Winter 2026' },
+  { id: 'w-11', title: 'Winter Classes End / Makeup Day (Friday sched)', date: '2026-04-14', type: 'academic', category: 'Winter 2026' },
+  { id: 'w-12', title: 'Study Day',                                    date: '2026-04-15', type: 'academic', category: 'Winter 2026' },
+  { id: 'w-13', title: 'Winter Exams Begin',                           date: '2026-04-16', type: 'academic', category: 'Winter 2026' },
+  { id: 'w-14', title: 'Winter Exams End',                             date: '2026-04-30', type: 'academic', category: 'Winter 2026' },
 ]
 
 const MONTHS_EN = ['January','February','March','April','May','June','July','August','September','October','November','December']
@@ -59,18 +63,16 @@ function daysUntil(dateStr) {
 
 // ── Event Modal ──────────────────────────────────────────────────
 function EventModal({ event, onSave, onDelete, onClose, t, notifPrefs, user }) {
-  const today = new Date().toISOString().split('T')[0]
+  const today = new Date().toLocaleDateString('en-CA', {
+    timeZone: localStorage.getItem('timezone') || Intl.DateTimeFormat().resolvedOptions().timeZone
+  })
 
   // Build default notification state from global prefs
   const defaultNotif = () => ({
     notifyEnabled: notifPrefs.method !== 'none',
-    notifyEmail:   notifPrefs.method === 'email' || notifPrefs.method === 'both',
-    notifySMS:     notifPrefs.method === 'sms'   || notifPrefs.method === 'both',
     notifySameDay: notifPrefs.timing.sameDay,
     notify1Day:    notifPrefs.timing.oneDay,
     notify7Days:   notifPrefs.timing.oneWeek,
-    notifyEmail_addr: notifPrefs.email || user?.email || '',
-    notifyPhone:   notifPrefs.phone || '',
   })
 
   const [form, setForm] = useState(() => ({
@@ -83,13 +85,9 @@ function EventModal({ event, onSave, onDelete, onClose, t, notifPrefs, user }) {
     ...(event?.id && !event?.titleKey
       ? {
           notifyEnabled:    event.notifyEnabled    ?? true,
-          notifyEmail:      event.notifyEmail      ?? true,
-          notifySMS:        event.notifySMS        ?? false,
           notifySameDay:    event.notifySameDay    ?? false,
           notify1Day:       event.notify1Day       ?? true,
           notify7Days:      event.notify7Days      ?? true,
-          notifyEmail_addr: event.notifyEmail_addr ?? '',
-          notifyPhone:      event.notifyPhone      ?? '',
         }
       : defaultNotif()
     ),
@@ -97,8 +95,6 @@ function EventModal({ event, onSave, onDelete, onClose, t, notifPrefs, user }) {
 
   const isEdit = !!event?.id && !event?.titleKey
   const typeConfig = {
-    union:    { color: '#7c3aed', bg: '#f5f3ff', label: t('calendar.unionEvents') },
-    club:     { color: '#0891b2', bg: '#ecfeff', label: t('calendar.clubEvents') },
     personal: { color: '#059669', bg: '#ecfdf5', label: t('calendar.personalEvents') },
   }
 
@@ -177,34 +173,6 @@ function EventModal({ event, onSave, onDelete, onClose, t, notifPrefs, user }) {
           </div>
 
           {form.notifyEnabled && (<>
-            {/* Method */}
-            <div className="cal-field">
-              <label>{t('calendar.notifyVia')}</label>
-              <div className="cal-notify-row">
-                <label className="cal-checkbox-label">
-                  <input type="checkbox" checked={form.notifyEmail} onChange={() => toggle('notifyEmail')} />
-                  <FaEnvelope /> {t('calendar.email')}
-                </label>
-                <label className="cal-checkbox-label">
-                  <input type="checkbox" checked={form.notifySMS} onChange={() => toggle('notifySMS')} />
-                  <FaMobileAlt /> {t('calendar.sms')}
-                </label>
-              </div>
-            </div>
-
-            {form.notifyEmail && (
-              <div className="cal-field">
-                <label>{t('calendar.emailAddress')}</label>
-                <input type="email" value={form.notifyEmail_addr} onChange={e => f('notifyEmail_addr')(e.target.value)} placeholder={user?.email || 'your@email.com'} />
-              </div>
-            )}
-            {form.notifySMS && (
-              <div className="cal-field">
-                <label>{t('calendar.phoneNumber')}</label>
-                <input type="tel" value={form.notifyPhone} onChange={e => f('notifyPhone')(e.target.value)} placeholder="+1 (514) 555-0100" />
-              </div>
-            )}
-
             {/* Timing */}
             <div className="cal-field">
               <label>{t('calendar.whenToRemind')}</label>
@@ -275,11 +243,7 @@ function EventPopup({ event, onClose, onEdit, canEdit, t, language, formatDate, 
         {event.notifyEnabled && (
           <div className="cal-event-popup-notif">
             <FaBell size={11} />
-            {[
-              event.notifyEmail && t('calendar.email'),
-              event.notifySMS   && t('calendar.sms'),
-            ].filter(Boolean).join(' + ')}
-            {' — '}
+
             {[
               event.notifySameDay && t('calendar.remindSameDay'),
               event.notify1Day    && t('calendar.remind1Day'),
@@ -300,16 +264,16 @@ function EventPopup({ event, onClose, onEdit, canEdit, t, language, formatDate, 
 // ── Main ─────────────────────────────────────────────────────────
 export default function CalendarTab({ user }) {
   const { t, language } = useLanguage()
+  const { getTodayStr, getNow } = useTimezone()
   const [notifPrefs] = useNotificationPrefs(user?.email)
-  const today = new Date()
+
+  const today = getNow()
 
   const MONTHS = language === 'fr' ? MONTHS_FR : MONTHS_EN
   const DAYS   = language === 'fr' ? DAYS_FR   : DAYS_EN
 
   const typeConfig = {
     academic: { color: '#ed1b2f', bg: '#fef2f2', icon: <FaGraduationCap />, label: t('calendar.academicDates') },
-    union:    { color: '#7c3aed', bg: '#f5f3ff', icon: <FaUsers />,         label: t('calendar.unionEvents') },
-    club:     { color: '#0891b2', bg: '#ecfeff', icon: <FaUsers />,         label: t('calendar.clubEvents') },
     personal: { color: '#059669', bg: '#ecfdf5', icon: <FaUser />,          label: t('calendar.personalEvents') },
   }
 
@@ -331,7 +295,7 @@ export default function CalendarTab({ user }) {
   const [userEvents, setUserEvents] = useState(() => {
     try { return JSON.parse(localStorage.getItem('mcgill_calendar_events') || '[]') } catch { return [] }
   })
-  const [filter, setFilter] = useState({ academic: true, union: true, club: true, personal: true })
+  const [filter, setFilter] = useState({ academic: true, personal: true })
   const [showModal, setShowModal] = useState(false)
   const [editEvent, setEditEvent] = useState(null)
   const [preselectedDate, setPreselectedDate] = useState(null)
@@ -344,7 +308,6 @@ export default function CalendarTab({ user }) {
 
   const allEvents = useMemo(() => [
     ...MCGILL_ACADEMIC_DATES.map(tEvent),
-    ...STUDENT_UNION_EVENTS.map(tEvent),
     ...userEvents,
   // eslint-disable-next-line react-hooks/exhaustive-deps
   ], [userEvents, language])
@@ -380,12 +343,25 @@ export default function CalendarTab({ user }) {
   for (let i = 0; i < firstDay; i++) cells.push(null)
   for (let d = 1; d <= daysInMonth; d++) cells.push(d)
 
-  const handleSaveEvent = (event) => {
-    if (event.id && userEvents.some(e => e.id === event.id)) {
+  const handleSaveEvent = async (event) => {
+    const isEdit = event.id && userEvents.some(e => e.id === event.id)
+
+    if (isEdit) {
       setUserEvents(prev => prev.map(e => e.id === event.id ? event : e))
     } else {
-      setUserEvents(prev => [...prev, event])
+      const newEvent = { ...event, id: event.id || `user-${Date.now()}` }
+      setUserEvents(prev => [...prev, newEvent])
+
+      // Send to backend to persist + queue notifications
+      if (user?.id && event.notifyEnabled) {
+        try {
+          await scheduleNotification(event, user.id, user.email)
+        } catch (err) {
+          console.error('Failed to schedule notification:', err)
+        }
+      }
     }
+
     setShowModal(false); setEditEvent(null)
     if (event.notifyEnabled) {
       setNotifSaved(true)
@@ -393,9 +369,18 @@ export default function CalendarTab({ user }) {
     }
   }
 
-  const handleDeleteEvent = (id) => {
+  const handleDeleteEvent = async (id) => {
     setUserEvents(prev => prev.filter(e => e.id !== id))
     setShowModal(false); setEditEvent(null); setPopupEvent(null)
+
+    // Remove from backend if it was persisted (UUID format)
+    if (user?.id && id && !id.startsWith('user-')) {
+      try {
+        await deleteEventAPI(id, user.id)
+      } catch (err) {
+        console.error('Failed to delete event from backend:', err)
+      }
+    }
   }
 
   const handleDayClick = (day) => {
@@ -407,7 +392,7 @@ export default function CalendarTab({ user }) {
   }
 
   const upcomingEvents = useMemo(() => {
-    const todayStr = today.toISOString().split('T')[0]
+    const todayStr = getTodayStr()
     return [...filteredEvents].filter(e => e.date >= todayStr).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 30)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filteredEvents])
@@ -484,7 +469,7 @@ export default function CalendarTab({ user }) {
               if (!day) return <div key={`empty-${idx}`} className="cal-cell cal-cell-empty" />
               const dateStr = toDateStr(currentYear, currentMonth, day)
               const eventsOnDay = eventsByDate[dateStr] || []
-              const isToday = dateStr === today.toISOString().split('T')[0]
+              const isToday = dateStr === getTodayStr()
               return (
                 <div key={dateStr}
                   className={`cal-cell ${isToday ? 'cal-cell-today' : ''} ${eventsOnDay.length > 0 ? 'cal-cell-has-events' : ''}`}

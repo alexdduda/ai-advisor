@@ -1,6 +1,7 @@
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { LanguageProvider } from './contexts/LanguageContext'
+import { TimezoneProvider } from './contexts/TimezoneContext'
 import Login from './components/Auth/Login'
 import { supabase } from './lib/supabase'
 import Dashboard from './components/Dashboard/Dashboard'
@@ -64,9 +65,11 @@ function App() {
     <ErrorBoundary>
       <ThemeProvider>
         <LanguageProvider>
-          <AuthProvider>
-            <AppContent />
-          </AuthProvider>
+          <TimezoneProvider>
+            <AuthProvider>
+              <AppContent />
+            </AuthProvider>
+          </TimezoneProvider>
         </LanguageProvider>
       </ThemeProvider>
     </ErrorBoundary>

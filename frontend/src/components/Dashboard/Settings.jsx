@@ -2,27 +2,26 @@ import { useState } from 'react'
 import {
   FaCog, FaPalette, FaBell, FaLock, FaBolt,
   FaSun, FaMoon, FaSyncAlt, FaDownload,
-  FaEnvelope, FaMobileAlt, FaGraduationCap, FaUsers, FaUser, FaCheck
+  FaEnvelope, FaGraduationCap, FaUsers, FaUser, FaCheck
 } from 'react-icons/fa'
 import { useLanguage } from '../../contexts/LanguageContext'
 import { useTheme } from '../../contexts/ThemeContext'
+import { useTimezone, TIMEZONES } from '../../contexts/TimezoneContext'
 import useNotificationPrefs from '../../hooks/useNotificationPrefs'
 import './Settings.css'
 
 export default function Settings({ user, profile, onUpdateSettings }) {
   const { language, setLanguage, t } = useLanguage()
   const { theme, setTheme } = useTheme()
+  const { timezone, setTimezone } = useTimezone()
   const [notifPrefs, setNotifPrefs] = useNotificationPrefs(user?.email)
 
   const [settings, setSettings] = useState({
     theme: theme || 'light',
-    emailNotifications: JSON.parse(localStorage.getItem('emailNotifications') ?? 'true'),
-    deadlineReminders:  JSON.parse(localStorage.getItem('deadlineReminders')  ?? 'true'),
-    courseUpdates:      JSON.parse(localStorage.getItem('courseUpdates')      ?? 'true'),
     profileVisibility:  localStorage.getItem('profileVisibility') || 'private',
     shareProgress:      JSON.parse(localStorage.getItem('shareProgress') ?? 'false'),
     language: language || 'en',
-    timezone: localStorage.getItem('timezone') || Intl.DateTimeFormat().resolvedOptions().timeZone,
+    timezone,
   })
 
   const [showExportModal, setShowExportModal] = useState(false)
@@ -59,6 +58,7 @@ export default function Settings({ user, profile, onUpdateSettings }) {
   const handleSelect = (key, val) => {
     setSettings(p => ({ ...p, [key]: val }))
     localStorage.setItem(key, typeof val === 'boolean' ? JSON.stringify(val) : val)
+    if (key === 'timezone') setTimezone(val)
     onUpdateSettings?.({ [key]: val })
     flash()
   }
@@ -67,7 +67,6 @@ export default function Settings({ user, profile, onUpdateSettings }) {
   const setNotifMethod  = (v) => { setNotifPrefs(p => ({ ...p, method: v })); flash() }
   const toggleTiming    = (k) => { setNotifPrefs(p => ({ ...p, timing: { ...p.timing, [k]: !p.timing[k] } })); flash() }
   const toggleEventType = (k) => { setNotifPrefs(p => ({ ...p, eventTypes: { ...p.eventTypes, [k]: !p.eventTypes[k] } })); flash() }
-  const setNotifEmail   = (v) => { setNotifPrefs(p => ({ ...p, email: v })); flash() }
   const setNotifPhone   = (v) => { setNotifPrefs(p => ({ ...p, phone: v })); flash() }
 
   const handleExportData = () => {
@@ -80,10 +79,8 @@ export default function Settings({ user, profile, onUpdateSettings }) {
   }
 
   const METHOD_OPTIONS = [
-    { value: 'email', icon: <FaEnvelope size={16} />,  label: t('settings.notifEmail') },
-    { value: 'sms',   icon: <FaMobileAlt size={16} />, label: t('settings.notifSMS') },
-    { value: 'both',  icon: <span style={{ display:'flex', gap: 3 }}><FaEnvelope size={13} /><FaMobileAlt size={13} /></span>, label: t('settings.notifBoth') },
-    { value: 'none',  icon: null,                      label: t('settings.notifNone') },
+    { value: 'email', icon: <FaEnvelope size={16} />, label: t('settings.notifEmail') },
+    { value: 'none',  icon: null,                     label: t('settings.notifNone') },
   ]
 
   const EVENT_TYPE_CFG = {
@@ -169,33 +166,6 @@ export default function Settings({ user, profile, onUpdateSettings }) {
               </div>
             </div>
 
-            {/* Email address */}
-            {(notifPrefs.method === 'email' || notifPrefs.method === 'both') && (
-              <div className="setting-item setting-item--block">
-                <div className="setting-info">
-                  <label className="setting-label">{t('settings.notifEmailAddr')}</label>
-                  <p className="setting-description">{t('settings.notifEmailAddrDesc')}</p>
-                </div>
-                <input type="email" className="setting-input"
-                  value={notifPrefs.email}
-                  onChange={e => setNotifEmail(e.target.value)}
-                  placeholder={user?.email || 'your@mail.mcgill.ca'} />
-              </div>
-            )}
-
-            {/* Phone */}
-            {(notifPrefs.method === 'sms' || notifPrefs.method === 'both') && (
-              <div className="setting-item setting-item--block">
-                <div className="setting-info">
-                  <label className="setting-label">{t('settings.notifPhone')}</label>
-                  <p className="setting-description">{t('settings.notifPhoneDesc')}</p>
-                </div>
-                <input type="tel" className="setting-input"
-                  value={notifPrefs.phone}
-                  onChange={e => setNotifPhone(e.target.value)}
-                  placeholder="+1 (514) 555-0100" />
-              </div>
-            )}
 
             {/* Timing */}
             <div className="setting-item setting-item--block">
@@ -239,31 +209,6 @@ export default function Settings({ user, profile, onUpdateSettings }) {
           </div>
         </div>
 
-        {/* ── General Notifications ── */}
-        <div className="settings-section">
-          <div className="section-header">
-            <span className="section-icon"><FaBell /></span>
-            <h3 className="section-title">{t('settings.notifications')}</h3>
-          </div>
-          <div className="section-content">
-            {[
-              { key: 'emailNotifications', label: t('settings.emailNotifications'), desc: t('settings.emailNotificationsDesc') },
-              { key: 'deadlineReminders',  label: t('settings.deadlineReminders'),  desc: t('settings.deadlineRemindersDesc') },
-              { key: 'courseUpdates',      label: t('settings.courseUpdates'),      desc: t('settings.courseUpdatesDesc') },
-            ].map(({ key, label, desc }) => (
-              <div key={key} className="setting-item">
-                <div className="setting-info">
-                  <label className="setting-label">{label}</label>
-                  <p className="setting-description">{desc}</p>
-                </div>
-                <label className="toggle-switch">
-                  <input type="checkbox" checked={settings[key]} onChange={() => handleToggle(key)} />
-                  <span className="toggle-slider" />
-                </label>
-              </div>
-            ))}
-          </div>
-        </div>
 
         {/* ── Privacy ── */}
         <div className="settings-section">
@@ -328,14 +273,9 @@ export default function Settings({ user, profile, onUpdateSettings }) {
                 <p className="setting-description">{t('settings.timezoneDesc')}</p>
               </div>
               <select className="setting-select" value={settings.timezone} onChange={e => handleSelect('timezone', e.target.value)}>
-                <option value="America/Toronto">Eastern Time (Toronto)</option>
-                <option value="America/Montreal">Eastern Time (Montréal)</option>
-                <option value="America/Vancouver">Pacific Time</option>
-                <option value="America/Denver">Mountain Time</option>
-                <option value="America/Chicago">Central Time</option>
-                <option value="Europe/London">London</option>
-                <option value="Europe/Paris">Paris</option>
-                <option value="Asia/Tokyo">Tokyo</option>
+                {TIMEZONES.map(({ value, label }) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
               </select>
             </div>
           </div>
