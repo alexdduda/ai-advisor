@@ -1,4 +1,3 @@
-
 .personal-info-card {
   background: var(--bg-primary);
   border-radius: 16px;
@@ -160,15 +159,28 @@
 
 /* Info Sections */
 .info-sections {
-  padding: 8px;
+  padding: 0 8px 8px 8px;
+  display: flex;
+  flex-direction: column;
 }
 
 .info-section {
-  margin-bottom: 8px;
-  border-radius: 12px;
-  border: 1px solid var(--border-primary);
+  margin-bottom: 0;
+  border-radius: 0;
+  border: none;
+  border-bottom: 1px solid var(--border-primary);
   overflow: hidden;
-  background: var(--bg-primary);
+  background: transparent;
+}
+
+.info-section:first-child {
+  border-top: 1px solid var(--border-primary);
+  border-radius: 12px 12px 0 0;
+}
+
+.info-section:last-child {
+  border-bottom: none;
+  border-radius: 0 0 12px 12px;
 }
 
 .section-header {
@@ -176,11 +188,11 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 20px;
-  background: var(--bg-primary);
+  padding: 18px 20px;
+  background: transparent;
   border: none;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.15s ease;
 }
 
 .section-header:hover {
@@ -194,7 +206,33 @@
 }
 
 .section-icon {
-  font-size: 20px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.section-icon.academic-icon {
+  background: rgba(237, 27, 47, 0.1);
+  color: var(--accent-primary);
+}
+
+.section-icon.contact-icon {
+  background: rgba(237, 27, 47, 0.1);
+  color: var(--accent-primary);
+}
+
+.section-icon.additional-icon {
+  background: rgba(237, 27, 47, 0.1);
+  color: var(--accent-primary);
+}
+
+[data-theme="dark"] .section-icon {
+  background: rgba(237, 27, 47, 0.15);
 }
 
 .section-title {
