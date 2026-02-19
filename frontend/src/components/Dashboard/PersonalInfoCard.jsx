@@ -100,7 +100,7 @@ export default function PersonalInfoCard({ profile, user, onUpdateProfile }) {
               onClick={() => toggleSection('academic')}
             >
               <div className="section-header-left">
-                <span className="section-icon"><FaGraduationCap /></span>
+                <span className="section-icon academic-icon"><FaGraduationCap /></span>
                 <h3 className="section-title">{t('profile.academicInfo')}</h3>
               </div>
               {expandedSections.academic ? <FaChevronUp /> : <FaChevronDown />}
@@ -188,7 +188,7 @@ export default function PersonalInfoCard({ profile, user, onUpdateProfile }) {
               onClick={() => toggleSection('contact')}
             >
               <div className="section-header-left">
-                <span className="section-icon"><FaEnvelope /></span>
+                <span className="section-icon contact-icon"><FaEnvelope /></span>
                 <h3 className="section-title">{t('profile.contactInfo')}</h3>
               </div>
               {expandedSections.contact ? <FaChevronUp /> : <FaChevronDown />}
@@ -225,7 +225,7 @@ export default function PersonalInfoCard({ profile, user, onUpdateProfile }) {
               onClick={() => toggleSection('additional')}
             >
               <div className="section-header-left">
-                <span className="section-icon"><HiMiniSparkles /></span>
+                <span className="section-icon additional-icon"><HiMiniSparkles /></span>
                 <h3 className="section-title">{t('profile.additionalInfo')}</h3>
               </div>
               {expandedSections.additional ? <FaChevronUp /> : <FaChevronDown />}
