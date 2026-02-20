@@ -23,6 +23,7 @@ export const AuthProvider = ({ children }) => {
   const loadingProfile = useRef(false)
   const justSignedUp = useRef(false)  // Track if we just completed signup
   const justUpdatedProfile = useRef(false)  // Track if we just updated profile
+  const initializedRef = useRef(false) // Track if initial auth check is done
 
   const loadProfile = useCallback(async (userId) => {
   if (!mountedRef.current || loadingProfile.current) {
@@ -98,6 +99,7 @@ export const AuthProvider = ({ children }) => {
         
         if (session?.user) {
           await loadProfile(session.user.id)
+          initializedRef.current = true
         }
       }
     } catch (error) {
@@ -127,19 +129,19 @@ export const AuthProvider = ({ children }) => {
         setUser(session?.user ?? null)
 
         if (event === 'SIGNED_IN' && session?.user) {
-          // Skip profile load if we just signed up (already loaded in signUp function)
           if (justSignedUp.current) {
             console.log('Skipping profile load - just signed up')
             justSignedUp.current = false
           } else if (justUpdatedProfile.current) {
             console.log('Skipping profile load - just updated profile')
             justUpdatedProfile.current = false
+          } else if (initializedRef.current) {
+            // initialize() already loaded the profile on page load, skip duplicate
+            console.log('Skipping profile load - already loaded during initialize()')
           } else {
             await loadProfile(session.user.id)
+            initializedRef.current = true
           }
-        } else if (event === 'SIGNED_OUT') {
-          setProfile(null)
-          setError(null)
         }
       }
     )
