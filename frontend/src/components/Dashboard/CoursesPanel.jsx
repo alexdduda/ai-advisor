@@ -81,10 +81,9 @@ export default function CoursesPanel() {
           placeholder="Search for courses (e.g., COMP 202, Introduction to Programming)..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          disabled={isSearching}
         />
         <button type="submit" className="btn btn-search" disabled={isSearching || !searchQuery.trim()}>
-          {isSearching ? 'Searching...' : 'Search'}
+          Search
         </button>
       </form>
 
@@ -126,15 +125,8 @@ export default function CoursesPanel() {
         </div>
       )}
 
-      {/* Loading */}
-      {isLoadingCourse && (
-        <div className="loading-container">
-          <div className="loading-spinner">Loading course details...</div>
-        </div>
-      )}
-
       {/* Detail view */}
-      {selectedCourse && !isLoadingCourse && (
+      {selectedCourse && (
         <div className="course-details">
           <button className="btn-back" onClick={() => setSelectedCourse(null)}>← Back to Results</button>
 

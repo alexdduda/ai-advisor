@@ -16,7 +16,6 @@ export default function CoursesTab({
   // Detail
   selectedCourse,
   setSelectedCourse,
-  isLoadingCourse,
   handleCourseClick,
   // Sort
   sortBy,
@@ -43,14 +42,13 @@ export default function CoursesTab({
           placeholder={t('courses.searchPlaceholder')}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          disabled={isSearching}
         />
         <button
           type="submit"
           className="btn btn-search"
           disabled={isSearching || !searchQuery.trim()}
         >
-          {isSearching ? t('courses.searching') : t('courses.search')}
+          {t('courses.search')}
         </button>
       </form>
 
@@ -183,15 +181,8 @@ export default function CoursesTab({
         </div>
       )}
 
-      {/* Loading */}
-      {isLoadingCourse && (
-        <div className="loading-container">
-          <div className="loading-spinner">{t('courses.loadingDetails')}</div>
-        </div>
-      )}
-
       {/* Course Detail */}
-      {selectedCourse && !isLoadingCourse && (
+      {selectedCourse && (
         <div className="course-details">
           <button className="btn-back" onClick={() => setSelectedCourse(null)}>
             ← {t('courses.backToResults')}
