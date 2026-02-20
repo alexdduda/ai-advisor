@@ -101,6 +101,15 @@ app.add_middleware(
     expose_headers=["X-Request-ID"],
 )
 
+@app.on_event("startup")
+async def startup_event():
+    """Warm up database connection on server start"""
+    import asyncio
+    from api.utils.supabase_client import get_supabase
+    loop = asyncio.get_event_loop()
+    await loop.run_in_executor(None, get_supabase)
+    logger.info("Startup complete - database connection ready")
+
 @app.middleware("http")
 async def rate_limit_middleware(request: Request, call_next):
     """Apply per-IP rate limiting."""

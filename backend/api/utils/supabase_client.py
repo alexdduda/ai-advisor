@@ -20,9 +20,7 @@ _supabase_client: Optional[Client] = None
 
 
 def get_supabase() -> Client:
-    """Get Supabase client (singleton)"""
     global _supabase_client
-    
     if _supabase_client is None:
         try:
             _supabase_client = create_client(
@@ -30,10 +28,15 @@ def get_supabase() -> Client:
                 settings.SUPABASE_SERVICE_KEY
             )
             logger.info("Supabase client initialized")
+            # Warm up the connection so the first real request isn't slow
+            try:
+                _supabase_client.table("users").select("id").limit(1).execute()
+                logger.info("Supabase connection warmed up")
+            except Exception:
+                pass  # Don't fail startup if warmup fails
         except Exception as e:
             logger.error(f"Failed to initialize Supabase client: {e}")
             raise DatabaseException("initialization", str(e))
-    
     return _supabase_client
 
 
