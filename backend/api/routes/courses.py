@@ -271,6 +271,31 @@ async def get_course_details(
         professor_rating = None
         grades = []
         
+        # Parse year from term string like "F2012", "W2019", "S2020"
+        def extract_year(term_name):
+            if not term_name:
+                return 0
+            match = re.search(r'\d{4}', str(term_name))
+            return int(match.group()) if match else 0
+
+        # Find the most recent year that has grade data
+        year_grades = {}
+        for section in sections:
+            avg = section.get('Class Ave.1')
+            if avg:
+                try:
+                    year = extract_year(section.get('Term Name'))
+                    if year > 0:
+                        year_grades.setdefault(year, []).append(float(avg))
+                except (ValueError, TypeError):
+                    pass
+
+        last_year_avg = None
+        if year_grades:
+            latest_year = max(year_grades.keys())
+            last_year_grades = year_grades[latest_year]
+            last_year_avg = round(sum(last_year_grades) / len(last_year_grades), 2)
+
         for section in sections:
             formatted_section = {
                 'term': section.get('Term Name'),
@@ -279,14 +304,14 @@ async def get_course_details(
                 'class': section.get('Class'),
             }
             
-            # Track grades for average calculation
+            # Track grades for overall average calculation
             avg = section.get('Class Ave.1')
             if avg:
                 try:
                     grades.append(float(avg))
                 except (ValueError, TypeError):
                     pass
-            
+
             # If section has rating data, include it
             if section.get('rmp_rating') is not None:
                 formatted_section['rmp_rating'] = section['rmp_rating']
@@ -313,6 +338,7 @@ async def get_course_details(
             "catalog": clean_catalog,
             "title": sections[0].get('course_name', ''),
             "average_grade": round(avg_grade, 2) if avg_grade else None,
+            "last_year_average": last_year_avg,
             "num_sections": len(sections),
             "sections": formatted_sections,
             "professor_rating": professor_rating,

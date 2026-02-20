@@ -144,7 +144,7 @@ export default function CoursesPanel() {
             </h2>
             {selectedCourse.average_grade && (
               <div className="course-stat-badge">
-                Average: {selectedCourse.average_grade} GPA ({gpaToLetterGrade(selectedCourse.average_grade)})
+                 {selectedCourse.average_grade} GPA ({gpaToLetterGrade(selectedCourse.average_grade)})
               </div>
             )}
           </div>
@@ -158,7 +158,7 @@ export default function CoursesPanel() {
                     <span className="section-term">{section.term || 'N/A'}</span>
                     {section.average && (
                       <span className="section-average">
-                        Average: {section.average} GPA ({gpaToLetterGrade(section.average)})
+                        {section.average} GPA ({gpaToLetterGrade(section.average)})
                       </span>
                     )}
                   </div>

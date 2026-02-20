@@ -155,6 +155,9 @@
   flex: 1;
   cursor: pointer;
   padding-bottom: 50px;
+  min-height: 110px;
+  display: flex;
+  flex-direction: column;
 }
 
 .course-header {
@@ -544,15 +547,34 @@
 .sections-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1rem;
+  gap: 0.4rem;
 }
 
 .section-card-compact {
-  padding: 1rem;
+  padding: 0.4rem 0.6rem;
   background: #e4e7ea;
-  border-radius: 8px;
+  border-radius: 6px;
   border-left: 3px solid #ED1B2F;
   transition: all 0.2s ease;
+  font-size: 0.8rem;
+}
+
+.section-card-compact .section-term {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.section-card-compact .section-average {
+  font-size: 0.75rem;
+  padding: 0.1rem 0.4rem;
+}
+
+.average-note {
+  font-size: 0.75rem;
+  font-weight: 400;
+  opacity: 0.75;
+  margin-left: 4px;
 }
 
 [data-theme="dark"] .section-card-compact {
