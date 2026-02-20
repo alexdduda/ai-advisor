@@ -201,9 +201,10 @@ export default function CoursesTab({
             <h2 className="course-details-title">
               {selectedCourse.subject} {selectedCourse.catalog}: {selectedCourse.title}
             </h2>
-            {selectedCourse.average_grade && (
+            {(selectedCourse.last_year_average || selectedCourse.average_grade) && (
               <div className="course-stat-badge">
-                {t('courses.average')}: {selectedCourse.average_grade} GPA ({gpaToLetterGrade(selectedCourse.average_grade)})
+                {(selectedCourse.last_year_average || selectedCourse.average_grade)} GPA ({gpaToLetterGrade(selectedCourse.last_year_average || selectedCourse.average_grade)})
+                {selectedCourse.last_year_average && <span className="average-note"></span>}
               </div>
             )}
 
@@ -235,36 +236,20 @@ export default function CoursesTab({
           {selectedCourse.sections && selectedCourse.sections.length > 0 && (
             <div className="course-sections">
               <h3 className="sections-header">{t('courses.sections')} ({selectedCourse.sections.length})</h3>
-              {selectedCourse.sections.map((section, idx) => (
-                <div key={idx} className="section-card">
-                  <div className="section-info">
-                    <div className="section-header">
+              <div className="sections-grid">
+                {selectedCourse.sections.map((section, idx) => (
+                  <div key={idx} className="section-card-compact">
+                    <div className="section-compact-header">
                       <span className="section-term">{section.term || t('common.na')}</span>
                       {section.average && (
                         <span className="section-average">
-                          {t('courses.average')}: {section.average} GPA ({gpaToLetterGrade(section.average)})
+                          {parseFloat(section.average).toFixed(1)} ({gpaToLetterGrade(section.average)})
                         </span>
                       )}
                     </div>
-                    {section.instructor && section.instructor !== 'TBA' && (
-                      <div className="section-instructor">
-                        <strong>{t('courses.instructor')}:</strong> {section.instructor}
-                      </div>
-                    )}
-                    {section.rmp_rating && (
-                      <div className="section-rmp">
-                        <div className="rmp-inline">
-                          <span className="rmp-badge"><FaStar /> {section.rmp_rating.toFixed(1)}</span>
-                          <span className="rmp-badge"><FaChartBar /> {t('courses.difficulty')}: {section.rmp_difficulty?.toFixed(1) || t('common.na')}</span>
-                          {section.rmp_num_ratings && (
-                            <span className="rmp-badge">📝 {Math.round(section.rmp_num_ratings)} {t('courses.reviews').toLowerCase()}</span>
-                          )}
-                        </div>
-                      </div>
-                    )}
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
         </div>
