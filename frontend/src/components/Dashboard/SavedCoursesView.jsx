@@ -10,12 +10,10 @@ export default function SavedCoursesView({
   completedCoursesMap = new Set(),
   currentCoursesMap = new Set(),
   favoritesMap = new Set(),
-  user,
   onToggleFavorite,
   onToggleCompleted,
   onToggleCurrent,
   onCourseClick,
-  onRefresh 
 }) {
   const { t } = useLanguage()
   const [activeView, setActiveView] = useState('saved')
@@ -93,14 +91,21 @@ export default function SavedCoursesView({
                       </button>
                     )}
                     {onToggleCurrent && (
-                      <button
-                        className={`current-btn ${isCurrent(course.subject, course.catalog) ? 'current' : ''}`}
-                        onClick={(e) => { e.stopPropagation(); onToggleCurrent({ subject: course.subject, catalog: course.catalog, title: course.course_title }) }}
-                        title={isCurrent(course.subject, course.catalog) ? 'Remove from current courses' : 'Add to current courses'}
-                      >
-                        <FaBook className="current-icon" />
-                      </button>
-                    )}
+                    <button
+                      className={`current-btn ${isCurrent(course.subject, course.catalog) ? 'current' : ''}`}
+                      onClick={(e) => { e.stopPropagation(); onToggleCurrent({ subject: course.subject, catalog: course.catalog, title: course.course_title }) }}
+                      disabled={isCompleted(course.subject, course.catalog) && !isCurrent(course.subject, course.catalog)}
+                      title={
+                        isCompleted(course.subject, course.catalog) && !isCurrent(course.subject, course.catalog)
+                          ? 'Already in completed courses'
+                          : isCurrent(course.subject, course.catalog)
+                          ? 'Remove from current courses'
+                          : 'Add to current courses'
+                      }
+                    >
+                      <FaBook className="current-icon" />
+                    </button>
+                  )}
                   </div>
                 </div>
               ))}
@@ -206,15 +211,6 @@ export default function SavedCoursesView({
                         {isFavorited(course.subject, course.catalog)
                           ? <FaHeart className="favorite-icon" />
                           : <FaRegHeart className="favorite-icon" />}
-                      </button>
-                    )}
-                    {onToggleCurrent && (
-                      <button
-                        className={`current-btn ${isCurrent(course.subject, course.catalog) ? 'current' : ''}`}
-                        onClick={(e) => { e.stopPropagation(); onToggleCurrent({ subject: course.subject, catalog: course.catalog, title: course.course_title }) }}
-                        title={isCurrent(course.subject, course.catalog) ? 'Remove from current courses' : 'Add to current courses'}
-                      >
-                        <FaBook className="current-icon" />
                       </button>
                     )}
                     <button
