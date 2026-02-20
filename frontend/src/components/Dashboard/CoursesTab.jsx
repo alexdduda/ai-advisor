@@ -161,10 +161,17 @@ export default function CoursesTab({
                   <button
                     className={`current-btn ${isCurrent(course.subject, course.catalog) ? 'current' : ''}`}
                     onClick={(e) => { e.stopPropagation(); handleToggleCurrent(course) }}
-                    title={isCurrent(course.subject, course.catalog) ? 'Remove from current courses' : 'Add to current courses'}
+                    disabled={isCompleted(course.subject, course.catalog) && !isCurrent(course.subject, course.catalog)}
+                    title={
+                      isCompleted(course.subject, course.catalog) && !isCurrent(course.subject, course.catalog)
+                        ? 'Already in completed courses'
+                        : isCurrent(course.subject, course.catalog)
+                        ? 'Remove from current courses'
+                        : 'Add to current courses'
+                    }
                   >
                     <FaBook className="current-icon" />
-                  </button>
+                </button>
                 </div>
               </div>
             ))}

@@ -166,8 +166,8 @@ export default function Sidebar({
           {sidebarOpen && (
             <>
               <div className="logo-container">
-                <div className="logo-icon">M</div>
-                <span className="logo-name">McGill AI</span>
+                <div className="logo-icon">SY</div>
+                <span className="logo-name">Symbolous</span>
               </div>
               <button
                 className="sidebar-toggle-btn"
