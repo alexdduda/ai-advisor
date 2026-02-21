@@ -56,7 +56,7 @@
   transform: translateY(-2px);
 }
 
-/* â”€â”€ Sort Controls â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── Sort Controls ───────────────────────────────────────── */
 
 .results-header-bar {
   display: flex;
@@ -93,7 +93,7 @@
   font-size: 0.95rem;
   font-weight: 500;
   color: var(--text-primary);
-  background-color: #f0f2f4;  /* Slightly darker than white page */
+  background-color: #f0f2f4;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 0.75rem center;
@@ -111,7 +111,7 @@
   color: #e2e8f0;
 }
 
-/* â”€â”€ Search Results â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── Search Results ──────────────────────────────────────── */
 
 .search-results { animation: fadeIn 0.3s ease; }
 
@@ -126,11 +126,11 @@
   margin-bottom: 2rem;
 }
 
-/* â”€â”€ Course Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── Course Card ─────────────────────────────────────────── */
 
 .course-card {
   position: relative;
-  background: #f0f2f4;  /* Light: slightly darker than white page */
+  background: #f0f2f4;
   border: 1.5px solid #d1d5db;
   border-radius: 12px;
   padding: 20px;
@@ -141,7 +141,7 @@
 }
 
 [data-theme="dark"] .course-card {
-  background: #0a1120;  /* Dark: slightly darker than #0f172a page */
+  background: #0a1120;
   border-color: #2d3f55;
 }
 
@@ -211,7 +211,7 @@
   font-size: 14px;
 }
 
-/* â”€â”€ Course Card Actions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── Course Card Actions ─────────────────────────────────── */
 
 .course-card-actions {
   position: absolute;
@@ -235,7 +235,7 @@
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s;
-  background: #f0f2f4;  /* Match course card bg */
+  background: #f0f2f4;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   padding: 0;
 }
@@ -296,7 +296,52 @@
 .current-btn:hover .current-icon { color: #2563eb; }
 .current-btn.current .current-icon { color: white; }
 
-/* â”€â”€ RMP (RateMyProfessor) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── Prof Flag Button ────────────────────────────────────── */
+
+.prof-flag-wrapper {
+  position: absolute;
+  bottom: 14px;
+  left: 14px;
+  z-index: 2;
+}
+
+.prof-flag-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid #d1d5db;
+  background: #f0f2f4;
+  color: #9ca3af;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 11px;
+  transition: all 0.2s;
+  opacity: 0;
+  padding: 0;
+}
+
+[data-theme="dark"] .prof-flag-btn {
+  background: #040d1a;
+  border-color: #2d3f55;
+  color: #4b5563;
+}
+
+.course-card:hover .prof-flag-btn {
+  opacity: 1;
+}
+
+.prof-flag-btn:hover,
+.prof-flag-btn.active {
+  opacity: 1;
+  border-color: #f59e0b;
+  color: #f59e0b;
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+}
+
+/* ── RMP (RateMyProfessor) ───────────────────────────────── */
 
 .course-instructor-section {
   margin-top: 1rem;
@@ -435,12 +480,39 @@
 .rmp-badge:hover { transform: translateY(-1px); box-shadow: 0 4px 8px rgba(237, 27, 47, 0.3); }
 .rmp-star-icon { color: #fbbf24; }
 
-/* â”€â”€ Course Details â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── Prof Correction Link (detail view) ─────────────────── */
+
+.prof-correction-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  position: relative;
+}
+
+.prof-correction-link {
+  font-size: 0.78rem;
+  color: #9ca3af;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.15s;
+  display: flex;
+  align-items: center;
+}
+
+.prof-correction-link:hover { color: #f59e0b; }
+
+/* ── Course Details ───────────────────────────────────────── */
 
 .course-details { animation: fadeIn 0.3s ease; }
 
 .course-details-header {
-  background: #f0f2f4;  /* Light: slightly darker than white */
+  background: #f0f2f4;
   border: 1px solid #d1d5db;
   padding: 2rem;
   border-radius: 12px;
@@ -449,7 +521,7 @@
 }
 
 [data-theme="dark"] .course-details-header {
-  background: #0a1120;  /* Dark: slightly darker than #0f172a */
+  background: #0a1120;
   border-color: #2d3f55;
 }
 
@@ -470,10 +542,10 @@
   font-weight: 600;
 }
 
-/* â”€â”€ Sections List â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── Sections ─────────────────────────────────────────────── */
 
 .course-sections {
-  background: #f0f2f4;  /* Light: slightly darker than white */
+  background: #f0f2f4;
   border: 1px solid #d1d5db;
   padding: 2rem;
   border-radius: 12px;
@@ -481,7 +553,7 @@
 }
 
 [data-theme="dark"] .course-sections {
-  background: #0a1120;  /* Dark: slightly darker than page */
+  background: #0a1120;
   border-color: #2d3f55;
 }
 
@@ -494,7 +566,6 @@
   border-bottom: 2px solid var(--border-color);
 }
 
-/* Old section card */
 .section-card {
   padding: 1.5rem;
   background: #e4e7ea;
@@ -542,11 +613,11 @@
 .section-instructor { color: var(--text-secondary); font-size: 0.95rem; margin-top: 0.5rem; }
 .section-instructor strong { color: var(--text-primary); }
 
-/* â”€â”€ Condensed Sections Grid â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── Condensed Sections Grid ─────────────────────────────── */
 
 .sections-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 0.4rem;
 }
 
@@ -578,7 +649,7 @@
 }
 
 [data-theme="dark"] .section-card-compact {
-  background: #040d1a;  /* Dark: darker than container */
+  background: #040d1a;
   border: 1px solid #1e3049;
   border-left: 3px solid #ED1B2F;
 }
@@ -602,7 +673,7 @@
   font-weight: 500;
 }
 
-/* â”€â”€ Placeholder â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── Placeholder ─────────────────────────────────────────── */
 
 .placeholder-content {
   background: #f0f2f4;
@@ -631,7 +702,7 @@
 .placeholder-content h3 { font-size: 1.5rem; color: var(--text-primary); margin-bottom: 0.5rem; }
 .placeholder-content p { color: var(--text-secondary); font-size: 1.1rem; max-width: 600px; margin: 0 auto; line-height: 1.6; }
 
-/* â”€â”€ Back button â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── Back button ─────────────────────────────────────────── */
 
 .btn-back {
   padding: 0.75rem 1.5rem;
@@ -657,7 +728,7 @@
   color: var(--text-primary);
 }
 
-/* â”€â”€ Responsive â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── Responsive ──────────────────────────────────────────── */
 
 @media (max-width: 768px) {
   .search-section { flex-direction: column; }
@@ -677,6 +748,7 @@
   .favorite-btn, .completed-btn { width: 36px; height: 36px; }
   .favorite-icon, .completed-icon { font-size: 16px; }
   .sections-grid { grid-template-columns: 1fr; }
+  .prof-flag-btn { opacity: 1; } /* Always show on touch devices */
 }
 
 @media (max-width: 480px) {
@@ -700,4 +772,5 @@
 
 @media (hover: none) and (pointer: coarse) {
   .btn-search, .search-input { min-height: 44px; }
+  .prof-flag-btn { opacity: 1; } /* Always visible on touch */
 }

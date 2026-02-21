@@ -10,10 +10,12 @@ import Loading from './components/Loading/Loading'
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary'
 import './theme.css'
 import './App.css'
+import AdminSuggestions from './components/Admin/AdminSuggestions'
 
 function AppContent() {
   const { user, profile, loading, error } = useAuth()
-
+  if (window.location.pathname === '/admin') return <AdminSuggestions />
+  
   if (loading) {
     return <Loading message="Setting up your session..." />
   }

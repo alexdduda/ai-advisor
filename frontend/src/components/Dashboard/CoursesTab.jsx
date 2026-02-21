@@ -1,8 +1,10 @@
-import { FaHeart, FaRegHeart, FaCheckCircle, FaStar, FaBook, FaUser, FaChartBar } from 'react-icons/fa'
+import { useState } from 'react'
+import { FaHeart, FaRegHeart, FaCheckCircle, FaStar, FaBook, FaUser, FaChartBar, FaFlag } from 'react-icons/fa'
 import { GrPowerCycle } from 'react-icons/gr'
 import { MdOutlineRateReview } from 'react-icons/md'
 import { useLanguage } from '../../contexts/LanguageContext'
 import './CoursesTab.css'
+import ProfSuggestionPopover from '../ProfSuggestion/ProfSuggestionPopover'
 
 export default function CoursesTab({
   // Search
@@ -32,7 +34,17 @@ export default function CoursesTab({
   gpaToLetterGrade,
 }) {
   const { t } = useLanguage()
-  
+
+  // Track which card has the flag popover open (by catalog key)
+  const [openFlagCard, setOpenFlagCard] = useState(null)
+  // Track whether the detail view correction popover is open
+  const [openFlagDetail, setOpenFlagDetail] = useState(false)
+
+  const toggleFlagCard = (e, key) => {
+    e.stopPropagation()
+    setOpenFlagCard(prev => prev === key ? null : key)
+  }
+
   return (
     <div className="courses-container">
       <form className="search-section" onSubmit={handleCourseSearch}>
@@ -84,95 +96,120 @@ export default function CoursesTab({
           </div>
 
           <div className="course-list">
-            {sortCourses(searchResults, sortBy).map((course) => (
-              <div key={`${course.subject}-${course.catalog}`} className="course-card">
-                <div className="course-card-content" onClick={() => handleCourseClick(course)}>
-                  <div className="course-header">
-                    <div className="course-code">{course.subject} {course.catalog}</div>
-                    {course.average && (
-                      <div className="course-average">
-                        {course.average.toFixed(1)} GPA ({gpaToLetterGrade(course.average)})
+            {sortCourses(searchResults, sortBy).map((course) => {
+              const cardKey = `${course.subject}-${course.catalog}`
+              const isFlagOpen = openFlagCard === cardKey
+
+              return (
+                <div key={cardKey} className="course-card">
+                  <div className="course-card-content" onClick={() => handleCourseClick(course)}>
+                    <div className="course-header">
+                      <div className="course-code">{course.subject} {course.catalog}</div>
+                      {course.average && (
+                        <div className="course-average">
+                          {course.average.toFixed(1)} GPA ({gpaToLetterGrade(course.average)})
+                        </div>
+                      )}
+                    </div>
+                    <h4 className="course-title">{course.title}</h4>
+
+                    {course.instructor && (
+                      <div className="course-instructor-section">
+                        <div className="instructor-name"><FaUser /> {course.instructor}</div>
+                        {course.rmp_rating && (
+                          <div className="rmp-compact">
+                            <div className="rmp-stat">
+                              <span className="rmp-label"><FaStar /> {t('courses.rating')}:</span>
+                              <span className="rmp-value">{course.rmp_rating.toFixed(1)}/5.0</span>
+                            </div>
+                            <div className="rmp-stat">
+                              <span className="rmp-label"><FaChartBar /> {t('courses.difficulty')}:</span>
+                              <span className="rmp-value">{course.rmp_difficulty?.toFixed(1) || t('common.na')}/5.0</span>
+                            </div>
+                            {course.rmp_num_ratings && (
+                              <div className="rmp-stat">
+                                <span className="rmp-label"><MdOutlineRateReview /> {t('courses.reviews')}:</span>
+                                <span className="rmp-value">{Math.round(course.rmp_num_ratings)}</span>
+                              </div>
+                            )}
+                            {course.rmp_would_take_again && (
+                              <div className="rmp-stat">
+                                <span className="rmp-label"><GrPowerCycle /> {t('courses.wouldRetake')}:</span>
+                                <span className="rmp-value">{Math.round(course.rmp_would_take_again)}%</span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {course.num_sections && (
+                      <div className="course-meta">
+                        <FaChartBar className="meta-icon" /> {course.num_sections === 1 
+                          ? t('courses.sectionsAvailable').replace('{count}', course.num_sections)
+                          : t('courses.sectionsAvailablePlural').replace('{count}', course.num_sections)
+                        }
                       </div>
                     )}
                   </div>
-                  <h4 className="course-title">{course.title}</h4>
 
+                  {/* Flag button — bottom left, appears on card hover */}
                   {course.instructor && (
-                    <div className="course-instructor-section">
-                      <div className="instructor-name"><FaUser /> {course.instructor}</div>
-                      {course.rmp_rating && (
-                        <div className="rmp-compact">
-                          <div className="rmp-stat">
-                            <span className="rmp-label"><FaStar /> {t('courses.rating')}:</span>
-                            <span className="rmp-value">{course.rmp_rating.toFixed(1)}/5.0</span>
-                          </div>
-                          <div className="rmp-stat">
-                            <span className="rmp-label"><FaChartBar /> {t('courses.difficulty')}:</span>
-                            <span className="rmp-value">{course.rmp_difficulty?.toFixed(1) || t('common.na')}/5.0</span>
-                          </div>
-                          {course.rmp_num_ratings && (
-                            <div className="rmp-stat">
-                              <span className="rmp-label"><MdOutlineRateReview /> {t('courses.reviews')}:</span>
-                              <span className="rmp-value">{Math.round(course.rmp_num_ratings)}</span>
-                            </div>
-                          )}
-                          {course.rmp_would_take_again && (
-                            <div className="rmp-stat">
-                              <span className="rmp-label"><GrPowerCycle /> {t('courses.wouldRetake')}:</span>
-                              <span className="rmp-value">{Math.round(course.rmp_would_take_again)}%</span>
-                            </div>
-                          )}
-                        </div>
+                    <div className="prof-flag-wrapper">
+                      <button
+                        className={`prof-flag-btn ${isFlagOpen ? 'active' : ''}`}
+                        onClick={(e) => toggleFlagCard(e, cardKey)}
+                        title="Professor incorrect? Flag it"
+                      >
+                        <FaFlag />
+                      </button>
+                      {isFlagOpen && (
+                        <ProfSuggestionPopover
+                          courseCode={`${course.subject} ${course.catalog}`}
+                          currentInstructor={course.instructor}
+                          onClose={() => setOpenFlagCard(null)}
+                        />
                       )}
                     </div>
                   )}
 
-                  {course.num_sections && (
-                    <div className="course-meta">
-                      <FaChartBar className="meta-icon" /> {course.num_sections === 1 
-                        ? t('courses.sectionsAvailable').replace('{count}', course.num_sections)
-                        : t('courses.sectionsAvailablePlural').replace('{count}', course.num_sections)
+                  <div className="course-card-actions">
+                    <button
+                      className={`favorite-btn ${isFavorited(course.subject, course.catalog) ? 'favorited' : ''}`}
+                      onClick={(e) => { e.stopPropagation(); handleToggleFavorite(course) }}
+                      title={isFavorited(course.subject, course.catalog) ? t('courses.removeFromSaved') : t('courses.addToSaved')}
+                    >
+                      {isFavorited(course.subject, course.catalog) ? (
+                        <FaHeart className="favorite-icon" />
+                      ) : (
+                        <FaRegHeart className="favorite-icon" />
+                      )}
+                    </button>
+                    <button
+                      className={`completed-btn ${isCompleted(course.subject, course.catalog) ? 'completed' : ''}`}
+                      onClick={(e) => { e.stopPropagation(); handleToggleCompleted(course) }}
+                      title={isCompleted(course.subject, course.catalog) ? t('courses.markNotCompleted') : t('courses.markCompleted')}
+                    >
+                      <FaCheckCircle className="completed-icon" />
+                    </button>
+                    <button
+                      className={`current-btn ${isCurrent(course.subject, course.catalog) ? 'current' : ''}`}
+                      onClick={(e) => { e.stopPropagation(); handleToggleCurrent(course) }}
+                      disabled={isCompleted(course.subject, course.catalog) && !isCurrent(course.subject, course.catalog)}
+                      title={
+                        isCompleted(course.subject, course.catalog) && !isCurrent(course.subject, course.catalog)
+                          ? 'Already in completed courses'
+                          : isCurrent(course.subject, course.catalog)
+                          ? 'Remove from current courses'
+                          : 'Add to current courses'
                       }
-                    </div>
-                  )}
+                    >
+                      <FaBook className="current-icon" />
+                    </button>
+                  </div>
                 </div>
-
-                <div className="course-card-actions">
-                  <button
-                    className={`favorite-btn ${isFavorited(course.subject, course.catalog) ? 'favorited' : ''}`}
-                    onClick={(e) => { e.stopPropagation(); handleToggleFavorite(course) }}
-                    title={isFavorited(course.subject, course.catalog) ? t('courses.removeFromSaved') : t('courses.addToSaved')}
-                  >
-                    {isFavorited(course.subject, course.catalog) ? (
-                      <FaHeart className="favorite-icon" />
-                    ) : (
-                      <FaRegHeart className="favorite-icon" />
-                    )}
-                  </button>
-                  <button
-                    className={`completed-btn ${isCompleted(course.subject, course.catalog) ? 'completed' : ''}`}
-                    onClick={(e) => { e.stopPropagation(); handleToggleCompleted(course) }}
-                    title={isCompleted(course.subject, course.catalog) ? t('courses.markNotCompleted') : t('courses.markCompleted')}
-                  >
-                    <FaCheckCircle className="completed-icon" />
-                  </button>
-                  <button
-                    className={`current-btn ${isCurrent(course.subject, course.catalog) ? 'current' : ''}`}
-                    onClick={(e) => { e.stopPropagation(); handleToggleCurrent(course) }}
-                    disabled={isCompleted(course.subject, course.catalog) && !isCurrent(course.subject, course.catalog)}
-                    title={
-                      isCompleted(course.subject, course.catalog) && !isCurrent(course.subject, course.catalog)
-                        ? 'Already in completed courses'
-                        : isCurrent(course.subject, course.catalog)
-                        ? 'Remove from current courses'
-                        : 'Add to current courses'
-                    }
-                  >
-                    <FaBook className="current-icon" />
-                </button>
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
 
           <button className="btn-back" onClick={() => { setSearchResults([]); setSearchQuery('') }}>
@@ -184,7 +221,7 @@ export default function CoursesTab({
       {/* Course Detail */}
       {selectedCourse && (
         <div className="course-details">
-          <button className="btn-back" onClick={() => setSelectedCourse(null)}>
+          <button className="btn-back" onClick={() => { setSelectedCourse(null); setOpenFlagDetail(false) }}>
             ← {t('courses.backToResults')}
           </button>
 
@@ -257,4 +294,3 @@ export default function CoursesTab({
     </div>
   )
 }
-
