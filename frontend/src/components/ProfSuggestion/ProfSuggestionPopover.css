@@ -1,0 +1,200 @@
+.prof-popover {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  z-index: 100;
+  width: 280px;
+  background: var(--bg-primary, #fff);
+  border: 1.5px solid #d1d5db;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  padding: 14px;
+  animation: popoverIn 0.15s ease;
+}
+
+[data-theme="dark"] .prof-popover {
+  background: #0f172a;
+  border-color: #2d3f55;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+@keyframes popoverIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.prof-popover::after {
+  content: '';
+  position: absolute;
+  bottom: -7px;
+  left: 18px;
+  width: 12px;
+  height: 12px;
+  background: var(--bg-primary, #fff);
+  border-right: 1.5px solid #d1d5db;
+  border-bottom: 1.5px solid #d1d5db;
+  transform: rotate(45deg);
+}
+
+[data-theme="dark"] .prof-popover::after {
+  background: #0f172a;
+  border-color: #2d3f55;
+}
+
+.prof-popover-header {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 10px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.prof-popover-flag {
+  color: #f59e0b;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.prof-popover-close {
+  margin-left: auto;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-tertiary, #9ca3af);
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  transition: color 0.15s;
+}
+
+.prof-popover-close:hover { color: var(--text-primary); }
+
+.prof-popover-desc {
+  font-size: 0.78rem;
+  color: var(--text-secondary, #6b7280);
+  margin: 0 0 10px 0;
+  line-height: 1.5;
+}
+
+.prof-popover-current {
+  font-size: 0.78rem;
+  color: var(--text-secondary, #6b7280);
+  margin-bottom: 10px;
+  padding: 6px 8px;
+  background: #f3f4f6;
+  border-radius: 6px;
+}
+
+[data-theme="dark"] .prof-popover-current {
+  background: #1e293b;
+}
+
+.prof-popover-current span {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.prof-popover-input {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  background: var(--bg-primary, #fff);
+  color: var(--text-primary);
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+  font-family: inherit;
+}
+
+.prof-popover-input:focus {
+  border-color: #ED1B2F;
+  box-shadow: 0 0 0 3px rgba(237, 27, 47, 0.1);
+}
+
+[data-theme="dark"] .prof-popover-input {
+  background: #0a1120;
+  border-color: #2d3f55;
+  color: #e2e8f0;
+}
+
+.prof-popover-error {
+  font-size: 0.75rem;
+  color: #dc2626;
+  margin: 5px 0 0 0;
+}
+
+.prof-popover-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  justify-content: flex-end;
+}
+
+.prof-popover-cancel {
+  padding: 5px 12px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 6px;
+  background: none;
+  color: var(--text-secondary, #6b7280);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+
+.prof-popover-cancel:hover {
+  border-color: #9ca3af;
+  color: var(--text-primary);
+}
+
+.prof-popover-submit {
+  padding: 5px 14px;
+  border: none;
+  border-radius: 6px;
+  background: #ED1B2F;
+  color: white;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-family: inherit;
+}
+
+.prof-popover-submit:hover:not(:disabled) { background: #c91625; }
+.prof-popover-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.prof-popover-success {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #16a34a;
+  padding: 6px 0;
+}
+
+.prof-popover-duplicate {
+  font-size: 0.82rem;
+  color: var(--text-secondary, #6b7280);
+  line-height: 1.5;
+}
+
+.prof-popover-dismiss {
+  display: block;
+  margin-top: 8px;
+  padding: 4px 12px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 6px;
+  background: none;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}

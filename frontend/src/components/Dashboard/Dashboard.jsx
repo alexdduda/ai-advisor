@@ -55,6 +55,7 @@ export default function Dashboard() {
   const [selectedCourse, setSelectedCourse] = useState(null)
   const [isLoadingCourse, setIsLoadingCourse] = useState(false)
   const [sortBy, setSortBy] = useState('relevance')
+  const [openFlagCourse, setOpenFlagCourse] = useState(null)
 
   // ── Favorites & completed ──────────────────────────────
   const [favorites, setFavorites] = useState([])
