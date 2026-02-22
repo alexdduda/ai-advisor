@@ -14,7 +14,9 @@ export default function Settings({ user, profile, onUpdateSettings }) {
   const { language, setLanguage, t } = useLanguage()
   const { theme, setTheme } = useTheme()
   const { timezone, setTimezone } = useTimezone()
-  const [notifPrefs, setNotifPrefs] = useNotificationPrefs(user?.email)
+
+  // FIX: pass user?.id as first arg so prefs sync to Supabase
+  const [notifPrefs, setNotifPrefs, syncing] = useNotificationPrefs(user?.id, user?.email)
 
   const [settings, setSettings] = useState({
     theme: theme || 'light',
@@ -27,7 +29,6 @@ export default function Settings({ user, profile, onUpdateSettings }) {
   const [showExportModal, setShowExportModal] = useState(false)
   const [autoSaveFlash, setAutoSaveFlash] = useState(false)
 
-  // Flash "Saved" indicator on any change
   const flash = () => {
     setAutoSaveFlash(true)
     setTimeout(() => setAutoSaveFlash(false), 1800)
@@ -63,7 +64,6 @@ export default function Settings({ user, profile, onUpdateSettings }) {
     flash()
   }
 
-  // Notification prefs auto-save through the hook's setNotifPrefs
   const setNotifMethod  = (v) => { setNotifPrefs(p => ({ ...p, method: v })); flash() }
   const toggleTiming    = (k) => { setNotifPrefs(p => ({ ...p, timing: { ...p.timing, [k]: !p.timing[k] } })); flash() }
   const toggleEventType = (k) => { setNotifPrefs(p => ({ ...p, eventTypes: { ...p.eventTypes, [k]: !p.eventTypes[k] } })); flash() }
@@ -104,7 +104,7 @@ export default function Settings({ user, profile, onUpdateSettings }) {
           </div>
           {autoSaveFlash && (
             <div className="settings-autosave-badge">
-              <FaCheck size={10} /> {t('settings.notifSaved')}
+              <FaCheck size={10} /> {syncing ? 'Saving…' : t('settings.notifSaved')}
             </div>
           )}
         </div>
@@ -166,7 +166,6 @@ export default function Settings({ user, profile, onUpdateSettings }) {
               </div>
             </div>
 
-
             {/* Timing */}
             <div className="setting-item setting-item--block">
               <div className="setting-info">
@@ -208,7 +207,6 @@ export default function Settings({ user, profile, onUpdateSettings }) {
 
           </div>
         </div>
-
 
         {/* ── Privacy ── */}
         <div className="settings-section">

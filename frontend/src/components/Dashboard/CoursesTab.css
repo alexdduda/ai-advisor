@@ -774,3 +774,117 @@
   .btn-search, .search-input { min-height: 44px; }
   .prof-flag-btn { opacity: 1; } /* Always visible on touch */
 }
+
+/* ── Pagination ──────────────────────────────────────────────────────────── */
+
+.results-page-info {
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: var(--text-secondary);
+  margin-left: 6px;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.pagination-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  border-color: #ED1B2F;
+  color: #ED1B2F;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.pagination-pages {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pagination-page {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+
+.pagination-page:hover {
+  border-color: #ED1B2F;
+  color: #ED1B2F;
+}
+
+.pagination-page.active {
+  background: #ED1B2F;
+  border-color: #ED1B2F;
+  color: white;
+}
+
+.pagination-ellipsis {
+  width: 28px;
+  text-align: center;
+  color: var(--text-tertiary);
+  font-size: 0.875rem;
+  line-height: 36px;
+  user-select: none;
+}
+
+[data-theme="dark"] .pagination-btn,
+[data-theme="dark"] .pagination-page {
+  background: #040d1a;
+  border-color: #2d3f55;
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .pagination-btn:hover:not(:disabled),
+[data-theme="dark"] .pagination-page:hover {
+  border-color: #ED1B2F;
+  color: #ED1B2F;
+}
+
+[data-theme="dark"] .pagination-page.active {
+  background: #ED1B2F;
+  border-color: #ED1B2F;
+  color: white;
+}
+
+@media (max-width: 480px) {
+  .pagination { gap: 4px; }
+  .pagination-btn,
+  .pagination-page { width: 32px; height: 32px; min-width: 32px; font-size: 0.8rem; }
+}

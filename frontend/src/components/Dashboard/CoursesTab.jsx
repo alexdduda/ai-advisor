@@ -1,10 +1,12 @@
 import { useState } from 'react'
-import { FaHeart, FaRegHeart, FaCheckCircle, FaStar, FaBook, FaUser, FaChartBar, FaFlag } from 'react-icons/fa'
+import { FaHeart, FaRegHeart, FaCheckCircle, FaStar, FaBook, FaUser, FaChartBar, FaFlag, FaChevronLeft, FaChevronRight } from 'react-icons/fa'
 import { GrPowerCycle } from 'react-icons/gr'
 import { MdOutlineRateReview } from 'react-icons/md'
 import { useLanguage } from '../../contexts/LanguageContext'
 import './CoursesTab.css'
 import ProfSuggestionPopover from '../ProfSuggestion/ProfSuggestionPopover'
+
+const PAGE_SIZE = 10
 
 export default function CoursesTab({
   // Search
@@ -35,19 +37,43 @@ export default function CoursesTab({
 }) {
   const { t } = useLanguage()
 
-  // Track which card has the flag popover open (by catalog key)
   const [openFlagCard, setOpenFlagCard] = useState(null)
-  // Track whether the detail view correction popover is open
   const [openFlagDetail, setOpenFlagDetail] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
 
   const toggleFlagCard = (e, key) => {
     e.stopPropagation()
     setOpenFlagCard(prev => prev === key ? null : key)
   }
 
+  // Reset to page 1 whenever sort changes
+  const handleSortChange = (val) => {
+    setSortBy(val)
+    setCurrentPage(1)
+  }
+
+  // Wrap the parent search handler to also reset page
+  const handleSearch = (e) => {
+    setCurrentPage(1)
+    handleCourseSearch(e)
+  }
+
+  // Paginate the sorted results
+  const sortedResults = sortCourses(searchResults, sortBy)
+  const totalPages    = Math.ceil(sortedResults.length / PAGE_SIZE)
+  const pageStart     = (currentPage - 1) * PAGE_SIZE
+  const pageEnd       = pageStart + PAGE_SIZE
+  const pageResults   = sortedResults.slice(pageStart, pageEnd)
+
+  const goToPage = (page) => {
+    setCurrentPage(page)
+    // Scroll the results back to top smoothly
+    document.querySelector('.search-results')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
   return (
     <div className="courses-container">
-      <form className="search-section" onSubmit={handleCourseSearch}>
+      <form className="search-section" onSubmit={handleSearch}>
         <input
           type="text"
           className="search-input"
@@ -71,10 +97,15 @@ export default function CoursesTab({
         <div className="search-results">
           <div className="results-header-bar">
             <h3 className="results-header">
-              {searchResults.length === 1 
+              {searchResults.length === 1
                 ? t('courses.foundResults').replace('{count}', searchResults.length)
                 : t('courses.foundResultsPlural').replace('{count}', searchResults.length)
               }
+              {totalPages > 1 && (
+                <span className="results-page-info">
+                  — page {currentPage} of {totalPages}
+                </span>
+              )}
             </h3>
             <div className="sort-controls">
               <label htmlFor="sort-select" className="sort-label">{t('courses.sortBy')}</label>
@@ -82,7 +113,7 @@ export default function CoursesTab({
                 id="sort-select"
                 className="sort-select"
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
+                onChange={(e) => handleSortChange(e.target.value)}
               >
                 <option value="relevance">{t('courses.relevance')}</option>
                 <option value="rating-high">{t('courses.sortRatingHigh')}</option>
@@ -96,8 +127,8 @@ export default function CoursesTab({
           </div>
 
           <div className="course-list">
-            {sortCourses(searchResults, sortBy).map((course) => {
-              const cardKey = `${course.subject}-${course.catalog}`
+            {pageResults.map((course) => {
+              const cardKey   = `${course.subject}-${course.catalog}`
               const isFlagOpen = openFlagCard === cardKey
 
               return (
@@ -145,7 +176,7 @@ export default function CoursesTab({
 
                     {course.num_sections && (
                       <div className="course-meta">
-                        <FaChartBar className="meta-icon" /> {course.num_sections === 1 
+                        <FaChartBar className="meta-icon" /> {course.num_sections === 1
                           ? t('courses.sectionsAvailable').replace('{count}', course.num_sections)
                           : t('courses.sectionsAvailablePlural').replace('{count}', course.num_sections)
                         }
@@ -153,7 +184,7 @@ export default function CoursesTab({
                     )}
                   </div>
 
-                  {/* Flag button — bottom left, appears on card hover */}
+                  {/* Flag button */}
                   {course.instructor && (
                     <div className="prof-flag-wrapper">
                       <button
@@ -177,34 +208,25 @@ export default function CoursesTab({
                     <button
                       className={`favorite-btn ${isFavorited(course.subject, course.catalog) ? 'favorited' : ''}`}
                       onClick={(e) => { e.stopPropagation(); handleToggleFavorite(course) }}
-                      title={isFavorited(course.subject, course.catalog) ? t('courses.removeFromSaved') : t('courses.addToSaved')}
+                      title={isFavorited(course.subject, course.catalog) ? t('courses.removeFromFavorites') : t('courses.addToFavorites')}
                     >
-                      {isFavorited(course.subject, course.catalog) ? (
-                        <FaHeart className="favorite-icon" />
-                      ) : (
-                        <FaRegHeart className="favorite-icon" />
-                      )}
+                      {isFavorited(course.subject, course.catalog)
+                        ? <FaHeart className="favorite-icon" />
+                        : <FaRegHeart className="favorite-icon" />}
                     </button>
                     <button
                       className={`completed-btn ${isCompleted(course.subject, course.catalog) ? 'completed' : ''}`}
                       onClick={(e) => { e.stopPropagation(); handleToggleCompleted(course) }}
-                      title={isCompleted(course.subject, course.catalog) ? t('courses.markNotCompleted') : t('courses.markCompleted')}
+                      title={isCompleted(course.subject, course.catalog) ? t('courses.markIncomplete') : t('courses.markComplete')}
                     >
                       <FaCheckCircle className="completed-icon" />
                     </button>
                     <button
                       className={`current-btn ${isCurrent(course.subject, course.catalog) ? 'current' : ''}`}
                       onClick={(e) => { e.stopPropagation(); handleToggleCurrent(course) }}
-                      disabled={isCompleted(course.subject, course.catalog) && !isCurrent(course.subject, course.catalog)}
-                      title={
-                        isCompleted(course.subject, course.catalog) && !isCurrent(course.subject, course.catalog)
-                          ? 'Already in completed courses'
-                          : isCurrent(course.subject, course.catalog)
-                          ? 'Remove from current courses'
-                          : 'Add to current courses'
-                      }
+                      title={isCurrent(course.subject, course.catalog) ? t('courses.removeFromCurrent') : t('courses.addToCurrent')}
                     >
-                      <FaBook className="current-icon" />
+                      <FaCheckCircle className="current-icon" />
                     </button>
                   </div>
                 </div>
@@ -212,9 +234,54 @@ export default function CoursesTab({
             })}
           </div>
 
-          <button className="btn-back" onClick={() => { setSearchResults([]); setSearchQuery('') }}>
-            ← {t('courses.newSearch')}
-          </button>
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="pagination">
+              <button
+                className="pagination-btn"
+                onClick={() => goToPage(currentPage - 1)}
+                disabled={currentPage === 1}
+                aria-label="Previous page"
+              >
+                <FaChevronLeft />
+              </button>
+
+              <div className="pagination-pages">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => {
+                  // Always show first, last, current, and neighbours; collapse the rest
+                  const isNearCurrent = Math.abs(page - currentPage) <= 1
+                  const isEdge        = page === 1 || page === totalPages
+
+                  if (!isNearCurrent && !isEdge) {
+                    // Show a single ellipsis between each gap
+                    if (page === 2 || page === totalPages - 1) {
+                      return <span key={page} className="pagination-ellipsis">…</span>
+                    }
+                    return null
+                  }
+
+                  return (
+                    <button
+                      key={page}
+                      className={`pagination-page ${page === currentPage ? 'active' : ''}`}
+                      onClick={() => goToPage(page)}
+                    >
+                      {page}
+                    </button>
+                  )
+                })}
+              </div>
+
+              <button
+                className="pagination-btn"
+                onClick={() => goToPage(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                aria-label="Next page"
+              >
+                <FaChevronRight />
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -232,7 +299,6 @@ export default function CoursesTab({
             {(selectedCourse.last_year_average || selectedCourse.average_grade) && (
               <div className="course-stat-badge">
                 {(selectedCourse.last_year_average || selectedCourse.average_grade)} GPA ({gpaToLetterGrade(selectedCourse.last_year_average || selectedCourse.average_grade)})
-                {selectedCourse.last_year_average && <span className="average-note"></span>}
               </div>
             )}
 
@@ -283,10 +349,10 @@ export default function CoursesTab({
         </div>
       )}
 
-      {/* Empty state */}
-      {searchResults.length === 0 && !selectedCourse && !searchError && !isSearching && (
+      {/* Placeholder */}
+      {!searchResults.length && !selectedCourse && !searchError && !isSearching && (
         <div className="placeholder-content">
-          <div className="placeholder-icon"><FaBook style={{ color: "#ED1B2F" }} /></div>
+          <div className="placeholder-icon"><FaBook /></div>
           <h3>{t('courses.explorerTitle')}</h3>
           <p>{t('courses.explorerDesc')}</p>
         </div>

@@ -78,6 +78,7 @@ class UserUpdate(BaseModel):
     interests: Optional[str] = Field(None, max_length=500)
     current_gpa: Optional[float] = Field(None, ge=0.0, le=4.0)
     advanced_standing: Optional[List[dict]] = None
+    notification_prefs: Optional[dict] = None
     
     @field_validator('username')
     @classmethod

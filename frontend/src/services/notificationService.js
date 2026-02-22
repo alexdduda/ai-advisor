@@ -1,15 +1,23 @@
 /**
  * notificationService.js
  * Talks to /api/notifications/* on the backend.
+ * All mutating/private endpoints now send the Supabase JWT for auth.
  */
+
+import { supabase } from '../lib/supabase'
 
 const BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
+/** Get the current user's Bearer token from Supabase session. */
+async function _authHeader() {
+  const { data } = await supabase.auth.getSession()
+  const token = data?.session?.access_token
+  if (!token) throw new Error('Not authenticated')
+  return { Authorization: `Bearer ${token}` }
+}
+
 /**
  * Save an event to Supabase and queue its notifications.
- * @param {object} event     - form data from EventModal
- * @param {string} userId    - Supabase auth user id
- * @param {string} userEmail - Account email (always used as recipient)
  */
 export async function scheduleNotification(event, userId, userEmail) {
   const payload = {
@@ -33,7 +41,7 @@ export async function scheduleNotification(event, userId, userEmail) {
 
   const res = await fetch(`${BASE}/api/notifications/schedule`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...(await _authHeader()) },
     body: JSON.stringify(payload),
   })
 
@@ -49,7 +57,9 @@ export async function scheduleNotification(event, userId, userEmail) {
  * Fetch all calendar events for a user from Supabase.
  */
 export async function getUserEvents(userId) {
-  const res = await fetch(`${BASE}/api/notifications/events/${userId}`)
+  const res = await fetch(`${BASE}/api/notifications/events/${userId}`, {
+    headers: await _authHeader(),
+  })
   if (!res.ok) throw new Error('Failed to fetch events')
   const data = await res.json()
   return data.events || []
@@ -59,10 +69,9 @@ export async function getUserEvents(userId) {
  * Delete an event (cascade removes its notification_queue rows).
  */
 export async function deleteEvent(eventId, userId) {
-  const res = await fetch(`${BASE}/api/notifications/events/${eventId}`, {
+  const res = await fetch(`${BASE}/api/notifications/events/${eventId}?user_id=${userId}`, {
     method: 'DELETE',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ user_id: userId }),
+    headers: { 'Content-Type': 'application/json', ...(await _authHeader()) },
   })
   if (!res.ok) throw new Error('Failed to delete event')
   return res.json()
