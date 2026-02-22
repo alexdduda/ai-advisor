@@ -1,29 +1,202 @@
-import { useState, useEffect } from 'react'
-import { FaRobot } from 'react-icons/fa'
-import { HiRefresh, HiChevronDown, HiChevronUp, HiLightningBolt } from 'react-icons/hi'
-import { CARD_CATEGORIES, CATEGORY_LABELS, CATEGORY_ICONS } from '../../../lib/cardsAPI'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { createPortal } from 'react-dom'
+import {
+  FaRobot,
+  FaGraduationCap,
+  FaExclamationTriangle,
+  FaLightbulb,
+  FaChartLine,
+  FaCalendarAlt,
+  FaBook,
+  FaClipboardList,
+  FaStar,
+  FaComments,
+  FaSync,
+  FaChevronDown,
+  FaChevronUp,
+  FaTimes,
+  FaBolt,
+  FaPlus,
+  FaArrowRight,
+} from 'react-icons/fa'
+import { CARD_CATEGORIES, CATEGORY_LABELS } from '../../../lib/cardsAPI'
 import './AdvisorCards.css'
 
-// ── Card type → accent colour ─────────────────────────────────
+// ── Card type config ──────────────────────────────────────────
 const CARD_CONFIG = {
-  urgent:   { accent: 'var(--card-urgent)'   },
-  warning:  { accent: 'var(--card-warning)'  },
-  insight:  { accent: 'var(--card-insight)'  },
-  progress: { accent: 'var(--card-progress)' },
+  urgent:   { accent: 'var(--card-urgent)',   Icon: FaExclamationTriangle },
+  warning:  { accent: 'var(--card-warning)',  Icon: FaExclamationTriangle },
+  insight:  { accent: 'var(--card-insight)',  Icon: FaLightbulb },
+  progress: { accent: 'var(--card-progress)', Icon: FaChartLine },
+}
+
+const CATEGORY_ICON_COMPONENTS = {
+  deadlines:     FaCalendarAlt,
+  degree:        FaGraduationCap,
+  courses:       FaBook,
+  grades:        FaChartLine,
+  planning:      FaClipboardList,
+  opportunities: FaStar,
+  other:         FaComments,
+}
+
+// ── Thread messages ───────────────────────────────────────────
+function ThreadMessages({ thread, isThinking }) {
+  const bottomRef = useRef(null)
+  const isFirstRender = useRef(true)
+
+  useEffect(() => {
+    // Skip scroll on first render so opening a thread doesn't jump the page
+    if (isFirstRender.current) {
+      isFirstRender.current = false
+      return
+    }
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  }, [thread, isThinking])
+
+  return (
+    <>
+      {thread.map((msg, i) => (
+        <div key={i} className={`thread-message thread-message--${msg.role}`}>
+          {msg.role === 'assistant' && (
+            <span className="thread-avatar"><FaRobot /></span>
+          )}
+          <p className="thread-text">{msg.content}</p>
+        </div>
+      ))}
+      {isThinking && (
+        <div className="thread-message thread-message--assistant">
+          <span className="thread-avatar"><FaRobot /></span>
+          <p className="thread-text">
+            <span className="thinking-dots"><span /><span /><span /></span>
+          </p>
+        </div>
+      )}
+      <div ref={bottomRef} />
+    </>
+  )
+}
+
+// ── Thread input ──────────────────────────────────────────────
+function ThreadInput({ onSubmit, isThinking, placeholder = 'Ask a follow-up…', autoFocus = false }) {
+  const [value, setValue] = useState('')
+  const inputRef = useRef(null)
+
+  useEffect(() => {
+    if (autoFocus) setTimeout(() => inputRef.current?.focus(), 50)
+  }, [autoFocus])
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    if (!value.trim() || isThinking) return
+    onSubmit(value.trim())
+    setValue('')
+  }
+
+  return (
+    <form className="thread-input-form" onSubmit={handleSubmit}>
+      <input
+        ref={inputRef}
+        className="thread-input"
+        type="text"
+        placeholder={placeholder}
+        value={value}
+        onChange={e => setValue(e.target.value)}
+        disabled={isThinking}
+      />
+      <button type="submit" className="thread-send" disabled={isThinking || !value.trim()}>
+        {isThinking
+          ? <span className="thinking-dots small"><span /><span /><span /></span>
+          : <FaArrowRight />}
+      </button>
+    </form>
+  )
+}
+
+// ── Thread modal ──────────────────────────────────────────────
+function ThreadModal({ card, thread, isThinking, onSend, onClose }) {
+  const config = CARD_CONFIG[card.card_type || card.type] || CARD_CONFIG.insight
+  const CategoryIcon = CATEGORY_ICON_COMPONENTS[card.category || 'other'] || FaComments
+  const overlayRef = useRef(null)
+
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [onClose])
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = '' }
+  }, [])
+
+  return createPortal(
+    <div
+      className="thread-modal-overlay"
+      ref={overlayRef}
+      onClick={e => { if (e.target === overlayRef.current) onClose() }}
+    >
+      <div
+        className="thread-modal"
+        style={{ '--card-accent': config.accent }}
+        role="dialog"
+        aria-modal="true"
+      >
+        <div className="thread-modal__header">
+          <div className="thread-modal__card-info">
+            <span className="thread-modal__cat-icon"><CategoryIcon /></span>
+            <div className="thread-modal__card-text">
+              <span className="thread-modal__label">{card.label}</span>
+              <h3 className="thread-modal__title">{card.title}</h3>
+            </div>
+          </div>
+          <button className="thread-modal__close" onClick={onClose} aria-label="Close">
+            <FaTimes />
+          </button>
+        </div>
+
+        <div className="thread-modal__summary">
+          <p>{card.body}</p>
+        </div>
+
+        <div className="thread-modal__messages">
+          {thread.length === 0 && !isThinking ? (
+            <div className="thread-modal__empty">
+              <FaRobot className="thread-modal__empty-icon" />
+              <p>Ask anything about this insight.</p>
+            </div>
+          ) : (
+            <ThreadMessages thread={thread} isThinking={isThinking} />
+          )}
+        </div>
+
+        <div className="thread-modal__input-area">
+          <ThreadInput
+            onSubmit={onSend}
+            isThinking={isThinking}
+            placeholder="Ask a follow-up question…"
+            autoFocus
+          />
+        </div>
+      </div>
+    </div>,
+    document.body
+  )
 }
 
 // ── Individual card ───────────────────────────────────────────
-function AdvisorCard({ card, onChipClick, onFollowUp }) {
-  const [thread, setThread]           = useState([])
-  const [collapsed, setCollapsed]     = useState(false)
-  const [followUpInput, setFollowUp]  = useState('')
-  const [isThinking, setIsThinking]   = useState(false)
-  const [chips, setChips]             = useState(card.actions || [])
+function AdvisorCard({ card, onChipClick }) {
+  const [thread, setThread]         = useState([])
+  const [collapsed, setCollapsed]   = useState(false)
+  const [isThinking, setIsThinking] = useState(false)
+  const [chips, setChips]           = useState(card.actions || [])
+  const [modalOpen, setModalOpen]   = useState(false)
 
-  const config = CARD_CONFIG[card.card_type || card.type] || CARD_CONFIG.insight
+  const config     = CARD_CONFIG[card.card_type || card.type] || CARD_CONFIG.insight
+  const CardIcon   = config.Icon
   const isUserCard = card.source === 'user'
 
-  const runThread = async (message, isChip = false) => {
+  const runThread = useCallback(async (message, isChip = false) => {
     if (isChip) setChips(prev => prev.filter(c => c !== message))
     setThread(prev => [...prev, { role: 'user', content: message }])
     setIsThinking(true)
@@ -31,53 +204,46 @@ function AdvisorCard({ card, onChipClick, onFollowUp }) {
       const reply = await onChipClick(card.id, message, card.title, card.body)
       setThread(prev => [...prev, { role: 'assistant', content: reply }])
     } catch {
-      setThread(prev => [...prev, { role: 'assistant', content: 'Something went wrong. Please try again.' }])
+      setThread(prev => [...prev, {
+        role: 'assistant',
+        content: 'Something went wrong. Please try again.',
+      }])
     } finally {
       setIsThinking(false)
     }
-  }
-
-  const handleFollowUpSubmit = async (e) => {
-    e.preventDefault()
-    if (!followUpInput.trim() || isThinking) return
-    const msg = followUpInput.trim()
-    setFollowUp('')
-    await runThread(msg, false)
-  }
-
-  const hasThread = thread.length > 0
+  }, [card.id, card.title, card.body, onChipClick])
 
   return (
-    <article
-      className={`advisor-card advisor-card--${card.card_type || card.type}${isUserCard ? ' advisor-card--user' : ''}`}
-      style={{ '--card-accent': config.accent }}
-    >
-      {/* Header */}
-      <div className="advisor-card__header">
-        <span className="advisor-card__icon">{card.icon}</span>
-        <div className="advisor-card__meta">
-          <div className="advisor-card__meta-top">
-            <span className="advisor-card__label">{card.label}</span>
-            {isUserCard && <span className="advisor-card__user-badge">Asked by you</span>}
+    <>
+      <article
+        className={`advisor-card advisor-card--${card.card_type || card.type}${isUserCard ? ' advisor-card--user' : ''}`}
+        style={{ '--card-accent': config.accent }}
+      >
+        {/* Header */}
+        <div className="advisor-card__header">
+          <span className="advisor-card__icon"><CardIcon /></span>
+          <div className="advisor-card__meta">
+            <div className="advisor-card__meta-top">
+              <span className="advisor-card__label">{card.label}</span>
+              {isUserCard && <span className="advisor-card__user-badge">Asked by you</span>}
+            </div>
+            <h3 className="advisor-card__title">{card.title}</h3>
           </div>
-          <h3 className="advisor-card__title">{card.title}</h3>
+          {thread.length > 0 && (
+            <button
+              className="advisor-card__collapse"
+              onClick={() => setCollapsed(c => !c)}
+              aria-label={collapsed ? 'Show thread' : 'Hide thread'}
+            >
+              {collapsed ? <FaChevronDown /> : <FaChevronUp />}
+            </button>
+          )}
         </div>
-        {hasThread && (
-          <button
-            className="advisor-card__collapse"
-            onClick={() => setCollapsed(c => !c)}
-            aria-label={collapsed ? 'Expand' : 'Collapse'}
-          >
-            {collapsed ? <HiChevronDown /> : <HiChevronUp />}
-          </button>
-        )}
-      </div>
 
-      {/* Body */}
-      <p className="advisor-card__body">{card.body}</p>
+        {/* Body */}
+        <p className="advisor-card__body">{card.body}</p>
 
-      {/* Action chips */}
-      {chips.length > 0 && (
+        {/* Chips + plus bubble */}
         <div className="advisor-card__chips">
           {chips.map((chip, i) => (
             <button
@@ -86,48 +252,44 @@ function AdvisorCard({ card, onChipClick, onFollowUp }) {
               onClick={() => runThread(chip, true)}
               disabled={isThinking}
             >
-              <HiLightningBolt className="chip-icon" />
+              <FaBolt className="chip-icon" />
               {chip}
             </button>
           ))}
+          <button
+            className="advisor-card__chip advisor-card__chip--plus"
+            onClick={() => setModalOpen(true)}
+            title="Ask your own question"
+            aria-label="Open chat"
+            disabled={isThinking}
+          >
+            <FaPlus />
+          </button>
         </div>
-      )}
 
-      {/* Thread */}
-      {hasThread && !collapsed && (
-        <div className="advisor-card__thread">
-          <div className="thread-divider" />
-          {thread.map((msg, i) => (
-            <div key={i} className={`thread-message thread-message--${msg.role}`}>
-              {msg.role === 'assistant' && (
-                <span className="thread-avatar"><FaRobot /></span>
-              )}
-              <p className="thread-text">{msg.content}</p>
-            </div>
-          ))}
-          {isThinking && (
-            <div className="thread-message thread-message--assistant">
-              <span className="thread-avatar"><FaRobot /></span>
-              <p className="thread-text">
-                <span className="thinking-dots"><span /><span /><span /></span>
-              </p>
-            </div>
-          )}
-          <form className="thread-input-form" onSubmit={handleFollowUpSubmit}>
-            <input
-              className="thread-input"
-              type="text"
-              placeholder="Ask a follow-up…"
-              value={followUpInput}
-              onChange={e => setFollowUp(e.target.value)}
-              disabled={isThinking}
+        {/* Inline thread — appears after first chip/message */}
+        {!collapsed && thread.length > 0 && (
+          <div className="advisor-card__thread">
+            <div className="thread-divider" />
+            <ThreadMessages thread={thread} isThinking={isThinking} />
+            <ThreadInput
+              onSubmit={msg => runThread(msg, false)}
+              isThinking={isThinking}
             />
-            <button type="submit" className="thread-send"
-              disabled={isThinking || !followUpInput.trim()}>↵</button>
-          </form>
-        </div>
+          </div>
+        )}
+      </article>
+
+      {modalOpen && (
+        <ThreadModal
+          card={card}
+          thread={thread}
+          isThinking={isThinking}
+          onSend={msg => runThread(msg, false)}
+          onClose={() => setModalOpen(false)}
+        />
       )}
-    </article>
+    </>
   )
 }
 
@@ -161,7 +323,6 @@ export default function AdvisorCards({
   generatedAt = null,
   onRefresh,
   onChipClick,
-  onFollowUp,
   freeformInput,
   setFreeformInput,
   onFreeformSubmit,
@@ -185,7 +346,6 @@ export default function AdvisorCards({
 
   const showSkeletons = isLoading || isGenerating
 
-  // Build category tab counts
   const categoryCounts = cards.reduce((acc, card) => {
     const cat = card.category || 'other'
     acc[cat] = (acc[cat] || 0) + 1
@@ -196,7 +356,6 @@ export default function AdvisorCards({
     ? cards
     : cards.filter(c => (c.category || 'other') === activeCategory)
 
-  // Only show category tabs that have cards (plus 'all')
   const activeCats = CARD_CATEGORIES.filter(cat => categoryCounts[cat])
 
   return (
@@ -205,10 +364,8 @@ export default function AdvisorCards({
       {/* Header */}
       <header className="advisor-cards-header">
         <div className="advisor-cards-header__left">
-          <h2 className="advisor-cards-header__title">
-            <FaRobot className="header-robot-icon" />
-            Academic Brief
-          </h2>
+          <FaRobot className="header-robot-icon" />
+          <h2 className="advisor-cards-header__title">Academic Brief</h2>
           {generatedAt && !showSkeletons && (
             <span className="advisor-cards-header__timestamp">Updated {timeAgo}</span>
           )}
@@ -219,7 +376,7 @@ export default function AdvisorCards({
           disabled={isGenerating}
           title="Refresh cards"
         >
-          <HiRefresh />
+          <FaSync />
         </button>
       </header>
 
@@ -230,20 +387,24 @@ export default function AdvisorCards({
             className={`category-tab ${activeCategory === 'all' ? 'active' : ''}`}
             onClick={() => setActiveCategory('all')}
           >
+            <FaClipboardList className="category-tab__icon" />
             All
             <span className="category-tab__count">{cards.length}</span>
           </button>
-          {activeCats.map(cat => (
-            <button
-              key={cat}
-              className={`category-tab ${activeCategory === cat ? 'active' : ''}`}
-              onClick={() => setActiveCategory(cat)}
-            >
-              <span className="category-tab__icon">{CATEGORY_ICONS[cat]}</span>
-              {CATEGORY_LABELS[cat]}
-              <span className="category-tab__count">{categoryCounts[cat]}</span>
-            </button>
-          ))}
+          {activeCats.map(cat => {
+            const CatIcon = CATEGORY_ICON_COMPONENTS[cat] || FaComments
+            return (
+              <button
+                key={cat}
+                className={`category-tab ${activeCategory === cat ? 'active' : ''}`}
+                onClick={() => setActiveCategory(cat)}
+              >
+                <CatIcon className="category-tab__icon" />
+                {CATEGORY_LABELS[cat]}
+                <span className="category-tab__count">{categoryCounts[cat]}</span>
+              </button>
+            )
+          })}
         </nav>
       )}
 
@@ -253,23 +414,18 @@ export default function AdvisorCards({
           <><CardSkeleton /><CardSkeleton /><CardSkeleton /></>
         ) : filteredCards.length === 0 && cards.length === 0 ? (
           <div className="advisor-cards-empty">
-            <span className="empty-icon">🎓</span>
+            <FaGraduationCap className="empty-icon" />
             <p>Your academic brief is being prepared.</p>
-            <button className="btn-generate" onClick={onRefresh}>Generate Now</button>
+            <button className="btn-primary" onClick={onRefresh}>Generate Now</button>
           </div>
         ) : filteredCards.length === 0 ? (
           <div className="advisor-cards-empty">
-            <span className="empty-icon">{CATEGORY_ICONS[activeCategory]}</span>
+            {(() => { const I = CATEGORY_ICON_COMPONENTS[activeCategory] || FaComments; return <I className="empty-icon" /> })()}
             <p>No {CATEGORY_LABELS[activeCategory]} cards right now.</p>
           </div>
         ) : (
           filteredCards.map(card => (
-            <AdvisorCard
-              key={card.id}
-              card={card}
-              onChipClick={onChipClick}
-              onFollowUp={onFollowUp}
-            />
+            <AdvisorCard key={card.id} card={card} onChipClick={onChipClick} />
           ))
         )}
       </div>
@@ -289,9 +445,9 @@ export default function AdvisorCards({
           className="freeform-send"
           disabled={isAsking || !freeformInput.trim()}
         >
-          {isAsking ? (
-            <span className="thinking-dots small"><span /><span /><span /></span>
-          ) : '↵'}
+          {isAsking
+            ? <span className="thinking-dots small"><span /><span /><span /></span>
+            : <FaArrowRight />}
         </button>
       </form>
 
