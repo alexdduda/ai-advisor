@@ -135,6 +135,37 @@ export default function Dashboard() {
     }
   }
 
+    // Toggle the saved/pinned state of a single card
+  const handleCardSaveToggle = async (cardId, isSaved) => {
+    if (!user?.id) return
+    try {
+      const updated = await cardsAPI.saveCard(cardId, isSaved)
+      setAdvisorCards(prev =>
+        prev.map(c => c.id === cardId ? { ...c, is_saved: updated.is_saved } : c)
+      )
+    } catch (error) {
+      console.error('Error toggling card save:', error)
+    }
+  }
+
+  // Persist drag-and-drop order sent up from AdvisorCards component
+  const handleCardsReorder = async (order) => {
+    if (!user?.id) return
+    try {
+      await cardsAPI.reorderCards(user.id, order)
+      // Optimistic update already happened inside DraggableFeed;
+      // re-sync sort_order field so future re-renders are stable
+      setAdvisorCards(prev => {
+        const orderMap = Object.fromEntries(order.map(o => [o.id, o.sort_order]))
+        return [...prev]
+          .map(c => orderMap[c.id] !== undefined ? { ...c, sort_order: orderMap[c.id] } : c)
+          .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+      })
+    } catch (error) {
+      console.error('Error reordering cards:', error)
+    }
+  }
+
   const handleFreeformSubmit = async (e) => {
     e.preventDefault()
     if (!freeformInput.trim() || isAsking || !user?.id) return
@@ -419,6 +450,8 @@ export default function Dashboard() {
               isAsking={isAsking}
               generatedAt={cardsGeneratedAt}
               onRefresh={() => refreshAdvisorCards(true)}
+              onSaveToggle={handleCardSaveToggle}
+              onReorder={handleCardsReorder}
               onChipClick={handleCardChipClick}
               onFollowUp={handleCardChipClick}
               freeformInput={freeformInput}

@@ -80,15 +80,44 @@ const cardsAPI = {
     })
     if (!response.ok) throw new Error('Failed to send thread message')
     const data = await response.json()
-    return data.response  // unwrap here so callers always get a string
+    return data.response
   },
 
-  /** Clear AI-generated cards (user-asked cards are preserved) */
+  /** Clear AI-generated, non-saved cards */
   async clearCards(userId) {
     const response = await fetch(`${BASE_URL}/api/cards/${userId}`, {
       method: 'DELETE',
     })
     if (!response.ok) throw new Error('Failed to clear advisor cards')
+  },
+
+  /**
+   * Pin or unpin a card so it survives the nightly 3am regeneration.
+   * Returns the updated card object.
+   */
+  async saveCard(cardId, isSaved) {
+    const response = await fetch(`${BASE_URL}/api/cards/${cardId}/save`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ is_saved: isSaved }),
+    })
+    if (!response.ok) throw new Error('Failed to update card saved state')
+    return response.json()
+  },
+
+  /**
+   * Persist a new drag-and-drop order.
+   * @param {string} userId
+   * @param {Array<{id: string, sort_order: number}>} order
+   */
+  async reorderCards(userId, order) {
+    const response = await fetch(`${BASE_URL}/api/cards/${userId}/reorder`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ order }),
+    })
+    if (!response.ok) throw new Error('Failed to reorder cards')
+    return response.json()
   },
 }
 
