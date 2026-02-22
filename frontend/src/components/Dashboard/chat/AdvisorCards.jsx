@@ -193,7 +193,7 @@ function AdvisorCard({ card, onChipClick }) {
   const [modalOpen, setModalOpen]   = useState(false)
 
   const config     = CARD_CONFIG[card.card_type || card.type] || CARD_CONFIG.insight
-  const CardIcon   = config.Icon
+  const CardIcon   = CATEGORY_ICON_COMPONENTS[card.category || 'other'] || FaComments
   const isUserCard = card.source === 'user'
 
   const runThread = useCallback(async (message, isChip = false) => {
