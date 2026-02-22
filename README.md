@@ -1,4 +1,4 @@
-# McGill AI Academic Advisor
+# Symboulos
 
 A full-stack web application that helps McGill University students navigate course selection, track academic progress, and get personalized advice.
 
