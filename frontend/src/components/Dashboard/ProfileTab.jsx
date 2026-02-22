@@ -1,10 +1,7 @@
-import { FaCamera, FaChartBar, FaBullseye, FaLightbulb, FaTrophy } from 'react-icons/fa'
-import { HiMiniSparkles } from 'react-icons/hi2'
+import { FaCamera, FaChartBar, FaBullseye, FaLightbulb } from 'react-icons/fa'
 import { useLanguage } from '../../contexts/LanguageContext'
 import PersonalInfoCard from './PersonalInfoCard'
-import BadgesDisplay from './BadgesDisplay'
 import DegreeProgressTracker from './DegreeProgressTracker'
-import PersonalizedInsights from './PersonalizedInsights'
 import GPATrendChart from './GPATrendChart'
 import TargetGPACalculator from './TargetGPACalculator'
 import Settings from './Settings'
@@ -62,7 +59,8 @@ export default function ProfileTab({
               <h1 className="profile-display-name">{profile?.username || t('profile.mcgillStudent')}</h1>
               <div className="profile-badges">
                 <span className="badge badge-year">
-                  {profile?.year ? t('profile.yearLabel').replace('{year}', profile.year) : t('profile.yearNotSet')}
+                  {profile?.year ?
+                    t('profile.yearLabel').replace('{year}', profile.year) : t('profile.yearNotSet')}
                 </span>
                 {profile?.major && (
                   <span className="badge badge-major">{profile.major}</span>
@@ -138,72 +136,6 @@ export default function ProfileTab({
               }
               totalCreditsRequired={120}
             />
-          </div>
-
-          {/* Interests & Preferences */}
-          <div className="profile-section-card card-full-width">
-            <div className="card-header">
-              <div className="card-title-group">
-                <span className="card-icon"><HiMiniSparkles /></span>
-                <h2 className="card-title">{t('profile.interestsPreferences')}</h2>
-              </div>
-            </div>
-            <div className="card-content">
-              <div className="interests-display">
-                {profile?.interests ? (
-                  <div className="interests-tags">
-                    {profile.interests.split(',').map((interest, idx) => (
-                      <span key={idx} className="interest-tag">{interest.trim()}</span>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="empty-state">
-                    <span className="empty-icon"><FaBullseye /></span>
-                    <span>{t('profile.noInterests')}</span>
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Badges */}
-          <div className="profile-section-card card-full-width">
-            <div className="card-header">
-              <div className="card-title-group">
-                <span className="card-icon"><FaTrophy /></span>
-                <h2 className="card-title">{t('profile.achievements')}</h2>
-              </div>
-            </div>
-            <div className="card-content">
-              <BadgesDisplay
-                userData={{
-                  profile,
-                  completedCourses,
-                  savedCourses: favorites,
-                  chatCount: Array.isArray(chatHistory) ? chatHistory.length : 0,
-                }}
-              />
-            </div>
-          </div>
-
-          {/* Personalized Insights */}
-          <div className="profile-section-card card-full-width">
-            <div className="card-header">
-              <div className="card-title-group">
-                <span className="card-icon"><FaLightbulb /></span>
-                <h2 className="card-title">{t('profile.personalizedInsights')}</h2>
-              </div>
-            </div>
-            <div className="card-content">
-              <PersonalizedInsights
-                userData={{
-                  profile,
-                  completedCourses,
-                  savedCourses: favorites,
-                  chatHistory: Array.isArray(chatHistory) ? chatHistory : [],
-                }}
-              />
-            </div>
           </div>
 
           {/* Settings */}

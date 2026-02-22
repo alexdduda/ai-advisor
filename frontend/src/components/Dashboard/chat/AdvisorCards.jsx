@@ -33,10 +33,16 @@ const CARD_CONFIG = {
 // ── Thread sub-components ─────────────────────────────────────
 
 function ThreadMessages({ thread, isThinking }) {
-  const bottomRef = useRef(null)
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [thread, isThinking])
+  const scrollRef = useRef(null)
+
+  // Scroll the messages container (not the page) to the bottom on each update
+  useEffect(() => {
+    const el = scrollRef.current
+    if (el) el.scrollTop = el.scrollHeight
+  }, [thread.length, isThinking])
+
   return (
-    <div className="thread-messages">
+    <div className="thread-messages" ref={scrollRef}>
       {thread.map((msg, i) => (
         <div key={i} className={`thread-message thread-message--${msg.role}`}>
           <span className="thread-avatar">
@@ -53,7 +59,6 @@ function ThreadMessages({ thread, isThinking }) {
           </p>
         </div>
       )}
-      <div ref={bottomRef} />
     </div>
   )
 }
@@ -129,6 +134,20 @@ function AdvisorCard({ card, onChipClick, onSaveToggle, dragHandleProps, isDragg
   const [chips, setChips]           = useState(card.actions || [])
   const [modalOpen, setModalOpen]   = useState(false)
   const [saving, setSaving]         = useState(false)
+  const cardRef                     = useRef(null)
+  const threadOpenedRef             = useRef(false)
+
+  // When thread first opens, scroll the card into view (top-anchored)
+  // so the feed doesn't jump the user below the card.
+  useEffect(() => {
+    if (thread.length > 0 && !threadOpenedRef.current) {
+      threadOpenedRef.current = true
+      setTimeout(() => {
+        cardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+      }, 50)
+    }
+    if (thread.length === 0) threadOpenedRef.current = false
+  }, [thread.length])
 
   const config     = CARD_CONFIG[card.card_type || card.type] || CARD_CONFIG.insight
   const CardIcon   = CATEGORY_ICON_COMPONENTS[card.category || 'other'] || FaComments
@@ -174,6 +193,7 @@ function AdvisorCard({ card, onChipClick, onSaveToggle, dragHandleProps, isDragg
           isDragging ? 'advisor-card--dragging' : '',
         ].filter(Boolean).join(' ')}
         style={{ '--card-accent': config.accent }}
+        ref={cardRef}
       >
         {/* Drag handle */}
         <span className="advisor-card__drag-handle" {...dragHandleProps} title="Drag to reorder">
