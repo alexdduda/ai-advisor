@@ -1,6 +1,6 @@
 # McGill AI Academic Advisor
 
-A full-stack web application that helps McGill University students navigate course selection, track academic progress, and get personalized advice — powered by Anthropic's Claude API.
+A full-stack web application that helps McGill University students navigate course selection, track academic progress, and get personalized advice.
 
 **Live at**: [ai-advisor-pi.vercel.app](https://ai-advisor-pi.vercel.app)
 
@@ -9,8 +9,6 @@ A full-stack web application that helps McGill University students navigate cour
 ## What It Does
 
 Students create a profile (major, year, GPA, interests) and then interact with the app through several core features:
-
-**AI Chat** — A conversational advisor powered by Claude that has full context on the student's profile, completed courses, current enrollment, saved courses, and calendar. It gives specific, personalized guidance using real McGill course codes and historical grade data.
 
 **Proactive Advisor Cards** — AI-generated briefing cards that surface things the student needs to know: deadline warnings, prerequisite gaps, GPA insights, degree progress, and course recommendations. Students can also ask freeform questions that return as cards in their feed.
 
@@ -39,59 +37,6 @@ Students create a profile (major, year, GPA, interests) and then interact with t
 | Data | Crowdsourced CSV of ~10k+ McGill course sections with historical grades, professor ratings via RateMyProfessor scraping |
 
 Key frontend libraries: Axios, react-markdown, react-icons, @supabase/supabase-js, remark-gfm.
-
----
-
-## Project Structure
-
-```
-├── backend/
-│   ├── api/
-│   │   ├── main.py                    # FastAPI app, middleware, route registration
-│   │   ├── config.py                  # Pydantic Settings (env validation)
-│   │   ├── exceptions.py              # Custom exception handlers
-│   │   ├── routes/
-│   │   │   ├── chat.py                # AI chat with Claude (session management, context building)
-│   │   │   ├── cards.py               # Proactive advisor cards (generate, ask, thread)
-│   │   │   ├── courses.py             # Course search and details
-│   │   │   ├── users.py               # User profile CRUD
-│   │   │   ├── favorites.py           # Saved/bookmarked courses
-│   │   │   ├── completed.py           # Completed courses with grades
-│   │   │   ├── current.py             # Current semester enrollment
-│   │   │   ├── suggestions.py         # Course suggestions engine
-│   │   │   └── notifications.py       # Notification preferences
-│   │   └── utils/
-│   │       └── supabase_client.py     # Database operations
-│   ├── ClassAverageCrowdSourcing.csv  # Historical grade data (~10k+ sections)
-│   ├── requirements.txt
-│   └── vercel.json
-│
-├── frontend/
-│   ├── src/
-│   │   ├── App.jsx                    # Root component, auth flow, routing
-│   │   ├── theme.css                  # Full light/dark theme variable system
-│   │   ├── contexts/
-│   │   │   ├── LanguageContext.jsx     # i18n (EN/FR translations)
-│   │   │   └── ThemeContext.jsx        # Light/dark/auto theme
-│   │   ├── components/
-│   │   │   ├── Auth/                  # Login/register screens
-│   │   │   ├── Dashboard/
-│   │   │   │   ├── Dashboard.jsx      # Main app shell + state management
-│   │   │   │   ├── Sidebar.jsx        # Navigation, settings popup
-│   │   │   │   ├── CoursesPanel.jsx   # Course explorer with RMP ratings
-│   │   │   │   ├── SavedCoursesView.jsx  # Favorites/completed/current tabs
-│   │   │   │   ├── CalendarTab.jsx    # Calendar with exam auto-detection
-│   │   │   │   └── ChatTab.jsx        # AI chat interface
-│   │   │   ├── ProfessorRating/       # RateMyProfessor display components
-│   │   │   └── Profile/               # Profile editing + settings
-│   │   └── lib/
-│   │       ├── api.js                 # Axios client, chat/courses/users APIs
-│   │       ├── favoritesAPI.js
-│   │       ├── completedCoursesAPI.js
-│   │       └── currentCoursesAPI.js
-│   ├── package.json
-│   └── .env.production
-```
 
 ---
 
