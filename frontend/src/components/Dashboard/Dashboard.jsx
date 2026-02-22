@@ -8,6 +8,7 @@ import { getCourseCredits } from '../../utils/courseCredits'
 import { useLanguage } from '../../contexts/LanguageContext'
 import cardsAPI from '../../lib/cardsAPI'
 import AdvisorCards from './chat/AdvisorCards'
+import FeedbackModal from './FeedbackModal'
 
 import Sidebar from './Sidebar'
 import CoursesTab from './CoursesTab'
@@ -549,6 +550,7 @@ export default function Dashboard() {
           }}
         />
       )}
+      <FeedbackModal userId={user?.id} userEmail={user?.email} />
     </div>
   )
 }

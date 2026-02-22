@@ -8,7 +8,7 @@ Handles:
   POST /api/notifications/cron      – daily cron: send due notifications (service key protected)
 """
 
-from fastapi import APIRouter, HTTPException, Header, Depends
+from fastapi import APIRouter, HTTPException, Header, Depends, Request
 from pydantic import BaseModel, EmailStr
 from typing import Optional, List
 import logging
@@ -19,6 +19,12 @@ from ..utils.supabase_client import get_supabase
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
+
+# ── Feature flag ─────────────────────────────────────────────────────────────
+# Set to True when you're ready to go live with email notifications.
+# Keeping this False means the cron runs, marks rows as processed, but
+# does NOT actually send any emails. Safe for pre-launch testing.
+NOTIFICATIONS_ENABLED = False
 
 
 # ── Pydantic schemas ─────────────────────────────────────────────────────────
@@ -40,6 +46,32 @@ class CalendarEventIn(BaseModel):
     notify_same_day: bool = False
     notify_1day: bool = True
     notify_7days: bool = True
+
+
+# ── Auth helper ──────────────────────────────────────────────────────────────
+
+def _verify_token_matches_user(request: Request, user_id: str) -> None:
+    """
+    Verify the Bearer token in the Authorization header belongs to the given user_id.
+    Raises HTTP 401 if no token, 403 if the token's sub doesn't match user_id.
+    """
+    auth_header = request.headers.get("Authorization", "")
+    if not auth_header.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing or invalid Authorization header")
+
+    token = auth_header.split(" ", 1)[1]
+    try:
+        supabase = get_supabase()
+        result = supabase.auth.get_user(token)
+        if not result or not result.user:
+            raise HTTPException(status_code=401, detail="Invalid or expired token")
+        if result.user.id != user_id:
+            raise HTTPException(status_code=403, detail="Token does not match requested user")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Token verification error: {e}")
+        raise HTTPException(status_code=401, detail="Token verification failed")
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
@@ -79,52 +111,29 @@ def _build_notification_rows(event_db_id: str, user_id: str, event: CalendarEven
     return rows
 
 
-def _send_email(to: str, event_title: str, event_date: str, days_before: int):
-    """Send reminder email via Resend."""
-    if not settings.RESEND_API_KEY:
-        logger.warning("RESEND_API_KEY not set – skipping email")
-        return False
-
-    resend.api_key = settings.RESEND_API_KEY
-
-    if days_before == 0:
-        subject = f"📅 Today: {event_title}"
-        timing  = "is <strong>today</strong>"
-    elif days_before == 1:
-        subject = f"⏰ Tomorrow: {event_title}"
-        timing  = "is <strong>tomorrow</strong>"
-    else:
-        subject = f"📌 {days_before} days away: {event_title}"
-        timing  = f"is in <strong>{days_before} days</strong>"
-
-    html = (
-        '<div style="font-family:sans-serif;max-width:520px;margin:0 auto;background:#fff;'
-        'border-radius:12px;border:1px solid #e5e7eb;overflow:hidden;">'
-        '<div style="background:#ed1b2f;padding:20px 28px;">'
-        '<h2 style="color:#fff;margin:0;font-size:18px;">McGill AI Advisor</h2>'
-        '</div>'
-        '<div style="padding:28px;">'
-        f'<h3 style="margin:0 0 8px;font-size:20px;color:#111827;">{event_title}</h3>'
-        f'<p style="color:#6b7280;font-size:15px;margin:0 0 20px;">'
-        f'This event {timing} &mdash; <strong>{event_date}</strong>.</p>'
-        '<a href="https://ai-advisor-pi.vercel.app" '
-        'style="display:inline-block;padding:11px 24px;background:#ed1b2f;color:#fff;'
-        'border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">'
-        'Open Calendar</a>'
-        '</div>'
-        '<div style="padding:16px 28px;background:#f9fafb;border-top:1px solid #e5e7eb;'
-        'font-size:12px;color:#9ca3af;">'
-        'You are receiving this because you enabled reminders in McGill AI Advisor.'
-        '</div>'
-        '</div>'
-    )
+def _send_email(to: str, event_title: str, event_date: str, days_before: int) -> bool:
+    """Send reminder email via Resend. Returns True on success."""
+    if not NOTIFICATIONS_ENABLED:
+        logger.info(f"[NOTIFICATIONS DISABLED] Would send email to {to} for '{event_title}'")
+        return True
 
     try:
+        if days_before == 0:
+            subject = f"📅 Today: {event_title}"
+            body = f"Reminder: '{event_title}' is happening today ({event_date})."
+        elif days_before == 1:
+            subject = f"⏰ Tomorrow: {event_title}"
+            body = f"Reminder: '{event_title}' is tomorrow ({event_date})."
+        else:
+            subject = f"📌 Upcoming: {event_title} in {days_before} days"
+            body = f"Reminder: '{event_title}' is in {days_before} days, on {event_date}."
+
+        resend.api_key = settings.RESEND_API_KEY
         resend.Emails.send({
-            "from":    "McGill AI Advisor <onboarding@resend.dev>",
-            "to":      [to],
+            "from": "Symboulos <reminders@symboulos.ca>",
+            "to": [to],
             "subject": subject,
-            "html":    html,
+            "text": body,
         })
         return True
     except Exception as e:
@@ -132,15 +141,15 @@ def _send_email(to: str, event_title: str, event_date: str, days_before: int):
         return False
 
 
-def _send_sms(to: str, event_title: str, event_date: str, days_before: int):
-    """Send reminder SMS via Twilio."""
-    if not (settings.TWILIO_ACCOUNT_SID and settings.TWILIO_AUTH_TOKEN and settings.TWILIO_FROM_NUMBER):
-        logger.warning("Twilio not configured – skipping SMS")
-        return False
+def _send_sms(to: str, event_title: str, event_date: str, days_before: int) -> bool:
+    """Send reminder SMS via Twilio. Returns True on success."""
+    if not NOTIFICATIONS_ENABLED:
+        logger.info(f"[NOTIFICATIONS DISABLED] Would send SMS to {to} for '{event_title}'")
+        return True
 
     try:
-        from twilio.rest import Client as TwilioClient
-        client = TwilioClient(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+        from twilio.rest import Client
+        client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
 
         if days_before == 0:
             body = f"📅 McGill Reminder: '{event_title}' is TODAY ({event_date})."
@@ -159,12 +168,13 @@ def _send_sms(to: str, event_title: str, event_date: str, days_before: int):
 # ── Routes ───────────────────────────────────────────────────────────────────
 
 @router.post("/schedule")
-async def schedule_event(event: CalendarEventIn):
+async def schedule_event(event: CalendarEventIn, request: Request):
     """Save a calendar event and queue its notifications."""
+    _verify_token_matches_user(request, event.user_id)
+
     try:
         supabase = get_supabase()
 
-        # Upsert calendar event
         event_row = {
             "user_id":          event.user_id,
             "title":            event.title,
@@ -186,30 +196,32 @@ async def schedule_event(event: CalendarEventIn):
         result = supabase.table("calendar_events").insert(event_row).execute()
         db_event_id = result.data[0]["id"]
 
-        # Remove old queue entries for this event if editing
-        # (identified by title+date+user – crude but effective for user edits)
         supabase.table("notification_queue") \
             .delete() \
             .eq("user_id", event.user_id) \
             .eq("event_id", db_event_id) \
             .execute()
 
-        # Queue new notifications
+        notif_rows = []
         if event.notify_enabled:
             notif_rows = _build_notification_rows(db_event_id, event.user_id, event)
             if notif_rows:
                 supabase.table("notification_queue").insert(notif_rows).execute()
 
-        return {"success": True, "event_id": db_event_id, "queued": len(notif_rows) if event.notify_enabled else 0}
+        return {"success": True, "event_id": db_event_id, "queued": len(notif_rows)}
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"schedule_event error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/events/{user_id}")
-async def get_user_events(user_id: str):
+async def get_user_events(user_id: str, request: Request):
     """Return all calendar events for a user."""
+    _verify_token_matches_user(request, user_id)
+
     try:
         supabase = get_supabase()
         result = supabase.table("calendar_events") \
@@ -218,20 +230,26 @@ async def get_user_events(user_id: str):
             .order("date") \
             .execute()
         return {"events": result.data}
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"get_user_events error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.delete("/events/{event_id}")
-async def delete_event(event_id: str, user_id: str):
+async def delete_event(event_id: str, user_id: str, request: Request):
     """Delete a calendar event and its queued notifications."""
+    _verify_token_matches_user(request, user_id)
+
     try:
         supabase = get_supabase()
         supabase.table("notification_queue").delete().eq("event_id", event_id).execute()
         supabase.table("calendar_events").delete() \
             .eq("id", event_id).eq("user_id", user_id).execute()
         return {"success": True}
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"delete_event error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -244,13 +262,14 @@ async def run_notification_cron(x_cron_secret: Optional[str] = Header(None)):
     Sends all due notifications and marks them sent.
     Protected by CRON_SECRET header.
     """
-    if settings.CRON_SECRET and x_cron_secret != settings.CRON_SECRET:
+    if not settings.CRON_SECRET:
+        raise HTTPException(status_code=500, detail="CRON_SECRET not configured")
+    if x_cron_secret != settings.CRON_SECRET:
         raise HTTPException(status_code=401, detail="Invalid cron secret")
 
     today = date.today().isoformat()
     supabase = get_supabase()
 
-    # Fetch all unsent notifications due today or earlier
     rows = supabase.table("notification_queue") \
         .select("*") \
         .lte("send_on", today) \
@@ -268,7 +287,7 @@ async def run_notification_cron(x_cron_secret: Optional[str] = Header(None)):
         ok = True
 
         if row["method"] in ("email", "both") and row.get("email"):
-            ok &= _send_email("alexanderdanielduda@gmail.com", row["event_title"], event_date, days_before)
+            ok &= _send_email(row["email"], row["event_title"], event_date, days_before)
 
         if row["method"] in ("sms", "both") and row.get("phone"):
             ok &= _send_sms(row["phone"], row["event_title"], event_date, days_before)
@@ -281,5 +300,10 @@ async def run_notification_cron(x_cron_secret: Optional[str] = Header(None)):
         else:
             failed_ids.append(row["id"])
 
-    logger.info(f"Cron: sent={sent_count}, failed={len(failed_ids)}")
-    return {"sent": sent_count, "failed": len(failed_ids), "failed_ids": failed_ids}
+    logger.info(f"Cron: enabled={NOTIFICATIONS_ENABLED}, sent={sent_count}, failed={len(failed_ids)}")
+    return {
+        "sent": sent_count,
+        "failed": len(failed_ids),
+        "failed_ids": failed_ids,
+        "notifications_enabled": NOTIFICATIONS_ENABLED,
+    }

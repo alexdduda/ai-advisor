@@ -1,0 +1,298 @@
+/* FeedbackModal.css — matches ProfSuggestionPopover visual style */
+
+/* ── Trigger button ──────────────────────────────────────── */
+.feedback-trigger-btn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
+  background: var(--bg-primary, #fff);
+  border: 1.5px solid #d1d5db;
+  border-radius: 20px;
+  color: var(--text-secondary, #6b7280);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+[data-theme="dark"] .feedback-trigger-btn {
+  background: #0f172a;
+  border-color: #2d3f55;
+  color: #94a3b8;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+}
+
+.feedback-trigger-btn:hover {
+  border-color: #ED1B2F;
+  color: #ED1B2F;
+  box-shadow: 0 4px 14px rgba(237, 27, 47, 0.2);
+  transform: translateY(-1px);
+}
+
+/* ── Overlay ─────────────────────────────────────────────── */
+.feedback-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+/* ── Modal — same radius/shadow as ProfSuggestionPopover ─── */
+.feedback-modal {
+  background: var(--bg-primary, #fff);
+  border: 1.5px solid #d1d5db;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  width: 360px;
+  max-width: 100%;
+  animation: feedbackIn 0.15s ease;
+  overflow: hidden;
+}
+
+[data-theme="dark"] .feedback-modal {
+  background: #0f172a;
+  border-color: #2d3f55;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+@keyframes feedbackIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+/* ── Header — mirrors .prof-popover-header ───────────────── */
+.feedback-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 14px 11px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  border-bottom: 1.5px solid #e5e7eb;
+}
+
+[data-theme="dark"] .feedback-modal-header {
+  border-bottom-color: #2d3f55;
+}
+
+.feedback-modal-flag {
+  color: #ED1B2F;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.feedback-modal-close {
+  margin-left: auto;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-tertiary, #9ca3af);
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  transition: color 0.15s;
+  font-family: inherit;
+}
+
+.feedback-modal-close:hover { color: var(--text-primary); }
+
+/* ── Mode select ─────────────────────────────────────────── */
+.feedback-mode-select {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.feedback-modal-desc {
+  font-size: 0.78rem;
+  color: var(--text-secondary, #6b7280);
+  margin: 0 0 6px 0;
+  line-height: 1.5;
+}
+
+.feedback-mode-btn {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 11px 13px;
+  background: var(--bg-secondary, #f9fafb);
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  font-family: inherit;
+  width: 100%;
+}
+
+[data-theme="dark"] .feedback-mode-btn {
+  background: #1e293b;
+  border-color: #2d3f55;
+}
+
+.feedback-mode-btn:hover {
+  border-color: #ED1B2F;
+  box-shadow: 0 2px 8px rgba(237, 27, 47, 0.12);
+}
+
+.feedback-mode-icon {
+  font-size: 1rem;
+  color: #ED1B2F;
+  margin-top: 1px;
+  flex-shrink: 0;
+}
+
+.feedback-mode-btn strong {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.feedback-mode-btn span {
+  font-size: 0.76rem;
+  color: var(--text-secondary, #6b7280);
+}
+
+/* ── Forms ───────────────────────────────────────────────── */
+.feedback-form {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.feedback-input {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  background: var(--bg-primary, #fff);
+  color: var(--text-primary);
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+  font-family: inherit;
+}
+
+.feedback-input:focus {
+  border-color: #ED1B2F;
+  box-shadow: 0 0 0 3px rgba(237, 27, 47, 0.1);
+}
+
+[data-theme="dark"] .feedback-input {
+  background: #0a1120;
+  border-color: #2d3f55;
+  color: #e2e8f0;
+}
+
+.feedback-textarea {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  background: var(--bg-primary, #fff);
+  color: var(--text-primary);
+  outline: none;
+  box-sizing: border-box;
+  resize: vertical;
+  transition: border-color 0.15s;
+  font-family: inherit;
+  line-height: 1.5;
+}
+
+.feedback-textarea:focus {
+  border-color: #ED1B2F;
+  box-shadow: 0 0 0 3px rgba(237, 27, 47, 0.1);
+}
+
+[data-theme="dark"] .feedback-textarea {
+  background: #0a1120;
+  border-color: #2d3f55;
+  color: #e2e8f0;
+}
+
+.feedback-textarea--short {
+  min-height: 56px;
+}
+
+/* ── Form actions ────────────────────────────────────────── */
+.feedback-form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 2px;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.feedback-cancel-btn {
+  padding: 5px 12px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 6px;
+  background: none;
+  color: var(--text-secondary, #6b7280);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+
+.feedback-cancel-btn:hover {
+  border-color: #9ca3af;
+  color: var(--text-primary);
+}
+
+.feedback-submit-btn {
+  padding: 5px 14px;
+  border: none;
+  border-radius: 6px;
+  background: #ED1B2F;
+  color: white;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-family: inherit;
+}
+
+.feedback-submit-btn:hover:not(:disabled) { background: #c91625; }
+.feedback-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Success / Duplicate states ──────────────────────────── */
+.feedback-success {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #16a34a;
+  padding: 14px;
+}
+
+.feedback-duplicate {
+  font-size: 0.82rem;
+  color: var(--text-secondary, #6b7280);
+  line-height: 1.5;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
