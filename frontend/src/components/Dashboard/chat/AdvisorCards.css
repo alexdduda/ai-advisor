@@ -830,3 +830,125 @@
   .advisor-card__title { font-size: 0.88rem; }
   .freeform-input      { font-size: 16px; }
 }
+
+/* ============================================================
+   ADDITIONS — append these to the bottom of AdvisorCards.css
+   ============================================================ */
+
+/* ── Drag handle ── */
+.advisor-card__drag-handle {
+  position: absolute;
+  left: -2px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  color: var(--text-muted, var(--text-tertiary));
+  opacity: 0;
+  cursor: grab;
+  transition: opacity 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  padding: 4px 0;
+  z-index: 1;
+}
+
+.advisor-card:hover .advisor-card__drag-handle { opacity: 0.5; }
+.advisor-card__drag-handle:hover               { opacity: 1 !important; color: var(--accent-primary); }
+.advisor-card__drag-handle:active              { cursor: grabbing; }
+
+/* Give card position:relative for the handle to anchor to */
+.advisor-card { position: relative; padding-left: 20px; }
+
+/* ── Save / bookmark button ── */
+.advisor-card__save {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+  color: var(--text-muted, var(--text-tertiary));
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s ease, transform 0.15s ease;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.advisor-card__save:hover:not(:disabled) {
+  color: var(--accent-primary);
+  transform: scale(1.15);
+}
+
+.advisor-card__save--active {
+  color: var(--accent-primary);
+}
+
+.advisor-card__save--active:hover:not(:disabled) {
+  color: var(--text-muted, var(--text-tertiary));
+  transform: scale(1.0);
+}
+
+.advisor-card__save:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── Saved badge ── */
+.advisor-card__saved-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: var(--accent-primary);
+  background: rgba(237, 27, 47, 0.08);
+  border: 1px solid rgba(237, 27, 47, 0.25);
+  border-radius: 4px;
+  padding: 1px 6px;
+}
+
+.saved-badge__icon {
+  font-size: 0.6rem;
+  color: var(--accent-primary);
+}
+
+[data-theme="dark"] .advisor-card__saved-badge,
+.dark .advisor-card__saved-badge {
+  background: rgba(237, 27, 47, 0.15);
+  border-color: rgba(237, 27, 47, 0.35);
+}
+
+/* ── Saved card — McGill red left border ── */
+.advisor-card--saved {
+  border-left-color: var(--accent-primary) !important;
+  background: rgba(237, 27, 47, 0.02);
+}
+
+/* ── Drag-and-drop row wrapper ── */
+.dnd-row {
+  position: relative;
+  transition: transform 0.15s ease;
+}
+
+.dnd-row--dragging {
+  opacity: 0.4;
+  z-index: 100;
+}
+
+.dnd-row--over::before {
+  content: '';
+  display: block;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--accent-primary);
+  margin-bottom: 4px;
+  animation: dropIndicator 0.2s ease;
+}
+
+@keyframes dropIndicator {
+  from { transform: scaleX(0.5); opacity: 0; }
+  to   { transform: scaleX(1);   opacity: 1; }
+}
+
+/* ── Dragging cursor on the whole feed while dragging ── */
+.advisor-cards-feed.is-dragging { cursor: grabbing; }

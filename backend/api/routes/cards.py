@@ -1,11 +1,13 @@
 """
 cards.py — Proactive advisor card generation
 
-POST /api/cards/generate/{user_id}   — Generate AI proactive cards
-GET  /api/cards/{user_id}            — Fetch stored cards (instant)
-DELETE /api/cards/{user_id}          — Clear AI-generated cards
-POST /api/cards/ask/{user_id}        — User asks a question → single card
-POST /api/cards/{card_id}/thread     — Follow-up thread on a card
+POST   /api/cards/generate/{user_id}   — Generate AI proactive cards
+GET    /api/cards/{user_id}            — Fetch stored cards (instant)
+DELETE /api/cards/{user_id}            — Clear AI-generated cards
+POST   /api/cards/ask/{user_id}        — User asks a question → single card
+POST   /api/cards/{card_id}/thread     — Follow-up thread on a card
+PATCH  /api/cards/{card_id}/save       — Toggle saved state on a card
+PATCH  /api/cards/{user_id}/reorder    — Persist drag-and-drop order
 """
 
 from fastapi import APIRouter, HTTPException
@@ -14,6 +16,7 @@ import anthropic
 import logging
 import json
 from datetime import datetime, timezone
+from typing import List
 
 from api.utils.supabase_client import get_supabase, get_user_by_id
 from api.config import settings
@@ -50,6 +53,13 @@ class AskRequest(BaseModel):
     user_id: str
     question: str
 
+class SaveRequest(BaseModel):
+    is_saved: bool
+
+class ReorderRequest(BaseModel):
+    # List of {id, sort_order} pairs
+    order: List[dict]
+
 
 # ── Supabase helpers ─────────────────────────────────────────────
 
@@ -82,6 +92,17 @@ def fetch_student_context(user_id: str) -> dict:
             "completed": completed, "current": current, "calendar": calendar}
 
 
+def fetch_saved_cards(user_id: str) -> list:
+    """Return all currently-saved cards for a user."""
+    supabase = get_supabase()
+    resp = (supabase.table("advisor_cards")
+        .select("title, body, category")
+        .eq("user_id", user_id)
+        .eq("is_saved", True)
+        .execute())
+    return resp.data or []
+
+
 def cards_are_fresh(user_id: str, max_age_hours: int = 12) -> bool:
     try:
         supabase = get_supabase()
@@ -104,12 +125,33 @@ def _sanitise_category(card: dict) -> str:
 
 
 def save_cards(user_id: str, cards: list) -> None:
-    """Replace AI-generated cards; preserve user-asked cards."""
+    """
+    Replace AI-generated, non-saved cards.
+    Saved cards and user-asked cards are never touched.
+    New cards get sort_order starting after the highest existing sort_order
+    so saved cards (which keep their order) naturally stay at the top.
+    """
     supabase = get_supabase()
+
+    # Delete only AI-generated cards that are NOT saved
     supabase.table("advisor_cards").delete() \
-        .eq("user_id", user_id).eq("source", "ai").execute()
+        .eq("user_id", user_id) \
+        .eq("source", "ai") \
+        .eq("is_saved", False) \
+        .execute()
+
     if not cards:
         return
+
+    # Find the current max sort_order so new cards go below saved ones
+    existing = (supabase.table("advisor_cards")
+        .select("sort_order")
+        .eq("user_id", user_id)
+        .order("sort_order", desc=True)
+        .limit(1)
+        .execute().data or [])
+    base_order = (existing[0]["sort_order"] + 1) if existing else 0
+
     now = datetime.now(timezone.utc).isoformat()
     rows = [{
         "user_id": user_id,
@@ -120,8 +162,10 @@ def save_cards(user_id: str, cards: list) -> None:
         "body": card.get("body", ""),
         "actions": json.dumps(card.get("actions", [])),
         "priority": card.get("priority", i + 1),
+        "sort_order": base_order + i,
         "category": _sanitise_category(card),
         "source": "ai",
+        "is_saved": False,
         "expires_at": card.get("expires_at"),
         "generated_at": now,
     } for i, card in enumerate(cards)]
@@ -129,7 +173,7 @@ def save_cards(user_id: str, cards: list) -> None:
 
 
 def insert_user_card(user_id: str, card: dict, question: str) -> dict:
-    """Insert a single user-asked card at priority=0 (top of feed)."""
+    """Insert a single user-asked card at sort_order=0 (top of feed)."""
     supabase = get_supabase()
     row = {
         "user_id": user_id,
@@ -140,8 +184,10 @@ def insert_user_card(user_id: str, card: dict, question: str) -> dict:
         "body": card.get("body", ""),
         "actions": json.dumps(card.get("actions", [])),
         "priority": 0,
+        "sort_order": 0,
         "category": _sanitise_category(card),
         "source": "user",
+        "is_saved": False,
         "user_question": question,
         "generated_at": datetime.now(timezone.utc).isoformat(),
     }
@@ -154,7 +200,7 @@ def insert_user_card(user_id: str, card: dict, question: str) -> dict:
 
 # ── Prompt builders ──────────────────────────────────────────────
 
-def build_rich_context(ctx: dict) -> str:
+def build_rich_context(ctx: dict, saved_cards: list = None) -> str:
     user = ctx["user"]
     completed, current, favorites, calendar = (
         ctx["completed"], ctx["current"], ctx["favorites"], ctx["calendar"])
@@ -187,9 +233,21 @@ def build_rich_context(ctx: dict) -> str:
     for m in (user.get("other_minors") or []):
         minors_str += f", {m}"
 
-    return f"""You are a proactive AI academic advisor for McGill University.
-Analyse the student's profile and generate 3–6 high-value briefing cards.
+    # Build saved-cards context so the AI doesn't duplicate them
+    saved_section = ""
+    if saved_cards:
+        saved_lines = "\n".join(
+            f"  - [{c.get('category','other')}] {c['title']}: {c['body'][:120]}"
+            for c in saved_cards
+        )
+        saved_section = f"""
+SAVED CARDS (already pinned by the student — DO NOT regenerate cards covering the same topic or insight):
+{saved_lines}
+"""
 
+    return f"""You are a proactive AI academic advisor for McGill University.
+Analyse the student's profile and generate 8 high-value briefing cards.
+{saved_section}
 Today: {datetime.now(timezone.utc).date().isoformat()}
 
 STUDENT PROFILE
@@ -199,115 +257,79 @@ STUDENT PROFILE
   Minor(s)     : {minors_str}
   Concentration: {user.get('concentration') or 'None'}
   Year         : U{user.get('year') or '?'}
-  GPA          : {user.get('current_gpa') or 'Not specified'}
-  Interests    : {user.get('interests') or 'Not specified'}
-  Credits done : {total_credits} + {adv_credits} adv = {total_credits + adv_credits}/120
-  Adv standing : {adv_summary}
-
-CURRENT COURSES
-{fmt_list(current)}
+  Credits done : {total_credits} (+ {adv_credits} advanced standing: {adv_summary})
 
 COMPLETED COURSES
 {fmt_completed()}
 
-SAVED COURSES
+CURRENT COURSES
+{fmt_list(current)}
+
+SAVED/FAVOURITED COURSES
 {fmt_list(favorites)}
 
-UPCOMING CALENDAR
+UPCOMING CALENDAR EVENTS
 {calendar_str}
 
-Surface things the student NEEDS to know: deadlines, prereq gaps, GPA warnings,
-degree milestones, smart recommendations. Be specific — use real course codes and numbers.
-
-Each card must have exactly one category from:
+INSTRUCTIONS
+Generate exactly 8 cards as a JSON array. Each card must include:
+  "type"     : one of "urgent" | "warning" | "insight" | "progress"
+  "icon"     : single emoji
+  "label"    : short ALL-CAPS label (≤ 4 words)
+  "title"    : concise headline (≤ 12 words)
+  "body"     : 1–3 sentence explanation with specific, actionable detail
+  "actions"  : array of 2–3 short follow-up question strings
+  "category" : one of:
 {CATEGORIES_PROMPT_LIST}
+  "priority" : integer 1–8 (1 = most important)
 
-Respond with ONLY a JSON array. No preamble, no markdown fences.
-Each object:
-{{
-  "type": "urgent"|"warning"|"insight"|"progress",
-  "icon": "<emoji>",
-  "label": "<3-5 WORD UPPERCASE LABEL>",
-  "title": "<max 10 words>",
-  "body": "<1-2 sentences, specific>",
-  "actions": ["<chip 1>", "<chip 2>"],
-  "priority": <1-10>,
-  "category": "<deadlines|degree|courses|grades|planning|opportunities|other>"
-}}"""
-
-
-def build_ask_context(ctx: dict, question: str) -> str:
-    user = ctx["user"]
-    completed, current, favorites = ctx["completed"], ctx["current"], ctx["favorites"]
-    total_credits = sum(c.get("credits") or 3 for c in completed)
-
-    completed_str = "\n".join(
-        f"  - {c['course_code']} | Grade: {c.get('grade') or 'N/A'}"
-        for c in completed[:20]) or "  None"
-    current_str = "\n".join(
-        f"  - {c['course_code']} ({c.get('course_title','')})"
-        for c in current) or "  None"
-    favorites_str = "\n".join(
-        f"  - {f['course_code']} ({f.get('course_title','')})"
-        for f in favorites[:15]) or "  None"
-
-    return f"""You are an AI academic advisor for McGill University.
-A student asked you a question. Answer it as a single briefing card.
-
-Today: {datetime.now(timezone.utc).date().isoformat()}
-
-STUDENT: {user.get('username') or user.get('email')} | U{user.get('year','?')} | {user.get('major','?')} | GPA: {user.get('current_gpa','?')} | Credits: {total_credits}
-
-Current courses:
-{current_str}
-Completed courses:
-{completed_str}
-Saved courses:
-{favorites_str}
-
-QUESTION: "{question}"
-
-Answer directly and specifically. Reference the student's actual data.
-Pick the best category from:
-{CATEGORIES_PROMPT_LIST}
-
-Respond with ONLY a single JSON object. No preamble, no markdown fences.
-{{
-  "type": "urgent"|"warning"|"insight"|"progress",
-  "icon": "<emoji>",
-  "label": "<3-5 WORD UPPERCASE LABEL>",
-  "title": "<answer summary, max 10 words>",
-  "body": "<direct answer, 2-3 sentences>",
-  "actions": ["<follow-up 1>", "<follow-up 2>"],
-  "category": "<deadlines|degree|courses|grades|planning|opportunities|other>"
-}}"""
-
-
-def build_thread_context(card_title: str, card_body: str, thread: list) -> str:
-    return f"""You are a concise AI academic advisor for McGill University.
-The student is asking a follow-up about this card:
-  Title: {card_title}
-  Body : {card_body}
-
-Answer directly in 2–4 sentences. Use real McGill course codes where relevant.
-Do not repeat the card content back."""
+Return ONLY the JSON array — no markdown, no commentary."""
 
 
 # ── Routes ───────────────────────────────────────────────────────
 
+@router.get("/{user_id}", response_model=dict)
+async def get_cards(user_id: str):
+    try:
+        get_user_by_id(user_id)
+        supabase = get_supabase()
+        resp = (supabase.table("advisor_cards")
+            .select("*")
+            .eq("user_id", user_id)
+            .order("sort_order", desc=False)
+            .execute())
+        cards = resp.data or []
+        for card in cards:
+            if isinstance(card.get("actions"), str):
+                card["actions"] = json.loads(card["actions"])
+        ai_cards = [c for c in cards if c.get("source") == "ai"]
+        generated_at = ai_cards[0].get("generated_at") if ai_cards else None
+        return {"cards": cards, "count": len(cards),
+                "generated_at": generated_at, "fresh": cards_are_fresh(user_id)}
+    except UserNotFoundException:
+        raise HTTPException(status_code=404, detail="User not found")
+    except Exception as e:
+        logger.exception(f"Failed to get cards for {user_id}: {e}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve advisor cards")
+
+
 @router.post("/generate/{user_id}", response_model=dict)
-async def generate_cards(user_id: str, request: GenerateRequest = GenerateRequest()):
+async def generate_cards(user_id: str, request: GenerateRequest):
     try:
         get_user_by_id(user_id)
         if not request.force and cards_are_fresh(user_id):
             return await get_cards(user_id)
 
         ctx = fetch_student_context(user_id)
+        saved = fetch_saved_cards(user_id)
+        prompt = build_rich_context(ctx, saved_cards=saved)
+
         client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
         message = client.messages.create(
-            model="claude-sonnet-4-20250514", max_tokens=2048,
-            system=build_rich_context(ctx),
-            messages=[{"role": "user", "content": "Generate my advisor cards now."}])
+            model="claude-opus-4-5",
+            max_tokens=4096,
+            messages=[{"role": "user", "content": prompt}],
+        )
 
         raw = message.content[0].text.strip()
         if raw.startswith("```"):
@@ -337,6 +359,69 @@ async def generate_cards(user_id: str, request: GenerateRequest = GenerateReques
         raise HTTPException(status_code=500, detail="Failed to generate advisor cards")
 
 
+@router.delete("/{user_id}", status_code=204)
+async def clear_cards(user_id: str):
+    try:
+        get_user_by_id(user_id)
+        supabase = get_supabase()
+        # Only delete non-saved AI cards
+        supabase.table("advisor_cards").delete() \
+            .eq("user_id", user_id) \
+            .eq("source", "ai") \
+            .eq("is_saved", False) \
+            .execute()
+    except UserNotFoundException:
+        raise HTTPException(status_code=404, detail="User not found")
+    except Exception as e:
+        logger.exception(f"Failed to clear cards for {user_id}: {e}")
+        raise HTTPException(status_code=500, detail="Failed to clear cards")
+
+
+@router.patch("/{card_id}/save", response_model=dict)
+async def toggle_save_card(card_id: str, request: SaveRequest):
+    """Pin or unpin a card so the nightly cron won't delete it."""
+    try:
+        supabase = get_supabase()
+        result = (supabase.table("advisor_cards")
+            .update({"is_saved": request.is_saved})
+            .eq("id", card_id)
+            .execute())
+        if not result.data:
+            raise HTTPException(status_code=404, detail="Card not found")
+        card = result.data[0]
+        if isinstance(card.get("actions"), str):
+            card["actions"] = json.loads(card["actions"])
+        return card
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception(f"Failed to toggle save for card {card_id}: {e}")
+        raise HTTPException(status_code=500, detail="Failed to update card")
+
+
+@router.patch("/{user_id}/reorder", response_model=dict)
+async def reorder_cards(user_id: str, request: ReorderRequest):
+    """
+    Persist a new drag-and-drop order.
+    Expects: { order: [ { id: "...", sort_order: 0 }, ... ] }
+    """
+    try:
+        get_user_by_id(user_id)
+        supabase = get_supabase()
+        for item in request.order:
+            supabase.table("advisor_cards") \
+                .update({"sort_order": item["sort_order"]}) \
+                .eq("id", item["id"]) \
+                .eq("user_id", user_id) \
+                .execute()
+        return {"success": True, "updated": len(request.order)}
+    except UserNotFoundException:
+        raise HTTPException(status_code=404, detail="User not found")
+    except Exception as e:
+        logger.exception(f"Failed to reorder cards for {user_id}: {e}")
+        raise HTTPException(status_code=500, detail="Failed to reorder cards")
+
+
 @router.post("/ask/{user_id}", response_model=dict)
 async def ask_card(user_id: str, request: AskRequest):
     try:
@@ -348,25 +433,29 @@ async def ask_card(user_id: str, request: AskRequest):
         ctx = fetch_student_context(user_id)
         client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
         message = client.messages.create(
-            model="claude-sonnet-4-20250514", max_tokens=512,
-            system=build_ask_context(ctx, question),
-            messages=[{"role": "user", "content": question}])
+            model="claude-opus-4-5",
+            max_tokens=1024,
+            messages=[{
+                "role": "user",
+                "content": f"""{build_rich_context(ctx)}
+
+The student has asked a specific question. Generate exactly ONE card answering it.
+Question: {question}
+
+Return ONLY a single JSON object (not an array) with the same fields as above."""
+            }],
+        )
 
         raw = message.content[0].text.strip()
         if raw.startswith("```"):
             raw = raw.split("\n", 1)[1].rsplit("```", 1)[0].strip()
 
-        card = json.loads(raw)
-        if not isinstance(card, dict):
-            raise ValueError("AI did not return a JSON object")
+        card_data = json.loads(raw)
+        if isinstance(card_data, list):
+            card_data = card_data[0]
 
-        card["category"] = _sanitise_category(card)
-        card.setdefault("type", "insight")
-        card.setdefault("icon", "💬")
-        card.setdefault("actions", [])
-
-        inserted = insert_user_card(user_id, card, question)
-        logger.info(f"User-asked card for {user_id}: {card.get('title')}")
+        card_data["category"] = _sanitise_category(card_data)
+        inserted = insert_user_card(user_id, card_data, question)
         return {"card": inserted}
 
     except UserNotFoundException:
@@ -374,47 +463,9 @@ async def ask_card(user_id: str, request: AskRequest):
     except json.JSONDecodeError as e:
         logger.error(f"Ask card JSON parse error: {e}")
         raise HTTPException(status_code=500, detail="Failed to parse AI response")
-    except HTTPException:
-        raise
     except Exception as e:
         logger.exception(f"Ask card failed for {user_id}: {e}")
-        raise HTTPException(status_code=500, detail="Failed to generate card")
-
-
-@router.get("/{user_id}", response_model=dict)
-async def get_cards(user_id: str):
-    try:
-        get_user_by_id(user_id)
-        supabase = get_supabase()
-        resp = (supabase.table("advisor_cards").select("*")
-            .eq("user_id", user_id).order("priority", desc=False).execute())
-        cards = resp.data or []
-        for card in cards:
-            if isinstance(card.get("actions"), str):
-                card["actions"] = json.loads(card["actions"])
-        ai_cards = [c for c in cards if c.get("source") == "ai"]
-        generated_at = ai_cards[0].get("generated_at") if ai_cards else None
-        return {"cards": cards, "count": len(cards),
-                "generated_at": generated_at, "fresh": cards_are_fresh(user_id)}
-    except UserNotFoundException:
-        raise HTTPException(status_code=404, detail="User not found")
-    except Exception as e:
-        logger.exception(f"Failed to get cards for {user_id}: {e}")
-        raise HTTPException(status_code=500, detail="Failed to retrieve advisor cards")
-
-
-@router.delete("/{user_id}", status_code=204)
-async def clear_cards(user_id: str):
-    try:
-        get_user_by_id(user_id)
-        supabase = get_supabase()
-        supabase.table("advisor_cards").delete() \
-            .eq("user_id", user_id).eq("source", "ai").execute()
-    except UserNotFoundException:
-        raise HTTPException(status_code=404, detail="User not found")
-    except Exception as e:
-        logger.exception(f"Failed to clear cards for {user_id}: {e}")
-        raise HTTPException(status_code=500, detail="Failed to clear cards")
+        raise HTTPException(status_code=500, detail="Failed to generate card from question")
 
 
 @router.post("/{card_id}/thread", response_model=dict)
@@ -422,38 +473,30 @@ async def append_thread_message(card_id: str, request: ThreadRequest):
     try:
         supabase = get_supabase()
         card_resp = (supabase.table("advisor_cards")
-            .select("title, body, user_id").eq("id", card_id).single().execute())
+            .select("title, body")
+            .eq("id", card_id)
+            .single()
+            .execute())
         if not card_resp.data:
             raise HTTPException(status_code=404, detail="Card not found")
-        card = card_resp.data
-        if card["user_id"] != request.user_id:
-            raise HTTPException(status_code=403, detail="Forbidden")
-
-        existing = (supabase.table("card_threads")
-            .select("role, content").eq("card_id", card_id)
-            .order("created_at", desc=False).execute().data or [])
-
-        messages = [{"role": m["role"], "content": m["content"]} for m in existing]
-        messages.append({"role": "user", "content": request.message})
 
         client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
-        response = client.messages.create(
-            model="claude-sonnet-4-20250514", max_tokens=512,
-            system=build_thread_context(card["title"], card["body"], existing),
-            messages=messages)
-
-        ai_response = response.content[0].text.strip()
-        supabase.table("card_threads").insert([
-            {"card_id": card_id, "user_id": request.user_id,
-             "role": "user", "content": request.message},
-            {"card_id": card_id, "user_id": request.user_id,
-             "role": "assistant", "content": ai_response},
-        ]).execute()
-
-        return {"response": ai_response}
-
+        message = client.messages.create(
+            model="claude-opus-4-5",
+            max_tokens=512,
+            system=(
+                "You are a helpful McGill academic advisor. "
+                "Answer follow-up questions about the academic insight card concisely and helpfully. "
+                "Keep responses under 150 words."
+            ),
+            messages=[{
+                "role": "user",
+                "content": f"Card context: {request.card_context}\n\nQuestion: {request.message}"
+            }],
+        )
+        return {"response": message.content[0].text.strip()}
     except HTTPException:
         raise
     except Exception as e:
-        logger.exception(f"Thread append failed for card {card_id}: {e}")
-        raise HTTPException(status_code=500, detail="Failed to process thread message")
+        logger.exception(f"Thread message failed for card {card_id}: {e}")
+        raise HTTPException(status_code=500, detail="Failed to send thread message")

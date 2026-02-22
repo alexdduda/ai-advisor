@@ -1,66 +1,47 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import {
-  FaRobot,
-  FaGraduationCap,
-  FaExclamationTriangle,
-  FaLightbulb,
-  FaChartLine,
-  FaCalendarAlt,
-  FaBook,
-  FaClipboardList,
-  FaStar,
-  FaComments,
-  FaSync,
-  FaChevronDown,
-  FaChevronUp,
-  FaTimes,
-  FaBolt,
-  FaPlus,
-  FaArrowRight,
+  FaRobot, FaSync, FaChevronDown, FaChevronUp,
+  FaBolt, FaPlus, FaArrowRight, FaGraduationCap,
+  FaClipboardList, FaComments, FaCalendarAlt,
+  FaChartBar, FaMapMarkedAlt, FaLightbulb,
+  FaBookmark, FaRegBookmark, FaThumbtack,
+  FaGripVertical,
 } from 'react-icons/fa'
 import { CARD_CATEGORIES, CATEGORY_LABELS } from '../../../lib/cardsAPI'
 import './AdvisorCards.css'
 
-// ── Card type config ──────────────────────────────────────────
-const CARD_CONFIG = {
-  urgent:   { accent: 'var(--card-urgent)',   Icon: FaExclamationTriangle },
-  warning:  { accent: 'var(--card-warning)',  Icon: FaExclamationTriangle },
-  insight:  { accent: 'var(--card-insight)',  Icon: FaLightbulb },
-  progress: { accent: 'var(--card-progress)', Icon: FaChartLine },
-}
-
+// ── Category → icon component map ────────────────────────────
 const CATEGORY_ICON_COMPONENTS = {
   deadlines:     FaCalendarAlt,
   degree:        FaGraduationCap,
-  courses:       FaBook,
-  grades:        FaChartLine,
-  planning:      FaClipboardList,
-  opportunities: FaStar,
+  courses:       FaClipboardList,
+  grades:        FaChartBar,
+  planning:      FaMapMarkedAlt,
+  opportunities: FaLightbulb,
   other:         FaComments,
 }
 
-// ── Thread messages ───────────────────────────────────────────
+// ── Card type → accent colour ─────────────────────────────────
+const CARD_CONFIG = {
+  urgent:   { accent: 'var(--card-urgent,   #ED1B2F)' },
+  warning:  { accent: 'var(--card-warning,  #F59E0B)' },
+  insight:  { accent: 'var(--card-insight,  #3B82F6)' },
+  progress: { accent: 'var(--card-progress, #10B981)' },
+}
+
+// ── Thread sub-components ─────────────────────────────────────
+
 function ThreadMessages({ thread, isThinking }) {
   const bottomRef = useRef(null)
-  const isFirstRender = useRef(true)
-
-  useEffect(() => {
-    // Skip scroll on first render so opening a thread doesn't jump the page
-    if (isFirstRender.current) {
-      isFirstRender.current = false
-      return
-    }
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
-  }, [thread, isThinking])
-
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [thread, isThinking])
   return (
-    <>
+    <div className="thread-messages">
       {thread.map((msg, i) => (
         <div key={i} className={`thread-message thread-message--${msg.role}`}>
-          {msg.role === 'assistant' && (
-            <span className="thread-avatar"><FaRobot /></span>
-          )}
+          <span className="thread-avatar">
+            {msg.role === 'user' ? '👤' : <FaRobot />}
+          </span>
           <p className="thread-text">{msg.content}</p>
         </div>
       ))}
@@ -73,93 +54,50 @@ function ThreadMessages({ thread, isThinking }) {
         </div>
       )}
       <div ref={bottomRef} />
-    </>
+    </div>
   )
 }
 
-// ── Thread input ──────────────────────────────────────────────
 function ThreadInput({ onSubmit, isThinking, placeholder = 'Ask a follow-up…', autoFocus = false }) {
   const [value, setValue] = useState('')
-  const inputRef = useRef(null)
-
-  useEffect(() => {
-    if (autoFocus) setTimeout(() => inputRef.current?.focus(), 50)
-  }, [autoFocus])
-
-  const handleSubmit = (e) => {
+  const handle = (e) => {
     e.preventDefault()
     if (!value.trim() || isThinking) return
     onSubmit(value.trim())
     setValue('')
   }
-
   return (
-    <form className="thread-input-form" onSubmit={handleSubmit}>
+    <form className="thread-input-form" onSubmit={handle}>
       <input
-        ref={inputRef}
         className="thread-input"
-        type="text"
-        placeholder={placeholder}
         value={value}
         onChange={e => setValue(e.target.value)}
+        placeholder={placeholder}
         disabled={isThinking}
+        autoFocus={autoFocus}
       />
-      <button type="submit" className="thread-send" disabled={isThinking || !value.trim()}>
-        {isThinking
-          ? <span className="thinking-dots small"><span /><span /><span /></span>
-          : <FaArrowRight />}
+      <button className="thread-send" type="submit" disabled={isThinking || !value.trim()}>
+        <FaArrowRight />
       </button>
     </form>
   )
 }
 
-// ── Thread modal ──────────────────────────────────────────────
 function ThreadModal({ card, thread, isThinking, onSend, onClose }) {
-  const config = CARD_CONFIG[card.card_type || card.type] || CARD_CONFIG.insight
-  const CategoryIcon = CATEGORY_ICON_COMPONENTS[card.category || 'other'] || FaComments
-  const overlayRef = useRef(null)
-
   useEffect(() => {
-    const handler = (e) => { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
+    const onKey = (e) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
   }, [onClose])
 
-  useEffect(() => {
-    document.body.style.overflow = 'hidden'
-    return () => { document.body.style.overflow = '' }
-  }, [])
-
   return createPortal(
-    <div
-      className="thread-modal-overlay"
-      ref={overlayRef}
-      onClick={e => { if (e.target === overlayRef.current) onClose() }}
-    >
-      <div
-        className="thread-modal"
-        style={{ '--card-accent': config.accent }}
-        role="dialog"
-        aria-modal="true"
-      >
+    <div className="thread-modal-overlay" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+      <div className="thread-modal" role="dialog" aria-modal="true">
         <div className="thread-modal__header">
-          <div className="thread-modal__card-info">
-            <span className="thread-modal__cat-icon"><CategoryIcon /></span>
-            <div className="thread-modal__card-text">
-              <span className="thread-modal__label">{card.label}</span>
-              <h3 className="thread-modal__title">{card.title}</h3>
-            </div>
-          </div>
-          <button className="thread-modal__close" onClick={onClose} aria-label="Close">
-            <FaTimes />
-          </button>
+          <h3 className="thread-modal__title">{card.title}</h3>
+          <button className="thread-modal__close" onClick={onClose} aria-label="Close">✕</button>
         </div>
-
-        <div className="thread-modal__summary">
-          <p>{card.body}</p>
-        </div>
-
-        <div className="thread-modal__messages">
+        <div className="thread-modal__body">
           {thread.length === 0 && !isThinking ? (
             <div className="thread-modal__empty">
               <FaRobot className="thread-modal__empty-icon" />
@@ -169,7 +107,6 @@ function ThreadModal({ card, thread, isThinking, onSend, onClose }) {
             <ThreadMessages thread={thread} isThinking={isThinking} />
           )}
         </div>
-
         <div className="thread-modal__input-area">
           <ThreadInput
             onSubmit={onSend}
@@ -185,16 +122,18 @@ function ThreadModal({ card, thread, isThinking, onSend, onClose }) {
 }
 
 // ── Individual card ───────────────────────────────────────────
-function AdvisorCard({ card, onChipClick }) {
+function AdvisorCard({ card, onChipClick, onSaveToggle, dragHandleProps, isDragging }) {
   const [thread, setThread]         = useState([])
   const [collapsed, setCollapsed]   = useState(false)
   const [isThinking, setIsThinking] = useState(false)
   const [chips, setChips]           = useState(card.actions || [])
   const [modalOpen, setModalOpen]   = useState(false)
+  const [saving, setSaving]         = useState(false)
 
   const config     = CARD_CONFIG[card.card_type || card.type] || CARD_CONFIG.insight
   const CardIcon   = CATEGORY_ICON_COMPONENTS[card.category || 'other'] || FaComments
   const isUserCard = card.source === 'user'
+  const isSaved    = card.is_saved || false
 
   const runThread = useCallback(async (message, isChip = false) => {
     if (isChip) setChips(prev => prev.filter(c => c !== message))
@@ -213,12 +152,34 @@ function AdvisorCard({ card, onChipClick }) {
     }
   }, [card.id, card.title, card.body, onChipClick])
 
+  const handleSave = async (e) => {
+    e.stopPropagation()
+    if (saving) return
+    setSaving(true)
+    try {
+      await onSaveToggle(card.id, !isSaved)
+    } finally {
+      setSaving(false)
+    }
+  }
+
   return (
     <>
       <article
-        className={`advisor-card advisor-card--${card.card_type || card.type}${isUserCard ? ' advisor-card--user' : ''}`}
+        className={[
+          'advisor-card',
+          `advisor-card--${card.card_type || card.type}`,
+          isUserCard ? 'advisor-card--user' : '',
+          isSaved    ? 'advisor-card--saved' : '',
+          isDragging ? 'advisor-card--dragging' : '',
+        ].filter(Boolean).join(' ')}
         style={{ '--card-accent': config.accent }}
       >
+        {/* Drag handle */}
+        <span className="advisor-card__drag-handle" {...dragHandleProps} title="Drag to reorder">
+          <FaGripVertical />
+        </span>
+
         {/* Header */}
         <div className="advisor-card__header">
           <span className="advisor-card__icon"><CardIcon /></span>
@@ -226,9 +187,26 @@ function AdvisorCard({ card, onChipClick }) {
             <div className="advisor-card__meta-top">
               <span className="advisor-card__label">{card.label}</span>
               {isUserCard && <span className="advisor-card__user-badge">Asked by you</span>}
+              {isSaved && (
+                <span className="advisor-card__saved-badge">
+                  <FaThumbtack className="saved-badge__icon" /> Saved
+                </span>
+              )}
             </div>
             <h3 className="advisor-card__title">{card.title}</h3>
           </div>
+
+          {/* Save button */}
+          <button
+            className={`advisor-card__save ${isSaved ? 'advisor-card__save--active' : ''}`}
+            onClick={handleSave}
+            disabled={saving}
+            title={isSaved ? 'Remove bookmark' : 'Bookmark — keep after refresh'}
+            aria-label={isSaved ? 'Remove bookmark' : 'Bookmark card'}
+          >
+            {isSaved ? <FaBookmark /> : <FaRegBookmark />}
+          </button>
+
           {thread.length > 0 && (
             <button
               className="advisor-card__collapse"
@@ -314,6 +292,77 @@ function CardSkeleton() {
   )
 }
 
+// ── Drag-and-drop feed ────────────────────────────────────────
+function DraggableFeed({ cards, onChipClick, onSaveToggle, onReorder }) {
+  const [items, setItems]       = useState(cards)
+  const [dragIdx, setDragIdx]   = useState(null)
+  const [overIdx, setOverIdx]   = useState(null)
+  const commitRef               = useRef(null)
+
+  // Keep in sync when parent cards change (e.g. after refresh/save)
+  useEffect(() => { setItems(cards) }, [cards])
+
+  const handleDragStart = (idx) => (e) => {
+    setDragIdx(idx)
+    e.dataTransfer.effectAllowed = 'move'
+    // transparent drag image so we can style ourselves
+    const ghost = document.createElement('div')
+    ghost.style.cssText = 'position:absolute;top:-9999px'
+    document.body.appendChild(ghost)
+    e.dataTransfer.setDragImage(ghost, 0, 0)
+    setTimeout(() => document.body.removeChild(ghost), 0)
+  }
+
+  const handleDragEnter = (idx) => () => {
+    if (idx === dragIdx) return
+    setOverIdx(idx)
+    setItems(prev => {
+      const next = [...prev]
+      const [moved] = next.splice(dragIdx, 1)
+      next.splice(idx, 0, moved)
+      setDragIdx(idx)
+      return next
+    })
+  }
+
+  const handleDragEnd = () => {
+    setDragIdx(null)
+    setOverIdx(null)
+    // Persist the new order — debounce slightly
+    clearTimeout(commitRef.current)
+    commitRef.current = setTimeout(() => {
+      const order = items.map((card, i) => ({ id: card.id, sort_order: i }))
+      onReorder(order)
+    }, 300)
+  }
+
+  return (
+    <>
+      {items.map((card, idx) => (
+        <div
+          key={card.id}
+          className={`dnd-row ${dragIdx === idx ? 'dnd-row--dragging' : ''} ${overIdx === idx ? 'dnd-row--over' : ''}`}
+          draggable
+          onDragStart={handleDragStart(idx)}
+          onDragEnter={handleDragEnter(idx)}
+          onDragOver={e => e.preventDefault()}
+          onDragEnd={handleDragEnd}
+        >
+          <AdvisorCard
+            card={card}
+            onChipClick={onChipClick}
+            onSaveToggle={onSaveToggle}
+            isDragging={dragIdx === idx}
+            dragHandleProps={{
+              onMouseDown: e => e.currentTarget.closest('[draggable]').setAttribute('draggable', true),
+            }}
+          />
+        </div>
+      ))}
+    </>
+  )
+}
+
 // ── Main component ────────────────────────────────────────────
 export default function AdvisorCards({
   cards = [],
@@ -323,6 +372,8 @@ export default function AdvisorCards({
   generatedAt = null,
   onRefresh,
   onChipClick,
+  onSaveToggle,
+  onReorder,
   freeformInput,
   setFreeformInput,
   onFreeformSubmit,
@@ -424,9 +475,12 @@ export default function AdvisorCards({
             <p>No {CATEGORY_LABELS[activeCategory]} cards right now.</p>
           </div>
         ) : (
-          filteredCards.map(card => (
-            <AdvisorCard key={card.id} card={card} onChipClick={onChipClick} />
-          ))
+          <DraggableFeed
+            cards={filteredCards}
+            onChipClick={onChipClick}
+            onSaveToggle={onSaveToggle}
+            onReorder={onReorder}
+          />
         )}
       </div>
 
