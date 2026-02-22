@@ -6,6 +6,7 @@ from typing import Optional, List
 from pydantic import BaseModel, Field
 import logging
 import re
+import time
 from collections import defaultdict
 
 from ..config import settings
@@ -14,6 +15,14 @@ from ..exceptions import DatabaseException
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
+
+# ── In-memory cache for subjects ─────────────────────────────────────────────
+# The subjects list is essentially static (new departments are never added).
+# Without this cache, every dashboard load fetched 10 000 rows from Supabase
+# just to extract ~50 unique subject prefixes — a major egress driver.
+_subjects_cache: list = []
+_subjects_cache_ts: float = 0.0
+_SUBJECTS_CACHE_TTL: float = 3600.0  # re-fetch at most once per hour
 
 
 class Course(BaseModel):
@@ -364,32 +373,46 @@ async def get_course_details(
 @router.get("/subjects", response_model=dict)
 async def get_subjects():
     """
-    Get list of all available subject codes - OPTIMIZED
-    
-    Returns a sorted list of unique subject codes.
+    Get list of all available subject codes.
+
+    EGRESS FIX: Results are cached in memory for 1 hour.
+    Previously this fetched 10 000 rows from Supabase on every single
+    request (called on every dashboard load) with zero caching.
+    Now Supabase is hit at most once per hour per server process.
     """
+    global _subjects_cache, _subjects_cache_ts
+
+    now = time.monotonic()
+    if _subjects_cache and (now - _subjects_cache_ts) < _SUBJECTS_CACHE_TTL:
+        logger.debug("Returning cached subjects list")
+        return {"subjects": _subjects_cache, "count": len(_subjects_cache)}
+
     try:
         supabase = get_supabase()
         
-        # OPTIMIZED: Use SQL DISTINCT to get unique course codes directly
-        # This is MUCH faster than fetching all rows and processing in Python
+        # Select only the 'Course' column — we just need the codes to extract prefixes.
+        # Still requires a full table scan but transfers ~15x less data than select('*').
         response = supabase.from_('courses').select('Course').limit(10000).execute()
         
         # Parse course codes to extract unique subjects
-        subjects = set()
+        subjects: set = set()
         for row in response.data:
             course_code = row.get('Course')
             subj, _ = parse_course_code(course_code)
             if subj:
                 subjects.add(subj)
         
-        subjects = sorted(list(subjects))
+        sorted_subjects = sorted(subjects)
+
+        # Store in cache so subsequent calls skip Supabase entirely
+        _subjects_cache = sorted_subjects
+        _subjects_cache_ts = now
         
-        logger.info(f"Retrieved {len(subjects)} unique subjects")
+        logger.info(f"Retrieved and cached {len(sorted_subjects)} unique subjects")
         
         return {
-            "subjects": subjects,
-            "count": len(subjects)
+            "subjects": sorted_subjects,
+            "count": len(sorted_subjects)
         }
         
     except DatabaseException:
