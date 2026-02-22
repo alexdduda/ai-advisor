@@ -5,7 +5,7 @@ const LanguageContext = createContext(null)
 const translations = {
   en: {
     // ── Sidebar Nav ───────────────────────────────────────
-    'nav.chat': 'AI Chat',
+    'nav.chat': 'Academic Brief',
     'nav.courses': 'Courses',
     'nav.saved': 'Saved',
     'nav.calendar': 'Calendar',
