@@ -5,6 +5,7 @@ import coursesAPI from '../../../lib/professorsAPI'
 import favoritesAPI from '../../../lib/favoritesAPI'
 import completedCoursesAPI from '../../../lib/completedCoursesAPI'
 import { getCourseCredits } from '../../../utils/courseCredits'
+import { getCards, generateCards, sendThreadMessage } from '../lib/cardsAPI'
 
 export default function useDashboardState() {
   const { user, profile, signOut, updateProfile } = useAuth()
@@ -61,6 +62,16 @@ export default function useDashboardState() {
   const [dragStartY, setDragStartY] = useState(0)
   const [dragStartPos, setDragStartPos] = useState(0)
 
+  // ── Advisor cards ───────────────────────────────────────────
+  const [advisorCards, setAdvisorCards] = useState([])
+  const [cardsLoading, setCardsLoading] = useState(false)
+  const [cardsGenerating, setCardsGenerating] = useState(false)
+  const [cardsGeneratedAt, setCardsGeneratedAt] = useState(null)
+
+  // ── Freeform input (cards tab) ──────────────────────────────
+  const [freeformInput, setFreeformInput] = useState('')
+  const [isSendingFreeform, setIsSendingFreeform] = useState(false)
+
   // ── Notification banner ─────────────────────────────────────
   const [notification, setNotification] = useState(null)
 
@@ -112,6 +123,74 @@ export default function useDashboardState() {
     if (tabId === activeChatTab) {
       const idx = Math.min(tabIndex, newTabs.length - 1)
       setActiveChatTab(newTabs[idx].id)
+    }
+  }
+  const loadAdvisorCards = async () => {
+    if (!user?.id) return
+    try {
+      setCardsLoading(true)
+      const data = await getCards(user.id)
+      setAdvisorCards(data.cards || [])
+      setCardsGeneratedAt(data.generated_at || null)
+
+      // If no cards yet, auto-generate
+      if (!data.cards || data.cards.length === 0) {
+        await refreshAdvisorCards(false)
+      }
+    } catch (error) {
+      console.error('Error loading advisor cards:', error)
+    } finally {
+      setCardsLoading(false)
+    }
+  }
+
+  const refreshAdvisorCards = async (force = true) => {
+    if (!user?.id) return
+    try {
+      setCardsGenerating(true)
+      const data = await generateCards(user.id, force)
+      setAdvisorCards(data.cards || [])
+      setCardsGeneratedAt(data.generated_at || null)
+    } catch (error) {
+      console.error('Error generating advisor cards:', error)
+      showNotification('Failed to refresh cards', 'error')
+    } finally {
+      setCardsGenerating(false)
+    }
+  }
+
+  const handleCardChipClick = async (cardId, message, cardTitle, cardBody) => {
+    if (!user?.id) return ''
+    const reply = await sendThreadMessage(cardId, user.id, message, `${cardTitle}: ${cardBody}`)
+    return reply
+  }
+
+  const handleCardFollowUp = async (cardId, message, cardTitle, cardBody) => {
+    if (!user?.id) return ''
+    const reply = await sendThreadMessage(cardId, user.id, message, `${cardTitle}: ${cardBody}`)
+    return reply
+  }
+
+  const handleFreeformSubmit = async (e) => {
+    e.preventDefault()
+    if (!freeformInput.trim() || isSendingFreeform) return
+
+    const msg = freeformInput.trim()
+    setFreeformInput('')
+    setIsSendingFreeform(true)
+
+    try {
+      // Re-use the existing chat endpoint — just open a new chat tab
+      // and pre-populate it with the message
+      handleNewChatTab()
+      setChatInput(msg)
+      setActiveTab('chat')
+      // Small delay so the tab renders before we switch to it
+      setTimeout(() => {
+        document.querySelector('.chat-input')?.focus()
+      }, 100)
+    } finally {
+      setIsSendingFreeform(false)
     }
   }
 
@@ -519,6 +598,7 @@ export default function useDashboardState() {
       loadChatSessions()
       loadFavorites()
       loadCompletedCourses()
+      loadAdvisorCards()
     }
   }, [user?.id])
 
@@ -635,5 +715,12 @@ export default function useDashboardState() {
 
     // Notifications
     notification, showNotification,
+
+    // Advisor cards
+    advisorCards, cardsLoading, cardsGenerating, cardsGeneratedAt,
+    loadAdvisorCards, refreshAdvisorCards,
+    handleCardChipClick, handleCardFollowUp,
+    // Freeform input
+    freeformInput, setFreeformInput, isSendingFreeform, handleFreeformSubmit,
   }
 }

@@ -20,7 +20,7 @@ from .exceptions import (
     RateLimitException,
 )
 
-from .routes import chat, courses, users, favorites, completed, notifications, current, suggestions
+from .routes import chat, courses, users, favorites, completed, notifications, current, suggestions, cards
 
 # Setup logging
 logger = setup_logging()
@@ -163,6 +163,8 @@ app.include_router(completed.router, prefix=f"{settings.API_PREFIX}/completed", 
 app.include_router(notifications.router, prefix=f"{settings.API_PREFIX}/notifications", tags=["Notifications"])
 app.include_router(current.router, prefix=f"{settings.API_PREFIX}/current", tags=["Current Courses"])
 app.include_router(suggestions.router, prefix=f"{settings.API_PREFIX}/suggestions", tags=["Suggestions"])
+app.include_router(cards.router, prefix=f"{settings.API_PREFIX}/cards", tags=["Cards"])
+#
 
 
 @app.get("/")
