@@ -831,10 +831,6 @@
   .freeform-input      { font-size: 16px; }
 }
 
-/* ============================================================
-   ADDITIONS — append these to the bottom of AdvisorCards.css
-   ============================================================ */
-
 /* ── Drag handle ── */
 .advisor-card__drag-handle {
   position: absolute;
@@ -952,3 +948,22 @@
 
 /* ── Dragging cursor on the whole feed while dragging ── */
 .advisor-cards-feed.is-dragging { cursor: grabbing; }
+
+/* ── Inline thread: scroll internally, never push the feed ── */
+/* Override the base .thread-messages so new messages stay inside the card */
+.advisor-card__thread .thread-messages {
+  max-height: 240px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-primary) transparent;
+  scroll-behavior: smooth;
+}
+
+.advisor-card__thread .thread-messages::-webkit-scrollbar { width: 3px; }
+.advisor-card__thread .thread-messages::-webkit-scrollbar-thumb {
+  background: var(--border-primary);
+  border-radius: 3px;
+}
