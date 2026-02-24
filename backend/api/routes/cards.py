@@ -376,6 +376,25 @@ async def clear_cards(user_id: str):
         raise HTTPException(status_code=500, detail="Failed to clear cards")
 
 
+@router.delete("/{user_id}/{card_id}", status_code=204)
+async def delete_card(user_id: str, card_id: str):
+    """Permanently delete a single advisor card for a user."""
+    try:
+        supabase = get_supabase()
+        result = (supabase.table("advisor_cards")
+            .delete()
+            .eq("id", card_id)
+            .eq("user_id", user_id)  # Ensure user can only delete their own cards
+            .execute())
+        if not result.data:
+            raise HTTPException(status_code=404, detail="Card not found")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception(f"Failed to delete card {card_id}: {e}")
+        raise HTTPException(status_code=500, detail="Failed to delete card")
+
+
 @router.patch("/{card_id}/save", response_model=dict)
 async def toggle_save_card(card_id: str, request: SaveRequest):
     """Pin or unpin a card so the nightly cron won't delete it."""
