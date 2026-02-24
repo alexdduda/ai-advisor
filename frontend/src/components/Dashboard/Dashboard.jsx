@@ -98,9 +98,15 @@ export default function Dashboard() {
     try {
       setCardsLoading(true)
       const data = await cardsAPI.getCards(user.id)
-      setAdvisorCards(data.cards || [])
+      // Filter out cards the user has deleted (persisted in localStorage)
+      const deletedKey = `advisor_deleted_${user.id}`
+      let deletedIds = []
+      try { deletedIds = JSON.parse(localStorage.getItem(deletedKey) || '[]') } catch {}
+      const allCards = data.cards || []
+      const visibleCards = allCards.filter(c => !deletedIds.includes(c.id))
+      setAdvisorCards(visibleCards)
       setCardsGeneratedAt(data.generated_at || null)
-      if (!data.cards || data.cards.length === 0) {
+      if (!visibleCards.length) {
         setCardsLoading(false)
         await refreshAdvisorCards(false)
       }
@@ -117,7 +123,16 @@ export default function Dashboard() {
     try {
       setCardsGenerating(true)
       const data = await cardsAPI.generateCards(user.id, force)
-      setAdvisorCards(data.cards || [])
+      // When explicitly refreshing (force=true), clear deleted list so fresh cards show
+      if (force) {
+        try { localStorage.removeItem(`advisor_deleted_${user.id}`) } catch {}
+        setAdvisorCards(data.cards || [])
+      } else {
+        const deletedKey = `advisor_deleted_${user.id}`
+        let deletedIds = []
+        try { deletedIds = JSON.parse(localStorage.getItem(deletedKey) || '[]') } catch {}
+        setAdvisorCards((data.cards || []).filter(c => !deletedIds.includes(c.id)))
+      }
       setCardsGeneratedAt(data.generated_at || null)
     } catch (error) {
       console.error('Error generating advisor cards:', error)
@@ -445,6 +460,7 @@ export default function Dashboard() {
 
           {activeTab === 'chat' && (
             <AdvisorCards
+              userId={user?.id}
               cards={advisorCards}
               isLoading={cardsLoading}
               isGenerating={cardsGenerating}
@@ -455,6 +471,7 @@ export default function Dashboard() {
               onReorder={handleCardsReorder}
               onChipClick={handleCardChipClick}
               onFollowUp={handleCardChipClick}
+              onDeleteCard={(cardId) => setAdvisorCards(prev => prev.filter(c => c.id !== cardId))}
               freeformInput={freeformInput}
               setFreeformInput={setFreeformInput}
               onFreeformSubmit={handleFreeformSubmit}

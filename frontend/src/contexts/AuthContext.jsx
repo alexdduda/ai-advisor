@@ -118,7 +118,7 @@ export const AuthProvider = ({ children }) => {
         if (mountedRef.current) {
           setUser(session?.user ?? null)
           if (session?.user) {
-            await loadProfile(session.user.id)
+            loadProfile(session.user.id) // non-blocking
           }
         }
       } catch (err) {
@@ -151,8 +151,8 @@ export const AuthProvider = ({ children }) => {
             justUpdatedProfile.current = false
             return
           }
-          // loadProfile itself now guards against reloading the same user
-          await loadProfile(session.user.id)
+          // Fire profile load in background — don't block auth state update
+          loadProfile(session.user.id)
         }
 
         if (event === 'SIGNED_OUT') {
