@@ -89,7 +89,6 @@ export default function EnhancedProfileForm({ profile, onSave, onCancel }) {
         ...prev,
         advanced_standing: [...prev.advanced_standing, {
           course_code: newAdvancedCourse.course_code,
-          // FIX: use course_title if provided, otherwise null — don't copy course_code into title
           course_title: newAdvancedCourse.course_title || null,
           credits: newAdvancedCourse.credits
         }]
@@ -160,7 +159,6 @@ export default function EnhancedProfileForm({ profile, onSave, onCancel }) {
     }
     
     if (formData.advanced_standing?.length > 0) {
-      // FIX: only require course_code — course_title is null for transcript-imported AP credits
       cleanedData.advanced_standing = formData.advanced_standing.filter(
         course => course.course_code?.trim()
       )

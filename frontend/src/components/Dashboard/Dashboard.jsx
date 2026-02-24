@@ -102,9 +102,15 @@ export default function Dashboard() {
     try {
       setCardsLoading(true)
       const data = await cardsAPI.getCards(user.id)
-      setAdvisorCards(data.cards || [])
+      // Filter out cards the user has deleted (persisted in localStorage)
+      const deletedKey = `advisor_deleted_${user.id}`
+      let deletedIds = []
+      try { deletedIds = JSON.parse(localStorage.getItem(deletedKey) || '[]') } catch {}
+      const allCards = data.cards || []
+      const visibleCards = allCards.filter(c => !deletedIds.includes(c.id))
+      setAdvisorCards(visibleCards)
       setCardsGeneratedAt(data.generated_at || null)
-      if (!data.cards || data.cards.length === 0) {
+      if (!visibleCards.length) {
         setCardsLoading(false)
         await refreshAdvisorCards(false)
       }
@@ -121,7 +127,16 @@ export default function Dashboard() {
     try {
       setCardsGenerating(true)
       const data = await cardsAPI.generateCards(user.id, force)
-      setAdvisorCards(data.cards || [])
+      // When explicitly refreshing (force=true), clear deleted list so fresh cards show
+      if (force) {
+        try { localStorage.removeItem(`advisor_deleted_${user.id}`) } catch {}
+        setAdvisorCards(data.cards || [])
+      } else {
+        const deletedKey = `advisor_deleted_${user.id}`
+        let deletedIds = []
+        try { deletedIds = JSON.parse(localStorage.getItem(deletedKey) || '[]') } catch {}
+        setAdvisorCards((data.cards || []).filter(c => !deletedIds.includes(c.id)))
+      }
       setCardsGeneratedAt(data.generated_at || null)
     } catch (error) {
       console.error('Error generating advisor cards:', error)
@@ -140,6 +155,7 @@ export default function Dashboard() {
     }
   }
 
+    // Toggle the saved/pinned state of a single card
   const handleCardSaveToggle = async (cardId, isSaved) => {
     if (!user?.id) return
     try {
@@ -152,10 +168,13 @@ export default function Dashboard() {
     }
   }
 
+  // Persist drag-and-drop order sent up from AdvisorCards component
   const handleCardsReorder = async (order) => {
     if (!user?.id) return
     try {
       await cardsAPI.reorderCards(user.id, order)
+      // Optimistic update already happened inside DraggableFeed;
+      // re-sync sort_order field so future re-renders are stable
       setAdvisorCards(prev => {
         const orderMap = Object.fromEntries(order.map(o => [o.id, o.sort_order]))
         return [...prev]
@@ -176,6 +195,7 @@ export default function Dashboard() {
     try {
       const data = await cardsAPI.askCard(user.id, question)
       if (data.card) {
+        // Prepend the new user-asked card to the top of the feed
         setAdvisorCards(prev => [data.card, ...prev])
       }
     } catch (error) {
@@ -407,7 +427,6 @@ export default function Dashboard() {
   // ── Transcript import complete ─────────────────────────
   const handleTranscriptImportComplete = () => {
     setShowTranscriptUpload(false)
-    // Reload all course data and profile to reflect changes
     loadCompletedCourses()
     loadCurrentCourses()
     refreshAdvisorCards(true)
@@ -453,6 +472,7 @@ export default function Dashboard() {
 
           {activeTab === 'chat' && (
             <AdvisorCards
+              userId={user?.id}
               cards={advisorCards}
               isLoading={cardsLoading}
               isGenerating={cardsGenerating}
@@ -463,6 +483,7 @@ export default function Dashboard() {
               onReorder={handleCardsReorder}
               onChipClick={handleCardChipClick}
               onFollowUp={handleCardChipClick}
+              onDeleteCard={(cardId) => setAdvisorCards(prev => prev.filter(c => c.id !== cardId))}
               freeformInput={freeformInput}
               setFreeformInput={setFreeformInput}
               onFreeformSubmit={handleFreeformSubmit}
@@ -559,7 +580,6 @@ export default function Dashboard() {
           }}
         />
       )}
-
       {showTranscriptUpload && (
         <TranscriptUpload
           userId={user?.id}

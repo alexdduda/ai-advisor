@@ -27,10 +27,10 @@ export default function ProfileSetup() {
   const [formError, setFormError]   = useState('')
 
   // Transcript
-  const [txStep, setTxStep]     = useState('idle')
-  const [dragOver, setDragOver] = useState(false)
-  const [file, setFile]         = useState(null)
-  const [txError, setTxError]   = useState('')
+  const [txStep, setTxStep]       = useState('idle')
+  const [dragOver, setDragOver]   = useState(false)
+  const [file, setFile]           = useState(null)
+  const [txError, setTxError]     = useState('')
   const [txResults, setTxResults] = useState(null)
   const [finishing, setFinishing] = useState(false)
   const fileRef = useRef(null)
@@ -40,7 +40,6 @@ export default function ProfileSetup() {
     await completeOnboarding()
   }
 
-  // ── Profile submit ──────────────────────────────────────────────────────
   const handleProfileSubmit = async (e) => {
     e.preventDefault()
     setFormError('')
@@ -67,8 +66,6 @@ export default function ProfileSetup() {
         try {
           await usersAPI.updateUser(user.id, updates)
         } catch (updateErr) {
-          // If the profile row doesn't exist yet (createUser failed with 500
-          // during signup), fall back to creating it now with all fields.
           if (updateErr.response?.status === 404) {
             await usersAPI.createUser({ id: user.id, email: user.email, ...updates })
           } else {
@@ -76,12 +73,10 @@ export default function ProfileSetup() {
           }
         }
       } else {
-        // No updates — but ensure the row exists (handles 500-during-signup case)
         try {
           await usersAPI.createUser({ id: user.id, email: user.email })
         } catch (createErr) {
-          if (createErr.response?.status !== 409 &&
-              createErr.response?.data?.code !== 'user_already_exists') {
+          if (createErr.response?.status !== 409 && createErr.response?.data?.code !== 'user_already_exists') {
             throw createErr
           }
         }
@@ -95,8 +90,6 @@ export default function ProfileSetup() {
     }
   }
 
-  // ── Skip profile step ───────────────────────────────────────────────────
-  // Ensure the row exists in case createUser failed with 500 during signup
   const handleSkipProfile = async () => {
     try {
       await usersAPI.createUser({ id: user.id, email: user.email })
@@ -108,7 +101,6 @@ export default function ProfileSetup() {
     setStep('transcript')
   }
 
-  // ── File handling ───────────────────────────────────────────────────────
   const pickFile = (f) => {
     if (!f) return
     if (!f.name.toLowerCase().endsWith('.pdf')) { setTxError('Please upload a PDF file.'); return }
@@ -145,7 +137,6 @@ export default function ProfileSetup() {
     }
   }
 
-  // ── Step indicator ──────────────────────────────────────────────────────
   const StepBar = () => (
     <div className="ps-stepbar">
       <div className={`ps-stepbar-item ${step === 'profile' ? 'active' : 'done'}`}>
@@ -156,39 +147,30 @@ export default function ProfileSetup() {
       </div>
       <div className={`ps-stepbar-line ${step === 'transcript' ? 'filled' : ''}`} />
       <div className={`ps-stepbar-item ${step === 'transcript' ? 'active' : ''}`}>
-        <div className="ps-stepbar-dot">
-          <span>2</span>
-        </div>
+        <div className="ps-stepbar-dot"><span>2</span></div>
         <span className="ps-stepbar-label">Transcript</span>
       </div>
     </div>
   )
 
-  // ── Profile step ────────────────────────────────────────────────────────
   if (step === 'profile') {
     return (
       <div className="ps-page">
         <div className="ps-container">
-
           <div className="ps-header">
-            <div className="ps-header-icon">
-              <FaUser />
-            </div>
+            <div className="ps-header-icon"><FaUser /></div>
             <div>
               <h1 className="ps-title">Set up your profile</h1>
               <p className="ps-subtitle">All fields are optional — fill in what you know and update anytime.</p>
             </div>
           </div>
-
           <StepBar />
-
           {formError && (
             <div className="ps-alert ps-alert--error">
               <FaExclamationTriangle className="ps-alert-icon" />
               <span>{formError}</span>
             </div>
           )}
-
           <form className="ps-form" onSubmit={handleProfileSubmit}>
             <div className="ps-row">
               <div className="ps-field">
@@ -199,8 +181,7 @@ export default function ProfileSetup() {
               </div>
               <div className="ps-field">
                 <label className="ps-label">Year</label>
-                <select className="ps-input" value={year}
-                  onChange={e => setYear(e.target.value)} disabled={saving}>
+                <select className="ps-input" value={year} onChange={e => setYear(e.target.value)} disabled={saving}>
                   <option value="">Select year</option>
                   <option value="1">U0 / U1</option>
                   <option value="2">U2</option>
@@ -209,14 +190,11 @@ export default function ProfileSetup() {
                 </select>
               </div>
             </div>
-
             <div className="ps-field">
               <label className="ps-label">Major</label>
               <input className="ps-input" type="text" placeholder="e.g. Computer Science"
-                value={major} onChange={e => setMajor(e.target.value)}
-                disabled={saving} autoComplete="off" />
+                value={major} onChange={e => setMajor(e.target.value)} disabled={saving} autoComplete="off" />
             </div>
-
             <div className="ps-row">
               <div className="ps-field">
                 <label className="ps-label">Current GPA</label>
@@ -226,21 +204,15 @@ export default function ProfileSetup() {
               </div>
               <div className="ps-field ps-field--grow">
                 <label className="ps-label">Interests</label>
-                <input className="ps-input" type="text"
-                  placeholder="e.g. ML, Web Dev, Finance"
-                  value={interests} onChange={e => setInterests(e.target.value)}
-                  disabled={saving} />
+                <input className="ps-input" type="text" placeholder="e.g. ML, Web Dev, Finance"
+                  value={interests} onChange={e => setInterests(e.target.value)} disabled={saving} />
               </div>
             </div>
-
             <div className="ps-actions">
               <button type="submit" className="ps-btn ps-btn--primary" disabled={saving}>
-                {saving
-                  ? <><FaSpinner className="ps-spin" /> Saving…</>
-                  : <>Continue <FaArrowRight /></>}
+                {saving ? <><FaSpinner className="ps-spin" /> Saving…</> : <>Continue <FaArrowRight /></>}
               </button>
-              <button type="button" className="ps-btn ps-btn--ghost"
-                onClick={() => handleSkipProfile()} disabled={saving}>
+              <button type="button" className="ps-btn ps-btn--ghost" onClick={handleSkipProfile} disabled={saving}>
                 Skip for now
               </button>
             </div>
@@ -250,26 +222,18 @@ export default function ProfileSetup() {
     )
   }
 
-  // ── Transcript step ─────────────────────────────────────────────────────
   return (
     <div className="ps-page">
       <div className="ps-container">
-
         <div className="ps-header">
-          <div className="ps-header-icon ps-header-icon--green">
-            <FaGraduationCap />
-          </div>
+          <div className="ps-header-icon ps-header-icon--green"><FaGraduationCap /></div>
           <div>
             <h1 className="ps-title">Import your transcript</h1>
-            <p className="ps-subtitle">
-              We'll automatically pull your courses, grades, GPA, and program info.
-            </p>
+            <p className="ps-subtitle">We'll automatically pull your courses, grades, GPA, and program info.</p>
           </div>
         </div>
-
         <StepBar />
 
-        {/* ── idle ── */}
         {txStep === 'idle' && (
           <>
             <div
@@ -281,7 +245,6 @@ export default function ProfileSetup() {
             >
               <input ref={fileRef} type="file" accept=".pdf" style={{ display: 'none' }}
                 onChange={e => pickFile(e.target.files[0])} />
-
               {file ? (
                 <div className="ps-dropzone-file">
                   <FaCheckCircle className="ps-dropzone-check" />
@@ -302,23 +265,20 @@ export default function ProfileSetup() {
                 </div>
               )}
             </div>
-
             {txError && (
               <div className="ps-alert ps-alert--error">
                 <FaExclamationTriangle className="ps-alert-icon" />
                 <span>{txError}</span>
               </div>
             )}
-
             <div className="ps-actions">
               <button className="ps-btn ps-btn--primary" onClick={handleUpload} disabled={!file}>
-                <FaFileUpload /> Import Transcript
+                <FaFileUpload /> Import & Replace Courses
               </button>
               <button className="ps-btn ps-btn--ghost" onClick={finish} disabled={finishing}>
                 {finishing ? <><FaSpinner className="ps-spin" /> Loading…</> : 'Skip for now'}
               </button>
             </div>
-
             <div className="ps-hint">
               <FaLightbulb className="ps-hint-icon" />
               <p>You can also do this later from the <strong>Profile tab</strong> — find <strong>Import Transcript</strong> in the Degree Progress card.</p>
@@ -326,26 +286,19 @@ export default function ProfileSetup() {
           </>
         )}
 
-        {/* ── uploading ── */}
         {txStep === 'uploading' && (
           <div className="ps-status">
-            <div className="ps-status-icon ps-status-icon--spin">
-              <FaSpinner />
-            </div>
+            <div className="ps-status-icon ps-status-icon--spin"><FaSpinner /></div>
             <h3 className="ps-status-title">Importing your transcript…</h3>
             <p className="ps-status-sub">Claude is reading your courses, grades, and program info.</p>
           </div>
         )}
 
-        {/* ── done ── */}
         {txStep === 'done' && txResults && (
           <div className="ps-status">
-            <div className="ps-status-icon ps-status-icon--success">
-              <FaCheckCircle />
-            </div>
+            <div className="ps-status-icon ps-status-icon--success"><FaCheckCircle /></div>
             <h3 className="ps-status-title">All set!</h3>
             <p className="ps-status-sub">Your academic history has been imported successfully.</p>
-
             <div className="ps-chips">
               {txResults.completed_added > 0 && (
                 <div className="ps-chip">
@@ -366,33 +319,25 @@ export default function ProfileSetup() {
                 </div>
               )}
             </div>
-
             <button className="ps-btn ps-btn--primary" onClick={finish} disabled={finishing}>
               {finishing ? <><FaSpinner className="ps-spin" /> Loading…</> : <>Go to Dashboard <FaArrowRight /></>}
             </button>
           </div>
         )}
 
-        {/* ── error ── */}
         {txStep === 'error' && (
           <div className="ps-status">
-            <div className="ps-status-icon ps-status-icon--warning">
-              <FaExclamationTriangle />
-            </div>
+            <div className="ps-status-icon ps-status-icon--warning"><FaExclamationTriangle /></div>
             <h3 className="ps-status-title">Import failed</h3>
             <p className="ps-status-sub">{txError}</p>
             <div className="ps-actions ps-actions--center">
-              <button className="ps-btn ps-btn--secondary"
-                onClick={() => { setTxStep('idle'); setTxError('') }}>
-                Try Again
-              </button>
+              <button className="ps-btn ps-btn--secondary" onClick={() => { setTxStep('idle'); setTxError('') }}>Try Again</button>
               <button className="ps-btn ps-btn--ghost" onClick={finish} disabled={finishing}>
                 {finishing ? <><FaSpinner className="ps-spin" /> Loading…</> : 'Skip for now'}
               </button>
             </div>
           </div>
         )}
-
       </div>
     </div>
   )

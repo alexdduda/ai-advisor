@@ -44,7 +44,6 @@ export const AuthProvider = ({ children }) => {
     console.log('Loading profile for:', userId)
 
     try {
-      // 15 s timeout — generous enough for cold-start backends
       const timeoutPromise = new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Profile load timeout')), 15000)
       )
@@ -61,6 +60,7 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (err) {
       console.error('Error loading profile:', err)
+
       if (mountedRef.current) {
         if (err.message === 'Profile load timeout') {
           if (!profile) {
@@ -92,9 +92,11 @@ export const AuthProvider = ({ children }) => {
       try {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession()
         if (sessionError) throw sessionError
+
         if (mountedRef.current) {
           setUser(session?.user ?? null)
-          if (session?.user) await loadProfile(session.user.id)
+          // Non-blocking — don't await so loading state clears fast
+          if (session?.user) loadProfile(session.user.id)
         }
       } catch (err) {
         console.error('Auth initialization error:', err)
@@ -109,12 +111,13 @@ export const AuthProvider = ({ children }) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!mountedRef.current) return
-        console.log('Auth state changed:', event, session?.user?.id)
+
         setUser(session?.user ?? null)
 
         if (event === 'SIGNED_IN' && session?.user) {
           if (justSignedUp.current) {
             console.log('Skipping profile load — just signed up')
+            justSignedUp.current = false
             return
           }
           if (justUpdatedProfile.current) {
@@ -122,7 +125,8 @@ export const AuthProvider = ({ children }) => {
             justUpdatedProfile.current = false
             return
           }
-          await loadProfile(session.user.id)
+          // Non-blocking — fire in background so login feels instant
+          loadProfile(session.user.id)
         }
 
         if (event === 'SIGNED_OUT') {
@@ -135,6 +139,7 @@ export const AuthProvider = ({ children }) => {
     )
 
     authSubscription = subscription
+
     return () => {
       mountedRef.current = false
       authSubscription?.unsubscribe()
@@ -146,11 +151,8 @@ export const AuthProvider = ({ children }) => {
     try {
       setError(null)
 
-      // CRITICAL: must be set BEFORE supabase.auth.signUp() is called.
-      // Supabase fires the SIGNED_IN auth event synchronously *inside* the
-      // signUp call — before it returns. If justSignedUp isn't already true
-      // by then, the onAuthStateChange handler will call loadProfile() and
-      // get a 404 (profile doesn't exist yet), setting PROFILE_NOT_FOUND.
+      // Must be set BEFORE supabase.auth.signUp() — Supabase fires SIGNED_IN
+      // synchronously inside signUp, before it returns.
       justSignedUp.current = true
 
       const { data, error: signUpError } = await supabase.auth.signUp({ email, password })
@@ -162,15 +164,11 @@ export const AuthProvider = ({ children }) => {
         await usersAPI.createUser({ id: data.user.id, email, username: username?.trim() || null })
         console.log('Minimal profile record created')
       } catch (profileError) {
-        // 409 = row already exists (e.g. re-signup after email confirm) — fine
-        // 5xx = backend cold start or transient error — ProfileSetup will
-        //       retry via updateUser when the user submits the form
         const status = profileError.response?.status
         const code   = profileError.response?.data?.code
         if (status !== 409 && code !== 'user_already_exists') {
           console.error('Profile creation error:', profileError)
-          // Don't throw — user auth succeeded, let them reach ProfileSetup
-          // which will call updateUser (upsert) when they fill out the form.
+          // Don't throw — user auth succeeded, ProfileSetup will retry via updateUser
         }
       }
 
@@ -183,7 +181,6 @@ export const AuthProvider = ({ children }) => {
 
       return { data, error: null }
     } catch (err) {
-      console.error('Signup error:', err)
       justSignedUp.current = false
       setError({ type: 'SIGNUP_FAILED', message: friendlyAuthError(err) })
       return { data: null, error: { message: friendlyAuthError(err) } }
@@ -199,7 +196,6 @@ export const AuthProvider = ({ children }) => {
       if (signInError) throw signInError
       return { data, error: null }
     } catch (err) {
-      console.error('Sign in error:', err)
       setError({ type: 'SIGNIN_FAILED', message: friendlyAuthError(err) })
       return { data: null, error: { message: friendlyAuthError(err) } }
     }
@@ -243,16 +239,12 @@ export const AuthProvider = ({ children }) => {
 
   // ── completeOnboarding ───────────────────────────────────────────────────
   // Called by ProfileSetup when the user finishes or skips.
-  // Fetches the latest profile from DB then clears needsOnboarding,
-  // which causes App.jsx to switch to Dashboard.
+  // Fetches the latest profile from DB then clears needsOnboarding.
   const completeOnboarding = useCallback(async () => {
     if (!user?.id) return
-    // Reset the guard so loadProfile will actually run
     loadedForUserId.current = null
     loadingProfile.current = false
     await loadProfile(user.id)
-    // Clear onboarding flag AFTER profile is loaded so App.jsx doesn't
-    // flash a Loading screen between needsOnboarding=false and profile being set.
     if (mountedRef.current) setNeedsOnboarding(false)
   }, [user?.id, loadProfile])
 
@@ -262,9 +254,11 @@ export const AuthProvider = ({ children }) => {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
+// ── Translate raw Supabase / network errors into readable strings ─────────────
 function friendlyAuthError(err) {
   const msg  = err?.message || err?.error_description || ''
   const code = err?.code || ''
+
   if (msg === 'EMAIL_ALREADY_EXISTS' || msg.includes('User already registered') || msg.includes('already been registered'))
     return 'An account with this email already exists. Please sign in instead.'
   if (msg.includes('Invalid login credentials') || code === 'invalid_credentials')

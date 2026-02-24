@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { LanguageProvider } from './contexts/LanguageContext'
@@ -14,9 +15,16 @@ import AdminSuggestions from './components/Admin/AdminSuggestions'
 function AppContent() {
   const { user, profile, loading, error, needsOnboarding } = useAuth()
 
+  // Enforce 2-second minimum loading screen
+  const [minLoadDone, setMinLoadDone] = useState(false)
+  useEffect(() => {
+    const t = setTimeout(() => setMinLoadDone(true), 2000)
+    return () => clearTimeout(t)
+  }, [])
+
   if (window.location.pathname === '/admin') return <AdminSuggestions />
 
-  if (loading) return <Loading message="Setting up your session..." />
+  if (loading || !minLoadDone) return <Loading />
 
   if (error?.type === 'AUTH_INIT_FAILED') {
     return (
@@ -28,14 +36,14 @@ function AppContent() {
     )
   }
 
-  // New signup — show onboarding flow regardless of profile state
+  // New signup — show onboarding flow
   if (user && needsOnboarding) return <ProfileSetup />
 
   // Returning user with loaded profile
   if (user && profile) return <Dashboard />
 
   // Profile is being fetched
-  if (user && !profile && !error) return <Loading message="Loading your profile..." />
+  if (user && !profile && !error) return <Loading />
 
   // Unauthenticated
   return <Login />

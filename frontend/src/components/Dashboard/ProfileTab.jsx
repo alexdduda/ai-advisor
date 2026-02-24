@@ -22,7 +22,6 @@ export default function ProfileTab({
   completedCourses,
   favorites,
   chatHistory,
-  // Transcript
   onImportTranscript,
 }) {
   const { t } = useLanguage()

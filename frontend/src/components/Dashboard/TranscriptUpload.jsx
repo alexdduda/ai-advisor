@@ -11,7 +11,7 @@ const normalizeUrl = (url) => {
 const BASE_URL = normalizeUrl(API_URL)
 
 export default function TranscriptUpload({ userId, onImportComplete, onClose }) {
-  const [step, setStep] = useState('upload') // upload | parsing | preview | importing | done | error
+  const [step, setStep] = useState('upload')
   const [dragOver, setDragOver] = useState(false)
   const [file, setFile] = useState(null)
   const [parsed, setParsed] = useState(null)
@@ -21,14 +21,8 @@ export default function TranscriptUpload({ userId, onImportComplete, onClose }) 
 
   const handleFile = (f) => {
     if (!f) return
-    if (!f.name.toLowerCase().endsWith('.pdf')) {
-      setErrorMsg('Please upload a PDF file.')
-      return
-    }
-    if (f.size > 10 * 1024 * 1024) {
-      setErrorMsg('File must be under 10MB.')
-      return
-    }
+    if (!f.name.toLowerCase().endsWith('.pdf')) { setErrorMsg('Please upload a PDF file.'); return }
+    if (f.size > 10 * 1024 * 1024) { setErrorMsg('File must be under 10MB.'); return }
     setErrorMsg('')
     setFile(f)
   }
@@ -46,15 +40,8 @@ export default function TranscriptUpload({ userId, onImportComplete, onClose }) 
       const form = new FormData()
       form.append('file', file)
       form.append('dry_run', 'true')
-
-      const res = await fetch(`${BASE_URL}/api/transcript/parse/${userId}`, {
-        method: 'POST',
-        body: form,
-      })
-      if (!res.ok) {
-        const err = await res.json()
-        throw new Error(err.detail || 'Parsing failed')
-      }
+      const res = await fetch(`${BASE_URL}/api/transcript/parse/${userId}`, { method: 'POST', body: form })
+      if (!res.ok) { const err = await res.json(); throw new Error(err.detail || 'Parsing failed') }
       const data = await res.json()
       setParsed(data.parsed)
       setStep('preview')
@@ -71,15 +58,8 @@ export default function TranscriptUpload({ userId, onImportComplete, onClose }) 
       const form = new FormData()
       form.append('file', file)
       form.append('dry_run', 'false')
-
-      const res = await fetch(`${BASE_URL}/api/transcript/parse/${userId}`, {
-        method: 'POST',
-        body: form,
-      })
-      if (!res.ok) {
-        const err = await res.json()
-        throw new Error(err.detail || 'Import failed')
-      }
+      const res = await fetch(`${BASE_URL}/api/transcript/parse/${userId}`, { method: 'POST', body: form })
+      if (!res.ok) { const err = await res.json(); throw new Error(err.detail || 'Import failed') }
       const data = await res.json()
       setResults(data.results)
       setStep('done')
@@ -98,8 +78,6 @@ export default function TranscriptUpload({ userId, onImportComplete, onClose }) 
   return (
     <div className="transcript-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="transcript-modal">
-
-        {/* ── Header (always visible, never scrolls) ── */}
         <div className="transcript-header">
           <div className="transcript-header-left">
             <FaGraduationCap className="transcript-header-icon" />
@@ -111,7 +89,6 @@ export default function TranscriptUpload({ userId, onImportComplete, onClose }) 
           <button className="transcript-close-btn" onClick={onClose}><FaTimes /></button>
         </div>
 
-        {/* ── Upload step ── */}
         {step === 'upload' && (
           <>
             <div className="transcript-body">
@@ -122,13 +99,8 @@ export default function TranscriptUpload({ userId, onImportComplete, onClose }) 
                 onDrop={handleDrop}
                 onClick={() => fileInputRef.current?.click()}
               >
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".pdf"
-                  style={{ display: 'none' }}
-                  onChange={(e) => handleFile(e.target.files[0])}
-                />
+                <input ref={fileInputRef} type="file" accept=".pdf" style={{ display: 'none' }}
+                  onChange={(e) => handleFile(e.target.files[0])} />
                 {file ? (
                   <div className="dropzone-file-selected">
                     <FaCheckCircle className="dropzone-check" />
@@ -140,35 +112,19 @@ export default function TranscriptUpload({ userId, onImportComplete, onClose }) 
                     <FaFileUpload className="dropzone-icon" />
                     <p className="dropzone-main">Drop your transcript PDF here</p>
                     <p className="dropzone-sub">or click to browse</p>
-                    <p className="dropzone-note">
-                      Download from Minerva → Student Records → Unofficial Transcript
-                    </p>
+                    <p className="dropzone-note">Download from Minerva → Student Records → Unofficial Transcript</p>
                   </>
                 )}
               </div>
-
-              {errorMsg && (
-                <div className="transcript-error-msg">
-                  <FaExclamationTriangle /> {errorMsg}
-                </div>
-              )}
+              {errorMsg && <div className="transcript-error-msg"><FaExclamationTriangle /> {errorMsg}</div>}
             </div>
-
-            {/* Footer outside the scrollable body so it's always visible */}
             <div className="transcript-footer">
               <button className="btn-transcript-secondary" onClick={onClose}>Cancel</button>
-              <button
-                className="btn-transcript-primary"
-                onClick={handleParse}
-                disabled={!file}
-              >
-                Parse Transcript
-              </button>
+              <button className="btn-transcript-primary" onClick={handleParse} disabled={!file}>Parse Transcript</button>
             </div>
           </>
         )}
 
-        {/* ── Parsing step ── */}
         {step === 'parsing' && (
           <div className="transcript-body transcript-loading">
             <FaSpinner className="transcript-spinner" />
@@ -177,57 +133,24 @@ export default function TranscriptUpload({ userId, onImportComplete, onClose }) 
           </div>
         )}
 
-        {/* ── Preview step ── */}
         {step === 'preview' && (
           <>
-            {/* This div scrolls independently; footer stays pinned below */}
             <div className="transcript-body">
-
-              {/* Profile info */}
               {(studentInfo.major || studentInfo.cum_gpa || studentInfo.year) && (
                 <div className="preview-section">
                   <h3 className="preview-section-title">📋 Profile Info Detected</h3>
                   <div className="preview-info-grid">
-                    {studentInfo.major && (
-                      <div className="preview-info-item">
-                        <span className="info-label">Major</span>
-                        <span className="info-value">{studentInfo.major}</span>
-                      </div>
-                    )}
-                    {studentInfo.minor && (
-                      <div className="preview-info-item">
-                        <span className="info-label">Minor</span>
-                        <span className="info-value">{studentInfo.minor}</span>
-                      </div>
-                    )}
-                    {studentInfo.faculty && (
-                      <div className="preview-info-item">
-                        <span className="info-label">Faculty</span>
-                        <span className="info-value">{studentInfo.faculty}</span>
-                      </div>
-                    )}
-                    {studentInfo.year && (
-                      <div className="preview-info-item">
-                        <span className="info-label">Year</span>
-                        <span className="info-value">Year {studentInfo.year}</span>
-                      </div>
-                    )}
-                    {studentInfo.cum_gpa && (
-                      <div className="preview-info-item">
-                        <span className="info-label">Cumulative GPA</span>
-                        <span className="info-value gpa-value">{studentInfo.cum_gpa}</span>
-                      </div>
-                    )}
+                    {studentInfo.major && <div className="preview-info-item"><span className="info-label">Major</span><span className="info-value">{studentInfo.major}</span></div>}
+                    {studentInfo.minor && <div className="preview-info-item"><span className="info-label">Minor</span><span className="info-value">{studentInfo.minor}</span></div>}
+                    {studentInfo.faculty && <div className="preview-info-item"><span className="info-label">Faculty</span><span className="info-value">{studentInfo.faculty}</span></div>}
+                    {studentInfo.year && <div className="preview-info-item"><span className="info-label">Year</span><span className="info-value">Year {studentInfo.year}</span></div>}
+                    {studentInfo.cum_gpa && <div className="preview-info-item"><span className="info-label">Cumulative GPA</span><span className="info-value gpa-value">{studentInfo.cum_gpa}</span></div>}
                   </div>
                 </div>
               )}
-
-              {/* Advanced Standing */}
               {advancedStanding.length > 0 && (
                 <div className="preview-section">
-                  <h3 className="preview-section-title">
-                    🏆 Advanced Standing / AP Credits ({advancedStanding.length})
-                  </h3>
+                  <h3 className="preview-section-title">🏆 Advanced Standing / AP Credits ({advancedStanding.length})</h3>
                   <div className="preview-course-list">
                     {advancedStanding.map((c, i) => (
                       <div key={i} className="preview-course-item preview-course-item--ap">
@@ -239,37 +162,24 @@ export default function TranscriptUpload({ userId, onImportComplete, onClose }) 
                   </div>
                 </div>
               )}
-
-              {/* Completed Courses */}
               {completedCourses.length > 0 && (
                 <div className="preview-section">
-                  <h3 className="preview-section-title">
-                    ✅ Completed Courses ({completedCourses.length})
-                  </h3>
+                  <h3 className="preview-section-title">✅ Completed Courses ({completedCourses.length})</h3>
                   <div className="preview-course-list">
                     {completedCourses.map((c, i) => (
                       <div key={i} className="preview-course-item">
                         <span className="course-code">{c.course_code}</span>
                         <span className="course-title">{c.course_title}</span>
                         <span className="course-term">{c.term} {c.year}</span>
-                        {c.grade && (
-                          <span className={`course-grade grade-${c.grade.replace('+', 'plus').replace('-', 'minus')}`}>
-                            {c.grade}
-                          </span>
-                        )}
+                        {c.grade && <span className={`course-grade grade-${c.grade.replace('+', 'plus').replace('-', 'minus')}`}>{c.grade}</span>}
                       </div>
                     ))}
                   </div>
                 </div>
               )}
-
-              {/* Current Courses */}
               {currentCourses.length > 0 && (
                 <div className="preview-section">
-                  <h3 className="preview-section-title">
-                    <FaBook style={{ display: 'inline', marginRight: 6 }} />
-                    Current Courses ({currentCourses.length})
-                  </h3>
+                  <h3 className="preview-section-title"><FaBook style={{ display: 'inline', marginRight: 6 }} />Current Courses ({currentCourses.length})</h3>
                   <div className="preview-course-list">
                     {currentCourses.map((c, i) => (
                       <div key={i} className="preview-course-item preview-course-item--current">
@@ -282,20 +192,15 @@ export default function TranscriptUpload({ userId, onImportComplete, onClose }) 
                 </div>
               )}
             </div>
-
-            {/* Footer outside scroll area — always visible */}
             <div className="transcript-footer">
-              <button className="btn-transcript-secondary" onClick={() => setStep('upload')}>
-                ← Back
-              </button>
+              <button className="btn-transcript-secondary" onClick={() => setStep('upload')}>← Back</button>
               <button className="btn-transcript-primary" onClick={handleImport}>
-                Import {completedCourses.length + currentCourses.length} Courses
+                Replace & Import {completedCourses.length + currentCourses.length} Courses
               </button>
             </div>
           </>
         )}
 
-        {/* ── Importing step ── */}
         {step === 'importing' && (
           <div className="transcript-body transcript-loading">
             <FaSpinner className="transcript-spinner" />
@@ -304,26 +209,14 @@ export default function TranscriptUpload({ userId, onImportComplete, onClose }) 
           </div>
         )}
 
-        {/* ── Done step ── */}
         {step === 'done' && results && (
           <div className="transcript-body transcript-done">
             <FaCheckCircle className="done-icon" />
             <h3 className="done-title">Import Complete!</h3>
             <div className="done-stats">
-              <div className="done-stat">
-                <span className="done-stat-num">{results.completed_added}</span>
-                <span className="done-stat-label">Completed courses added</span>
-              </div>
-              <div className="done-stat">
-                <span className="done-stat-num">{results.current_added}</span>
-                <span className="done-stat-label">Current courses added</span>
-              </div>
-              {results.profile_updated && (
-                <div className="done-stat done-stat--green">
-                  <span className="done-stat-num">✓</span>
-                  <span className="done-stat-label">Profile updated</span>
-                </div>
-              )}
+              <div className="done-stat"><span className="done-stat-num">{results.completed_added}</span><span className="done-stat-label">Completed courses added</span></div>
+              <div className="done-stat"><span className="done-stat-num">{results.current_added}</span><span className="done-stat-label">Current courses added</span></div>
+              {results.profile_updated && <div className="done-stat done-stat--green"><span className="done-stat-num">✓</span><span className="done-stat-label">Profile updated</span></div>}
               {(results.completed_skipped + results.current_skipped) > 0 && (
                 <div className="done-stat done-stat--gray">
                   <span className="done-stat-num">{results.completed_skipped + results.current_skipped}</span>
@@ -335,7 +228,6 @@ export default function TranscriptUpload({ userId, onImportComplete, onClose }) 
           </div>
         )}
 
-        {/* ── Error step ── */}
         {step === 'error' && (
           <>
             <div className="transcript-body transcript-error-state">
@@ -344,14 +236,11 @@ export default function TranscriptUpload({ userId, onImportComplete, onClose }) 
               <p className="error-state-msg">{errorMsg}</p>
             </div>
             <div className="transcript-footer">
-              <button className="btn-transcript-secondary" onClick={() => { setStep('upload'); setErrorMsg('') }}>
-                Try Again
-              </button>
+              <button className="btn-transcript-secondary" onClick={() => { setStep('upload'); setErrorMsg('') }}>Try Again</button>
               <button className="btn-transcript-secondary" onClick={onClose}>Close</button>
             </div>
           </>
         )}
-
       </div>
     </div>
   )
