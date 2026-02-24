@@ -188,7 +188,6 @@ def insert_user_card(user_id: str, card: dict, question: str) -> dict:
         "category": _sanitise_category(card),
         "source": "user",
         "is_saved": False,
-        "user_question": question,
         "generated_at": datetime.now(timezone.utc).isoformat(),
     }
     result = supabase.table("advisor_cards").insert(row).execute()
@@ -464,8 +463,8 @@ Return ONLY a single JSON object (not an array) with the same fields as above.""
         logger.error(f"Ask card JSON parse error: {e}")
         raise HTTPException(status_code=500, detail="Failed to parse AI response")
     except Exception as e:
-        logger.exception(f"Ask card failed for {user_id}: {e}")
-        raise HTTPException(status_code=500, detail="Failed to generate card from question")
+        logger.exception(f"Ask card failed for {user_id}: {type(e).__name__}: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate card: {type(e).__name__}: {str(e)}")
 
 
 @router.post("/{card_id}/thread", response_model=dict)

@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { LanguageProvider } from './contexts/LanguageContext'
@@ -14,10 +15,17 @@ import AdminSuggestions from './components/Admin/AdminSuggestions'
 
 function AppContent() {
   const { user, profile, loading, error } = useAuth()
+  const [minLoadDone, setMinLoadDone] = useState(false)
+
+  useEffect(() => {
+    const t = setTimeout(() => setMinLoadDone(true), 2000)
+    return () => clearTimeout(t)
+  }, [])
+
   if (window.location.pathname === '/admin') return <AdminSuggestions />
-  
-  if (loading) {
-    return <Loading message="Setting up your session..." />
+
+  if (loading || !minLoadDone) {
+    return <Loading />
   }
 
   if (error?.type === 'AUTH_INIT_FAILED') {
@@ -55,7 +63,7 @@ function AppContent() {
 
   // User is authenticated but profile is still loading
   if (user && !profile && !error) {
-    return <Loading message="Loading your profile..." />
+    return <Loading />
   }
 
   // No user - show login
