@@ -1,13 +1,11 @@
-import refreshIconSrc from '../../../assets/refresh-icon.png'
-import historyIconSrc from '../../../assets/history-icon.png'
 import { useState, useEffect, useCallback, useRef } from 'react'
 import {
-  FaRobot, FaChevronDown, FaChevronUp,
+  FaRobot, FaSync, FaChevronDown, FaChevronUp,
   FaBolt, FaArrowRight, FaGraduationCap,
   FaClipboardList, FaComments, FaCalendarAlt,
   FaChartBar, FaMapMarkedAlt, FaLightbulb,
   FaBookmark, FaRegBookmark, FaThumbtack,
-  FaGripVertical, FaTimes, FaTrash, FaHistory,
+  FaGripVertical, FaTrash,
 } from 'react-icons/fa'
 import { CARD_CATEGORIES, CATEGORY_LABELS } from '../../../lib/cardsAPI'
 import './AdvisorCards.css'
@@ -29,7 +27,7 @@ const CARD_CONFIG = {
   progress: { accent: 'var(--card-progress, #10B981)' },
 }
 
-// Thread messages scroller
+// ── Thread messages scroller ──────────────────────────────────
 function ThreadMessages({ thread, isThinking }) {
   const scrollRef = useRef(null)
   useEffect(() => {
@@ -59,8 +57,8 @@ function ThreadMessages({ thread, isThinking }) {
   )
 }
 
-// Auto-growing textarea chat bar
-function CardChatBar({ onSend, isThinking, onFocus, isExpanded }) {
+// ── Auto-growing textarea chat bar ────────────────────────────
+function CardChatBar({ onSend, isThinking, onFocus }) {
   const [value, setValue] = useState('')
   const taRef = useRef(null)
 
@@ -91,11 +89,11 @@ function CardChatBar({ onSend, isThinking, onFocus, isExpanded }) {
   }
 
   return (
-    <div className={`card-chat-bar ${isExpanded ? 'card-chat-bar--expanded' : ''}`}>
+    <div className="card-chat-bar">
       <textarea
         ref={taRef}
         className="card-chat-bar__input"
-        placeholder={isExpanded ? 'Ask a follow-up…' : 'Ask about this insight…'}
+        placeholder="Ask a follow-up…"
         value={value}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
@@ -117,7 +115,7 @@ function CardChatBar({ onSend, isThinking, onFocus, isExpanded }) {
   )
 }
 
-// Individual card
+// ── Individual card ───────────────────────────────────────────
 function AdvisorCard({
   card,
   thread = [],
@@ -131,25 +129,21 @@ function AdvisorCard({
   dragHandleProps,
   isDragging,
 }) {
-  const [saving, setSaving] = useState(false)
+  const [saving, setSaving]       = useState(false)
+  const [panelOpen, setPanelOpen] = useState(false)
   const cardRef = useRef(null)
 
   const config   = CARD_CONFIG[card.card_type || card.type] || CARD_CONFIG.insight
   const CardIcon = CATEGORY_ICON_COMPONENTS[card.category || 'other'] || FaComments
   const isSaved  = card.is_saved || false
   const isUser   = card.source === 'user'
+  const chips    = card.actions || []
 
-  // Click outside to collapse
-  useEffect(() => {
-    if (!isExpanded) return
-    const handleClickOutside = (e) => {
-      if (cardRef.current && !cardRef.current.contains(e.target)) {
-        onCollapse(card.id)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [isExpanded, card.id, onCollapse])
+  // Sync with parent expanded state
+  useEffect(() => { if (isExpanded) setPanelOpen(true) }, [isExpanded])
+
+  // Auto-open when thread arrives
+  useEffect(() => { if (thread.length > 0) setPanelOpen(true) }, [thread.length])
 
   const handleSave = async (e) => {
     e.stopPropagation()
@@ -159,14 +153,24 @@ function AdvisorCard({
     finally { setSaving(false) }
   }
 
-  const handleExpand = () => {
-    onExpand(card.id)
-    setTimeout(() => {
-      cardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
-    }, 80)
+  const togglePanel = () => {
+    const next = !panelOpen
+    setPanelOpen(next)
+    if (next) {
+      onExpand(card.id)
+      setTimeout(() => cardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 80)
+    } else {
+      onCollapse(card.id)
+    }
   }
 
-  const showTypingIndicator = isThinking
+  const handleSend = (msg) => {
+    if (!panelOpen) {
+      setPanelOpen(true)
+      onExpand(card.id)
+    }
+    onSend(msg)
+  }
 
   return (
     <article
@@ -174,20 +178,23 @@ function AdvisorCard({
       className={[
         'advisor-card',
         `advisor-card--${card.card_type || card.type}`,
-        isUser    ? 'advisor-card--user' : '',
-        isSaved   ? 'advisor-card--saved' : '',
+        isUser     ? 'advisor-card--user' : '',
+        isSaved    ? 'advisor-card--saved' : '',
         isDragging ? 'advisor-card--dragging' : '',
-        isExpanded ? 'advisor-card--expanded' : '',
+        panelOpen  ? 'advisor-card--expanded' : '',
       ].filter(Boolean).join(' ')}
       style={{ '--card-accent': config.accent }}
       ref={cardRef}
     >
+      {/* Drag handle */}
       <span className="advisor-card__drag-handle" {...dragHandleProps} title="Drag to reorder">
         <FaGripVertical />
       </span>
 
+      {/* ── Header: icon | meta | save | trash ── */}
       <div className="advisor-card__header">
         <span className="advisor-card__icon"><CardIcon /></span>
+
         <div className="advisor-card__meta">
           <div className="advisor-card__meta-top">
             <span className="advisor-card__label">{card.label}</span>
@@ -201,7 +208,16 @@ function AdvisorCard({
           <h3 className="advisor-card__title">{card.title}</h3>
         </div>
 
+        {/* Trash left, save rightmost */}
         <div className="advisor-card__header-actions">
+          <button
+            className="advisor-card__delete"
+            onClick={() => onDelete(card.id)}
+            title="Delete card"
+          >
+            <FaTrash />
+          </button>
+
           <button
             className={`advisor-card__save ${isSaved ? 'advisor-card__save--active' : ''}`}
             onClick={handleSave}
@@ -210,71 +226,96 @@ function AdvisorCard({
           >
             {isSaved ? <FaBookmark /> : <FaRegBookmark />}
           </button>
-
-          <button
-            className="advisor-card__delete"
-            onClick={() => onDelete(card.id)}
-            title="Delete card"
-          >
-            <FaTrash />
-          </button>
         </div>
       </div>
 
+      {/* ── Body — always visible ── */}
       <p className="advisor-card__body">{card.body}</p>
 
-      {(card.actions || []).length > 0 && (
-        <div className="advisor-card__chips">
-          {(card.actions || []).map((chip, i) => (
-            <button
-              key={i}
-              className="advisor-card__chip"
-              onClick={() => { if (!isExpanded) handleExpand(); onSend(chip) }}
-              disabled={isThinking}
-            >
-              <FaBolt className="chip-icon" />
-              {chip}
-            </button>
-          ))}
-        </div>
-      )}
+      {/* ── Collapsible panel: chips + thread + chat bar + close toggle ── */}
+      <div className={`advisor-card__panel ${panelOpen ? 'advisor-card__panel--open' : ''}`}>
+        <div className="advisor-card__panel-inner">
 
-      {thread.length > 0 && (
-        <div className={`advisor-card__thread ${isExpanded ? '' : 'advisor-card__thread--preview'}`}>
-          <div className="thread-divider" />
-          {isExpanded ? (
-            <ThreadMessages thread={thread} isThinking={isThinking} />
-          ) : (
-            <div className="advisor-card__thread-preview">
-              <div className={`thread-message thread-message--${thread[thread.length - 1].role}`}>
-                <span className="thread-avatar">
-                  {thread[thread.length - 1].role === 'user' ? '👤' : <FaRobot />}
-                </span>
-                <p className="thread-text">
-                  {thread[thread.length - 1].content.slice(0, 100)}
-                  {thread[thread.length - 1].content.length > 100 ? '…' : ''}
-                </p>
-              </div>
+          {/* Follow-up question chips */}
+          {chips.length > 0 && (
+            <div className="advisor-card__chips">
+              {chips.map((chip, i) => (
+                <button
+                  key={i}
+                  className="advisor-card__chip"
+                  onClick={() => handleSend(chip)}
+                  disabled={isThinking}
+                >
+                  <FaBolt className="chip-icon" />
+                  {chip}
+                </button>
+              ))}
             </div>
           )}
+
+          {/* Thread */}
+          {thread.length > 0 && (
+            <div className="advisor-card__thread">
+              <div className="thread-divider" />
+              <ThreadMessages thread={thread} isThinking={isThinking} />
+            </div>
+          )}
+
+          {/* Chat bar */}
+          <div className="advisor-card__chat-bar-wrapper">
+            <CardChatBar
+              onSend={handleSend}
+              isThinking={isThinking}
+              onFocus={() => {
+                if (!panelOpen) { setPanelOpen(true); onExpand(card.id) }
+              }}
+            />
+          </div>
+
+          {/* Close chevron — at the bottom of the open panel */}
+          <div className="advisor-card__toggle-row">
+            <button
+              className="advisor-card__toggle advisor-card__toggle--open"
+              onClick={togglePanel}
+              aria-label="Collapse"
+            >
+              <FaChevronUp />
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      {/* ── Open chevron — always visible below the body when closed ── */}
+      {!panelOpen && (
+        <div className="advisor-card__toggle-row">
+          <button
+            className="advisor-card__toggle"
+            onClick={togglePanel}
+            aria-label="Expand"
+          >
+            <FaChevronDown />
+          </button>
         </div>
       )}
 
-      <div className="advisor-card__chat-bar-wrapper">
-        <CardChatBar
-          onSend={(msg) => {
-            if (!isExpanded) handleExpand()
-            onSend(msg)
-          }}
-          isThinking={isThinking}
-          onFocus={handleExpand}
-          isExpanded={isExpanded}
-        />
-      </div>
+      {/* Peek strip when collapsed but thread has messages */}
+      {!panelOpen && thread.length > 0 && (
+        <button className="advisor-card__thread-peek" onClick={togglePanel}>
+          <span className={`thread-peek__role thread-peek__role--${thread[thread.length - 1].role}`}>
+            {thread[thread.length - 1].role === 'user' ? 'You' : 'AI'}:
+          </span>{' '}
+          <span className="thread-peek__text">
+            {thread[thread.length - 1].content.slice(0, 90)}
+            {thread[thread.length - 1].content.length > 90 ? '…' : ''}
+          </span>
+        </button>
+      )}
     </article>
   )
 }
 
+// ── Skeleton ──────────────────────────────────────────────────
 function CardSkeleton() {
   return (
     <div className="advisor-card advisor-card--skeleton">
@@ -294,6 +335,7 @@ function CardSkeleton() {
   )
 }
 
+// ── Drag-and-drop feed ────────────────────────────────────────
 function DraggableFeed({ cards, threadMap, thinkingCards, expandedCards, onSaveToggle, onReorder, onSend, onExpand, onCollapse, onDelete }) {
   const [items, setItems]     = useState(cards)
   const [dragIdx, setDragIdx] = useState(null)
@@ -365,33 +407,7 @@ function DraggableFeed({ cards, threadMap, thinkingCards, expandedCards, onSaveT
   )
 }
 
-function HistoryPreviewCard({ card, thread, onClick }) {
-  const CardIcon = CATEGORY_ICON_COMPONENTS[card.category || 'other'] || FaComments
-  const last = thread[thread.length - 1]
-  return (
-    <button className="history-preview-card" onClick={onClick} type="button">
-      <div className="history-preview-card__header">
-        <span className="history-preview-card__icon"><CardIcon /></span>
-        <div className="history-preview-card__meta">
-          <span className="history-preview-card__category">
-            {CATEGORY_LABELS[card.category || 'other']}
-          </span>
-          <h4 className="history-preview-card__title">{card.title}</h4>
-        </div>
-        <span className="history-preview-card__count">{thread.length} msg{thread.length !== 1 ? 's' : ''}</span>
-      </div>
-      {last && (
-        <p className="history-preview-card__last">
-          <span className={`history-preview-card__role history-preview-card__role--${last.role}`}>
-            {last.role === 'user' ? 'You' : 'AI'}:
-          </span>{' '}
-          {last.content.slice(0, 90)}{last.content.length > 90 ? '…' : ''}
-        </p>
-      )}
-    </button>
-  )
-}
-
+// ── Main export ───────────────────────────────────────────────
 export default function AdvisorCards({
   userId = null,
   cards = [],
@@ -411,26 +427,22 @@ export default function AdvisorCards({
   const [activeCategory, setActiveCategory] = useState('all')
   const [timeAgo, setTimeAgo] = useState('')
 
-  // Stable storage keys keyed by userId prop (available before cards load)
   const storageKey = userId ? `advisor_threads_${userId}` : 'advisor_threads'
   const deletedKey = userId ? `advisor_deleted_${userId}` : 'advisor_deleted'
 
-  // Lifted thread state — persisted to localStorage
   const [threadMap, setThreadMap] = useState(() => {
     try { return JSON.parse(localStorage.getItem(userId ? `advisor_threads_${userId}` : 'advisor_threads') || '{}') } catch { return {} }
   })
   const [thinkingCards, setThinking] = useState(new Set())
   const [expandedCards, setExpanded] = useState(new Set())
 
-  // Persist threadMap on every change
   useEffect(() => {
     try { localStorage.setItem(storageKey, JSON.stringify(threadMap)) } catch {}
   }, [threadMap, storageKey])
 
-  const feedRef  = useRef(null)
-  const prevLen  = useRef(cards.length)
+  const feedRef = useRef(null)
+  const prevLen = useRef(cards.length)
 
-  // Auto-scroll to top when new card prepended
   useEffect(() => {
     if (cards.length > prevLen.current && feedRef.current) {
       feedRef.current.scrollTo({ top: 0, behavior: 'smooth' })
@@ -438,7 +450,6 @@ export default function AdvisorCards({
     prevLen.current = cards.length
   }, [cards.length])
 
-  // Timestamp ticker
   useEffect(() => {
     if (!generatedAt) return
     const update = () => {
@@ -453,7 +464,6 @@ export default function AdvisorCards({
     return () => clearInterval(interval)
   }, [generatedAt])
 
-  // Send a message in a card's thread
   const handleSend = useCallback(async (cardId, message, cardTitle, cardBody) => {
     setExpanded(prev => new Set([...prev, cardId]))
     setThreadMap(prev => ({
@@ -478,19 +488,13 @@ export default function AdvisorCards({
     }
   }, [onChipClick])
 
-  const handleExpand = useCallback((cardId) => {
-    setExpanded(prev => new Set([...prev, cardId]))
-  }, [])
-
-  const handleCollapse = useCallback((cardId) => {
-    setExpanded(prev => { const n = new Set(prev); n.delete(cardId); return n })
-  }, [])
+  const handleExpand   = useCallback((id) => setExpanded(prev => new Set([...prev, id])), [])
+  const handleCollapse = useCallback((id) => setExpanded(prev => { const n = new Set(prev); n.delete(id); return n }), [])
 
   const handleDelete = useCallback((cardId) => {
-    setExpanded(prev => { const n = new Set(prev); n.delete(cardId); return n })
+    setExpanded(prev  => { const n = new Set(prev); n.delete(cardId); return n })
     setThreadMap(prev => { const n = { ...prev }; delete n[cardId]; return n })
-    setThinking(prev => { const n = new Set(prev); n.delete(cardId); return n })
-    // Persist deleted card ID so it stays hidden after refresh
+    setThinking(prev  => { const n = new Set(prev); n.delete(cardId); return n })
     try {
       const existing = JSON.parse(localStorage.getItem(deletedKey) || '[]')
       if (!existing.includes(cardId)) {
@@ -508,30 +512,19 @@ export default function AdvisorCards({
     return acc
   }, {})
 
-  const savedCards   = cards.filter(c => c.is_saved)
-  const historyCards = cards.filter(c => (threadMap[c.id] || []).length > 0)
+  const savedCards = cards.filter(c => c.is_saved)
 
   const filteredCards =
-    activeCategory === 'all'     ? cards :
-    activeCategory === 'saved'   ? savedCards :
-    activeCategory === 'history' ? historyCards :
+    activeCategory === 'all'   ? cards :
+    activeCategory === 'saved' ? savedCards :
     cards.filter(c => (c.category || 'other') === activeCategory)
 
   const activeCats = CARD_CATEGORIES.filter(cat => categoryCounts[cat])
 
-  const handleHistoryCardClick = (card) => {
-    const cat = card.category || 'other'
-    setActiveCategory(cat)
-    handleExpand(card.id)
-    setTimeout(() => {
-      document.querySelector(`[data-card-id="${card.id}"]`)
-        ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    }, 150)
-  }
-
   return (
     <div className="advisor-cards-root">
 
+      {/* ── Header ── */}
       <header className="advisor-cards-header">
         <div className="advisor-cards-header__left">
           <FaRobot className="header-robot-icon" />
@@ -546,11 +539,12 @@ export default function AdvisorCards({
           disabled={isGenerating}
           title="Refresh cards"
         >
-          <img src={refreshIconSrc} className="refresh-icon-img" alt="Refresh" />
+          <FaSync />
         </button>
       </header>
 
-      {!showSkeletons && (
+      {/* ── Category bar ── */}
+      {!showSkeletons && activeCats.length > 1 && (
         <nav className="category-bar">
           <button
             className={`category-tab ${activeCategory === 'all' ? 'active' : ''}`}
@@ -561,7 +555,7 @@ export default function AdvisorCards({
             <span className="category-tab__count">{cards.length}</span>
           </button>
 
-          {CARD_CATEGORIES.map(cat => {
+          {activeCats.map(cat => {
             const CatIcon = CATEGORY_ICON_COMPONENTS[cat] || FaComments
             return (
               <button
@@ -586,39 +580,13 @@ export default function AdvisorCards({
               <span className="category-tab__count category-tab__count--saved">{savedCards.length}</span>
             )}
           </button>
-
-          <button
-            className={`category-tab-icon-only ${activeCategory === 'history' ? 'active' : ''}`}
-            onClick={() => setActiveCategory('history')}
-            title="History"
-          >
-            <img src={historyIconSrc} className="history-icon-img" alt="History" />
-
-          </button>
         </nav>
       )}
 
+      {/* ── Card feed ── */}
       <div className="advisor-cards-feed" ref={feedRef}>
         {showSkeletons ? (
           <><CardSkeleton /><CardSkeleton /><CardSkeleton /></>
-        ) : activeCategory === 'history' ? (
-          historyCards.length === 0 ? (
-            <div className="advisor-cards-empty">
-              <FaHistory className="empty-icon" />
-              <p>No chat history yet. Start a conversation on any card.</p>
-            </div>
-          ) : (
-            <div className="history-list">
-              {historyCards.map(card => (
-                <HistoryPreviewCard
-                  key={card.id}
-                  card={card}
-                  thread={threadMap[card.id] || []}
-                  onClick={() => handleHistoryCardClick(card)}
-                />
-              ))}
-            </div>
-          )
         ) : filteredCards.length === 0 && cards.length === 0 ? (
           <div className="advisor-cards-empty">
             <FaGraduationCap className="empty-icon" />
@@ -651,6 +619,7 @@ export default function AdvisorCards({
         )}
       </div>
 
+      {/* ── Freeform input ── */}
       <form className="advisor-cards-freeform" onSubmit={onFreeformSubmit}>
         <input
           type="text"
