@@ -373,3 +373,23 @@
   .profile-display-name { font-size: 1.5rem; }
   .stat-value-large { font-size: 2.5rem; }
 }
+
+.btn-import-transcript {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #ED1B2F 0%, #B01B2E 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.15s;
+}
+
+.btn-import-transcript:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
