@@ -3,17 +3,18 @@
    Inherits all site CSS variables.
    Add card colour vars to your theme:
 
-   :root
-   --card-urgent:   #ED1B2F;
-   --card-warning:  #F59E0B;
-   --card-insight:  #3B82F6;
-   --card-progress: #10B981;
-
-   [data-theme="dark"] (or .dark)
-   --card-urgent:   #FF3B4E;
-   --card-warning:  #FBBF24;
-   --card-insight:  #60A5FA;
-   --card-progress: #34D399;
+   :root {
+     --card-urgent:   #ED1B2F;
+     --card-warning:  #F59E0B;
+     --card-insight:  #3B82F6;
+     --card-progress: #10B981;
+   }
+   [data-theme="dark"] {
+     --card-urgent:   #FF3B4E;
+     --card-warning:  #FBBF24;
+     --card-insight:  #60A5FA;
+     --card-progress: #34D399;
+   }
    ============================================ */
 
 /* ── Root shell ── */
@@ -73,9 +74,9 @@
   width: 34px;
   height: 34px;
   border-radius: 8px;
-  border: 1px solid rgba(237, 27, 47, 0.35);
-  background: rgba(237, 27, 47, 0.06);
-  color: var(--accent-primary);
+  border: 1px solid var(--border-primary);
+  background: var(--btn-secondary-bg, transparent);
+  color: var(--text-secondary);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -101,7 +102,7 @@
   to   { transform: rotate(360deg); }
 }
 
-/* ── Category bar ── */
+/* ── Category bar — exactly Doc 4 style ── */
 .category-bar {
   display: flex;
   gap: 2px;
@@ -142,10 +143,13 @@
   font-weight: 600;
 }
 
+/* Tab icons — visible, Doc 4 sizing */
 .category-tab__icon {
+  display: inline-block;
   font-size: 0.78rem;
   color: var(--accent-primary);
   opacity: 0.7;
+  flex-shrink: 0;
 }
 
 .category-tab.active .category-tab__icon { opacity: 1; }
@@ -161,6 +165,23 @@
 
 .category-tab.active .category-tab__count {
   background: rgba(237, 27, 47, 0.1);
+  color: var(--accent-primary);
+}
+
+/* Saved tab — amber accent (from Doc 5), otherwise same structure */
+.category-tab--saved.active {
+  color: var(--accent-primary);
+  border-bottom-color: var(--accent-primary);
+}
+
+.category-tab--saved .category-tab__icon {
+  color: var(--accent-primary);
+}
+
+.category-tab--saved.active .category-tab__icon { opacity: 1; }
+
+.category-tab--saved.active .category-tab__count {
+  background: rgba(245, 158, 11, 0.1);
   color: var(--accent-primary);
 }
 
@@ -186,11 +207,12 @@
 /* ── Card ── */
 .advisor-card {
   --card-accent: var(--accent-primary);
+  position: relative;
   background: var(--bg-primary);
   border: 1px solid var(--card-border, var(--border-primary));
   border-left: 3px solid var(--card-accent);
   border-radius: 12px;
-  padding: 16px 18px;
+  padding: 16px 18px 14px 22px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -210,6 +232,15 @@
   border-bottom-style: dashed;
 }
 
+.advisor-card--expanded {
+  box-shadow: 0 0 0 2px rgba(237, 27, 47, 0.1);
+}
+
+.advisor-card--saved {
+  border-left-color: var(--accent-primary) !important;
+  background: rgba(237, 27, 47, 0.02);
+}
+
 @keyframes cardSlide {
   from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -222,7 +253,7 @@
 .advisor-card:nth-child(5) { animation-delay: 0.15s; }
 .advisor-card:nth-child(6) { animation-delay: 0.18s; }
 
-/* Card header */
+/* ── Card header ── */
 .advisor-card__header {
   display: flex;
   align-items: flex-start;
@@ -251,6 +282,7 @@
   align-items: center;
   gap: 8px;
   margin-bottom: 3px;
+  flex-wrap: wrap;
 }
 
 .advisor-card__label {
@@ -258,7 +290,7 @@
   font-weight: 700;
   letter-spacing: 0.07em;
   text-transform: uppercase;
-  color: var(--mcgill-red);
+  color: var(--mcgill-red, var(--accent-primary));
 }
 
 .advisor-card__user-badge {
@@ -280,23 +312,6 @@
   letter-spacing: -0.01em;
 }
 
-.advisor-card__collapse {
-  background: transparent;
-  border: none;
-  color: var(--text-muted, var(--text-tertiary));
-  cursor: pointer;
-  padding: 4px;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  font-size: 0.8rem;
-  transition: color 0.15s;
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-.advisor-card__collapse:hover { color: var(--text-primary); }
-
 .advisor-card__body {
   font-size: 0.875rem;
   color: var(--text-secondary);
@@ -304,6 +319,126 @@
   margin: 0;
 }
 
+/* ── Header actions: save then trash ── */
+.advisor-card__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.advisor-card__save {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+  color: var(--text-muted, var(--text-tertiary));
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s ease, transform 0.15s ease;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.advisor-card__save:hover:not(:disabled) {
+  color: var(--accent-primary);
+  transform: scale(1.15);
+}
+
+.advisor-card__save--active { color: var(--accent-primary); }
+
+.advisor-card__save--active:hover:not(:disabled) {
+  color: var(--text-muted, var(--text-tertiary));
+  transform: scale(1.0);
+}
+
+.advisor-card__save:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.advisor-card__delete {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+  color: var(--text-muted, var(--text-tertiary));
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s ease;
+  flex-shrink: 0;
+  opacity: 0;
+  margin-top: 2px;
+}
+
+.advisor-card:hover .advisor-card__delete { opacity: 1; }
+.advisor-card__delete:hover { color: #ef4444; }
+
+/* ── Saved badge ── */
+.advisor-card__saved-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: var(--accent-primary);
+  background: rgba(237, 27, 47, 0.08);
+  border: 1px solid rgba(237, 27, 47, 0.25);
+  border-radius: 4px;
+  padding: 1px 6px;
+}
+
+.saved-badge__icon {
+  font-size: 0.6rem;
+  color: var(--accent-primary);
+}
+
+[data-theme="dark"] .advisor-card__saved-badge,
+.dark .advisor-card__saved-badge {
+  background: rgba(237, 27, 47, 0.15);
+  border-color: rgba(237, 27, 47, 0.35);
+}
+
+/* ═══════════════════════════════════════════
+   COLLAPSIBLE PANEL
+   grid-template-rows 0fr → 1fr for smooth
+   height animation with no JS measurement.
+   ═══════════════════════════════════════════ */
+.advisor-card__panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition:
+    grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.25s ease;
+  opacity: 0;
+  /* keep the toggle-row below visible when closed */
+  overflow: visible;
+}
+
+.advisor-card__panel--open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.advisor-card__panel-inner {
+  min-height: 0;
+  /* overflow-x clips horizontal overflow during animation;
+     overflow-y must remain visible so the textarea focus
+     bottom-border is never clipped by the grid container. */
+  overflow-x: hidden;
+  overflow-y: visible;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+/* Prevent the card article from showing a browser focus outline
+   when an inner element (e.g. the chat textarea) is focused. *
+   /
 /* ── Chips ── */
 .advisor-card__chips {
   display: flex;
@@ -340,29 +475,7 @@
   color: var(--accent-primary);
 }
 
-/* + bubble */
-.advisor-card__chip--plus {
-  width: 28px;
-  height: 28px;
-  padding: 0;
-  border-radius: 50%;
-  border-color: var(--accent-primary);
-  color: var(--accent-primary);
-  font-size: 0.75rem;
-  justify-content: center;
-  opacity: 0.75;
-  flex-shrink: 0;
-}
-
-.advisor-card__chip--plus:hover:not(:disabled) {
-  opacity: 1;
-  background: var(--accent-primary);
-  color: #fff;
-  transform: scale(1.1);
-  box-shadow: 0 2px 8px rgba(237, 27, 47, 0.3);
-}
-
-/* ── Inline thread ── */
+/* ── Thread ── */
 .advisor-card__thread {
   display: flex;
   flex-direction: column;
@@ -375,7 +488,24 @@
   opacity: 0.6;
 }
 
-/* Thread messages */
+/* ── Inline thread messages — scroll internally ── */
+.thread-messages {
+  max-height: 240px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-primary) transparent;
+  scroll-behavior: smooth;
+}
+
+.thread-messages::-webkit-scrollbar { width: 3px; }
+.thread-messages::-webkit-scrollbar-thumb {
+  background: var(--border-primary);
+  border-radius: 3px;
+}
+
 .thread-message {
   display: flex;
   align-items: flex-start;
@@ -446,241 +576,162 @@
   50%       { opacity: 1;   transform: scale(1.1); }
 }
 
-/* Thread input — matches site's .input-area style */
-.thread-input-form {
+/* ── Card chat bar ── */
+.card-chat-bar {
   display: flex;
   gap: 8px;
-  align-items: center;
+  align-items: flex-end;
 }
 
-.thread-input {
+.card-chat-bar__input {
   flex: 1;
-  padding: 8px 16px;
-  border: 2px solid var(--border-primary);
-  border-radius: 50px;
-  font-size: 0.84rem;
-  background: var(--bg-secondary);
-  color: var(--text-primary);
+  border: none;
+  border-bottom: 1.5px solid var(--border-primary);
+  border-radius: 0;
+  background: transparent;
   font-family: inherit;
+  font-size: 0.83rem;
+  color: var(--text-primary);
   outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  resize: none;
+  min-height: 20px;
+  max-height: 120px;
+  line-height: 1.5;
+  padding: 2px 0 4px;
+  transition: border-color 0.2s;
 }
 
-.thread-input:focus {
-  border-color: var(--accent-primary);
-  background: var(--bg-primary);
-  box-shadow: 0 4px 12px rgba(237, 27, 47, 0.1);
+.card-chat-bar__input:focus {
+  border-bottom-color: var(--accent-primary);
+  outline: none
 }
 
-.thread-input::placeholder { color: var(--text-muted, var(--text-tertiary)); }
+.card-chat-bar__input::placeholder {
+  color: var(--text-muted, var(--text-tertiary));
+}
 
-.thread-send {
-  width: 34px;
-  height: 34px;
+.card-chat-bar__input:disabled { opacity: 0.6; }
+
+.card-chat-bar__send {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
   border-radius: 50%;
   border: none;
   background: linear-gradient(135deg, var(--accent-primary) 0%, #B01B2E 100%);
   color: #fff;
   cursor: pointer;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 10px rgba(237, 27, 47, 0.3);
+  box-shadow: 0 2px 8px rgba(237, 27, 47, 0.28);
+  align-self: flex-end;
 }
 
-.thread-send:hover:not(:disabled) {
-  transform: scale(1.05);
+.card-chat-bar__send:hover:not(:disabled) {
+  transform: scale(1.08);
   background: #d4192a;
 }
 
-.thread-send:disabled {
+.card-chat-bar__send:disabled {
   background: var(--bg-quaternary, #e5e7eb);
   color: #a1a1aa;
   box-shadow: none;
   cursor: default;
 }
 
-/* ── Thread modal ── */
-.thread-modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
-  z-index: 1000;
+/* ═══════════════════════════════════════════
+   CHEVRON TOGGLE ROW
+   Icon-only pill, centered, with a faint
+   rule running behind it.
+   Used both inside the panel (close) and
+   outside it (open).
+   ═══════════════════════════════════════════ */
+.advisor-card__toggle-row {
   display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+.advisor-card__toggle-row::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: var(--border-primary);
+  opacity: 0.4;
+}
+
+.advisor-card__toggle {
+  position: relative; /* floats above the rule */
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
-  animation: overlayIn 0.18s ease;
-}
-
-@keyframes overlayIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-.thread-modal {
-  --card-accent: var(--accent-primary);
-  background: var(--card-bg, var(--bg-primary));
-  border: 1px solid var(--card-border, var(--border-primary));
-  border-top: 3px solid var(--card-accent);
-  border-radius: 12px;
-  width: 100%;
-  max-width: 600px;
-  max-height: 80vh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  box-shadow: var(--shadow-2xl, 0 24px 60px rgba(0,0,0,0.2));
-  animation: modalIn 0.22s cubic-bezier(0.34, 1.4, 0.64, 1);
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-}
-
-@keyframes modalIn {
-  from { opacity: 0; transform: scale(0.95) translateY(10px); }
-  to   { opacity: 1; transform: scale(1)    translateY(0); }
-}
-
-.thread-modal__header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  padding: 16px 20px 14px;
-  border-bottom: 1px solid var(--card-border, var(--border-primary));
-  flex-shrink: 0;
-}
-
-.thread-modal__card-info {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  flex: 1;
-  min-width: 0;
-}
-
-.thread-modal__cat-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  background: rgba(237, 27, 47, 0.08);
-  color: var(--accent-primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.9rem;
-  flex-shrink: 0;
-}
-
-.thread-modal__card-text { flex: 1; min-width: 0; }
-
-.thread-modal__label {
-  display: block;
-  font-size: 0.62rem;
-  font-weight: 700;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: var(--card-accent);
-  margin-bottom: 3px;
-}
-
-.thread-modal__title {
-  font-size: 0.98rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin: 0;
-  line-height: 1.3;
-}
-
-.thread-modal__close {
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
+  width: 28px;
+  height: 28px;
   border: 1px solid var(--border-primary);
-  background: var(--btn-secondary-bg, transparent);
+  border-radius: 50%;
+  background: var(--bg-primary);
   color: var(--text-muted, var(--text-tertiary));
+  font-size: 0.72rem;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.8rem;
+  transition: border-color 0.18s ease, color 0.18s ease, background 0.18s ease;
   flex-shrink: 0;
-  margin-left: 12px;
-  transition: all 0.15s ease;
-  font-family: inherit;
 }
 
-.thread-modal__close:hover {
+.advisor-card__toggle:hover {
   border-color: var(--accent-primary);
   color: var(--accent-primary);
+  background: rgba(237, 27, 47, 0.04);
 }
 
-.thread-modal__summary {
-  padding: 12px 20px;
-  background: var(--bg-secondary);
-  border-bottom: 1px solid var(--card-border, var(--border-primary));
-  flex-shrink: 0;
-}
-
-.thread-modal__summary p {
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-  line-height: 1.65;
-  margin: 0;
-}
-
-.thread-modal__messages {
-  flex: 1;
-  overflow-y: auto;
-  padding: 16px 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  scrollbar-width: thin;
-  scrollbar-color: var(--border-primary) transparent;
-}
-
-.thread-modal__messages::-webkit-scrollbar { width: 4px; }
-.thread-modal__messages::-webkit-scrollbar-track { background: transparent; }
-.thread-modal__messages::-webkit-scrollbar-thumb {
-  background: var(--border-primary);
-  border-radius: 4px;
-}
-
-/* Bigger text in modal */
-.thread-modal__messages .thread-text { font-size: 0.9rem; max-width: 90%; }
-.thread-modal__messages .thread-avatar { width: 30px; height: 30px; font-size: 0.78rem; }
-
-.thread-modal__empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  padding: 40px 20px;
-  color: var(--text-muted, var(--text-tertiary));
-  text-align: center;
-}
-
-.thread-modal__empty-icon {
-  font-size: 2.2rem;
+/* Active / open state — filled accent ring */
+.advisor-card__toggle--open {
+  border-color: var(--accent-primary);
   color: var(--accent-primary);
-  opacity: 0.35;
+  background: rgba(237, 27, 47, 0.06);
 }
 
-.thread-modal__empty p { margin: 0; font-size: 0.9rem; }
-
-.thread-modal__input-area {
-  padding: 12px 20px 16px;
-  border-top: 1px solid var(--card-border, var(--border-primary));
-  flex-shrink: 0;
+/* ── Peek strip (collapsed, thread exists) ── */
+.advisor-card__thread-peek {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  border: 1px dashed var(--border-primary);
+  background: var(--bg-secondary);
+  font-family: inherit;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s, background 0.15s;
+  overflow: hidden;
+  white-space: nowrap;
+  width: 100%;
 }
 
-.thread-modal__input-area .thread-input  { font-size: 0.9rem;  padding: 10px 18px; }
-.thread-modal__input-area .thread-send   { width: 38px; height: 38px; font-size: 0.82rem; }
+.advisor-card__thread-peek:hover {
+  border-color: var(--accent-primary);
+  background: rgba(237, 27, 47, 0.03);
+  color: var(--text-primary);
+}
+
+.thread-peek__role { font-weight: 700; flex-shrink: 0; }
+.thread-peek__role--user      { color: var(--accent-primary); }
+.thread-peek__role--assistant { color: var(--text-muted, var(--text-tertiary)); }
+
+.thread-peek__text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 /* ── Skeletons ── */
 .advisor-card--skeleton {
@@ -746,13 +797,12 @@
 
 .advisor-cards-empty p { margin: 0; font-size: 0.95rem; }
 
-/* Reuse site's .btn-primary */
 .advisor-cards-empty .btn-primary {
   padding: 0.75rem 1.5rem;
   font-size: 0.9rem;
 }
 
-/* ── Freeform input — matches site's .input-area ── */
+/* ── Freeform input ── */
 .advisor-cards-freeform {
   padding: 14px 24px 18px;
   border-top: 1px solid var(--card-border, var(--border-primary));
@@ -774,7 +824,6 @@
   font-family: inherit;
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
-  box-shadow: 0 0 0 3px rgba(237, 27, 47, 0.1);
 }
 
 .freeform-input:focus {
@@ -819,15 +868,15 @@
 @media (max-width: 768px) {
   .advisor-cards-feed,
   .advisor-cards-header,
-  .advisor-cards-freeform  { padding-left: 16px; padding-right: 16px; }
-  .category-bar            { padding-left: 16px; padding-right: 16px; }
-  .thread-modal-overlay    { padding: 0; align-items: flex-end; }
-  .thread-modal            { border-radius: 14px 14px 0 0; max-width: 100%; max-height: 88vh; }
+  .advisor-cards-freeform { padding-left: 16px; padding-right: 16px; }
+  .category-bar           { padding-left: 16px; padding-right: 16px; }
+  .thread-modal-overlay   { padding: 0; align-items: flex-end; }
+  .thread-modal           { border-radius: 14px 14px 0 0; max-width: 100%; max-height: 88vh; }
 }
 
 @media (max-width: 480px) {
   .advisor-cards-root  { border-radius: 8px; }
-  .advisor-card        { padding: 14px; }
+  .advisor-card        { padding: 14px 14px 12px 20px; }
   .advisor-card__title { font-size: 0.88rem; }
   .freeform-input      { font-size: 16px; }
 }
@@ -855,82 +904,13 @@
 .advisor-card__drag-handle:hover               { opacity: 1 !important; color: var(--accent-primary); }
 .advisor-card__drag-handle:active              { cursor: grabbing; }
 
-/* Give card position:relative for the handle to anchor to */
-.advisor-card { position: relative; padding-left: 20px; }
-
-/* ── Save / bookmark button ── */
-.advisor-card__save {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 4px 6px;
-  border-radius: 6px;
-  color: var(--text-muted, var(--text-tertiary));
-  font-size: 0.85rem;
-  display: flex;
-  align-items: center;
-  transition: color 0.15s ease, transform 0.15s ease;
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-.advisor-card__save:hover:not(:disabled) {
-  color: var(--accent-primary);
-  transform: scale(1.15);
-}
-
-.advisor-card__save--active {
-  color: var(--accent-primary);
-}
-
-.advisor-card__save--active:hover:not(:disabled) {
-  color: var(--text-muted, var(--text-tertiary));
-  transform: scale(1.0);
-}
-
-.advisor-card__save:disabled { opacity: 0.4; cursor: not-allowed; }
-
-/* ── Saved badge ── */
-.advisor-card__saved-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.62rem;
-  font-weight: 600;
-  color: var(--accent-primary);
-  background: rgba(237, 27, 47, 0.08);
-  border: 1px solid rgba(237, 27, 47, 0.25);
-  border-radius: 4px;
-  padding: 1px 6px;
-}
-
-.saved-badge__icon {
-  font-size: 0.6rem;
-  color: var(--accent-primary);
-}
-
-[data-theme="dark"] .advisor-card__saved-badge,
-.dark .advisor-card__saved-badge {
-  background: rgba(237, 27, 47, 0.15);
-  border-color: rgba(237, 27, 47, 0.35);
-}
-
-/* ── Saved card — McGill red left border ── */
-.advisor-card--saved {
-  border-left-color: var(--accent-primary) !important;
-  background: rgba(237, 27, 47, 0.02);
-}
-
 /* ── Drag-and-drop row wrapper ── */
 .dnd-row {
   position: relative;
   transition: transform 0.15s ease;
 }
 
-.dnd-row--dragging {
-  opacity: 0.4;
-  z-index: 100;
-}
+.dnd-row--dragging { opacity: 0.4; z-index: 100; }
 
 .dnd-row--over::before {
   content: '';
@@ -947,541 +927,5 @@
   to   { transform: scaleX(1);   opacity: 1; }
 }
 
-/* ── Dragging cursor on the whole feed while dragging ── */
 .advisor-cards-feed.is-dragging { cursor: grabbing; }
 
-/* ── Inline thread: scroll internally, never push the feed ── */
-/* Override the base .thread-messages so new messages stay inside the card */
-.advisor-card__thread .thread-messages {
-  max-height: 900px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  scrollbar-width: thin;
-  scrollbar-color: var(--border-primary) transparent;
-  scroll-behavior: smooth;
-}
-
-.advisor-card__thread .thread-messages::-webkit-scrollbar { width: 3px; }
-.advisor-card__thread .thread-messages::-webkit-scrollbar-thumb {
-  background: var(--border-primary);
-  border-radius: 3px;
-}
-/* ═══════════════════════════════════════════════════════════════
-   NEW FEATURES: Chat Bar, Saved Tab, History Tab, Close Chat
-   ═══════════════════════════════════════════════════════════════ */
-
-/* ── Header actions group ── */
-.advisor-card__header-actions {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-/* ── Delete button ── */
-.advisor-card__delete {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 4px 6px;
-  border-radius: 6px;
-  color: var(--text-muted, var(--text-tertiary));
-  font-size: 0.75rem;
-  display: flex;
-  align-items: center;
-  transition: color 0.15s ease;
-  flex-shrink: 0;
-  opacity: 0;
-}
-
-.advisor-card:hover .advisor-card__delete {
-  opacity: 1;
-}
-
-.advisor-card__delete:hover {
-  color: #ef4444;
-}
-
-/* ── Expanded card style ── */
-.advisor-card--expanded {
-  border-left-width: 3px;
-  box-shadow: 0 0 0 2px rgba(237, 27, 47, 0.12);
-}
-
-.advisor-card--expanded .advisor-card__thread {
-  min-height: 227px;
-}
-
-.advisor-card--expanded .advisor-card__thread .thread-messages {
-  min-height: 187px;
-}
-
-/* ── Card chat bar (replaces plus button) ── */
-.advisor-card__chat-bar-wrapper {
-  margin-top: 4px;
-}
-
-.card-chat-bar {
-  display: flex;
-  gap: 8px;
-  align-items: flex-end;
-  background: transparent;
-  border: none;
-  border-radius: 0;
-  padding: 4px 0;
-  transition: none;
-}
-
-.card-chat-bar:focus-within {
-  background: transparent;
-  box-shadow: none;
-}
-
-.card-chat-bar--expanded {
-  background: transparent;
-}
-
-.card-chat-bar__input {
-  flex: 1;
-  border: none;
-  background: transparent;
-  font-family: inherit;
-  font-size: 0.83rem;
-  color: var(--text-primary);
-  outline: none;
-  resize: none;
-  min-height: 20px;
-  max-height: 120px;
-  line-height: 1.5;
-  padding: 0;
-  scrollbar-width: thin;
-  scrollbar-color: var(--border-primary) transparent;
-}
-
-.card-chat-bar__input::placeholder {
-  color: var(--text-muted, var(--text-tertiary));
-}
-
-.card-chat-bar__input:disabled {
-  opacity: 0.6;
-}
-
-.card-chat-bar__send {
-  width: 30px;
-  height: 30px;
-  flex-shrink: 0;
-  border-radius: 50%;
-  border: none;
-  background: linear-gradient(135deg, var(--accent-primary) 0%, #B01B2E 100%);
-  color: #fff;
-  cursor: pointer;
-  font-size: 0.72rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(237, 27, 47, 0.28);
-  align-self: flex-end;
-}
-
-.card-chat-bar__send:hover:not(:disabled) {
-  transform: scale(1.08);
-  background: #d4192a;
-}
-
-.card-chat-bar__send:disabled {
-  background: var(--bg-quaternary, #e5e7eb);
-  color: #a1a1aa;
-  box-shadow: none;
-  cursor: default;
-}
-
-/* ── Close Chat button ── */
-.advisor-card__close-chat {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  border: 1px solid var(--border-primary);
-  border-radius: 8px;
-  background: transparent;
-  color: var(--text-muted, var(--text-tertiary));
-  font-size: 0.78rem;
-  font-weight: 500;
-  cursor: pointer;
-  font-family: inherit;
-  align-self: flex-start;
-  transition: all 0.18s ease;
-  margin-top: 2px;
-}
-
-.advisor-card__close-chat:hover {
-  border-color: #ef4444;
-  color: #ef4444;
-  background: rgba(239, 68, 68, 0.05);
-}
-
-.close-chat__icon {
-  font-size: 0.7rem;
-}
-
-/* ── Saved tab accent ── */
-.category-tab--saved {
-  border-bottom-color: transparent;
-}
-
-.category-tab--saved.active {
-  color: #f59e0b;
-  border-bottom-color: #f59e0b;
-}
-
-.category-tab--saved .category-tab__icon {
-  color: #f59e0b;
-}
-
-.category-tab--saved.active .category-tab__icon {
-  opacity: 1;
-}
-
-.category-tab__count--saved {
-  background: rgba(245, 158, 11, 0.1);
-  color: #f59e0b;
-}
-
-/* ── History tab accent ── */
-.category-tab--history.active {
-  color: #8b5cf6;
-  border-bottom-color: #8b5cf6;
-}
-
-.category-tab--history .category-tab__icon {
-  color: #8b5cf6;
-}
-
-.category-tab--history.active .category-tab__icon {
-  opacity: 1;
-}
-
-/* ── History list ── */
-.history-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.history-preview-card {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  width: 100%;
-  text-align: left;
-  background: var(--bg-primary);
-  border: 1px solid var(--card-border, var(--border-primary));
-  border-left: 3px solid #8b5cf6;
-  border-radius: 10px;
-  padding: 14px 16px;
-  cursor: pointer;
-  font-family: inherit;
-  transition: box-shadow 0.18s ease, border-color 0.18s ease;
-  animation: cardSlide 0.25s ease both;
-}
-
-.history-preview-card:hover {
-  box-shadow: var(--shadow-md);
-  border-color: #8b5cf6;
-}
-
-.history-preview-card__header {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-}
-
-.history-preview-card__icon {
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  background: rgba(139, 92, 246, 0.1);
-  color: #8b5cf6;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.78rem;
-  flex-shrink: 0;
-}
-
-.history-preview-card__meta {
-  flex: 1;
-  min-width: 0;
-}
-
-.history-preview-card__category {
-  display: block;
-  font-size: 0.62rem;
-  font-weight: 700;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: #8b5cf6;
-  margin-bottom: 2px;
-}
-
-.history-preview-card__title {
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin: 0;
-  line-height: 1.3;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.history-preview-card__count {
-  font-size: 0.68rem;
-  font-weight: 600;
-  color: #8b5cf6;
-  background: rgba(139, 92, 246, 0.1);
-  border-radius: 10px;
-  padding: 2px 8px;
-  flex-shrink: 0;
-}
-
-.history-preview-card__last {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  margin: 0;
-  line-height: 1.5;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.history-preview-card__role {
-  font-weight: 600;
-}
-
-.history-preview-card__role--user {
-  color: var(--accent-primary);
-}
-
-.history-preview-card__role--assistant {
-  color: var(--text-muted, var(--text-tertiary));
-}
-
-/* ── Thread divider in chat wrapper ── */
-.advisor-card__chat-bar-wrapper .thread-divider {
-  margin-bottom: 8px;
-}
-
-/* ── Tabs: fill full width in one line ── */
-.category-bar {
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  scrollbar-width: none;
-  padding: 0 12px;
-  justify-content: space-between;
-}
-
-.category-bar::-webkit-scrollbar { display: none; }
-
-.category-tab {
-  flex: 1;
-  justify-content: center;
-  padding: 8px 4px;
-  font-size: 0.71rem;
-  gap: 3px;
-  min-width: 0;
-}
-
-/* Hide tab icons to save space */
-.category-tab__icon {
-  display: none;
-}
-
-/* Shrink count badges */
-.category-tab__count {
-  font-size: 0.6rem;
-  padding: 1px 4px;
-}
-
-/* ── Custom refresh icon image ── */
-.refresh-icon-img {
-  width: 22px;
-  height: 22px;
-  object-fit: contain;
-  display: block;
-}
-
-.advisor-cards-refresh.spinning .refresh-icon-img {
-  animation: spin 0.8s linear infinite;
-}
-
-/* ── Card expansion: smooth grow when chat opens ── */
-.advisor-card {
-  transition: box-shadow 0.2s ease, border-color 0.2s ease;
-}
-
-.advisor-card__thread {
-  overflow: hidden;
-  animation: threadExpand 0.28s cubic-bezier(0.4, 0, 0.2, 1) both;
-}
-
-@keyframes threadExpand {
-  from {
-    opacity: 0;
-    max-height: 0;
-    transform: translateY(-6px);
-  }
-  to {
-    opacity: 1;
-    max-height: 2000px;
-    transform: translateY(0);
-  }
-}
-
-/* ── Chat bar: subtle underline only, no box ── */
-.card-chat-bar__input {
-  border-bottom: 1.5px solid var(--border-primary);
-  border-radius: 0;
-  padding-bottom: 4px;
-  transition: border-color 0.2s;
-}
-
-.card-chat-bar__input:focus {
-  border-bottom-color: var(--accent-primary);
-  outline: none;
-}
-
-/* ── Typing indicator: plain bouncing dots, no bubble ── */
-.card-typing-indicator {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding: 8px 4px;
-}
-
-.card-typing-indicator span {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--text-muted, #9ca3af);
-  display: block;
-  animation: typingBounce 1.2s ease-in-out infinite;
-}
-
-.card-typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
-.card-typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
-
-@keyframes typingBounce {
-  0%, 60%, 100% { transform: translateY(0); opacity: 0.35; }
-  30%           { transform: translateY(-5px); opacity: 1; }
-}
-
-/* ── Collapsed thread: show last message as a faded preview ── */
-.advisor-card__thread--preview {
-  animation: none;
-  min-height: 0;
-}
-
-.advisor-card__thread-preview {
-  pointer-events: none;
-}
-
-.advisor-card__thread--preview .thread-message {
-  opacity: 0.55;
-}
-
-.advisor-card__thread--preview .thread-text {
-  font-size: 0.8rem;
-  max-width: 100%;
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-}
-
-/* ── History icon-only button (sits after Saved tab) ── */
-.category-tab-icon-only {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  border: none;
-  background: transparent;
-  color: var(--text-muted, var(--text-tertiary));
-  font-size: 0.95rem;
-  cursor: pointer;
-  flex-shrink: 0;
-  margin: auto 6px auto 4px;
-  transition: all 0.18s ease;
-  font-family: inherit;
-}
-
-.category-tab-icon-only:hover {
-  color: #8b5cf6;
-  border-color: #8b5cf6;
-  background: rgba(139, 92, 246, 0.08);
-}
-
-.category-tab-icon-only:hover::after {
-  content: 'History';
-  position: absolute;
-  bottom: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--bg-primary);
-  border: 1px solid var(--border-primary);
-  color: var(--text-primary);
-  font-size: 0.7rem;
-  font-weight: 600;
-  padding: 3px 8px;
-  border-radius: 6px;
-  white-space: nowrap;
-  box-shadow: var(--shadow-md);
-  pointer-events: none;
-  z-index: 10;
-}
-
-.category-tab-icon-only.active {
-  color: #8b5cf6;
-  border-color: #8b5cf6;
-  background: rgba(139, 92, 246, 0.1);
-}
-
-.category-tab-icon-only__badge {
-  position: absolute;
-  top: -5px;
-  right: -5px;
-  background: #8b5cf6;
-  color: #fff;
-  font-size: 0.55rem;
-  font-weight: 700;
-  border-radius: 10px;
-  padding: 1px 4px;
-  line-height: 1.4;
-  min-width: 14px;
-  text-align: center;
-}
-
-/* ── History custom icon image ── */
-.history-icon-img {
-  width: 18px;
-  height: 18px;
-  object-fit: contain;
-  display: block;
-  opacity: 0.55;
-  transition: opacity 0.18s ease;
-  filter: invert(0);
-}
-
-.category-tab-icon-only:hover .history-icon-img,
-.category-tab-icon-only.active .history-icon-img {
-  opacity: 1;
-  filter: invert(40%) sepia(80%) saturate(500%) hue-rotate(230deg);
-}
