@@ -1,0 +1,500 @@
+/* ── Overlay ─────────────────────────────────────────────── */
+.transcript-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: overlayFadeIn 0.2s ease;
+}
+
+@keyframes overlayFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Modal ───────────────────────────────────────────────── */
+.transcript-modal {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-primary);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 640px;
+  /* Use a fixed height so the body can scroll within it */
+  max-height: 88vh;
+  height: 88vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.3);
+  animation: modalSlideUp 0.25s ease;
+}
+
+@keyframes modalSlideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Header (fixed, never scrolls) ──────────────────────── */
+.transcript-header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 1.75rem;
+  border-bottom: 1px solid var(--border-primary);
+  background: linear-gradient(135deg, #ED1B2F 0%, #B01B2E 100%);
+  color: white;
+}
+
+.transcript-header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.transcript-header-icon {
+  font-size: 2rem;
+  opacity: 0.9;
+}
+
+.transcript-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0 0 0.15rem 0;
+  color: white;
+}
+
+.transcript-subtitle {
+  font-size: 0.85rem;
+  margin: 0;
+  opacity: 0.85;
+}
+
+.transcript-close-btn {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background 0.15s;
+}
+
+.transcript-close-btn:hover {
+  background: rgba(255,255,255,0.35);
+}
+
+/* ── Body (scrollable middle area) ──────────────────────── */
+.transcript-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 1.5rem 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  /* Ensure it never grows past available space */
+  min-height: 0;
+}
+
+/* ── Footer (fixed at bottom, never scrolls) ─────────────── */
+.transcript-footer {
+  flex-shrink: 0;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  padding: 1rem 1.75rem;
+  border-top: 1px solid var(--border-primary);
+  background: var(--bg-primary);
+}
+
+/* ── Buttons ─────────────────────────────────────────────── */
+.btn-transcript-primary {
+  padding: 0.7rem 1.5rem;
+  background: linear-gradient(135deg, #ED1B2F 0%, #B01B2E 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.15s;
+}
+
+.btn-transcript-primary:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.btn-transcript-primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-transcript-secondary {
+  padding: 0.7rem 1.5rem;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-primary);
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-transcript-secondary:hover {
+  background: var(--bg-tertiary);
+}
+
+/* ── Dropzone ────────────────────────────────────────────── */
+.transcript-dropzone {
+  border: 2px dashed var(--border-primary);
+  border-radius: 16px;
+  padding: 3rem 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: var(--bg-secondary);
+}
+
+.transcript-dropzone:hover,
+.transcript-dropzone.drag-over {
+  border-color: #ED1B2F;
+  background: rgba(237, 27, 47, 0.04);
+}
+
+.transcript-dropzone.has-file {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.05);
+  border-style: solid;
+}
+
+.dropzone-icon {
+  font-size: 3rem;
+  color: #ED1B2F;
+  margin-bottom: 1rem;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.dropzone-main {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 0.4rem 0;
+}
+
+.dropzone-sub {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin: 0 0 1rem 0;
+}
+
+.dropzone-note {
+  font-size: 0.8rem;
+  color: var(--text-tertiary);
+  margin: 0 auto;
+  max-width: 380px;
+  line-height: 1.5;
+}
+
+.dropzone-file-selected {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.dropzone-check {
+  font-size: 1.75rem;
+  color: #10b981;
+}
+
+.dropzone-filename {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.dropzone-filesize {
+  font-size: 0.85rem;
+  color: var(--text-tertiary);
+}
+
+/* ── Inline error message ────────────────────────────────── */
+.transcript-error-msg {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.875rem 1rem;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 10px;
+  color: #dc2626;
+  font-size: 0.9rem;
+}
+
+/* ── Loading states ──────────────────────────────────────── */
+.transcript-loading {
+  align-items: center;
+  justify-content: center;
+  min-height: 220px;
+  text-align: center;
+}
+
+.transcript-spinner {
+  font-size: 2.5rem;
+  color: #ED1B2F;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 1.25rem;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loading-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 0.4rem 0;
+}
+
+.loading-sub {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* ── Preview sections ────────────────────────────────────── */
+.preview-section {
+  border: 1px solid var(--border-primary);
+  border-radius: 12px;
+  overflow: hidden;
+  /* Don't let individual sections shrink — they should scroll within .transcript-body */
+  flex-shrink: 0;
+}
+
+.preview-section-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  padding: 0.875rem 1rem;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-primary);
+}
+
+.preview-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+}
+
+.preview-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.875rem 1rem;
+  border-right: 1px solid var(--border-primary);
+  border-bottom: 1px solid var(--border-primary);
+}
+
+.info-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-tertiary);
+}
+
+.info-value {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.gpa-value {
+  color: #ED1B2F;
+  font-size: 1.1rem;
+}
+
+/* ── Course lists (no inner max-height — parent scrolls) ─── */
+.preview-course-list {
+  /* Removed max-height — the whole .transcript-body scrolls now */
+}
+
+.preview-course-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 1rem;
+  border-bottom: 1px solid var(--border-primary);
+  font-size: 0.875rem;
+}
+
+.preview-course-item:last-child {
+  border-bottom: none;
+}
+
+.preview-course-item--ap {
+  background: rgba(245, 158, 11, 0.04);
+}
+
+.preview-course-item--current {
+  background: rgba(16, 185, 129, 0.04);
+}
+
+.course-code {
+  font-weight: 700;
+  color: #ED1B2F;
+  min-width: 80px;
+  font-family: monospace;
+  font-size: 0.85rem;
+}
+
+.course-title {
+  flex: 1;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.course-term {
+  font-size: 0.8rem;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+.course-credits {
+  font-size: 0.8rem;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+.course-grade {
+  font-weight: 700;
+  font-size: 0.85rem;
+  min-width: 36px;
+  text-align: center;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.course-badge-current {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.12);
+  border-radius: 20px;
+  padding: 2px 10px;
+  white-space: nowrap;
+}
+
+/* ── Done state ──────────────────────────────────────────── */
+.transcript-done {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 280px;
+}
+
+.done-icon {
+  font-size: 3.5rem;
+  color: #10b981;
+  margin-bottom: 1rem;
+}
+
+.done-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 1.5rem 0;
+}
+
+.done-stats {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.done-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 1rem 1.5rem;
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  border: 1px solid var(--border-primary);
+  min-width: 110px;
+}
+
+.done-stat--green .done-stat-num { color: #10b981; }
+.done-stat--gray  .done-stat-num { color: var(--text-tertiary); }
+
+.done-stat-num {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #ED1B2F;
+  line-height: 1;
+}
+
+.done-stat-label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+/* ── Error state ─────────────────────────────────────────── */
+.transcript-error-state {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 220px;
+}
+
+.error-state-icon {
+  font-size: 3rem;
+  color: #f59e0b;
+  margin-bottom: 1rem;
+}
+
+.error-state-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 0.5rem 0;
+}
+
+.error-state-msg {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  max-width: 380px;
+  margin: 0 0 1.5rem 0;
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .transcript-overlay { align-items: flex-end; padding: 0; }
+  .transcript-modal {
+    border-radius: 16px 16px 0 0;
+    max-height: 95vh;
+    height: 95vh;
+  }
+  .preview-info-grid { grid-template-columns: 1fr 1fr; }
+}
