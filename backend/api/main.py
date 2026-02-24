@@ -20,7 +20,7 @@ from .exceptions import (
     RateLimitException,
 )
 
-from .routes import chat, courses, users, favorites, completed, notifications, current, suggestions, cards, transcript
+from .routes import chat, courses, users, favorites, completed, notifications, current, suggestions, cards, transcript, degree_requirements, electives
 
 # Setup logging
 logger = setup_logging()
@@ -165,6 +165,9 @@ app.include_router(current.router, prefix=f"{settings.API_PREFIX}/current", tags
 app.include_router(suggestions.router, prefix=f"{settings.API_PREFIX}/suggestions", tags=["Suggestions"])
 app.include_router(cards.router, prefix=f"{settings.API_PREFIX}/cards", tags=["Cards"])
 app.include_router(transcript.router, prefix="/api/transcript", tags=["transcript"])
+app.include_router(degree_requirements.router, prefix="/api/degree-requirements", tags=["Degree Requirements"])
+app.include_router(electives.router, prefix="/api/electives", tags=["Electives"])
+
 
 @app.get("/")
 async def root():

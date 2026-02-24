@@ -1,15 +1,21 @@
+import loadingVideo from '../../assets/loading-bg.mp4'
 import './Loading.css'
 
-export default function Loading({ message = 'Loading...' }) {
+export default function Loading() {
   return (
     <div className="loading-container">
+      <video
+        className="loading-video"
+        autoPlay
+        loop
+        muted
+        playsInline
+      >
+        <source src={loadingVideo} type="video/mp4" />
+      </video>
+      <div className="loading-overlay" />
       <div className="loading-content">
-        <div className="loader">
-          <div className="loader-circle"></div>
-          <div className="loader-circle"></div>
-          <div className="loader-circle"></div>
-        </div>
-        <p className="loading-message">{message}</p>
+        <p className="loading-message">Loading</p>
       </div>
     </div>
   )
