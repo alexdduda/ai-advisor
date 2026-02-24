@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { FaChevronLeft, FaChevronRight, FaComments, FaBook, FaStar, FaUser, FaCog, FaPalette, FaSignOutAlt, FaCalendarAlt } from 'react-icons/fa'
+import { FaChevronLeft, FaChevronRight, FaComments, FaBook, FaStar, FaUser, FaCog, FaPalette, FaSignOutAlt, FaCalendarAlt, FaGraduationCap } from 'react-icons/fa'
 import { MdLanguage } from 'react-icons/md'
 import { useTheme } from '../../contexts/ThemeContext'
 import { useLanguage } from '../../contexts/LanguageContext'
@@ -201,7 +201,7 @@ export default function Sidebar({
               {[
                 { key: 'chat', icon: <FaComments />, label: t('nav.chat') },
                 { key: 'courses', icon: <FaBook />, label: t('nav.courses') },
-                { key: 'favorites', icon: <FaStar />, label: t('nav.saved'), badge: favorites.length || null },
+                { key: 'favorites', icon: <FaGraduationCap />, label: 'Degree Planning', badge: null },
                 { key: 'calendar', icon: <FaCalendarAlt />, label: t('nav.calendar') },
                 { key: 'forum', icon: <FaComments />, label: t('nav.forum') },
                 { key: 'profile', icon: <FaUser />, label: t('nav.profile') },

@@ -378,34 +378,26 @@
 /* Thread messages */
 .thread-message {
   display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  animation: cardSlide 0.22s ease;
+  align-items: flex-end;
+  gap: 6px;
+  animation: cardSlide 0.2s ease;
 }
 
-.thread-message--user { flex-direction: row-reverse; }
+.thread-message--user {
+  justify-content: flex-end;
+}
 
-.thread-avatar {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent-primary) 0%, #B01B2E 100%);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.68rem;
-  flex-shrink: 0;
-  box-shadow: 0 2px 6px rgba(237, 27, 47, 0.25);
+.thread-message--assistant {
+  justify-content: flex-start;
 }
 
 .thread-text {
   font-size: 0.84rem;
   line-height: 1.6;
   margin: 0;
-  padding: 8px 14px;
-  border-radius: 20px;
-  max-width: 86%;
+  padding: 8px 13px;
+  border-radius: 18px;
+  max-width: 84%;
   word-break: break-word;
 }
 
@@ -416,7 +408,7 @@
 }
 
 .thread-message--user .thread-text {
-  background: var(--user-msg-bg, var(--accent-primary));
+  background: var(--accent-primary);
   color: #fff;
   border-bottom-right-radius: 4px;
 }
@@ -924,27 +916,35 @@
 /* ── Drag-and-drop row wrapper ── */
 .dnd-row {
   position: relative;
-  transition: transform 0.15s ease;
+  transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity  0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
 }
 
 .dnd-row--dragging {
-  opacity: 0.4;
+  opacity: 0.35;
+  transform: scale(0.98);
   z-index: 100;
+}
+
+.dnd-row--over {
+  transform: translateY(2px);
 }
 
 .dnd-row--over::before {
   content: '';
   display: block;
-  height: 3px;
-  border-radius: 3px;
-  background: var(--accent-primary);
-  margin-bottom: 4px;
-  animation: dropIndicator 0.2s ease;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--accent-primary), rgba(237,27,47,0.3));
+  margin-bottom: 6px;
+  animation: dropIndicator 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: left center;
 }
 
 @keyframes dropIndicator {
-  from { transform: scaleX(0.5); opacity: 0; }
-  to   { transform: scaleX(1);   opacity: 1; }
+  from { transform: scaleX(0); opacity: 0; }
+  to   { transform: scaleX(1); opacity: 1; }
 }
 
 /* ── Dragging cursor on the whole feed while dragging ── */
@@ -1484,4 +1484,61 @@
 .category-tab-icon-only.active .history-icon-img {
   opacity: 1;
   filter: invert(40%) sepia(80%) saturate(500%) hue-rotate(230deg);
+}
+
+/* ── Pin button ── */
+.advisor-card__pin {
+  background: none;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  color: var(--text-secondary, #9ca3af);
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;
+  transition: color 0.15s, transform 0.15s;
+  box-shadow: none;
+}
+
+.advisor-card__pin:hover {
+  color: var(--accent-primary, #ED1B2F);
+  transform: rotate(-20deg) scale(1.15);
+}
+
+.advisor-card__pin--active {
+  color: var(--accent-primary, #ED1B2F);
+}
+
+.advisor-card__pin--active:hover {
+  color: #c0152a;
+  transform: rotate(0deg) scale(1.1);
+}
+
+.advisor-card__pin:focus { outline: none; box-shadow: none; }
+
+/* ── Pinned badge ── */
+.advisor-card__pinned-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--accent-primary, #ED1B2F);
+  background: rgba(237, 27, 47, 0.08);
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.02em;
+}
+
+.pinned-badge__icon {
+  font-size: 0.65rem;
+}
+
+/* ── Pinned card glow ── */
+.advisor-card--pinned {
+  border-color: rgba(237, 27, 47, 0.3) !important;
+  box-shadow: 0 0 0 2px rgba(237, 27, 47, 0.1), var(--card-shadow, 0 2px 8px rgba(0,0,0,0.08));
 }
