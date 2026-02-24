@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { FaEdit, FaChevronDown, FaChevronUp, FaCheck, FaUser, FaEnvelope, FaGraduationCap } from 'react-icons/fa'
 import { HiMiniSparkles } from 'react-icons/hi2'
 import { useLanguage } from '../../contexts/LanguageContext'
@@ -8,35 +8,63 @@ import './PersonalInfoCard.css'
 export default function PersonalInfoCard({ profile, user, onUpdateProfile }) {
   const { t } = useLanguage()
   const [isEditing, setIsEditing] = useState(false)
+  const [saveError, setSaveError] = useState(null)
   const [expandedSections, setExpandedSections] = useState({
     academic: true,
     contact: true,
     additional: false
   })
 
-  // Log profile changes
+  // Guard against concurrent saves (re-renders recreating the handler mid-flight)
+  const isSavingRef = useRef(false)
+
+  // Keep a stable ref to onUpdateProfile so the handler below never goes stale
+  const onUpdateProfileRef = useRef(onUpdateProfile)
+  useEffect(() => { onUpdateProfileRef.current = onUpdateProfile }, [onUpdateProfile])
+
   useEffect(() => {
     console.log('PersonalInfoCard: Profile prop changed:', JSON.stringify(profile, null, 2))
   }, [profile])
 
   const toggleSection = (section) => {
-    setExpandedSections(prev => ({
-      ...prev,
-      [section]: !prev[section]
-    }))
+    setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }))
   }
 
-  // Calculate profile completeness
   const calculateCompleteness = () => {
-    const fields = [
-      'username', 'major', 'year', 'faculty', 
-      'interests', 'concentration'
-    ]
+    const fields = ['username', 'major', 'year', 'faculty', 'interests', 'concentration']
     const completed = fields.filter(field => profile?.[field]).length
     return Math.round((completed / fields.length) * 100)
   }
 
   const completeness = calculateCompleteness()
+
+  // ── Stable save handler ────────────────────────────────────────────────────
+  // Uses refs so it is never stale across re-renders triggered by setProfile().
+  // Optimistic close: hides the form immediately so the user gets instant feedback,
+  // then re-opens on error.
+  const handleSave = useCallback(async (formData) => {
+    if (isSavingRef.current) return
+    isSavingRef.current = true
+    setSaveError(null)
+
+    // Optimistic close — form disappears immediately on click
+    setIsEditing(false)
+
+    try {
+      console.log('PersonalInfoCard: Saving form data:', formData)
+      const result = await onUpdateProfileRef.current(formData)
+      console.log('PersonalInfoCard: Update result:', result)
+      console.log('PersonalInfoCard: Updated user data:', result?.data)
+      // Success — form already closed, nothing more to do
+    } catch (error) {
+      console.error('Error updating profile:', error)
+      // Re-open the form so the user can fix things
+      setSaveError(error.message || 'Failed to update profile')
+      setIsEditing(true)
+    } finally {
+      isSavingRef.current = false
+    }
+  }, []) // intentionally empty — we use refs for all external values
 
   return (
     <div className="personal-info-card">
@@ -51,12 +79,12 @@ export default function PersonalInfoCard({ profile, user, onUpdateProfile }) {
             <p className="card-subtitle">{t('profile.manageDetails')}</p>
           </div>
         </div>
-        
+
         <div className="header-right">
           {!isEditing && (
-            <button 
+            <button
               className="btn-edit-modern"
-              onClick={() => setIsEditing(true)}
+              onClick={() => { setSaveError(null); setIsEditing(true) }}
               title={t('profile.editProfile')}
             >
               <FaEdit />
@@ -73,12 +101,12 @@ export default function PersonalInfoCard({ profile, user, onUpdateProfile }) {
           <span className="completeness-percentage">{completeness}%</span>
         </div>
         <div className="completeness-bar">
-          <div 
+          <div
             className="completeness-fill"
-            style={{ 
+            style={{
               width: `${completeness}%`,
-              background: completeness === 100 
-                ? 'linear-gradient(90deg, #10b981, #059669)' 
+              background: completeness === 100
+                ? 'linear-gradient(90deg, #10b981, #059669)'
                 : 'linear-gradient(90deg, #ED1B2F, #c91625)'
             }}
           />
@@ -90,15 +118,22 @@ export default function PersonalInfoCard({ profile, user, onUpdateProfile }) {
         )}
       </div>
 
+      {/* Save error banner (shown after optimistic close if API fails) */}
+      {saveError && !isEditing && (
+        <div className="save-error-banner">
+          {saveError} —{' '}
+          <button className="save-error-retry" onClick={() => setIsEditing(true)}>
+            Try again
+          </button>
+        </div>
+      )}
+
       {/* Main Content */}
       {!isEditing ? (
         <div className="info-sections">
           {/* Academic Information Section */}
           <div className="info-section">
-            <button 
-              className="section-header"
-              onClick={() => toggleSection('academic')}
-            >
+            <button className="section-header" onClick={() => toggleSection('academic')}>
               <div className="section-header-left">
                 <span className="section-icon academic-icon"><FaGraduationCap /></span>
                 <h3 className="section-title">{t('profile.academicInfo')}</h3>
@@ -109,7 +144,6 @@ export default function PersonalInfoCard({ profile, user, onUpdateProfile }) {
             {expandedSections.academic && (
               <div className="section-content">
                 <div className="info-grid-modern">
-                  {/* Major */}
                   <div className="info-field">
                     <label className="field-label">{t('profile.major')}</label>
                     <div className="field-value">
@@ -117,7 +151,6 @@ export default function PersonalInfoCard({ profile, user, onUpdateProfile }) {
                     </div>
                   </div>
 
-                  {/* Additional Majors */}
                   {profile?.other_majors && profile.other_majors.length > 0 && (
                     <div className="info-field">
                       <label className="field-label">{t('profile.additionalMajors')}</label>
@@ -129,7 +162,6 @@ export default function PersonalInfoCard({ profile, user, onUpdateProfile }) {
                     </div>
                   )}
 
-                  {/* Minor */}
                   {profile?.minor && (
                     <div className="info-field">
                       <label className="field-label">{t('profile.primaryMinor')}</label>
@@ -137,7 +169,6 @@ export default function PersonalInfoCard({ profile, user, onUpdateProfile }) {
                     </div>
                   )}
 
-                  {/* Additional Minors */}
                   {profile?.other_minors && profile.other_minors.length > 0 && (
                     <div className="info-field">
                       <label className="field-label">{t('profile.additionalMinors')}</label>
@@ -149,7 +180,6 @@ export default function PersonalInfoCard({ profile, user, onUpdateProfile }) {
                     </div>
                   )}
 
-                  {/* Concentration */}
                   {profile?.concentration && (
                     <div className="info-field">
                       <label className="field-label">{t('profile.concentration')}</label>
@@ -157,7 +187,6 @@ export default function PersonalInfoCard({ profile, user, onUpdateProfile }) {
                     </div>
                   )}
 
-                  {/* Faculty */}
                   <div className="info-field">
                     <label className="field-label">{t('profile.faculty')}</label>
                     <div className="field-value">
@@ -165,15 +194,10 @@ export default function PersonalInfoCard({ profile, user, onUpdateProfile }) {
                     </div>
                   </div>
 
-                  {/* Year */}
                   <div className="info-field">
                     <label className="field-label">{t('profile.year')}</label>
                     <div className="field-value">
-                      {profile?.year ? (
-                        <span className="year-badge">U{profile.year}</span>
-                      ) : (
-                        <span className="text-muted">{t('profile.notSpecified')}</span>
-                      )}
+                      {profile?.year ? `U${profile.year}` : <span className="text-muted">{t('profile.notSpecified')}</span>}
                     </div>
                   </div>
                 </div>
@@ -181,12 +205,9 @@ export default function PersonalInfoCard({ profile, user, onUpdateProfile }) {
             )}
           </div>
 
-          {/* Contact Information Section */}
+          {/* Contact / Account Section */}
           <div className="info-section">
-            <button 
-              className="section-header"
-              onClick={() => toggleSection('contact')}
-            >
+            <button className="section-header" onClick={() => toggleSection('contact')}>
               <div className="section-header-left">
                 <span className="section-icon contact-icon"><FaEnvelope /></span>
                 <h3 className="section-title">{t('profile.contactInfo')}</h3>
@@ -220,10 +241,7 @@ export default function PersonalInfoCard({ profile, user, onUpdateProfile }) {
 
           {/* Additional Information Section */}
           <div className="info-section">
-            <button 
-              className="section-header"
-              onClick={() => toggleSection('additional')}
-            >
+            <button className="section-header" onClick={() => toggleSection('additional')}>
               <div className="section-header-left">
                 <span className="section-icon additional-icon"><HiMiniSparkles /></span>
                 <h3 className="section-title">{t('profile.additionalInfo')}</h3>
@@ -234,7 +252,6 @@ export default function PersonalInfoCard({ profile, user, onUpdateProfile }) {
             {expandedSections.additional && (
               <div className="section-content">
                 <div className="info-grid-modern">
-                  {/* Interests */}
                   <div className="info-field full-width">
                     <label className="field-label">{t('profile.academicInterests')}</label>
                     {profile?.interests ? (
@@ -252,7 +269,6 @@ export default function PersonalInfoCard({ profile, user, onUpdateProfile }) {
                     )}
                   </div>
 
-                  {/* Advanced Standing */}
                   {profile?.advanced_standing && profile.advanced_standing.length > 0 && (
                     <div className="info-field full-width">
                       <label className="field-label">
@@ -278,26 +294,15 @@ export default function PersonalInfoCard({ profile, user, onUpdateProfile }) {
         </div>
       ) : (
         <div className="edit-mode-container">
+          {saveError && (
+            <div className="save-error-banner save-error-banner--inline">
+              {saveError}
+            </div>
+          )}
           <EnhancedProfileForm
             profile={profile}
-            onSave={async (formData) => {
-              try {
-                console.log('PersonalInfoCard: Saving form data:', formData)
-                const result = await onUpdateProfile(formData)
-                console.log('PersonalInfoCard: Update result:', result)
-                console.log('PersonalInfoCard: Updated user data:', result?.data)
-                
-                // Force a small delay to ensure state updates
-                await new Promise(resolve => setTimeout(resolve, 100))
-                
-                setIsEditing(false)
-                // Success - alert removed to prevent loop
-              } catch (error) {
-                console.error('Error updating profile:', error)
-                alert('Failed to update profile: ' + (error.message || 'Unknown error'))
-              }
-            }}
-            onCancel={() => setIsEditing(false)}
+            onSave={handleSave}
+            onCancel={() => { setSaveError(null); setIsEditing(false) }}
           />
         </div>
       )}

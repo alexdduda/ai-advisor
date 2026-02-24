@@ -17,6 +17,7 @@ import SavedCoursesView from './SavedCoursesView'
 import Forum from '../Forum/Forum'
 import MarkCompleteModal from './MarkCompleteModal'
 import CalendarTab from './CalendarTab'
+import TranscriptUpload from './TranscriptUpload'
 
 import './Dashboard.css'
 
@@ -30,6 +31,9 @@ export default function Dashboard() {
   const [profileImage, setProfileImage] = useState(profile?.profile_image || null)
   const [isUploadingImage, setIsUploadingImage] = useState(false)
   const fileInputRef = useRef(null)
+
+  // ── Transcript upload ──────────────────────────────────
+  const [showTranscriptUpload, setShowTranscriptUpload] = useState(false)
 
   // ── Advisor cards ──────────────────────────────────────
   const [advisorCards, setAdvisorCards] = useState([])
@@ -136,7 +140,6 @@ export default function Dashboard() {
     }
   }
 
-    // Toggle the saved/pinned state of a single card
   const handleCardSaveToggle = async (cardId, isSaved) => {
     if (!user?.id) return
     try {
@@ -149,13 +152,10 @@ export default function Dashboard() {
     }
   }
 
-  // Persist drag-and-drop order sent up from AdvisorCards component
   const handleCardsReorder = async (order) => {
     if (!user?.id) return
     try {
       await cardsAPI.reorderCards(user.id, order)
-      // Optimistic update already happened inside DraggableFeed;
-      // re-sync sort_order field so future re-renders are stable
       setAdvisorCards(prev => {
         const orderMap = Object.fromEntries(order.map(o => [o.id, o.sort_order]))
         return [...prev]
@@ -176,7 +176,6 @@ export default function Dashboard() {
     try {
       const data = await cardsAPI.askCard(user.id, question)
       if (data.card) {
-        // Prepend the new user-asked card to the top of the feed
         setAdvisorCards(prev => [data.card, ...prev])
       }
     } catch (error) {
@@ -405,6 +404,15 @@ export default function Dashboard() {
     }
   }
 
+  // ── Transcript import complete ─────────────────────────
+  const handleTranscriptImportComplete = () => {
+    setShowTranscriptUpload(false)
+    // Reload all course data and profile to reflect changes
+    loadCompletedCourses()
+    loadCurrentCourses()
+    refreshAdvisorCards(true)
+  }
+
   // ── Effects ────────────────────────────────────────────
   useEffect(() => {
     if (user?.id) {
@@ -535,6 +543,7 @@ export default function Dashboard() {
               completedCourses={completedCourses}
               favorites={favorites}
               chatHistory={[]}
+              onImportTranscript={() => setShowTranscriptUpload(true)}
             />
           )}
         </div>
@@ -550,6 +559,15 @@ export default function Dashboard() {
           }}
         />
       )}
+
+      {showTranscriptUpload && (
+        <TranscriptUpload
+          userId={user?.id}
+          onClose={() => setShowTranscriptUpload(false)}
+          onImportComplete={handleTranscriptImportComplete}
+        />
+      )}
+
       <FeedbackModal userId={user?.id} userEmail={user?.email} />
     </div>
   )

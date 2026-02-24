@@ -61,7 +61,7 @@ export const MAJORS = [
   // Engineering
   'Chemical Engineering', 'Civil Engineering', 'Electrical Engineering',
   'Mechanical Engineering', 'Mining Engineering', 'Materials Engineering',
-  'Bioengineering', 'Software Engineering',
+  'Bioengineering',
   
   // Management
   'Accounting', 'Finance', 'Information Systems', 'International Management',

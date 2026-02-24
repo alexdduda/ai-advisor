@@ -20,8 +20,18 @@ logger = logging.getLogger(__name__)
 # ── Named constants ────────────────────────────────────────────
 VALID_TERMS = {"fall", "winter", "summer"}
 VALID_GRADES = {
-    "A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D", "F", "P", "S",
-    "W",  # Withdrew
+    # Standard letter grades
+    "A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D", "F",
+    # Pass/fail and satisfactory
+    "P", "S", "U",
+    # Administrative
+    "W",   # Withdrew
+    "L",   # Deferred
+    "EX",  # Exemption/Exempt
+    "IP",  # In Progress
+    "CO",  # Complete
+    "HH",  # High Honour
+    "K",   # Incomplete
 }
 COURSE_CODE_PATTERN = re.compile(r"^[A-Z]{3,4}\s?\d{3}[A-Z]?\d?$", re.IGNORECASE)
 
