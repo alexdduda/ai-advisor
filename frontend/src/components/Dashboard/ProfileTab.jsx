@@ -111,27 +111,6 @@ export default function ProfileTab({
             </div>
           </div>
 
-          {/* Degree Progress */}
-          <div className="profile-section-card card-full-width">
-            <div className="card-header">
-              <div className="card-title-group">
-                <span className="card-icon"><FaBullseye /></span>
-                <h2 className="card-title">{t('profile.degreeProgress')}</h2>
-              </div>
-              {onImportTranscript && (
-                <button className="btn-import-transcript" onClick={onImportTranscript}>
-                  <FaFileUpload />
-                  Import Transcript
-                </button>
-              )}
-            </div>
-            <div className="card-content">
-              <DegreeProgressTracker
-                completedCourses={completedCourses}
-                profile={profile}
-              />
-            </div>
-          </div>
 
           {/* Target GPA Calculator */}
           <div className="profile-section-card card-full-width">

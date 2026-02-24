@@ -4,8 +4,9 @@
 .feedback-trigger-btn {
   position: fixed;
   bottom: 24px;
-  right: 24px;
+  right: calc(24px + var(--rsb-width, 0px));
   z-index: 900;
+  transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1), all 0.2s;
   display: flex;
   align-items: center;
   gap: 7px;

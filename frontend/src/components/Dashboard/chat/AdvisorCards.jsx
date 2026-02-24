@@ -9,6 +9,7 @@ import {
   FaBookmark, FaRegBookmark, FaThumbtack,
   FaGripVertical, FaTimes, FaTrash, FaHistory,
 } from 'react-icons/fa'
+import { MdPushPin, MdOutlinePushPin } from 'react-icons/md'
 import { CARD_CATEGORIES, CATEGORY_LABELS } from '../../../lib/cardsAPI'
 import './AdvisorCards.css'
 
@@ -29,7 +30,6 @@ const CARD_CONFIG = {
   progress: { accent: 'var(--card-progress, #10B981)' },
 }
 
-// Thread messages scroller
 function ThreadMessages({ thread, isThinking }) {
   const scrollRef = useRef(null)
   useEffect(() => {
@@ -41,15 +41,11 @@ function ThreadMessages({ thread, isThinking }) {
     <div className="thread-messages" ref={scrollRef}>
       {thread.map((msg, i) => (
         <div key={i} className={`thread-message thread-message--${msg.role}`}>
-          <span className="thread-avatar">
-            {msg.role === 'user' ? '👤' : <FaRobot />}
-          </span>
           <p className="thread-text">{msg.content}</p>
         </div>
       ))}
       {isThinking && (
         <div className="thread-message thread-message--assistant">
-          <span className="thread-avatar"><FaRobot /></span>
           <p className="thread-text">
             <span className="thinking-dots"><span /><span /><span /></span>
           </p>
@@ -59,7 +55,6 @@ function ThreadMessages({ thread, isThinking }) {
   )
 }
 
-// Auto-growing textarea chat bar
 function CardChatBar({ onSend, isThinking, onFocus, isExpanded }) {
   const [value, setValue] = useState('')
   const taRef = useRef(null)
@@ -117,13 +112,14 @@ function CardChatBar({ onSend, isThinking, onFocus, isExpanded }) {
   )
 }
 
-// Individual card
 function AdvisorCard({
   card,
   thread = [],
   isThinking = false,
   isExpanded = false,
+  isPinned = false,
   onSaveToggle,
+  onPinToggle,
   onSend,
   onExpand,
   onCollapse,
@@ -139,7 +135,6 @@ function AdvisorCard({
   const isSaved  = card.is_saved || false
   const isUser   = card.source === 'user'
 
-  // Click outside to collapse
   useEffect(() => {
     if (!isExpanded) return
     const handleClickOutside = (e) => {
@@ -159,14 +154,17 @@ function AdvisorCard({
     finally { setSaving(false) }
   }
 
+  const handlePin = (e) => {
+    e.stopPropagation()
+    onPinToggle(card, thread)
+  }
+
   const handleExpand = () => {
     onExpand(card.id)
     setTimeout(() => {
       cardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
     }, 80)
   }
-
-  const showTypingIndicator = isThinking
 
   return (
     <article
@@ -178,6 +176,7 @@ function AdvisorCard({
         isSaved   ? 'advisor-card--saved' : '',
         isDragging ? 'advisor-card--dragging' : '',
         isExpanded ? 'advisor-card--expanded' : '',
+        isPinned  ? 'advisor-card--pinned' : '',
       ].filter(Boolean).join(' ')}
       style={{ '--card-accent': config.accent }}
       ref={cardRef}
@@ -197,6 +196,11 @@ function AdvisorCard({
                 <FaThumbtack className="saved-badge__icon" /> Saved
               </span>
             )}
+            {isPinned && (
+              <span className="advisor-card__pinned-badge">
+                <MdPushPin className="pinned-badge__icon" /> Pinned
+              </span>
+            )}
           </div>
           <h3 className="advisor-card__title">{card.title}</h3>
         </div>
@@ -209,6 +213,14 @@ function AdvisorCard({
             title={isSaved ? 'Remove bookmark' : 'Bookmark'}
           >
             {isSaved ? <FaBookmark /> : <FaRegBookmark />}
+          </button>
+
+          <button
+            className={`advisor-card__pin ${isPinned ? 'advisor-card__pin--active' : ''}`}
+            onClick={handlePin}
+            title={isPinned ? 'Unpin from sidebar' : 'Pin to sidebar'}
+          >
+            {isPinned ? <MdPushPin /> : <MdOutlinePushPin />}
           </button>
 
           <button
@@ -247,9 +259,6 @@ function AdvisorCard({
           ) : (
             <div className="advisor-card__thread-preview">
               <div className={`thread-message thread-message--${thread[thread.length - 1].role}`}>
-                <span className="thread-avatar">
-                  {thread[thread.length - 1].role === 'user' ? '👤' : <FaRobot />}
-                </span>
                 <p className="thread-text">
                   {thread[thread.length - 1].content.slice(0, 100)}
                   {thread[thread.length - 1].content.length > 100 ? '…' : ''}
@@ -294,7 +303,7 @@ function CardSkeleton() {
   )
 }
 
-function DraggableFeed({ cards, threadMap, thinkingCards, expandedCards, onSaveToggle, onReorder, onSend, onExpand, onCollapse, onDelete }) {
+function DraggableFeed({ cards, threadMap, thinkingCards, expandedCards, pinnedCardId, onSaveToggle, onPinToggle, onReorder, onSend, onExpand, onCollapse, onDelete }) {
   const [items, setItems]     = useState(cards)
   const [dragIdx, setDragIdx] = useState(null)
   const [overIdx, setOverIdx] = useState(null)
@@ -349,7 +358,9 @@ function DraggableFeed({ cards, threadMap, thinkingCards, expandedCards, onSaveT
             thread={threadMap[card.id] || []}
             isThinking={thinkingCards.has(card.id)}
             isExpanded={expandedCards.has(card.id)}
+            isPinned={card.id === pinnedCardId}
             onSaveToggle={onSaveToggle}
+            onPinToggle={onPinToggle}
             onSend={(msg) => onSend(card.id, msg, card.title, card.body)}
             onExpand={onExpand}
             onCollapse={onCollapse}
@@ -402,6 +413,8 @@ export default function AdvisorCards({
   onRefresh,
   onChipClick,
   onSaveToggle,
+  onPinToggle,
+  pinnedCardId = null,
   onReorder,
   onDeleteCard,
   freeformInput,
@@ -411,18 +424,14 @@ export default function AdvisorCards({
   const [activeCategory, setActiveCategory] = useState('all')
   const [timeAgo, setTimeAgo] = useState('')
 
-  // Stable storage keys keyed by userId prop (available before cards load)
   const storageKey = userId ? `advisor_threads_${userId}` : 'advisor_threads'
-  const deletedKey = userId ? `advisor_deleted_${userId}` : 'advisor_deleted'
 
-  // Lifted thread state — persisted to localStorage
   const [threadMap, setThreadMap] = useState(() => {
     try { return JSON.parse(localStorage.getItem(userId ? `advisor_threads_${userId}` : 'advisor_threads') || '{}') } catch { return {} }
   })
   const [thinkingCards, setThinking] = useState(new Set())
   const [expandedCards, setExpanded] = useState(new Set())
 
-  // Persist threadMap on every change
   useEffect(() => {
     try { localStorage.setItem(storageKey, JSON.stringify(threadMap)) } catch {}
   }, [threadMap, storageKey])
@@ -430,7 +439,6 @@ export default function AdvisorCards({
   const feedRef  = useRef(null)
   const prevLen  = useRef(cards.length)
 
-  // Auto-scroll to top when new card prepended
   useEffect(() => {
     if (cards.length > prevLen.current && feedRef.current) {
       feedRef.current.scrollTo({ top: 0, behavior: 'smooth' })
@@ -438,7 +446,6 @@ export default function AdvisorCards({
     prevLen.current = cards.length
   }, [cards.length])
 
-  // Timestamp ticker
   useEffect(() => {
     if (!generatedAt) return
     const update = () => {
@@ -453,7 +460,6 @@ export default function AdvisorCards({
     return () => clearInterval(interval)
   }, [generatedAt])
 
-  // Send a message in a card's thread
   const handleSend = useCallback(async (cardId, message, cardTitle, cardBody) => {
     setExpanded(prev => new Set([...prev, cardId]))
     setThreadMap(prev => ({
@@ -490,15 +496,13 @@ export default function AdvisorCards({
     setExpanded(prev => { const n = new Set(prev); n.delete(cardId); return n })
     setThreadMap(prev => { const n = { ...prev }; delete n[cardId]; return n })
     setThinking(prev => { const n = new Set(prev); n.delete(cardId); return n })
-    // Persist deleted card ID so it stays hidden after refresh
-    try {
-      const existing = JSON.parse(localStorage.getItem(deletedKey) || '[]')
-      if (!existing.includes(cardId)) {
-        localStorage.setItem(deletedKey, JSON.stringify([...existing, cardId]))
-      }
-    } catch {}
     if (onDeleteCard) onDeleteCard(cardId)
-  }, [onDeleteCard, deletedKey])
+  }, [onDeleteCard])
+
+  const handlePinToggle = useCallback((card, thread) => {
+    const isCurrentlyPinned = card.id === pinnedCardId
+    if (onPinToggle) onPinToggle(isCurrentlyPinned ? null : card, isCurrentlyPinned ? [] : thread)
+  }, [pinnedCardId, onPinToggle])
 
   const showSkeletons = isLoading || isGenerating
 
@@ -516,8 +520,6 @@ export default function AdvisorCards({
     activeCategory === 'saved'   ? savedCards :
     activeCategory === 'history' ? historyCards :
     cards.filter(c => (c.category || 'other') === activeCategory)
-
-  const activeCats = CARD_CATEGORIES.filter(cat => categoryCounts[cat])
 
   const handleHistoryCardClick = (card) => {
     const cat = card.category || 'other'
@@ -593,7 +595,6 @@ export default function AdvisorCards({
             title="History"
           >
             <img src={historyIconSrc} className="history-icon-img" alt="History" />
-
           </button>
         </nav>
       )}
@@ -641,7 +642,9 @@ export default function AdvisorCards({
             threadMap={threadMap}
             thinkingCards={thinkingCards}
             expandedCards={expandedCards}
+            pinnedCardId={pinnedCardId}
             onSaveToggle={onSaveToggle}
+            onPinToggle={handlePinToggle}
             onReorder={onReorder}
             onSend={handleSend}
             onExpand={handleExpand}

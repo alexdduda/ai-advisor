@@ -16,7 +16,7 @@ const BASE_URL = normalizeUrl(API_URL);
 export const completedCoursesAPI = {
   // Get all completed courses for a user
   async getCompleted(userId) {
-    const response = await fetch(`${BASE_URL}/api/completed/${userId}`, {
+    const response = await fetch(`${BASE_URL}/api/completed/${userId}?limit=200`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
