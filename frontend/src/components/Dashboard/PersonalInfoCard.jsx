@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { FaEdit, FaChevronDown, FaChevronUp, FaCheck, FaUser, FaEnvelope, FaGraduationCap } from 'react-icons/fa'
 import { HiMiniSparkles } from 'react-icons/hi2'
 import { useLanguage } from '../../contexts/LanguageContext'
@@ -8,6 +8,12 @@ import './PersonalInfoCard.css'
 export default function PersonalInfoCard({ profile, user, onUpdateProfile }) {
   const { t } = useLanguage()
   const [isEditing, setIsEditing] = useState(false)
+  const [saveError, setSaveError] = useState(null)
+
+  const isSavingRef = useRef(false)
+  const onUpdateProfileRef = useRef(onUpdateProfile)
+  useEffect(() => { onUpdateProfileRef.current = onUpdateProfile }, [onUpdateProfile])
+
   const [expandedSections, setExpandedSections] = useState({
     academic: true,
     contact: true,
@@ -38,7 +44,22 @@ export default function PersonalInfoCard({ profile, user, onUpdateProfile }) {
 
   const completeness = calculateCompleteness()
 
-  return (
+  const handleSave = useCallback(async (formData) => {
+    if (isSavingRef.current) return
+    isSavingRef.current = true
+    setSaveError(null)
+    setIsEditing(false)
+    try {
+      await onUpdateProfileRef.current(formData)
+    } catch (error) {
+      setSaveError(error.message || 'Failed to update profile')
+      setIsEditing(true)
+    } finally {
+      isSavingRef.current = false
+    }
+  }, [])
+
+    return (
     <div className="personal-info-card">
       {/* Card Header */}
       <div className="card-header-modern">
@@ -56,7 +77,7 @@ export default function PersonalInfoCard({ profile, user, onUpdateProfile }) {
           {!isEditing && (
             <button 
               className="btn-edit-modern"
-              onClick={() => setIsEditing(true)}
+              onClick={() => { setSaveError(null); setIsEditing(true) }}
               title={t('profile.editProfile')}
             >
               <FaEdit />
@@ -89,6 +110,15 @@ export default function PersonalInfoCard({ profile, user, onUpdateProfile }) {
           </p>
         )}
       </div>
+
+      {saveError && !isEditing && (
+        <div className="save-error-banner">
+          {saveError} —{' '}
+          <button className="save-error-retry" onClick={() => setIsEditing(true)}>
+            Try again
+          </button>
+        </div>
+      )}
 
       {/* Main Content */}
       {!isEditing ? (
@@ -278,6 +308,11 @@ export default function PersonalInfoCard({ profile, user, onUpdateProfile }) {
         </div>
       ) : (
         <div className="edit-mode-container">
+          {saveError && (
+            <div className="save-error-banner save-error-banner--inline">
+              {saveError}
+            </div>
+          )}
           <EnhancedProfileForm
             profile={profile}
             onSave={async (formData) => {

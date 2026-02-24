@@ -1,4 +1,4 @@
-import { FaCamera, FaChartBar, FaBullseye, FaLightbulb } from 'react-icons/fa'
+import { FaCamera, FaChartBar, FaBullseye, FaLightbulb, FaFileUpload } from 'react-icons/fa'
 import { useLanguage } from '../../contexts/LanguageContext'
 import PersonalInfoCard from './PersonalInfoCard'
 import DegreeProgressTracker from './DegreeProgressTracker'
@@ -22,6 +22,7 @@ export default function ProfileTab({
   completedCourses,
   favorites,
   chatHistory,
+  onImportTranscript,
 }) {
   const { t } = useLanguage()
   
@@ -117,6 +118,12 @@ export default function ProfileTab({
                 <span className="card-icon"><FaBullseye /></span>
                 <h2 className="card-title">{t('profile.degreeProgress')}</h2>
               </div>
+              {onImportTranscript && (
+                <button className="btn-import-transcript" onClick={onImportTranscript}>
+                  <FaFileUpload />
+                  Import Transcript
+                </button>
+              )}
             </div>
             <div className="card-content">
               <DegreeProgressTracker

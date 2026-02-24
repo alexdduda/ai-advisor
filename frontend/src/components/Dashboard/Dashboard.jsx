@@ -17,6 +17,7 @@ import SavedCoursesView from './SavedCoursesView'
 import Forum from '../Forum/Forum'
 import MarkCompleteModal from './MarkCompleteModal'
 import CalendarTab from './CalendarTab'
+import TranscriptUpload from './TranscriptUpload'
 
 import './Dashboard.css'
 
@@ -30,6 +31,9 @@ export default function Dashboard() {
   const [profileImage, setProfileImage] = useState(profile?.profile_image || null)
   const [isUploadingImage, setIsUploadingImage] = useState(false)
   const fileInputRef = useRef(null)
+
+  // ── Transcript upload ──────────────────────────────────
+  const [showTranscriptUpload, setShowTranscriptUpload] = useState(false)
 
   // ── Advisor cards ──────────────────────────────────────
   const [advisorCards, setAdvisorCards] = useState([])
@@ -420,6 +424,14 @@ export default function Dashboard() {
     }
   }
 
+  // ── Transcript import complete ─────────────────────────
+  const handleTranscriptImportComplete = () => {
+    setShowTranscriptUpload(false)
+    loadCompletedCourses()
+    loadCurrentCourses()
+    refreshAdvisorCards(true)
+  }
+
   // ── Effects ────────────────────────────────────────────
   useEffect(() => {
     if (user?.id) {
@@ -552,6 +564,7 @@ export default function Dashboard() {
               completedCourses={completedCourses}
               favorites={favorites}
               chatHistory={[]}
+              onImportTranscript={() => setShowTranscriptUpload(true)}
             />
           )}
         </div>
@@ -567,6 +580,14 @@ export default function Dashboard() {
           }}
         />
       )}
+      {showTranscriptUpload && (
+        <TranscriptUpload
+          userId={user?.id}
+          onClose={() => setShowTranscriptUpload(false)}
+          onImportComplete={handleTranscriptImportComplete}
+        />
+      )}
+
       <FeedbackModal userId={user?.id} userEmail={user?.email} />
     </div>
   )
