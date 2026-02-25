@@ -5,9 +5,8 @@ import {
   FaClipboardList, FaComments, FaCalendarAlt,
   FaChartBar, FaMapMarkedAlt, FaLightbulb,
   FaBookmark, FaRegBookmark, FaThumbtack,
-  FaGripVertical, FaTrash,
+  FaGripVertical, FaTrash, FaMapPin,
 } from 'react-icons/fa'
-import { MdPushPin, MdOutlinePushPin } from 'react-icons/md'
 import { CARD_CATEGORIES, CATEGORY_LABELS } from '../../../lib/cardsAPI'
 import './AdvisorCards.css'
 
@@ -18,6 +17,7 @@ const CATEGORY_ICON_COMPONENTS = {
   grades:        FaChartBar,
   planning:      FaMapMarkedAlt,
   opportunities: FaLightbulb,
+  other:         FaComments,
 }
 
 const CARD_CONFIG = {
@@ -39,11 +39,15 @@ function ThreadMessages({ thread, isThinking }) {
     <div className="thread-messages" ref={scrollRef}>
       {thread.map((msg, i) => (
         <div key={i} className={`thread-message thread-message--${msg.role}`}>
+          <span className="thread-avatar">
+            {msg.role === 'user' ? '👤' : <FaRobot />}
+          </span>
           <p className="thread-text">{msg.content}</p>
         </div>
       ))}
       {isThinking && (
         <div className="thread-message thread-message--assistant">
+          <span className="thread-avatar"><FaRobot /></span>
           <p className="thread-text">
             <span className="thinking-dots"><span /><span /><span /></span>
           </p>
@@ -132,7 +136,7 @@ function AdvisorCard({
   const cardRef = useRef(null)
 
   const config   = CARD_CONFIG[card.card_type || card.type] || CARD_CONFIG.insight
-  const CardIcon = CATEGORY_ICON_COMPONENTS[card.category || 'planning'] || FaMapMarkedAlt
+  const CardIcon = CATEGORY_ICON_COMPONENTS[card.category || 'other'] || FaComments
   const isSaved  = card.is_saved || false
   const isUser   = card.source === 'user'
 
@@ -222,14 +226,14 @@ function AdvisorCard({
             )}
             {isPinned && (
               <span className="advisor-card__pinned-badge">
-                <MdPushPin className="pinned-badge__icon" /> Pinned
+                <FaMapPin className="pinned-badge__icon" /> Pinned
               </span>
             )}
           </div>
           <h3 className="advisor-card__title">{card.title}</h3>
         </div>
 
-        {/* Trash left, save rightmost */}
+        {/* Trash, save, pin */}
         <div className="advisor-card__header-actions">
           <button
             className="advisor-card__delete"
@@ -253,7 +257,7 @@ function AdvisorCard({
             onClick={handlePin}
             title={isPinned ? 'Unpin from sidebar' : 'Pin to sidebar'}
           >
-            {isPinned ? <MdPushPin /> : <MdOutlinePushPin />}
+            <FaMapPin style={isPinned ? {} : { opacity: 0.45 }} />
           </button>
         </div>
       </div>
@@ -282,7 +286,6 @@ function AdvisorCard({
             </div>
           )}
 
-          {/* FIX: Chat bar is always available in the panel, not just when thread exists */}
           {thread.length > 0 && (
             <div className={`advisor-card__thread ${isExpanded ? '' : 'advisor-card__thread--preview'}`}>
               <div className="thread-divider" />
@@ -312,7 +315,7 @@ function AdvisorCard({
             />
           </div>
 
-          {/* Close chevron — at the bottom of the open panel */}
+          {/* Close chevron */}
           <div className="advisor-card__toggle-row">
             <button
               className="advisor-card__toggle advisor-card__toggle--open"
@@ -323,8 +326,8 @@ function AdvisorCard({
             </button>
           </div>
 
-        </div>{/* end panel-inner — FIX: was missing */}
-      </div>{/* end panel */}
+        </div>
+      </div>
 
       {/* ── Open chevron — always visible below the body when closed ── */}
       {!panelOpen && (
@@ -376,8 +379,11 @@ function CardSkeleton() {
 }
 
 // ── Drag-and-drop feed ────────────────────────────────────────
-// FIX: Added pinnedCardId and onPinToggle to destructured props
-function DraggableFeed({ cards, threadMap, thinkingCards, expandedCards, pinnedCardId, onSaveToggle, onPinToggle, onReorder, onSend, onExpand, onCollapse, onDelete }) {
+function DraggableFeed({
+  cards, threadMap, thinkingCards, expandedCards,
+  pinnedCardId, onSaveToggle, onPinToggle,
+  onReorder, onSend, onExpand, onCollapse, onDelete,
+}) {
   const [items, setItems]     = useState(cards)
   const [dragIdx, setDragIdx] = useState(null)
   const [overIdx, setOverIdx] = useState(null)
@@ -472,9 +478,14 @@ export default function AdvisorCards({
   const [activeCategory, setActiveCategory] = useState('all')
   const [timeAgo, setTimeAgo] = useState('')
 
-  const storageKey  = userId ? `advisor_threads_${userId}` : 'advisor_threads'
-  // FIX: Define deletedKey so handleDelete can use it
-  const deletedKey  = userId ? `advisor_deleted_${userId}` : 'advisor_deleted'
+  const storageKey = userId ? `advisor_threads_${userId}` : 'advisor_threads'
+  const deletedKey = userId ? `advisor_deleted_${userId}` : 'advisor_deleted'
+
+  const [deletedIds, setDeletedIds] = useState(() => {
+    try { return new Set(JSON.parse(localStorage.getItem(deletedKey) || '[]')) } catch { return new Set() }
+  })
+
+  const visibleCards = cards.filter(c => !deletedIds.has(c.id))
 
   const [threadMap, setThreadMap] = useState(() => {
     try { return JSON.parse(localStorage.getItem(storageKey) || '{}') } catch { return {} }
@@ -490,11 +501,11 @@ export default function AdvisorCards({
   const prevLen = useRef(cards.length)
 
   useEffect(() => {
-    if (cards.length > prevLen.current && feedRef.current) {
+    if (visibleCards.length > prevLen.current && feedRef.current) {
       feedRef.current.scrollTo({ top: 0, behavior: 'smooth' })
     }
-    prevLen.current = cards.length
-  }, [cards.length])
+    prevLen.current = visibleCards.length
+  }, [visibleCards.length])
 
   useEffect(() => {
     if (!generatedAt) return
@@ -541,13 +552,12 @@ export default function AdvisorCards({
     setExpanded(prev  => { const n = new Set(prev); n.delete(cardId); return n })
     setThreadMap(prev => { const n = { ...prev }; delete n[cardId]; return n })
     setThinking(prev  => { const n = new Set(prev); n.delete(cardId); return n })
-    // FIX: deletedKey is now defined at component scope above
-    try {
-      const existing = JSON.parse(localStorage.getItem(deletedKey) || '[]')
-      if (!existing.includes(cardId)) {
-        localStorage.setItem(deletedKey, JSON.stringify([...existing, cardId]))
-      }
-    } catch {}
+    setDeletedIds(prev => {
+      const n = new Set(prev)
+      n.add(cardId)
+      try { localStorage.setItem(deletedKey, JSON.stringify([...n])) } catch {}
+      return n
+    })
     if (onDeleteCard) onDeleteCard(cardId)
   }, [onDeleteCard, deletedKey])
 
@@ -558,18 +568,18 @@ export default function AdvisorCards({
 
   const showSkeletons = isLoading || isGenerating
 
-  const categoryCounts = cards.reduce((acc, card) => {
-    const cat = card.category || 'planning'
+  const categoryCounts = visibleCards.reduce((acc, card) => {
+    const cat = card.category || 'other'
     acc[cat] = (acc[cat] || 0) + 1
     return acc
   }, {})
 
-  const savedCards = cards.filter(c => c.is_saved)
+  const savedCards = visibleCards.filter(c => c.is_saved)
 
   const filteredCards =
-    activeCategory === 'all'   ? cards :
+    activeCategory === 'all'   ? visibleCards :
     activeCategory === 'saved' ? savedCards :
-    cards.filter(c => (c.category || 'planning') === activeCategory)
+    visibleCards.filter(c => (c.category || 'other') === activeCategory)
 
   const activeCats = CARD_CATEGORIES.filter(cat => categoryCounts[cat])
 
@@ -608,7 +618,7 @@ export default function AdvisorCards({
           </button>
 
           {activeCats.map(cat => {
-            const CatIcon = CATEGORY_ICON_COMPONENTS[cat] || FaMapMarkedAlt
+            const CatIcon = CATEGORY_ICON_COMPONENTS[cat] || FaComments
             return (
               <button
                 key={cat}
@@ -639,7 +649,7 @@ export default function AdvisorCards({
       <div className="advisor-cards-feed" ref={feedRef}>
         {showSkeletons ? (
           <><CardSkeleton /><CardSkeleton /><CardSkeleton /></>
-        ) : filteredCards.length === 0 && cards.length === 0 ? (
+        ) : filteredCards.length === 0 && visibleCards.length === 0 ? (
           <div className="advisor-cards-empty">
             <FaGraduationCap className="empty-icon" />
             <p>Your academic brief is being prepared.</p>
@@ -652,7 +662,7 @@ export default function AdvisorCards({
           </div>
         ) : filteredCards.length === 0 ? (
           <div className="advisor-cards-empty">
-            {(() => { const I = CATEGORY_ICON_COMPONENTS[activeCategory] || FaMapMarkedAlt; return <I className="empty-icon" /> })()}
+            {(() => { const I = CATEGORY_ICON_COMPONENTS[activeCategory] || FaComments; return <I className="empty-icon" /> })()}
             <p>No {CATEGORY_LABELS[activeCategory]} cards right now.</p>
           </div>
         ) : (
