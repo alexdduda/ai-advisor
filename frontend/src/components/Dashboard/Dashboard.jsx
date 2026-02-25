@@ -9,6 +9,7 @@ import { useLanguage } from '../../contexts/LanguageContext'
 import cardsAPI from '../../lib/cardsAPI'
 import AdvisorCards from './chat/AdvisorCards'
 import FeedbackModal from './FeedbackModal'
+import ClubsTab from './ClubsTab'
 
 import Sidebar from './Sidebar'
 import CoursesTab from './CoursesTab'
@@ -42,6 +43,9 @@ export default function Dashboard() {
   const [cardsGeneratedAt, setCardsGeneratedAt] = useState(null)
   const [freeformInput, setFreeformInput] = useState('')
   const [isAsking, setIsAsking] = useState(false)
+
+  // ── Club calendar events (fed up from ClubsTab) ────────
+  const [clubCalendarEvents, setClubCalendarEvents] = useState([])
 
   // ── Course search ──────────────────────────────────────
   const [searchQuery, setSearchQuery] = useState('')
@@ -155,7 +159,7 @@ export default function Dashboard() {
     }
   }
 
-    // Toggle the saved/pinned state of a single card
+  // Toggle the saved/pinned state of a single card
   const handleCardSaveToggle = async (cardId, isSaved) => {
     if (!user?.id) return
     try {
@@ -173,8 +177,6 @@ export default function Dashboard() {
     if (!user?.id) return
     try {
       await cardsAPI.reorderCards(user.id, order)
-      // Optimistic update already happened inside DraggableFeed;
-      // re-sync sort_order field so future re-renders are stable
       setAdvisorCards(prev => {
         const orderMap = Object.fromEntries(order.map(o => [o.id, o.sort_order]))
         return [...prev]
@@ -195,7 +197,6 @@ export default function Dashboard() {
     try {
       const data = await cardsAPI.askCard(user.id, question)
       if (data.card) {
-        // Prepend the new user-asked card to the top of the feed
         setAdvisorCards(prev => [data.card, ...prev])
       }
     } catch (error) {
@@ -490,6 +491,14 @@ export default function Dashboard() {
             />
           )}
 
+          {activeTab === 'clubs' && (
+            <ClubsTab
+              user={user}
+              profile={profile}
+              onClubEventsChange={setClubCalendarEvents}
+            />
+          )}
+
           {activeTab === 'courses' && (
             <CoursesTab
               searchQuery={searchQuery}
@@ -548,7 +557,9 @@ export default function Dashboard() {
 
           {activeTab === 'forum' && <Forum />}
 
-          {activeTab === 'calendar' && <CalendarTab user={user} />}
+          {activeTab === 'calendar' && (
+            <CalendarTab user={user} clubEvents={clubCalendarEvents} />
+          )}
 
           {activeTab === 'profile' && (
             <ProfileTab

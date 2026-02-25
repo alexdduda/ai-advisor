@@ -2,7 +2,7 @@ import { useState } from 'react'
 import {
   FaCog, FaPalette, FaBell, FaLock, FaBolt,
   FaSun, FaMoon, FaSyncAlt, FaDownload,
-  FaEnvelope, FaGraduationCap, FaUsers, FaUser, FaCheck
+  FaEnvelope, FaGraduationCap, FaUsers, FaUser, FaCheck,
 } from 'react-icons/fa'
 import { useLanguage } from '../../contexts/LanguageContext'
 import { useTheme } from '../../contexts/ThemeContext'
