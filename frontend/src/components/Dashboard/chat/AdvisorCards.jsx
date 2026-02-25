@@ -7,6 +7,7 @@ import {
   FaBookmark, FaRegBookmark, FaThumbtack,
   FaGripVertical, FaTrash,
 } from 'react-icons/fa'
+import { MdPushPin, MdOutlinePushPin } from 'react-icons/md'
 import { CARD_CATEGORIES, CATEGORY_LABELS } from '../../../lib/cardsAPI'
 import './AdvisorCards.css'
 
@@ -38,15 +39,11 @@ function ThreadMessages({ thread, isThinking }) {
     <div className="thread-messages" ref={scrollRef}>
       {thread.map((msg, i) => (
         <div key={i} className={`thread-message thread-message--${msg.role}`}>
-          <span className="thread-avatar">
-            {msg.role === 'user' ? '👤' : <FaRobot />}
-          </span>
           <p className="thread-text">{msg.content}</p>
         </div>
       ))}
       {isThinking && (
         <div className="thread-message thread-message--assistant">
-          <span className="thread-avatar"><FaRobot /></span>
           <p className="thread-text">
             <span className="thinking-dots"><span /><span /><span /></span>
           </p>
@@ -120,7 +117,9 @@ function AdvisorCard({
   thread = [],
   isThinking = false,
   isExpanded = false,
+  isPinned = false,
   onSaveToggle,
+  onPinToggle,
   onSend,
   onExpand,
   onCollapse,
@@ -136,6 +135,17 @@ function AdvisorCard({
   const CardIcon = CATEGORY_ICON_COMPONENTS[card.category || 'planning'] || FaMapMarkedAlt
   const isSaved  = card.is_saved || false
   const isUser   = card.source === 'user'
+
+  useEffect(() => {
+    if (!isExpanded) return
+    const handleClickOutside = (e) => {
+      if (cardRef.current && !cardRef.current.contains(e.target)) {
+        onCollapse(card.id)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [isExpanded, card.id, onCollapse])
   const chips    = card.actions || []
 
   // Sync with parent expanded state
@@ -150,6 +160,11 @@ function AdvisorCard({
     setSaving(true)
     try { await onSaveToggle(card.id, !isSaved) }
     finally { setSaving(false) }
+  }
+
+  const handlePin = (e) => {
+    e.stopPropagation()
+    onPinToggle(card, thread)
   }
 
   const togglePanel = () => {
@@ -181,6 +196,7 @@ function AdvisorCard({
         isSaved    ? 'advisor-card--saved' : '',
         isDragging ? 'advisor-card--dragging' : '',
         panelOpen  ? 'advisor-card--expanded' : '',
+        isPinned  ? 'advisor-card--pinned' : '',
       ].filter(Boolean).join(' ')}
       style={{ '--card-accent': config.accent }}
       ref={cardRef}
@@ -201,6 +217,11 @@ function AdvisorCard({
             {isSaved && (
               <span className="advisor-card__saved-badge">
                 <FaThumbtack className="saved-badge__icon" /> Saved
+              </span>
+            )}
+            {isPinned && (
+              <span className="advisor-card__pinned-badge">
+                <MdPushPin className="pinned-badge__icon" /> Pinned
               </span>
             )}
           </div>
@@ -224,6 +245,14 @@ function AdvisorCard({
             title={isSaved ? 'Remove bookmark' : 'Bookmark'}
           >
             {isSaved ? <FaBookmark /> : <FaRegBookmark />}
+          </button>
+
+          <button
+            className={`advisor-card__pin ${isPinned ? 'advisor-card__pin--active' : ''}`}
+            onClick={handlePin}
+            title={isPinned ? 'Unpin from sidebar' : 'Pin to sidebar'}
+          >
+            {isPinned ? <MdPushPin /> : <MdOutlinePushPin />}
           </button>
         </div>
       </div>
@@ -252,11 +281,19 @@ function AdvisorCard({
             </div>
           )}
 
-          {/* Thread */}
-          {thread.length > 0 && (
-            <div className="advisor-card__thread">
-              <div className="thread-divider" />
-              <ThreadMessages thread={thread} isThinking={isThinking} />
+      {thread.length > 0 && (
+        <div className={`advisor-card__thread ${isExpanded ? '' : 'advisor-card__thread--preview'}`}>
+          <div className="thread-divider" />
+          {isExpanded ? (
+            <ThreadMessages thread={thread} isThinking={isThinking} />
+          ) : (
+            <div className="advisor-card__thread-preview">
+              <div className={`thread-message thread-message--${thread[thread.length - 1].role}`}>
+                <p className="thread-text">
+                  {thread[thread.length - 1].content.slice(0, 100)}
+                  {thread[thread.length - 1].content.length > 100 ? '…' : ''}
+                </p>
+              </div>
             </div>
           )}
 
@@ -390,7 +427,9 @@ function DraggableFeed({ cards, threadMap, thinkingCards, expandedCards, onSaveT
             thread={threadMap[card.id] || []}
             isThinking={thinkingCards.has(card.id)}
             isExpanded={expandedCards.has(card.id)}
+            isPinned={card.id === pinnedCardId}
             onSaveToggle={onSaveToggle}
+            onPinToggle={onPinToggle}
             onSend={(msg) => onSend(card.id, msg, card.title, card.body)}
             onExpand={onExpand}
             onCollapse={onCollapse}
@@ -417,6 +456,8 @@ export default function AdvisorCards({
   onRefresh,
   onChipClick,
   onSaveToggle,
+  onPinToggle,
+  pinnedCardId = null,
   onReorder,
   onDeleteCard,
   freeformInput,
@@ -427,7 +468,6 @@ export default function AdvisorCards({
   const [timeAgo, setTimeAgo] = useState('')
 
   const storageKey = userId ? `advisor_threads_${userId}` : 'advisor_threads'
-  const deletedKey = userId ? `advisor_deleted_${userId}` : 'advisor_deleted'
 
   const [threadMap, setThreadMap] = useState(() => {
     try { return JSON.parse(localStorage.getItem(userId ? `advisor_threads_${userId}` : 'advisor_threads') || '{}') } catch { return {} }
@@ -501,7 +541,12 @@ export default function AdvisorCards({
       }
     } catch {}
     if (onDeleteCard) onDeleteCard(cardId)
-  }, [onDeleteCard, deletedKey])
+  }, [onDeleteCard])
+
+  const handlePinToggle = useCallback((card, thread) => {
+    const isCurrentlyPinned = card.id === pinnedCardId
+    if (onPinToggle) onPinToggle(isCurrentlyPinned ? null : card, isCurrentlyPinned ? [] : thread)
+  }, [pinnedCardId, onPinToggle])
 
   const showSkeletons = isLoading || isGenerating
 
@@ -608,7 +653,9 @@ export default function AdvisorCards({
             threadMap={threadMap}
             thinkingCards={thinkingCards}
             expandedCards={expandedCards}
+            pinnedCardId={pinnedCardId}
             onSaveToggle={onSaveToggle}
+            onPinToggle={handlePinToggle}
             onReorder={onReorder}
             onSend={handleSend}
             onExpand={handleExpand}

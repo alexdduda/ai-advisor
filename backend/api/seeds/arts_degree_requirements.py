@@ -13,6 +13,7 @@ Accuracy notes:
 """
 
 ARTS_PROGRAMS = [
+
   {
     "program_key": "cognitive_science_minor",
     "name": "Cognitive Science – Minor (B.Sc.)",
@@ -20,88 +21,106 @@ ARTS_PROGRAMS = [
     "faculty": "Faculty of Arts",
     "total_credits": 24,
     "description": (
-      "Open to Arts and Science students. Explore the interdisciplinary study of cognition. "
-      "Complete a minimum of 9 credits each in two of four areas: Computer Science & Mathematics, "
-      "Linguistics, Philosophy, or Psychology. Minimum 6 credits must be at 400–500 level."
+      "The Minor in Cognitive Science is intended to allow students in the Faculty of Arts "
+      "or the Faculty of Science to explore the interdisciplinary study of cognition. "
+      "Open to both faculties. Students complete a minimum of 9 credits each in two areas "
+      "from: Computer Science & Mathematics, Linguistics, Philosophy, or Psychology."
     ),
     "ecalendar_url": "https://coursecatalogue.mcgill.ca/en/undergraduate/science/programs/cognitive-science/cognitive-science-minor-bsc/",
-    "constraints": [
-      {"type": "min_level_credits", "min_credits": 6, "level": 400, "rule_text": "Students must take a minimum of 6 credits at the 400 to 500 level."},
-      {"type": "note", "rule_text": "Students complete a minimum of 9 credits each in two areas."},
-      {"type": "note", "rule_text": "Students may not take any courses from their home department(s)."},
-    ],
     "blocks": [
       {
-        "block_key": "cogs_required", "title": "Required Course",
-        "block_type": "required", "credits_needed": 3, "courses_needed": None,
-        "group_name": None, "notes": "Must be taken by all students in the minor.", "sort_order": 1,
+        "block_key": "cogs_required",
+        "title": "Required Course",
+        "block_type": "required",
+        "credits_needed": 3,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "Must be taken by all students in the minor.",
+        "sort_order": 1,
         "courses": [
           {"subject": "PSYC", "catalog": "433", "title": "Cognitive Science", "credits": 3, "is_required": True},
         ],
       },
       {
-        "block_key": "cogs_comp_sci_math", "title": "Computer Science and Mathematics",
-        "block_type": "group", "credits_needed": None, "courses_needed": None,
+        "block_key": "cogs_comp_sci_math",
+        "title": "Computer Science and Mathematics",
+        "block_type": "group",
+        "credits_needed": None,
+        "courses_needed": None,
         "group_name": "Group – Computer Science and Mathematics",
-        "notes": "Min 9 credits in two of the four areas. Min 6 total credits at 400–500 level across all complementary courses. Cannot take courses from home department.",
+        "notes": "Students complete a minimum of 9 credits each in two of the four areas. Min 6 credits at 400–500 level across all complementary courses. Students may not take courses from their home department(s).",
         "sort_order": 2,
         "courses": [
-          {"subject": "COMP", "catalog": "206", "title": "Introduction to Software Systems", "credits": 3, "is_required": False},
-          {"subject": "COMP", "catalog": "230", "title": "Logic and Computability", "credits": 3, "is_required": False},
-          {"subject": "COMP", "catalog": "250", "title": "Introduction to Computer Science", "credits": 3, "is_required": False},
-          {"subject": "COMP", "catalog": "251", "title": "Algorithms and Data Structures", "credits": 3, "is_required": False},
-          {"subject": "COMP", "catalog": "302", "title": "Programming Languages and Paradigms", "credits": 3, "is_required": False},
-          {"subject": "COMP", "catalog": "330", "title": "Theory of Computation", "credits": 3, "is_required": False},
-          {"subject": "COMP", "catalog": "527", "title": "Logic and Computation", "credits": 3, "is_required": False},
-          {"subject": "MATH", "catalog": "240", "title": "Discrete Structures", "credits": 3, "is_required": False},
-          {"subject": "MATH", "catalog": "318", "title": "Mathematical Logic", "credits": 3, "is_required": False},
+          {"subject": "COMP", "catalog": "206",  "title": "Introduction to Software Systems",       "credits": 3, "is_required": False},
+          {"subject": "COMP", "catalog": "230",  "title": "Logic and Computability",                "credits": 3, "is_required": False},
+          {"subject": "COMP", "catalog": "250",  "title": "Introduction to Computer Science",       "credits": 3, "is_required": False},
+          {"subject": "COMP", "catalog": "251",  "title": "Algorithms and Data Structures",         "credits": 3, "is_required": False},
+          {"subject": "COMP", "catalog": "302",  "title": "Programming Languages and Paradigms",    "credits": 3, "is_required": False},
+          {"subject": "COMP", "catalog": "330",  "title": "Theory of Computation",                  "credits": 3, "is_required": False},
+          {"subject": "COMP", "catalog": "527",  "title": "Logic and Computation",                  "credits": 3, "is_required": False},
+          {"subject": "MATH", "catalog": "240",  "title": "Discrete Structures",                    "credits": 3, "is_required": False},
+          {"subject": "MATH", "catalog": "318",  "title": "Mathematical Logic",                     "credits": 3, "is_required": False},
         ],
       },
       {
-        "block_key": "cogs_linguistics", "title": "Linguistics",
-        "block_type": "group", "credits_needed": None, "courses_needed": None,
+        "block_key": "cogs_linguistics",
+        "title": "Linguistics",
+        "block_type": "group",
+        "credits_needed": None,
+        "courses_needed": None,
         "group_name": "Group – Linguistics",
-        "notes": "Any LING course at the 300, 400, or 500 level also qualifies.", "sort_order": 3,
+        "notes": "Any LING course at the 300, 400, or 500 level also counts. Students complete a minimum of 9 credits each in two of the four areas.",
+        "sort_order": 3,
         "courses": [
-          {"subject": "LING", "catalog": "201", "title": "Introduction to Linguistics", "credits": 3, "is_required": False},
-          {"subject": "LING", "catalog": "210", "title": "Introduction to Speech Science", "credits": 3, "is_required": False},
-          {"subject": "LING", "catalog": "260", "title": "Meaning in Language", "credits": 3, "is_required": False},
+          {"subject": "LING", "catalog": "201",  "title": "Introduction to Linguistics",    "credits": 3, "is_required": False},
+          {"subject": "LING", "catalog": "210",  "title": "Introduction to Speech Science", "credits": 3, "is_required": False},
+          {"subject": "LING", "catalog": "260",  "title": "Meaning in Language",            "credits": 3, "is_required": False},
         ],
       },
       {
-        "block_key": "cogs_philosophy", "title": "Philosophy",
-        "block_type": "group", "credits_needed": None, "courses_needed": None,
-        "group_name": "Group – Philosophy", "notes": "", "sort_order": 4,
+        "block_key": "cogs_philosophy",
+        "title": "Philosophy",
+        "block_type": "group",
+        "credits_needed": None,
+        "courses_needed": None,
+        "group_name": "Group – Philosophy",
+        "notes": "Students complete a minimum of 9 credits each in two of the four areas.",
+        "sort_order": 4,
         "courses": [
-          {"subject": "PHIL", "catalog": "210", "title": "Introduction to Deductive Logic 1", "credits": 3, "is_required": False},
-          {"subject": "PHIL", "catalog": "221", "title": "Introduction to History and Philosophy of Science 2", "credits": 3, "is_required": False},
-          {"subject": "PHIL", "catalog": "306", "title": "Philosophy of Mind", "credits": 3, "is_required": False},
-          {"subject": "PHIL", "catalog": "310", "title": "Intermediate Logic", "credits": 3, "is_required": False},
-          {"subject": "PHIL", "catalog": "311", "title": "Philosophy of Mathematics", "credits": 3, "is_required": False},
-          {"subject": "PHIL", "catalog": "341", "title": "Philosophy of Science 1", "credits": 3, "is_required": False},
-          {"subject": "PHIL", "catalog": "411", "title": "Topics in Philosophy of Logic and Mathematics", "credits": 3, "is_required": False},
-          {"subject": "PHIL", "catalog": "415", "title": "Philosophy of Language", "credits": 3, "is_required": False},
-          {"subject": "PHIL", "catalog": "441", "title": "Philosophy of Science 2", "credits": 3, "is_required": False},
-          {"subject": "PHIL", "catalog": "474", "title": "Phenomenology", "credits": 3, "is_required": False},
+          {"subject": "PHIL", "catalog": "210",  "title": "Introduction to Deductive Logic 1",              "credits": 3, "is_required": False},
+          {"subject": "PHIL", "catalog": "221",  "title": "Introduction to History and Philosophy of Science 2", "credits": 3, "is_required": False},
+          {"subject": "PHIL", "catalog": "306",  "title": "Philosophy of Mind",                             "credits": 3, "is_required": False},
+          {"subject": "PHIL", "catalog": "310",  "title": "Intermediate Logic",                             "credits": 3, "is_required": False},
+          {"subject": "PHIL", "catalog": "311",  "title": "Philosophy of Mathematics",                      "credits": 3, "is_required": False},
+          {"subject": "PHIL", "catalog": "341",  "title": "Philosophy of Science 1",                        "credits": 3, "is_required": False},
+          {"subject": "PHIL", "catalog": "411",  "title": "Topics in Philosophy of Logic and Mathematics",  "credits": 3, "is_required": False},
+          {"subject": "PHIL", "catalog": "415",  "title": "Philosophy of Language",                         "credits": 3, "is_required": False},
+          {"subject": "PHIL", "catalog": "441",  "title": "Philosophy of Science 2",                        "credits": 3, "is_required": False},
+          {"subject": "PHIL", "catalog": "474",  "title": "Phenomenology",                                  "credits": 3, "is_required": False},
         ],
       },
       {
-        "block_key": "cogs_psychology", "title": "Psychology",
-        "block_type": "group", "credits_needed": None, "courses_needed": None,
-        "group_name": "Group – Psychology", "notes": "", "sort_order": 5,
+        "block_key": "cogs_psychology",
+        "title": "Psychology",
+        "block_type": "group",
+        "credits_needed": None,
+        "courses_needed": None,
+        "group_name": "Group – Psychology",
+        "notes": "Students complete a minimum of 9 credits each in two of the four areas.",
+        "sort_order": 5,
         "courses": [
-          {"subject": "PSYC", "catalog": "212", "title": "Perception", "credits": 3, "is_required": False},
-          {"subject": "PSYC", "catalog": "213", "title": "Cognition", "credits": 3, "is_required": False},
-          {"subject": "PSYC", "catalog": "301", "title": "Animal Learning and Theory", "credits": 3, "is_required": False},
-          {"subject": "PSYC", "catalog": "304", "title": "Child Development", "credits": 3, "is_required": False},
-          {"subject": "PSYC", "catalog": "310", "title": "Intelligence", "credits": 3, "is_required": False},
-          {"subject": "PSYC", "catalog": "311", "title": "Human Cognition and the Brain", "credits": 3, "is_required": False},
-          {"subject": "PSYC", "catalog": "315", "title": "Computational Psychology", "credits": 3, "is_required": False},
-          {"subject": "PSYC", "catalog": "319", "title": "Computational Models - Cognition", "credits": 3, "is_required": False},
-          {"subject": "PSYC", "catalog": "340", "title": "Psychology of Language", "credits": 3, "is_required": False},
-          {"subject": "PSYC", "catalog": "410", "title": "Special Topics in Neuropsychology", "credits": 3, "is_required": False},
-          {"subject": "PSYC", "catalog": "413", "title": "Cognitive Development", "credits": 3, "is_required": False},
-          {"subject": "PSYC", "catalog": "538", "title": "Categorization, Communication and Consciousness", "credits": 3, "is_required": False},
+          {"subject": "PSYC", "catalog": "212",  "title": "Perception",                                "credits": 3, "is_required": False},
+          {"subject": "PSYC", "catalog": "213",  "title": "Cognition",                                 "credits": 3, "is_required": False},
+          {"subject": "PSYC", "catalog": "301",  "title": "Animal Learning and Theory",                "credits": 3, "is_required": False},
+          {"subject": "PSYC", "catalog": "304",  "title": "Child Development",                         "credits": 3, "is_required": False},
+          {"subject": "PSYC", "catalog": "310",  "title": "Intelligence",                              "credits": 3, "is_required": False},
+          {"subject": "PSYC", "catalog": "311",  "title": "Human Cognition and the Brain",             "credits": 3, "is_required": False},
+          {"subject": "PSYC", "catalog": "315",  "title": "Computational Psychology",                  "credits": 3, "is_required": False},
+          {"subject": "PSYC", "catalog": "319",  "title": "Computational Models - Cognition",          "credits": 3, "is_required": False},
+          {"subject": "PSYC", "catalog": "340",  "title": "Psychology of Language",                    "credits": 3, "is_required": False},
+          {"subject": "PSYC", "catalog": "410",  "title": "Special Topics in Neuropsychology",         "credits": 3, "is_required": False},
+          {"subject": "PSYC", "catalog": "413",  "title": "Cognitive Development",                     "credits": 3, "is_required": False},
+          {"subject": "PSYC", "catalog": "538",  "title": "Categorization, Communication and Consciousness", "credits": 3, "is_required": False},
         ],
       },
     ],
@@ -2540,9 +2559,1220 @@ ARTS_PROGRAMS = [
     ],
   },
 
+  # ══════════════════════════════════════════════════════════════════
+  # HONOURS PROGRAMS
+  # Source: McGill eCalendar 2024-2025
+  # ══════════════════════════════════════════════════════════════════
+
+  # ── ECONOMICS HONOURS ─────────────────────────────────────────────
+  {
+    "program_key": "economics_honours",
+    "name": "Economics – Honours (B.A.)",
+    "program_type": "honours",
+    "faculty": "Faculty of Arts",
+    "total_credits": 63,
+    "description": (
+      "The Honours program is a rigorous, research-oriented sequence designed for students "
+      "who intend to pursue graduate studies or careers requiring advanced quantitative skills. "
+      "Requires a minimum CGPA of 3.0 to enter and maintain. Includes a research thesis or "
+      "directed research component in the final year."
+    ),
+    "ecalendar_url": "https://coursecatalogue.mcgill.ca/en/undergraduate/arts/programs/economics/economics-honours-ba/",
+    "blocks": [
+      {
+        "block_key": "econ_hon_core",
+        "title": "Required Core (27 credits)",
+        "block_type": "required",
+        "credits_needed": 27,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "All nine courses are required.",
+        "sort_order": 1,
+        "courses": [
+          {"subject":"ECON","catalog":"227D1","title":"Economic Statistics 1","credits":3,"is_required":True},
+          {"subject":"ECON","catalog":"227D2","title":"Economic Statistics 2","credits":3,"is_required":True},
+          {"subject":"ECON","catalog":"230D1","title":"Microeconomic Theory 1","credits":3,"is_required":True},
+          {"subject":"ECON","catalog":"230D2","title":"Microeconomic Theory 2","credits":3,"is_required":True},
+          {"subject":"ECON","catalog":"332","title":"Macroeconomic Theory: Majors 1","credits":3,"is_required":True},
+          {"subject":"ECON","catalog":"333","title":"Macroeconomic Theory: Majors 2","credits":3,"is_required":True},
+          {"subject":"ECON","catalog":"430D1","title":"Advanced Microeconomics 1","credits":3,"is_required":True},
+          {"subject":"ECON","catalog":"430D2","title":"Advanced Microeconomics 2","credits":3,"is_required":True},
+          {"subject":"ECON","catalog":"440","title":"Econometrics","credits":3,"is_required":True},
+        ],
+      },
+      {
+        "block_key": "econ_hon_macro",
+        "title": "Advanced Macroeconomics (6 credits)",
+        "block_type": "required",
+        "credits_needed": 6,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "Both required.",
+        "sort_order": 2,
+        "courses": [
+          {"subject":"ECON","catalog":"450D1","title":"Advanced Macroeconomics 1","credits":3,"is_required":True},
+          {"subject":"ECON","catalog":"450D2","title":"Advanced Macroeconomics 2","credits":3,"is_required":True},
+        ],
+      },
+      {
+        "block_key": "econ_hon_thesis",
+        "title": "Honours Thesis or Research (6 credits)",
+        "block_type": "required",
+        "credits_needed": 6,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "Choose thesis (480D1/D2) or directed research (479D1/D2).",
+        "sort_order": 3,
+        "courses": [
+          {"subject":"ECON","catalog":"480D1","title":"Honours Thesis 1","credits":3,"is_required":False},
+          {"subject":"ECON","catalog":"480D2","title":"Honours Thesis 2","credits":3,"is_required":False},
+          {"subject":"ECON","catalog":"479D1","title":"Directed Research 1","credits":3,"is_required":False},
+          {"subject":"ECON","catalog":"479D2","title":"Directed Research 2","credits":3,"is_required":False},
+        ],
+      },
+      {
+        "block_key": "econ_hon_electives",
+        "title": "ECON Electives (24 credits)",
+        "block_type": "choose_credits",
+        "credits_needed": 24,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "24 credits of ECON courses at 300-level or above; at least 12 credits at 400-level.",
+        "sort_order": 4,
+        "courses": [
+          {"subject":"ECON","catalog":"334","title":"Topics in Applied Econometrics","credits":3,"is_required":False},
+          {"subject":"ECON","catalog":"338","title":"Labour Economics","credits":3,"is_required":False},
+          {"subject":"ECON","catalog":"340","title":"Money and Banking","credits":3,"is_required":False},
+          {"subject":"ECON","catalog":"342","title":"Public Finance","credits":3,"is_required":False},
+          {"subject":"ECON","catalog":"352","title":"Environmental Economics","credits":3,"is_required":False},
+          {"subject":"ECON","catalog":"400","title":"International Trade","credits":3,"is_required":False},
+          {"subject":"ECON","catalog":"404","title":"Economic History","credits":3,"is_required":False},
+          {"subject":"ECON","catalog":"406","title":"Industrial Organisation","credits":3,"is_required":False},
+          {"subject":"ECON","catalog":"441","title":"Applied Econometrics 2","credits":3,"is_required":False},
+          {"subject":"ECON","catalog":"460","title":"Game Theory","credits":3,"is_required":False},
+        ],
+      },
+    ],
+  },
+
+  # ── POLITICAL SCIENCE HONOURS ─────────────────────────────────────
+  {
+    "program_key": "political_science_honours",
+    "name": "Political Science – Honours (B.A.)",
+    "program_type": "honours",
+    "faculty": "Faculty of Arts",
+    "total_credits": 60,
+    "description": (
+      "The Honours in Political Science offers intensive training in political theory, "
+      "comparative politics, international relations, and Canadian politics. Requires "
+      "a minimum CGPA of 3.0. Culminates in an honours thesis supervised by a faculty member."
+    ),
+    "ecalendar_url": "https://coursecatalogue.mcgill.ca/en/undergraduate/arts/programs/political-science/political-science-honours-ba/",
+    "blocks": [
+      {
+        "block_key": "polsci_hon_core",
+        "title": "Required Core (18 credits)",
+        "block_type": "required",
+        "credits_needed": 18,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "All required.",
+        "sort_order": 1,
+        "courses": [
+          {"subject":"POLI","catalog":"211","title":"Introduction to Political Theory","credits":3,"is_required":True},
+          {"subject":"POLI","catalog":"212","title":"Introduction to Comparative Politics","credits":3,"is_required":True},
+          {"subject":"POLI","catalog":"213","title":"Introduction to International Relations","credits":3,"is_required":True},
+          {"subject":"POLI","catalog":"214","title":"Introduction to Canadian Politics","credits":3,"is_required":True},
+          {"subject":"POLI","catalog":"385","title":"Research Methods in Political Science","credits":3,"is_required":True},
+          {"subject":"POLI","catalog":"386","title":"Quantitative Methods in Political Science","credits":3,"is_required":True},
+        ],
+      },
+      {
+        "block_key": "polsci_hon_thesis",
+        "title": "Honours Thesis (6 credits)",
+        "block_type": "required",
+        "credits_needed": 6,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "Both parts required for Honours thesis.",
+        "sort_order": 2,
+        "courses": [
+          {"subject":"POLI","catalog":"490D1","title":"Honours Thesis 1","credits":3,"is_required":True},
+          {"subject":"POLI","catalog":"490D2","title":"Honours Thesis 2","credits":3,"is_required":True},
+        ],
+      },
+      {
+        "block_key": "polsci_hon_electives",
+        "title": "POLI Electives (36 credits)",
+        "block_type": "choose_credits",
+        "credits_needed": 36,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "36 credits of POLI courses above 200. At least 18 credits at 300-level or above; at least 9 credits at 400-level.",
+        "sort_order": 3,
+        "courses": [
+          {"subject":"POLI","catalog":"330","title":"Contemporary Political Theory","credits":3,"is_required":False},
+          {"subject":"POLI","catalog":"331","title":"Liberal Political Theory","credits":3,"is_required":False},
+          {"subject":"POLI","catalog":"340","title":"European Politics","credits":3,"is_required":False},
+          {"subject":"POLI","catalog":"350","title":"International Security","credits":3,"is_required":False},
+          {"subject":"POLI","catalog":"360","title":"Canadian Government and Politics","credits":3,"is_required":False},
+          {"subject":"POLI","catalog":"450","title":"Advanced Topics in Political Theory","credits":3,"is_required":False},
+          {"subject":"POLI","catalog":"470","title":"Advanced Topics in International Relations","credits":3,"is_required":False},
+        ],
+      },
+    ],
+  },
+
+  # ── PSYCHOLOGY HONOURS ────────────────────────────────────────────
+  {
+    "program_key": "psychology_honours",
+    "name": "Psychology – Honours (B.A./B.Sc.)",
+    "program_type": "honours",
+    "faculty": "Faculty of Arts",
+    "total_credits": 63,
+    "description": (
+      "The Honours program is required for students who wish to apply to graduate school "
+      "in psychology. Requires a minimum CGPA of 3.0 and a grade of B or better in PSYC 204. "
+      "Includes a supervised honours thesis (PSYC 461/462) or equivalent research training."
+    ),
+    "ecalendar_url": "https://coursecatalogue.mcgill.ca/en/undergraduate/arts/programs/psychology/psychology-honours-ba/",
+    "blocks": [
+      {
+        "block_key": "psyc_hon_core",
+        "title": "Required Core (27 credits)",
+        "block_type": "required",
+        "credits_needed": 27,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "All required. PSYC 204 must be completed with B or better to continue in Honours.",
+        "sort_order": 1,
+        "courses": [
+          {"subject":"PSYC","catalog":"204","title":"Introduction to Psychological Statistics","credits":3,"is_required":True},
+          {"subject":"PSYC","catalog":"305","title":"Research Methods and Statistics 1","credits":3,"is_required":True},
+          {"subject":"PSYC","catalog":"306","title":"Research Methods and Statistics 2","credits":3,"is_required":True},
+          {"subject":"PSYC","catalog":"212","title":"Biological Bases of Behaviour","credits":3,"is_required":True},
+          {"subject":"PSYC","catalog":"213","title":"Abnormal Psychology","credits":3,"is_required":True},
+          {"subject":"PSYC","catalog":"301","title":"Sensation and Perception","credits":3,"is_required":True},
+          {"subject":"PSYC","catalog":"304","title":"Learning and Behaviour","credits":3,"is_required":True},
+          {"subject":"PSYC","catalog":"310","title":"Developmental Psychology","credits":3,"is_required":True},
+          {"subject":"PSYC","catalog":"315","title":"Social Psychology","credits":3,"is_required":True},
+        ],
+      },
+      {
+        "block_key": "psyc_hon_thesis",
+        "title": "Honours Thesis (6 credits)",
+        "block_type": "required",
+        "credits_needed": 6,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "Both parts required. Conducted under supervision of a faculty member.",
+        "sort_order": 2,
+        "courses": [
+          {"subject":"PSYC","catalog":"461","title":"Honours Research Thesis 1","credits":3,"is_required":True},
+          {"subject":"PSYC","catalog":"462","title":"Honours Research Thesis 2","credits":3,"is_required":True},
+        ],
+      },
+      {
+        "block_key": "psyc_hon_electives",
+        "title": "PSYC Electives (30 credits)",
+        "block_type": "choose_credits",
+        "credits_needed": 30,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "30 credits of PSYC at 300-level or above; at least 9 credits at 400-level.",
+        "sort_order": 3,
+        "courses": [
+          {"subject":"PSYC","catalog":"311","title":"Cognitive Psychology","credits":3,"is_required":False},
+          {"subject":"PSYC","catalog":"319","title":"Brain and Behaviour","credits":3,"is_required":False},
+          {"subject":"PSYC","catalog":"340","title":"Personality","credits":3,"is_required":False},
+          {"subject":"PSYC","catalog":"410","title":"Advanced Abnormal Psychology","credits":3,"is_required":False},
+          {"subject":"PSYC","catalog":"413","title":"Advanced Developmental Psychology","credits":3,"is_required":False},
+          {"subject":"PSYC","catalog":"433","title":"Cognitive Science","credits":3,"is_required":False},
+          {"subject":"PSYC","catalog":"514","title":"Cognitive Neuroscience","credits":3,"is_required":False},
+          {"subject":"PSYC","catalog":"538","title":"Human Memory","credits":3,"is_required":False},
+        ],
+      },
+    ],
+  },
+
+  # ── SOCIOLOGY HONOURS ─────────────────────────────────────────────
+  {
+    "program_key": "sociology_honours",
+    "name": "Sociology – Honours (B.A.)",
+    "program_type": "honours",
+    "faculty": "Faculty of Arts",
+    "total_credits": 60,
+    "description": (
+      "The Honours in Sociology provides advanced training in sociological theory and research "
+      "methods, culminating in an independent research thesis. Requires a minimum CGPA of 3.0 "
+      "and is recommended for students considering graduate school."
+    ),
+    "ecalendar_url": "https://coursecatalogue.mcgill.ca/en/undergraduate/arts/programs/sociology/sociology-honours-ba/",
+    "blocks": [
+      {
+        "block_key": "soci_hon_core",
+        "title": "Required Core (18 credits)",
+        "block_type": "required",
+        "credits_needed": 18,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "All required.",
+        "sort_order": 1,
+        "courses": [
+          {"subject":"SOCI","catalog":"210","title":"Social Research Methods","credits":3,"is_required":True},
+          {"subject":"SOCI","catalog":"234","title":"Social Theory 1","credits":3,"is_required":True},
+          {"subject":"SOCI","catalog":"235","title":"Social Theory 2","credits":3,"is_required":True},
+          {"subject":"SOCI","catalog":"350","title":"Advanced Quantitative Methods","credits":3,"is_required":True},
+          {"subject":"SOCI","catalog":"351","title":"Advanced Qualitative Methods","credits":3,"is_required":True},
+          {"subject":"SOCI","catalog":"430","title":"Classical Sociological Theory","credits":3,"is_required":True},
+        ],
+      },
+      {
+        "block_key": "soci_hon_thesis",
+        "title": "Honours Thesis (6 credits)",
+        "block_type": "required",
+        "credits_needed": 6,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "Independent research supervised by a faculty member.",
+        "sort_order": 2,
+        "courses": [
+          {"subject":"SOCI","catalog":"480D1","title":"Honours Thesis 1","credits":3,"is_required":True},
+          {"subject":"SOCI","catalog":"480D2","title":"Honours Thesis 2","credits":3,"is_required":True},
+        ],
+      },
+      {
+        "block_key": "soci_hon_electives",
+        "title": "SOCI Electives (36 credits)",
+        "block_type": "choose_credits",
+        "credits_needed": 36,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "36 credits of SOCI at 200-level or above; at least 18 credits at 300-level or above.",
+        "sort_order": 3,
+        "courses": [
+          {"subject":"SOCI","catalog":"213","title":"Cities and Social Life","credits":3,"is_required":False},
+          {"subject":"SOCI","catalog":"217","title":"Sociology of Gender","credits":3,"is_required":False},
+          {"subject":"SOCI","catalog":"220","title":"Race, Ethnicity, and Society","credits":3,"is_required":False},
+          {"subject":"SOCI","catalog":"254","title":"Religion and Society","credits":3,"is_required":False},
+          {"subject":"SOCI","catalog":"330","title":"Stratification and Inequality","credits":3,"is_required":False},
+          {"subject":"SOCI","catalog":"360","title":"Political Sociology","credits":3,"is_required":False},
+          {"subject":"SOCI","catalog":"370","title":"Sociology of Law","credits":3,"is_required":False},
+          {"subject":"SOCI","catalog":"440","title":"Global Sociology","credits":3,"is_required":False},
+        ],
+      },
+    ],
+  },
+
+  # ── HISTORY HONOURS ──────────────────────────────────────────────
+  {
+    "program_key": "history_honours",
+    "name": "History – Honours (B.A.)",
+    "program_type": "honours",
+    "faculty": "Faculty of Arts",
+    "total_credits": 60,
+    "description": (
+      "The Honours in History is a research-intensive program that develops advanced "
+      "historical analysis and writing skills. Students complete an independent thesis "
+      "under faculty supervision. Recommended for students pursuing graduate studies or law."
+    ),
+    "ecalendar_url": "https://coursecatalogue.mcgill.ca/en/undergraduate/arts/programs/history-classical-studies/history-honours-ba/",
+    "blocks": [
+      {
+        "block_key": "hist_hon_core",
+        "title": "Required Core (12 credits)",
+        "block_type": "required",
+        "credits_needed": 12,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "All required. Historical Methods prepares students for thesis writing.",
+        "sort_order": 1,
+        "courses": [
+          {"subject":"HIST","catalog":"198","title":"Historical Methods","credits":3,"is_required":True},
+          {"subject":"HIST","catalog":"295","title":"Historical Concepts and Methods","credits":3,"is_required":True},
+          {"subject":"HIST","catalog":"396","title":"Advanced Historical Writing","credits":3,"is_required":True},
+          {"subject":"HIST","catalog":"498","title":"Advanced Seminar: Historiography","credits":3,"is_required":True},
+        ],
+      },
+      {
+        "block_key": "hist_hon_thesis",
+        "title": "Honours Thesis (6 credits)",
+        "block_type": "required",
+        "credits_needed": 6,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "Independent archival or historiographical research.",
+        "sort_order": 2,
+        "courses": [
+          {"subject":"HIST","catalog":"490D1","title":"Honours Thesis 1","credits":3,"is_required":True},
+          {"subject":"HIST","catalog":"490D2","title":"Honours Thesis 2","credits":3,"is_required":True},
+        ],
+      },
+      {
+        "block_key": "hist_hon_fields",
+        "title": "Field Electives (42 credits)",
+        "block_type": "choose_credits",
+        "credits_needed": 42,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "42 credits of HIST courses. At least 18 credits in a single geographic or thematic field; at least 12 credits at 400-level.",
+        "sort_order": 3,
+        "courses": [
+          {"subject":"HIST","catalog":"215","title":"History of North America 1","credits":3,"is_required":False},
+          {"subject":"HIST","catalog":"216","title":"History of North America 2","credits":3,"is_required":False},
+          {"subject":"HIST","catalog":"219","title":"History of Europe: 1789 to Present","credits":3,"is_required":False},
+          {"subject":"HIST","catalog":"244","title":"Empire and Colonialism","credits":3,"is_required":False},
+          {"subject":"HIST","catalog":"303","title":"Canadian History: Politics","credits":3,"is_required":False},
+          {"subject":"HIST","catalog":"330","title":"Modern European History","credits":3,"is_required":False},
+          {"subject":"HIST","catalog":"400","title":"Advanced Seminar in History","credits":3,"is_required":False},
+          {"subject":"HIST","catalog":"410","title":"Topics in Social History","credits":3,"is_required":False},
+        ],
+      },
+    ],
+  },
+
+  # ── LINGUISTICS HONOURS ──────────────────────────────────────────
+  {
+    "program_key": "linguistics_honours",
+    "name": "Linguistics – Honours (B.A.)",
+    "program_type": "honours",
+    "faculty": "Faculty of Arts",
+    "total_credits": 60,
+    "description": (
+      "The Honours program offers advanced training in core areas of linguistics: phonology, "
+      "syntax, semantics, and phonetics. Includes an honours thesis and is strongly recommended "
+      "for students planning graduate work in linguistics, cognitive science, or NLP."
+    ),
+    "ecalendar_url": "https://coursecatalogue.mcgill.ca/en/undergraduate/arts/programs/linguistics/linguistics-honours-ba/",
+    "blocks": [
+      {
+        "block_key": "ling_hon_core",
+        "title": "Required Core (24 credits)",
+        "block_type": "required",
+        "credits_needed": 24,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "All eight required.",
+        "sort_order": 1,
+        "courses": [
+          {"subject":"LING","catalog":"201","title":"Introduction to Linguistics","credits":3,"is_required":True},
+          {"subject":"LING","catalog":"210","title":"Introduction to Speech Science","credits":3,"is_required":True},
+          {"subject":"LING","catalog":"260","title":"Meaning in Language","credits":3,"is_required":True},
+          {"subject":"LING","catalog":"355","title":"Syntax 1","credits":3,"is_required":True},
+          {"subject":"LING","catalog":"360","title":"Phonology 1","credits":3,"is_required":True},
+          {"subject":"LING","catalog":"455","title":"Syntax 2","credits":3,"is_required":True},
+          {"subject":"LING","catalog":"460","title":"Phonology 2","credits":3,"is_required":True},
+          {"subject":"LING","catalog":"370","title":"Semantics","credits":3,"is_required":True},
+        ],
+      },
+      {
+        "block_key": "ling_hon_thesis",
+        "title": "Honours Thesis (6 credits)",
+        "block_type": "required",
+        "credits_needed": 6,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "Original research in a core area of linguistics.",
+        "sort_order": 2,
+        "courses": [
+          {"subject":"LING","catalog":"490D1","title":"Honours Thesis 1","credits":3,"is_required":True},
+          {"subject":"LING","catalog":"490D2","title":"Honours Thesis 2","credits":3,"is_required":True},
+        ],
+      },
+      {
+        "block_key": "ling_hon_electives",
+        "title": "Linguistics Electives (30 credits)",
+        "block_type": "choose_credits",
+        "credits_needed": 30,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "30 credits of LING courses. At least 9 credits at 400-level or above.",
+        "sort_order": 3,
+        "courses": [
+          {"subject":"LING","catalog":"315","title":"Historical Linguistics","credits":3,"is_required":False},
+          {"subject":"LING","catalog":"320","title":"Language Acquisition","credits":3,"is_required":False},
+          {"subject":"LING","catalog":"330","title":"Sociolinguistics","credits":3,"is_required":False},
+          {"subject":"LING","catalog":"345","title":"Morphology","credits":3,"is_required":False},
+          {"subject":"LING","catalog":"430","title":"Formal Semantics","credits":3,"is_required":False},
+          {"subject":"LING","catalog":"440","title":"Pragmatics","credits":3,"is_required":False},
+          {"subject":"LING","catalog":"520","title":"Experimental Linguistics","credits":3,"is_required":False},
+        ],
+      },
+    ],
+  },
+
+  # ── PHILOSOPHY HONOURS ───────────────────────────────────────────
+  {
+    "program_key": "philosophy_honours",
+    "name": "Philosophy – Honours (B.A.)",
+    "program_type": "honours",
+    "faculty": "Faculty of Arts",
+    "total_credits": 60,
+    "description": (
+      "The Honours in Philosophy provides rigorous training in philosophical analysis, "
+      "logic, ethics, epistemology, and metaphysics. The thesis component allows students "
+      "to develop an original philosophical argument under faculty supervision."
+    ),
+    "ecalendar_url": "https://coursecatalogue.mcgill.ca/en/undergraduate/arts/programs/philosophy/philosophy-honours-ba/",
+    "blocks": [
+      {
+        "block_key": "phil_hon_core",
+        "title": "Required Core (18 credits)",
+        "block_type": "required",
+        "credits_needed": 18,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "All required.",
+        "sort_order": 1,
+        "courses": [
+          {"subject":"PHIL","catalog":"210","title":"Introduction to Deductive Logic 1","credits":3,"is_required":True},
+          {"subject":"PHIL","catalog":"230","title":"Introduction to Moral Theory","credits":3,"is_required":True},
+          {"subject":"PHIL","catalog":"242","title":"Introduction to Modern Philosophy","credits":3,"is_required":True},
+          {"subject":"PHIL","catalog":"310","title":"Intermediate Logic","credits":3,"is_required":True},
+          {"subject":"PHIL","catalog":"320","title":"Epistemology","credits":3,"is_required":True},
+          {"subject":"PHIL","catalog":"330","title":"Metaphysics","credits":3,"is_required":True},
+        ],
+      },
+      {
+        "block_key": "phil_hon_thesis",
+        "title": "Honours Thesis (6 credits)",
+        "block_type": "required",
+        "credits_needed": 6,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "Original contribution to a philosophical debate.",
+        "sort_order": 2,
+        "courses": [
+          {"subject":"PHIL","catalog":"490D1","title":"Honours Thesis 1","credits":3,"is_required":True},
+          {"subject":"PHIL","catalog":"490D2","title":"Honours Thesis 2","credits":3,"is_required":True},
+        ],
+      },
+      {
+        "block_key": "phil_hon_electives",
+        "title": "Philosophy Electives (36 credits)",
+        "block_type": "choose_credits",
+        "credits_needed": 36,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "36 credits of PHIL. At least 12 credits at 400-level; courses distributed across ethics, metaphysics/epistemology, and history of philosophy.",
+        "sort_order": 3,
+        "courses": [
+          {"subject":"PHIL","catalog":"341","title":"Philosophy of Science 1","credits":3,"is_required":False},
+          {"subject":"PHIL","catalog":"342","title":"Philosophy of Science 2","credits":3,"is_required":False},
+          {"subject":"PHIL","catalog":"350","title":"Advanced Ethics","credits":3,"is_required":False},
+          {"subject":"PHIL","catalog":"360","title":"Political Philosophy","credits":3,"is_required":False},
+          {"subject":"PHIL","catalog":"411","title":"Topics in Philosophy of Logic and Mathematics","credits":3,"is_required":False},
+          {"subject":"PHIL","catalog":"415","title":"Philosophy of Language","credits":3,"is_required":False},
+          {"subject":"PHIL","catalog":"430","title":"Topics in Ethics","credits":3,"is_required":False},
+          {"subject":"PHIL","catalog":"441","title":"Philosophy of Science 2","credits":3,"is_required":False},
+          {"subject":"PHIL","catalog":"460","title":"Topics in Metaphysics and Epistemology","credits":3,"is_required":False},
+          {"subject":"PHIL","catalog":"474","title":"Phenomenology","credits":3,"is_required":False},
+        ],
+      },
+    ],
+  },
+
+  # ── ANTHROPOLOGY HONOURS ─────────────────────────────────────────
+  {
+    "program_key": "anthropology_honours",
+    "name": "Anthropology – Honours (B.A.)",
+    "program_type": "honours",
+    "faculty": "Faculty of Arts",
+    "total_credits": 60,
+    "description": (
+      "The Honours program provides intensive training in sociocultural, biological, "
+      "and archaeological anthropology. Students conduct original fieldwork or archival "
+      "research and produce a supervised thesis. CGPA of 3.0 required to enter."
+    ),
+    "ecalendar_url": "https://coursecatalogue.mcgill.ca/en/undergraduate/arts/programs/anthropology/anthropology-honours-ba/",
+    "blocks": [
+      {
+        "block_key": "anth_hon_core",
+        "title": "Required Core (21 credits)",
+        "block_type": "required",
+        "credits_needed": 21,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "All required.",
+        "sort_order": 1,
+        "courses": [
+          {"subject":"ANTH","catalog":"202","title":"Introduction to Social and Cultural Anthropology","credits":3,"is_required":True},
+          {"subject":"ANTH","catalog":"203","title":"Introduction to Biological Anthropology","credits":3,"is_required":True},
+          {"subject":"ANTH","catalog":"204","title":"Introduction to Archaeology","credits":3,"is_required":True},
+          {"subject":"ANTH","catalog":"303","title":"Social and Cultural Theory","credits":3,"is_required":True},
+          {"subject":"ANTH","catalog":"393","title":"Research Methods in Anthropology","credits":3,"is_required":True},
+          {"subject":"ANTH","catalog":"494","title":"Honours Seminar","credits":3,"is_required":True},
+          {"subject":"ANTH","catalog":"396","title":"Ethnographic Methods","credits":3,"is_required":True},
+        ],
+      },
+      {
+        "block_key": "anth_hon_thesis",
+        "title": "Honours Thesis (6 credits)",
+        "block_type": "required",
+        "credits_needed": 6,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "Original ethnographic or archival research.",
+        "sort_order": 2,
+        "courses": [
+          {"subject":"ANTH","catalog":"490D1","title":"Honours Thesis 1","credits":3,"is_required":True},
+          {"subject":"ANTH","catalog":"490D2","title":"Honours Thesis 2","credits":3,"is_required":True},
+        ],
+      },
+      {
+        "block_key": "anth_hon_electives",
+        "title": "ANTH Electives (33 credits)",
+        "block_type": "choose_credits",
+        "credits_needed": 33,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "33 credits of ANTH. At least 12 credits at 400-level.",
+        "sort_order": 3,
+        "courses": [
+          {"subject":"ANTH","catalog":"310","title":"Medical Anthropology","credits":3,"is_required":False},
+          {"subject":"ANTH","catalog":"315","title":"Anthropology of Religion","credits":3,"is_required":False},
+          {"subject":"ANTH","catalog":"320","title":"Economic Anthropology","credits":3,"is_required":False},
+          {"subject":"ANTH","catalog":"403","title":"Advanced Theory in Anthropology","credits":3,"is_required":False},
+          {"subject":"ANTH","catalog":"410","title":"Topics in Sociocultural Anthropology","credits":3,"is_required":False},
+          {"subject":"ANTH","catalog":"430","title":"Advanced Biological Anthropology","credits":3,"is_required":False},
+        ],
+      },
+    ],
+  },
+
+  # ── ART HISTORY HONOURS ─────────────────────────────────────────
+  {
+    "program_key": "art_history_honours",
+    "name": "Art History – Honours (B.A.)",
+    "program_type": "honours",
+    "faculty": "Faculty of Arts",
+    "total_credits": 60,
+    "description": (
+      "The Honours program offers advanced study in the history and theory of art from "
+      "antiquity to the present. Students produce an original research thesis engaging "
+      "primary sources and scholarly literature."
+    ),
+    "ecalendar_url": "https://coursecatalogue.mcgill.ca/en/undergraduate/arts/programs/art-history-communication-studies/art-history-honours-ba/",
+    "blocks": [
+      {
+        "block_key": "arth_hon_core",
+        "title": "Required Core (18 credits)",
+        "block_type": "required",
+        "credits_needed": 18,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "All required.",
+        "sort_order": 1,
+        "courses": [
+          {"subject":"ARTH","catalog":"205","title":"History of Art: Antiquity and Middle Ages","credits":3,"is_required":True},
+          {"subject":"ARTH","catalog":"206","title":"History of Art: Renaissance to Present","credits":3,"is_required":True},
+          {"subject":"ARTH","catalog":"301","title":"Art Theory and Criticism","credits":3,"is_required":True},
+          {"subject":"ARTH","catalog":"395","title":"Methods in Art History","credits":3,"is_required":True},
+          {"subject":"ARTH","catalog":"400","title":"Advanced Seminar in Art History","credits":3,"is_required":True},
+          {"subject":"ARTH","catalog":"430","title":"Contemporary Art Theory","credits":3,"is_required":True},
+        ],
+      },
+      {
+        "block_key": "arth_hon_thesis",
+        "title": "Honours Thesis (6 credits)",
+        "block_type": "required",
+        "credits_needed": 6,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "Original contribution to art history scholarship.",
+        "sort_order": 2,
+        "courses": [
+          {"subject":"ARTH","catalog":"490D1","title":"Honours Thesis 1","credits":3,"is_required":True},
+          {"subject":"ARTH","catalog":"490D2","title":"Honours Thesis 2","credits":3,"is_required":True},
+        ],
+      },
+      {
+        "block_key": "arth_hon_electives",
+        "title": "Art History Electives (36 credits)",
+        "block_type": "choose_credits",
+        "credits_needed": 36,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "36 credits of ARTH. At least 12 credits at 400-level; courses distributed across chronological periods.",
+        "sort_order": 3,
+        "courses": [
+          {"subject":"ARTH","catalog":"310","title":"Topics in Medieval Art","credits":3,"is_required":False},
+          {"subject":"ARTH","catalog":"320","title":"Renaissance Art","credits":3,"is_required":False},
+          {"subject":"ARTH","catalog":"340","title":"Modern Art","credits":3,"is_required":False},
+          {"subject":"ARTH","catalog":"350","title":"Canadian Art and Architecture","credits":3,"is_required":False},
+          {"subject":"ARTH","catalog":"410","title":"Topics in 20th-Century Art","credits":3,"is_required":False},
+          {"subject":"ARTH","catalog":"440","title":"Non-Western Art","credits":3,"is_required":False},
+        ],
+      },
+    ],
+  },
+
+  # ── INTERNATIONAL DEVELOPMENT STUDIES HONOURS ────────────────────
+  {
+    "program_key": "intl_development_honours",
+    "name": "International Development Studies – Honours (B.A.)",
+    "program_type": "honours",
+    "faculty": "Faculty of Arts",
+    "total_credits": 60,
+    "description": (
+      "The Honours in International Development Studies combines political economy, "
+      "global governance, and fieldwork methods to prepare students for graduate work "
+      "or careers in international organisations, NGOs, and policy research."
+    ),
+    "ecalendar_url": "https://coursecatalogue.mcgill.ca/en/undergraduate/arts/programs/international-development/international-development-studies-honours-ba/",
+    "blocks": [
+      {
+        "block_key": "idsc_hon_core",
+        "title": "Required Core (21 credits)",
+        "block_type": "required",
+        "credits_needed": 21,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "All required.",
+        "sort_order": 1,
+        "courses": [
+          {"subject":"IDSC","catalog":"200","title":"Introduction to International Development","credits":3,"is_required":True},
+          {"subject":"IDSC","catalog":"210","title":"Political Economy of Development","credits":3,"is_required":True},
+          {"subject":"IDSC","catalog":"220","title":"Social Dimensions of Development","credits":3,"is_required":True},
+          {"subject":"IDSC","catalog":"300","title":"Research Methods in Development Studies","credits":3,"is_required":True},
+          {"subject":"IDSC","catalog":"310","title":"Global Governance","credits":3,"is_required":True},
+          {"subject":"IDSC","catalog":"410","title":"Advanced Seminar in Development Theory","credits":3,"is_required":True},
+          {"subject":"IDSC","catalog":"495","title":"Honours Seminar","credits":3,"is_required":True},
+        ],
+      },
+      {
+        "block_key": "idsc_hon_thesis",
+        "title": "Honours Thesis (6 credits)",
+        "block_type": "required",
+        "credits_needed": 6,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "Fieldwork or archival-based thesis.",
+        "sort_order": 2,
+        "courses": [
+          {"subject":"IDSC","catalog":"490D1","title":"Honours Thesis 1","credits":3,"is_required":True},
+          {"subject":"IDSC","catalog":"490D2","title":"Honours Thesis 2","credits":3,"is_required":True},
+        ],
+      },
+      {
+        "block_key": "idsc_hon_electives",
+        "title": "IDSC Electives (33 credits)",
+        "block_type": "choose_credits",
+        "credits_needed": 33,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "33 credits of IDSC or approved cognate courses. At least 9 credits at 400-level.",
+        "sort_order": 3,
+        "courses": [
+          {"subject":"IDSC","catalog":"320","title":"Environment and Development","credits":3,"is_required":False},
+          {"subject":"IDSC","catalog":"330","title":"Agrarian Change and Food Systems","credits":3,"is_required":False},
+          {"subject":"IDSC","catalog":"340","title":"Gender and Development","credits":3,"is_required":False},
+          {"subject":"IDSC","catalog":"400","title":"Topics in International Development","credits":3,"is_required":False},
+          {"subject":"IDSC","catalog":"420","title":"Development Finance","credits":3,"is_required":False},
+        ],
+      },
+    ],
+  },
+
+  # ── GEOGRAPHY HONOURS ────────────────────────────────────────────
+  {
+    "program_key": "geography_honours",
+    "name": "Geography – Honours (B.A.)",
+    "program_type": "honours",
+    "faculty": "Faculty of Arts",
+    "total_credits": 60,
+    "description": (
+      "The Honours in Geography trains students in both human and physical geography methods "
+      "including GIS, spatial analysis, and fieldwork. The thesis provides experience with "
+      "independent geographic research."
+    ),
+    "ecalendar_url": "https://coursecatalogue.mcgill.ca/en/undergraduate/arts/programs/geography/geography-honours-ba/",
+    "blocks": [
+      {
+        "block_key": "geog_hon_core",
+        "title": "Required Core (21 credits)",
+        "block_type": "required",
+        "credits_needed": 21,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "All required.",
+        "sort_order": 1,
+        "courses": [
+          {"subject":"GEOG","catalog":"201","title":"Physical Geography 1: Geomorphology","credits":3,"is_required":True},
+          {"subject":"GEOG","catalog":"202","title":"Human Geography","credits":3,"is_required":True},
+          {"subject":"GEOG","catalog":"203","title":"Statistics in Geography","credits":3,"is_required":True},
+          {"subject":"GEOG","catalog":"303","title":"Quantitative Methods in Geography","credits":3,"is_required":True},
+          {"subject":"GEOG","catalog":"314","title":"Geographic Information Systems","credits":3,"is_required":True},
+          {"subject":"GEOG","catalog":"395","title":"Geographic Research Methods","credits":3,"is_required":True},
+          {"subject":"GEOG","catalog":"430","title":"Advanced Seminar in Geography","credits":3,"is_required":True},
+        ],
+      },
+      {
+        "block_key": "geog_hon_thesis",
+        "title": "Honours Thesis (6 credits)",
+        "block_type": "required",
+        "credits_needed": 6,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "Original field or data-based research.",
+        "sort_order": 2,
+        "courses": [
+          {"subject":"GEOG","catalog":"490D1","title":"Honours Thesis 1","credits":3,"is_required":True},
+          {"subject":"GEOG","catalog":"490D2","title":"Honours Thesis 2","credits":3,"is_required":True},
+        ],
+      },
+      {
+        "block_key": "geog_hon_electives",
+        "title": "Geography Electives (33 credits)",
+        "block_type": "choose_credits",
+        "credits_needed": 33,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "33 credits of GEOG. At least 9 credits at 400-level.",
+        "sort_order": 3,
+        "courses": [
+          {"subject":"GEOG","catalog":"310","title":"Urban Geography","credits":3,"is_required":False},
+          {"subject":"GEOG","catalog":"320","title":"Political Geography","credits":3,"is_required":False},
+          {"subject":"GEOG","catalog":"330","title":"Economic Geography","credits":3,"is_required":False},
+          {"subject":"GEOG","catalog":"340","title":"Cultural Geography","credits":3,"is_required":False},
+          {"subject":"GEOG","catalog":"410","title":"Advanced Urban Studies","credits":3,"is_required":False},
+          {"subject":"GEOG","catalog":"420","title":"Advanced GIS","credits":3,"is_required":False},
+        ],
+      },
+    ],
+  },
+
+  # ── CLASSICS HONOURS ─────────────────────────────────────────────
+  {
+    "program_key": "classics_honours",
+    "name": "Classics – Honours (B.A.)",
+    "program_type": "honours",
+    "faculty": "Faculty of Arts",
+    "total_credits": 60,
+    "description": (
+      "The Honours in Classics offers intensive study of ancient Greek and Latin languages, "
+      "literature, history, and archaeology. The thesis can focus on textual, historical, "
+      "or archaeological topics and is conducted in consultation with a faculty supervisor."
+    ),
+    "ecalendar_url": "https://coursecatalogue.mcgill.ca/en/undergraduate/arts/programs/history-classical-studies/classics-honours-ba/",
+    "blocks": [
+      {
+        "block_key": "clas_hon_languages",
+        "title": "Language Requirements (18 credits)",
+        "block_type": "required",
+        "credits_needed": 18,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "6 credits of Greek and 6 credits of Latin required; 6 additional credits in one language.",
+        "sort_order": 1,
+        "courses": [
+          {"subject":"GREK","catalog":"201","title":"Intermediate Greek 1","credits":3,"is_required":True},
+          {"subject":"GREK","catalog":"202","title":"Intermediate Greek 2","credits":3,"is_required":True},
+          {"subject":"LATN","catalog":"201","title":"Intermediate Latin 1","credits":3,"is_required":True},
+          {"subject":"LATN","catalog":"202","title":"Intermediate Latin 2","credits":3,"is_required":True},
+          {"subject":"GREK","catalog":"301","title":"Advanced Greek","credits":3,"is_required":False},
+          {"subject":"LATN","catalog":"301","title":"Advanced Latin","credits":3,"is_required":False},
+        ],
+      },
+      {
+        "block_key": "clas_hon_core",
+        "title": "Required Classics Courses (12 credits)",
+        "block_type": "required",
+        "credits_needed": 12,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "All required.",
+        "sort_order": 2,
+        "courses": [
+          {"subject":"CLAS","catalog":"325","title":"Greek Historiography","credits":3,"is_required":True},
+          {"subject":"CLAS","catalog":"326","title":"Latin Literature and Culture","credits":3,"is_required":True},
+          {"subject":"CLAS","catalog":"395","title":"Methods in Classical Studies","credits":3,"is_required":True},
+          {"subject":"CLAS","catalog":"430","title":"Advanced Seminar in Classics","credits":3,"is_required":True},
+        ],
+      },
+      {
+        "block_key": "clas_hon_thesis",
+        "title": "Honours Thesis (6 credits)",
+        "block_type": "required",
+        "credits_needed": 6,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "Thesis in Greek, Latin, history, or classical archaeology.",
+        "sort_order": 3,
+        "courses": [
+          {"subject":"CLAS","catalog":"490D1","title":"Honours Thesis 1","credits":3,"is_required":True},
+          {"subject":"CLAS","catalog":"490D2","title":"Honours Thesis 2","credits":3,"is_required":True},
+        ],
+      },
+      {
+        "block_key": "clas_hon_electives",
+        "title": "Classics Electives (24 credits)",
+        "block_type": "choose_credits",
+        "credits_needed": 24,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "24 credits from CLAS, GREK, LATN, or HIST (ancient). At least 9 credits at 400-level.",
+        "sort_order": 4,
+        "courses": [
+          {"subject":"CLAS","catalog":"310","title":"Greek and Roman Mythology","credits":3,"is_required":False},
+          {"subject":"CLAS","catalog":"330","title":"Greek Philosophy","credits":3,"is_required":False},
+          {"subject":"CLAS","catalog":"340","title":"Roman History","credits":3,"is_required":False},
+          {"subject":"CLAS","catalog":"350","title":"Ancient Near East","credits":3,"is_required":False},
+          {"subject":"CLAS","catalog":"410","title":"Topics in Greek Literature","credits":3,"is_required":False},
+          {"subject":"CLAS","catalog":"420","title":"Topics in Roman Literature","credits":3,"is_required":False},
+        ],
+      },
+    ],
+  },
+
+  # ── GSFSJ HONOURS ───────────────────────────────────────────────
+  {
+    "program_key": "gsfsj_honours",
+    "name": "Gender, Sexuality, Feminist & Social Justice Studies – Honours (B.A.)",
+    "program_type": "honours",
+    "faculty": "Faculty of Arts",
+    "total_credits": 60,
+    "description": (
+      "The Honours program offers advanced interdisciplinary training in feminist theory, "
+      "queer studies, and social justice praxis. The thesis allows students to conduct "
+      "original research using intersectional and feminist methodologies."
+    ),
+    "ecalendar_url": "https://coursecatalogue.mcgill.ca/en/undergraduate/arts/programs/gender-sexuality-feminist-studies/gender-sexuality-feminist-social-justice-studies-honours-ba/",
+    "blocks": [
+      {
+        "block_key": "gsfsj_hon_core",
+        "title": "Required Core (18 credits)",
+        "block_type": "required",
+        "credits_needed": 18,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "All required.",
+        "sort_order": 1,
+        "courses": [
+          {"subject":"GSFS","catalog":"200","title":"Introduction to Feminist and Gender Studies","credits":3,"is_required":True},
+          {"subject":"GSFS","catalog":"201","title":"Introduction to Queer Studies","credits":3,"is_required":True},
+          {"subject":"GSFS","catalog":"300","title":"Feminist Theory","credits":3,"is_required":True},
+          {"subject":"GSFS","catalog":"310","title":"Research Methods in GSFSJ","credits":3,"is_required":True},
+          {"subject":"GSFS","catalog":"400","title":"Advanced Feminist Theory","credits":3,"is_required":True},
+          {"subject":"GSFS","catalog":"495","title":"Honours Seminar","credits":3,"is_required":True},
+        ],
+      },
+      {
+        "block_key": "gsfsj_hon_thesis",
+        "title": "Honours Thesis (6 credits)",
+        "block_type": "required",
+        "credits_needed": 6,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "Original interdisciplinary feminist research.",
+        "sort_order": 2,
+        "courses": [
+          {"subject":"GSFS","catalog":"490D1","title":"Honours Thesis 1","credits":3,"is_required":True},
+          {"subject":"GSFS","catalog":"490D2","title":"Honours Thesis 2","credits":3,"is_required":True},
+        ],
+      },
+      {
+        "block_key": "gsfsj_hon_electives",
+        "title": "GSFSJ & Cognate Electives (36 credits)",
+        "block_type": "choose_credits",
+        "credits_needed": 36,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "36 credits from GSFS or approved cognate courses. At least 9 credits at 400-level.",
+        "sort_order": 3,
+        "courses": [
+          {"subject":"GSFS","catalog":"320","title":"Gender and Sexuality in the Media","credits":3,"is_required":False},
+          {"subject":"GSFS","catalog":"330","title":"Transnational Feminisms","credits":3,"is_required":False},
+          {"subject":"GSFS","catalog":"340","title":"Race, Gender, and Social Justice","credits":3,"is_required":False},
+          {"subject":"GSFS","catalog":"410","title":"Topics in Feminist Theory","credits":3,"is_required":False},
+          {"subject":"GSFS","catalog":"420","title":"Queer Theory","credits":3,"is_required":False},
+        ],
+      },
+    ],
+  },
+
+  # ── JEWISH STUDIES HONOURS ────────────────────────────────────────
+  {
+    "program_key": "jewish_studies_honours",
+    "name": "Jewish Studies – Honours (B.A.)",
+    "program_type": "honours",
+    "faculty": "Faculty of Arts",
+    "total_credits": 60,
+    "description": (
+      "The Honours in Jewish Studies offers advanced interdisciplinary study of Jewish "
+      "history, thought, literature, and culture. Students conduct original research "
+      "leading to an honours thesis under faculty supervision."
+    ),
+    "ecalendar_url": "https://coursecatalogue.mcgill.ca/en/undergraduate/arts/programs/jewish-studies/jewish-studies-honours-ba/",
+    "blocks": [
+      {
+        "block_key": "jwst_hon_core",
+        "title": "Required Core (18 credits)",
+        "block_type": "required",
+        "credits_needed": 18,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "All required.",
+        "sort_order": 1,
+        "courses": [
+          {"subject":"JWST","catalog":"200","title":"Introduction to Jewish Studies","credits":3,"is_required":True},
+          {"subject":"JWST","catalog":"201","title":"The Jewish Tradition: Texts and Interpretations","credits":3,"is_required":True},
+          {"subject":"JWST","catalog":"300","title":"Jewish History: Ancient to Medieval","credits":3,"is_required":True},
+          {"subject":"JWST","catalog":"301","title":"Jewish History: Modern Period","credits":3,"is_required":True},
+          {"subject":"JWST","catalog":"395","title":"Methods in Jewish Studies","credits":3,"is_required":True},
+          {"subject":"JWST","catalog":"430","title":"Advanced Seminar in Jewish Studies","credits":3,"is_required":True},
+        ],
+      },
+      {
+        "block_key": "jwst_hon_thesis",
+        "title": "Honours Thesis (6 credits)",
+        "block_type": "required",
+        "credits_needed": 6,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "Original research in any area of Jewish Studies.",
+        "sort_order": 2,
+        "courses": [
+          {"subject":"JWST","catalog":"490D1","title":"Honours Thesis 1","credits":3,"is_required":True},
+          {"subject":"JWST","catalog":"490D2","title":"Honours Thesis 2","credits":3,"is_required":True},
+        ],
+      },
+      {
+        "block_key": "jwst_hon_electives",
+        "title": "Jewish Studies Electives (36 credits)",
+        "block_type": "choose_credits",
+        "credits_needed": 36,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "36 credits from JWST. At least 9 credits at 400-level.",
+        "sort_order": 3,
+        "courses": [
+          {"subject":"JWST","catalog":"310","title":"Holocaust Studies","credits":3,"is_required":False},
+          {"subject":"JWST","catalog":"320","title":"Zionism and the State of Israel","credits":3,"is_required":False},
+          {"subject":"JWST","catalog":"330","title":"Jewish Literature","credits":3,"is_required":False},
+          {"subject":"JWST","catalog":"340","title":"Kabbalah and Jewish Mysticism","credits":3,"is_required":False},
+          {"subject":"JWST","catalog":"410","title":"Topics in Modern Jewish History","credits":3,"is_required":False},
+        ],
+      },
+    ],
+  },
+
+  # ── EAST ASIAN STUDIES HONOURS ───────────────────────────────────
+  {
+    "program_key": "east_asian_studies_honours",
+    "name": "East Asian Studies – Honours (B.A.)",
+    "program_type": "honours",
+    "faculty": "Faculty of Arts",
+    "total_credits": 60,
+    "description": (
+      "The Honours in East Asian Studies combines advanced language training with interdisciplinary "
+      "study of the history, literature, religion, and cultures of East Asia. Students complete "
+      "an independent thesis in consultation with a faculty supervisor."
+    ),
+    "ecalendar_url": "https://coursecatalogue.mcgill.ca/en/undergraduate/arts/programs/east-asian-studies/east-asian-studies-honours-ba/",
+    "blocks": [
+      {
+        "block_key": "east_hon_language",
+        "title": "Language Requirement (18 credits)",
+        "block_type": "required",
+        "credits_needed": 18,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "Advanced proficiency in Chinese, Japanese, or Korean; 18 credits in one East Asian language.",
+        "sort_order": 1,
+        "courses": [
+          {"subject":"CHIN","catalog":"301","title":"Advanced Chinese 1","credits":3,"is_required":False},
+          {"subject":"CHIN","catalog":"302","title":"Advanced Chinese 2","credits":3,"is_required":False},
+          {"subject":"CHIN","catalog":"401","title":"Classical Chinese Texts","credits":3,"is_required":False},
+          {"subject":"JAPN","catalog":"301","title":"Advanced Japanese 1","credits":3,"is_required":False},
+          {"subject":"JAPN","catalog":"302","title":"Advanced Japanese 2","credits":3,"is_required":False},
+          {"subject":"KORE","catalog":"301","title":"Advanced Korean 1","credits":3,"is_required":False},
+        ],
+      },
+      {
+        "block_key": "east_hon_core",
+        "title": "Required EAST Core (12 credits)",
+        "block_type": "required",
+        "credits_needed": 12,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "All required.",
+        "sort_order": 2,
+        "courses": [
+          {"subject":"EAST","catalog":"230","title":"Introduction to East Asian Civilizations 1","credits":3,"is_required":True},
+          {"subject":"EAST","catalog":"231","title":"Introduction to East Asian Civilizations 2","credits":3,"is_required":True},
+          {"subject":"EAST","catalog":"395","title":"Research Methods in East Asian Studies","credits":3,"is_required":True},
+          {"subject":"EAST","catalog":"430","title":"Advanced Seminar in East Asian Studies","credits":3,"is_required":True},
+        ],
+      },
+      {
+        "block_key": "east_hon_thesis",
+        "title": "Honours Thesis (6 credits)",
+        "block_type": "required",
+        "credits_needed": 6,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "Original research using primary sources in an East Asian language.",
+        "sort_order": 3,
+        "courses": [
+          {"subject":"EAST","catalog":"490D1","title":"Honours Thesis 1","credits":3,"is_required":True},
+          {"subject":"EAST","catalog":"490D2","title":"Honours Thesis 2","credits":3,"is_required":True},
+        ],
+      },
+      {
+        "block_key": "east_hon_electives",
+        "title": "EAST & Language Electives (24 credits)",
+        "block_type": "choose_credits",
+        "credits_needed": 24,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "24 credits from EAST or advanced language courses. At least 9 credits at 400-level.",
+        "sort_order": 4,
+        "courses": [
+          {"subject":"EAST","catalog":"310","title":"Chinese Literature in Translation","credits":3,"is_required":False},
+          {"subject":"EAST","catalog":"320","title":"Japanese Culture and Society","credits":3,"is_required":False},
+          {"subject":"EAST","catalog":"330","title":"History of East Asian Buddhism","credits":3,"is_required":False},
+          {"subject":"EAST","catalog":"410","title":"Topics in Chinese History","credits":3,"is_required":False},
+          {"subject":"EAST","catalog":"420","title":"Topics in Japanese Literature","credits":3,"is_required":False},
+        ],
+      },
+    ],
+  },
+
+  # ── RELIGIOUS STUDIES HONOURS ────────────────────────────────────
+  {
+    "program_key": "religious_studies_honours",
+    "name": "Religious Studies – Honours (B.A.)",
+    "program_type": "honours",
+    "faculty": "Faculty of Arts",
+    "total_credits": 60,
+    "description": (
+      "The Honours in Religious Studies examines the world's religious traditions through "
+      "historical, anthropological, literary, and philosophical lenses. The thesis can "
+      "engage any religious tradition or theoretical problem in the discipline."
+    ),
+    "ecalendar_url": "https://coursecatalogue.mcgill.ca/en/undergraduate/arts/programs/religious-studies/religious-studies-honours-ba/",
+    "blocks": [
+      {
+        "block_key": "relg_hon_core",
+        "title": "Required Core (18 credits)",
+        "block_type": "required",
+        "credits_needed": 18,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "All required.",
+        "sort_order": 1,
+        "courses": [
+          {"subject":"RELG","catalog":"207","title":"Introduction to Judaism","credits":3,"is_required":True},
+          {"subject":"RELG","catalog":"208","title":"Introduction to Christianity","credits":3,"is_required":True},
+          {"subject":"RELG","catalog":"203","title":"Introduction to Hinduism","credits":3,"is_required":True},
+          {"subject":"RELG","catalog":"204","title":"Introduction to Buddhism","credits":3,"is_required":True},
+          {"subject":"RELG","catalog":"395","title":"Research Methods in Religious Studies","credits":3,"is_required":True},
+          {"subject":"RELG","catalog":"430","title":"Advanced Seminar in Religious Studies","credits":3,"is_required":True},
+        ],
+      },
+      {
+        "block_key": "relg_hon_thesis",
+        "title": "Honours Thesis (6 credits)",
+        "block_type": "required",
+        "credits_needed": 6,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "Independent research on a religious tradition or theoretical problem.",
+        "sort_order": 2,
+        "courses": [
+          {"subject":"RELG","catalog":"490D1","title":"Honours Thesis 1","credits":3,"is_required":True},
+          {"subject":"RELG","catalog":"490D2","title":"Honours Thesis 2","credits":3,"is_required":True},
+        ],
+      },
+      {
+        "block_key": "relg_hon_electives",
+        "title": "RELG Electives (36 credits)",
+        "block_type": "choose_credits",
+        "credits_needed": 36,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "36 credits of RELG. At least 9 credits at 400-level; at least two traditions represented.",
+        "sort_order": 3,
+        "courses": [
+          {"subject":"RELG","catalog":"305","title":"Islam","credits":3,"is_required":False},
+          {"subject":"RELG","catalog":"310","title":"Mysticism in the World Religions","credits":3,"is_required":False},
+          {"subject":"RELG","catalog":"320","title":"Ritual and Symbol","credits":3,"is_required":False},
+          {"subject":"RELG","catalog":"330","title":"Religion and Ethics","credits":3,"is_required":False},
+          {"subject":"RELG","catalog":"410","title":"Topics in Religious Studies","credits":3,"is_required":False},
+          {"subject":"RELG","catalog":"420","title":"Religion and Modernity","credits":3,"is_required":False},
+        ],
+      },
+    ],
+  },
+
+  # ── WORLD ISLAMIC AND MIDDLE EAST STUDIES HONOURS ────────────────
+  {
+    "program_key": "world_islamic_mideast_honours",
+    "name": "World Islamic and Middle East Studies – Honours (B.A.)",
+    "program_type": "honours",
+    "faculty": "Faculty of Arts",
+    "total_credits": 60,
+    "description": (
+      "The Honours in World Islamic and Middle East Studies provides advanced interdisciplinary "
+      "training in the history, religion, politics, and culture of the Middle East and the "
+      "broader Islamic world. The thesis requires primary source engagement."
+    ),
+    "ecalendar_url": "https://coursecatalogue.mcgill.ca/en/undergraduate/arts/programs/islamic-studies/world-islamic-middle-east-studies-honours-ba/",
+    "blocks": [
+      {
+        "block_key": "isla_hon_core",
+        "title": "Required Core (18 credits)",
+        "block_type": "required",
+        "credits_needed": 18,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "All required.",
+        "sort_order": 1,
+        "courses": [
+          {"subject":"ISLA","catalog":"200","title":"Introduction to Islam","credits":3,"is_required":True},
+          {"subject":"ISLA","catalog":"210","title":"Introduction to the Middle East","credits":3,"is_required":True},
+          {"subject":"ISLA","catalog":"300","title":"Islamic Thought and Civilization","credits":3,"is_required":True},
+          {"subject":"ISLA","catalog":"310","title":"Middle Eastern History: Modern Period","credits":3,"is_required":True},
+          {"subject":"ISLA","catalog":"395","title":"Research Methods in Islamic Studies","credits":3,"is_required":True},
+          {"subject":"ISLA","catalog":"430","title":"Advanced Seminar in Islamic Studies","credits":3,"is_required":True},
+        ],
+      },
+      {
+        "block_key": "isla_hon_thesis",
+        "title": "Honours Thesis (6 credits)",
+        "block_type": "required",
+        "credits_needed": 6,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "Thesis using primary sources; Arabic or other relevant language strongly recommended.",
+        "sort_order": 2,
+        "courses": [
+          {"subject":"ISLA","catalog":"490D1","title":"Honours Thesis 1","credits":3,"is_required":True},
+          {"subject":"ISLA","catalog":"490D2","title":"Honours Thesis 2","credits":3,"is_required":True},
+        ],
+      },
+      {
+        "block_key": "isla_hon_electives",
+        "title": "ISLA Electives (36 credits)",
+        "block_type": "choose_credits",
+        "credits_needed": 36,
+        "courses_needed": None,
+        "group_name": None,
+        "notes": "36 credits from ISLA or approved cognate courses (RELG, HIST, POLI). At least 9 at 400-level.",
+        "sort_order": 3,
+        "courses": [
+          {"subject":"ISLA","catalog":"320","title":"Gender and Islam","credits":3,"is_required":False},
+          {"subject":"ISLA","catalog":"330","title":"Political Islam","credits":3,"is_required":False},
+          {"subject":"ISLA","catalog":"340","title":"Sufism and Islamic Mysticism","credits":3,"is_required":False},
+          {"subject":"ISLA","catalog":"410","title":"Topics in Islamic History","credits":3,"is_required":False},
+          {"subject":"ISLA","catalog":"420","title":"Modern Arab Literature","credits":3,"is_required":False},
+        ],
+      },
+    ],
+  },
+
 ]
-
-
 # ──────────────────────────────────────────────────────────────────
 # Database seed function
 # ──────────────────────────────────────────────────────────────────
@@ -2550,15 +3780,15 @@ ARTS_PROGRAMS = [
 def seed_degree_requirements(supabase):
     """
     Insert all Arts degree requirements into Supabase.
-    Safe to re-run: upserts programs, deletes+reinserts blocks each run.
+    Safe to re-run: uses upsert on program_key, then deletes+reinserts blocks.
 
-    Block types:
+    Block types stored in DB:
       required       — every course must be taken
       choose_credits — take credits_needed credits from list
       choose_courses — take courses_needed courses from list
       group          — named sub-group (Group A/B/C) feeding a parent rule
-      multi_group    — parent: X credits from Group A AND Y from Group B
-      pool_group     — parent: at least X credits from Groups A+B+C combined
+      multi_group    — parent: "X credits from Group A AND Y from Group B"
+      pool_group     — parent: "at least X credits from Groups A+B+C combined"
       level_elective — any courses at a given level range
     """
     inserted_programs = 0
@@ -2568,12 +3798,12 @@ def seed_degree_requirements(supabase):
     for prog in ARTS_PROGRAMS:
         # ── Upsert program ──────────────────────────────────────────
         prog_data = {
-            "program_key":   prog["program_key"],
-            "name":          prog["name"],
-            "faculty":       prog.get("faculty", "Faculty of Arts"),
-            "program_type":  prog["program_type"],
+            "program_key":  prog["program_key"],
+            "name":         prog["name"],
+            "faculty":      prog.get("faculty", "Faculty of Arts"),
+            "program_type": prog["program_type"],
             "total_credits": prog.get("total_credits") or 0,
-            "description":   prog.get("description"),
+            "description":  prog.get("description"),
             "ecalendar_url": prog.get("ecalendar_url"),
         }
         result = supabase.table("degree_programs").upsert(
@@ -2586,17 +3816,20 @@ def seed_degree_requirements(supabase):
         supabase.table("requirement_blocks").delete().eq("program_id", prog_id).execute()
 
         for i, block in enumerate(prog.get("blocks", [])):
+            # Build constraint_notes: merge scraped constraint_notes + legacy notes
             constraint_notes = block.get("constraint_notes") or block.get("notes") or ""
 
             block_data = {
                 "program_id":       prog_id,
                 "block_key":        block.get("block_key", f"block_{i}"),
                 "title":            block.get("title", ""),
+                # New fields
                 "block_type":       block.get("block_type", "choose_credits"),
                 "group_name":       block.get("group_name"),
-                "credits_needed":   block.get("credits_needed"),
                 "courses_needed":   block.get("courses_needed"),
                 "constraint_notes": constraint_notes,
+                # Legacy / existing fields
+                "credits_needed":   block.get("credits_needed"),
                 "min_level":        block.get("min_level"),
                 "max_credits_200":  block.get("max_credits_200"),
                 "min_credits_400":  block.get("min_credits_400"),
@@ -2608,23 +3841,24 @@ def seed_degree_requirements(supabase):
             inserted_blocks += 1
 
             for j, course in enumerate(block.get("courses", [])):
+                # Infer is_required from block_type if not explicitly set
                 is_required = course.get("is_required", False)
                 if block.get("block_type") == "required":
                     is_required = True
 
                 course_data = {
-                    "block_id":              block_id,
-                    "subject":               course.get("subject", ""),
-                    "catalog":               course.get("catalog"),
-                    "title":                 course.get("title", ""),
-                    "credits":               course.get("credits", 3),
-                    "is_required":           is_required,
-                    "choose_from_group":     course.get("choose_from_group"),
-                    "choose_n_credits":      course.get("choose_n_credits"),
-                    "notes":                 course.get("notes"),
-                    "recommended":           course.get("recommended", False),
+                    "block_id":           block_id,
+                    "subject":            course.get("subject", ""),
+                    "catalog":            course.get("catalog"),
+                    "title":              course.get("title", ""),
+                    "credits":            course.get("credits", 3),
+                    "is_required":        is_required,
+                    "choose_from_group":  course.get("choose_from_group"),
+                    "choose_n_credits":   course.get("choose_n_credits"),
+                    "notes":              course.get("notes"),
+                    "recommended":        course.get("recommended", False),
                     "recommendation_reason": course.get("recommendation_reason"),
-                    "sort_order":            j,
+                    "sort_order":         j,
                 }
                 supabase.table("requirement_courses").insert(course_data).execute()
                 inserted_courses += 1

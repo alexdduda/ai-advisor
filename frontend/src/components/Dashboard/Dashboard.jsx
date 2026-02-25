@@ -10,11 +10,12 @@ import cardsAPI from '../../lib/cardsAPI'
 import AdvisorCards from './chat/AdvisorCards'
 import FeedbackModal from './FeedbackModal'
 import ClubsTab from './ClubsTab'
+import RightSidebar from './RightSidebar'
 
 import Sidebar from './Sidebar'
 import CoursesTab from './CoursesTab'
 import ProfileTab from './ProfileTab'
-import SavedCoursesView from './SavedCoursesView'
+import DegreePlanningView from './DegreePlanningView'
 import Forum from '../Forum/Forum'
 import MarkCompleteModal from './MarkCompleteModal'
 import CalendarTab from './CalendarTab'
@@ -32,6 +33,12 @@ export default function Dashboard() {
   const [profileImage, setProfileImage] = useState(profile?.profile_image || null)
   const [isUploadingImage, setIsUploadingImage] = useState(false)
   const fileInputRef = useRef(null)
+
+  // ── Right sidebar / pinned chat ─────────────────────────
+  const [rightSidebarOpen, setRightSidebarOpen] = useState(false)
+  const [pinnedCard, setPinnedCard] = useState(null)
+  const [pinnedThread, setPinnedThread] = useState([])
+  const [pinnedIsThinking, setPinnedIsThinking] = useState(false)
 
   // ── Transcript upload ──────────────────────────────────
   const [showTranscriptUpload, setShowTranscriptUpload] = useState(false)
@@ -106,15 +113,10 @@ export default function Dashboard() {
     try {
       setCardsLoading(true)
       const data = await cardsAPI.getCards(user.id)
-      // Filter out cards the user has deleted (persisted in localStorage)
-      const deletedKey = `advisor_deleted_${user.id}`
-      let deletedIds = []
-      try { deletedIds = JSON.parse(localStorage.getItem(deletedKey) || '[]') } catch {}
-      const allCards = data.cards || []
-      const visibleCards = allCards.filter(c => !deletedIds.includes(c.id))
-      setAdvisorCards(visibleCards)
+      const cards = data.cards || []
+      setAdvisorCards(cards)
       setCardsGeneratedAt(data.generated_at || null)
-      if (!visibleCards.length) {
+      if (!cards.length) {
         setCardsLoading(false)
         await refreshAdvisorCards(false)
       }
@@ -131,16 +133,7 @@ export default function Dashboard() {
     try {
       setCardsGenerating(true)
       const data = await cardsAPI.generateCards(user.id, force)
-      // When explicitly refreshing (force=true), clear deleted list so fresh cards show
-      if (force) {
-        try { localStorage.removeItem(`advisor_deleted_${user.id}`) } catch {}
-        setAdvisorCards(data.cards || [])
-      } else {
-        const deletedKey = `advisor_deleted_${user.id}`
-        let deletedIds = []
-        try { deletedIds = JSON.parse(localStorage.getItem(deletedKey) || '[]') } catch {}
-        setAdvisorCards((data.cards || []).filter(c => !deletedIds.includes(c.id)))
-      }
+      setAdvisorCards(data.cards || [])
       setCardsGeneratedAt(data.generated_at || null)
     } catch (error) {
       console.error('Error generating advisor cards:', error)
@@ -203,6 +196,41 @@ export default function Dashboard() {
       console.error('Error asking card:', error)
     } finally {
       setIsAsking(false)
+    }
+  }
+
+  // ── Sync right sidebar width as CSS var on body ──────────
+  useEffect(() => {
+    const visible = rightSidebarOpen && pinnedCard && activeTab !== 'chat'
+    document.body.style.setProperty('--rsb-width', visible ? '320px' : '0px')
+    return () => document.body.style.setProperty('--rsb-width', '0px')
+  }, [rightSidebarOpen, pinnedCard, activeTab])
+
+  // ── Pinned card handler ───────────────────────────────────
+  const handlePinToggle = (card, thread) => {
+    if (!card) {
+      // unpin
+      setPinnedCard(null)
+      setPinnedThread([])
+      setRightSidebarOpen(false)
+    } else {
+      setPinnedCard(card)
+      setPinnedThread(thread || [])
+      setRightSidebarOpen(true)
+    }
+  }
+
+  const handlePinnedSend = async (message) => {
+    if (!user?.id || !pinnedCard) return
+    setPinnedThread(prev => [...prev, { role: 'user', content: message }])
+    setPinnedIsThinking(true)
+    try {
+      const reply = await handleCardChipClick(pinnedCard.id, message, pinnedCard.title, pinnedCard.body)
+      setPinnedThread(prev => [...prev, { role: 'assistant', content: reply }])
+    } catch {
+      setPinnedThread(prev => [...prev, { role: 'assistant', content: 'Something went wrong. Please try again.' }])
+    } finally {
+      setPinnedIsThinking(false)
     }
   }
 
@@ -481,10 +509,19 @@ export default function Dashboard() {
               generatedAt={cardsGeneratedAt}
               onRefresh={() => refreshAdvisorCards(true)}
               onSaveToggle={handleCardSaveToggle}
+              onPinToggle={handlePinToggle}
+              pinnedCardId={pinnedCard?.id || null}
               onReorder={handleCardsReorder}
               onChipClick={handleCardChipClick}
               onFollowUp={handleCardChipClick}
-              onDeleteCard={(cardId) => setAdvisorCards(prev => prev.filter(c => c.id !== cardId))}
+              onDeleteCard={async (cardId) => {
+                // Optimistically remove from UI immediately
+                setAdvisorCards(prev => prev.filter(c => c.id !== cardId))
+                // Permanently delete from DB so it doesn't come back on refresh
+                try { await cardsAPI.deleteCard(user.id, cardId) } catch (e) {
+                  console.warn('Failed to delete card from DB:', e)
+                }
+              }}
               freeformInput={freeformInput}
               setFreeformInput={setFreeformInput}
               onFreeformSubmit={handleFreeformSubmit}
@@ -526,17 +563,18 @@ export default function Dashboard() {
           )}
 
           {activeTab === 'favorites' && (
-            <SavedCoursesView
+            <DegreePlanningView
               favorites={favorites}
               completedCourses={completedCourses}
               completedCoursesMap={completedCoursesMap}
+              currentCourses={currentCourses}
+              currentCoursesMap={currentCoursesMap}
               favoritesMap={favoritesMap}
-              user={user}
+              profile={profile}
               onToggleFavorite={handleToggleFavorite}
               onToggleCompleted={handleToggleCompleted}
               onToggleCurrent={handleToggleCurrent}
-              currentCourses={currentCourses}
-              currentCoursesMap={currentCoursesMap}
+              onImportTranscript={() => setShowTranscriptUpload(true)}
               onCourseClick={async (course) => {
                 setActiveTab('courses')
                 setTimeout(async () => {
@@ -546,11 +584,6 @@ export default function Dashboard() {
                     title: course.course_title,
                   })
                 }, 100)
-              }}
-              onRefresh={() => {
-                loadFavorites()
-                loadCompletedCourses()
-                loadCurrentCourses()
               }}
             />
           )}
@@ -598,6 +631,17 @@ export default function Dashboard() {
           onImportComplete={handleTranscriptImportComplete}
         />
       )}
+
+      <RightSidebar
+        isOpen={rightSidebarOpen}
+        setIsOpen={setRightSidebarOpen}
+        pinnedCard={pinnedCard}
+        pinnedThread={pinnedThread}
+        pinnedIsThinking={pinnedIsThinking}
+        onSend={handlePinnedSend}
+        onUnpin={() => handlePinToggle(null, [])}
+        activeTab={activeTab}
+      />
 
       <FeedbackModal userId={user?.id} userEmail={user?.email} />
     </div>
