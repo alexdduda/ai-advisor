@@ -345,7 +345,7 @@ function DayDrawer({ date, events, onClose, onAddEvent, onEditEvent, onSelectEve
 export default function CalendarTab({ user, clubEvents = [] }) {
   const { t, language } = useLanguage()
   const { getTodayStr, getNow } = useTimezone()
-  const [notifPrefs] = useNotificationPrefs(user?.email)
+  const [notifPrefs] = useNotificationPrefs(user?.id, user?.email)
 
   const today = getNow()
   const MONTHS = language === 'fr' ? MONTHS_FR : MONTHS_EN

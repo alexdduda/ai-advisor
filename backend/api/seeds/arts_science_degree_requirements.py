@@ -1113,17 +1113,11 @@ def seed_degree_requirements(supabase):
     """
     Insert all B.A. & Sc. degree requirements into Supabase.
     Safe to re-run: uses upsert on program_key, then deletes+reinserts blocks.
-
-    Block types stored in DB:
-      required       — every listed course must be taken
-      choose_credits — take credits_needed credits from list
-      choose_courses — take courses_needed courses from list
-      group          — named sub-group (Area/Group A/B/C) feeding a parent rule
-      interfaculty   — top-level program type for B.A. & Sc. interfaculty programs
+    Courses are batch-inserted per block (one call per block) to avoid timeouts.
     """
     inserted_programs = 0
-    inserted_blocks = 0
-    inserted_courses = 0
+    inserted_blocks   = 0
+    inserted_courses  = 0
 
     for prog in ARTS_SCIENCE_PROGRAMS:
         prog_data = {
@@ -1164,11 +1158,12 @@ def seed_degree_requirements(supabase):
             block_id = block_result.data[0]["id"]
             inserted_blocks += 1
 
+            courses_to_insert = []
             for j, course in enumerate(block.get("courses", [])):
                 is_required = course.get("is_required", False)
                 if block.get("block_type") == "required":
                     is_required = True
-                course_data = {
+                courses_to_insert.append({
                     "block_id":              block_id,
                     "subject":               course.get("subject", ""),
                     "catalog":               course.get("catalog"),
@@ -1181,9 +1176,11 @@ def seed_degree_requirements(supabase):
                     "recommended":           course.get("recommended", False),
                     "recommendation_reason": course.get("recommendation_reason"),
                     "sort_order":            j,
-                }
-                supabase.table("requirement_courses").insert(course_data).execute()
-                inserted_courses += 1
+                })
+
+            if courses_to_insert:
+                supabase.table("requirement_courses").insert(courses_to_insert).execute()
+                inserted_courses += len(courses_to_insert)
 
     return {
         "programs": inserted_programs,
