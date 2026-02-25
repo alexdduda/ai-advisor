@@ -1187,7 +1187,6 @@ def seed_degree_requirements(supabase):
             block_id = block_result.data[0]["id"]
             inserted_blocks += 1
 
-            courses_to_insert = []
             for j, course in enumerate(block.get("courses", [])):
                 is_required = course.get("is_required", False)
                 if block.get("block_type") == "required":
@@ -1206,11 +1205,8 @@ def seed_degree_requirements(supabase):
                     "recommendation_reason": course.get("recommendation_reason"),
                     "sort_order":            j,
                 }
-                courses_to_insert.append(course_data)
-
-            if courses_to_insert:
-                supabase.table("requirement_courses").insert(courses_to_insert).execute()
-                inserted_courses += len(courses_to_insert)
+                supabase.table("requirement_courses").insert(course_data).execute()
+                inserted_courses += 1
 
     return {
         "programs": inserted_programs,
