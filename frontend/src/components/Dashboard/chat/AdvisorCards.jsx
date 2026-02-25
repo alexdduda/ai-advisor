@@ -146,7 +146,8 @@ function AdvisorCard({
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [isExpanded, card.id, onCollapse])
-  const chips    = card.actions || []
+
+  const chips = card.actions || []
 
   // Sync with parent expanded state
   useEffect(() => { if (isExpanded) setPanelOpen(true) }, [isExpanded])
@@ -196,7 +197,7 @@ function AdvisorCard({
         isSaved    ? 'advisor-card--saved' : '',
         isDragging ? 'advisor-card--dragging' : '',
         panelOpen  ? 'advisor-card--expanded' : '',
-        isPinned  ? 'advisor-card--pinned' : '',
+        isPinned   ? 'advisor-card--pinned' : '',
       ].filter(Boolean).join(' ')}
       style={{ '--card-accent': config.accent }}
       ref={cardRef}
@@ -281,23 +282,26 @@ function AdvisorCard({
             </div>
           )}
 
-      {thread.length > 0 && (
-        <div className={`advisor-card__thread ${isExpanded ? '' : 'advisor-card__thread--preview'}`}>
-          <div className="thread-divider" />
-          {isExpanded ? (
-            <ThreadMessages thread={thread} isThinking={isThinking} />
-          ) : (
-            <div className="advisor-card__thread-preview">
-              <div className={`thread-message thread-message--${thread[thread.length - 1].role}`}>
-                <p className="thread-text">
-                  {thread[thread.length - 1].content.slice(0, 100)}
-                  {thread[thread.length - 1].content.length > 100 ? '…' : ''}
-                </p>
-              </div>
+          {/* FIX: Chat bar is always available in the panel, not just when thread exists */}
+          {thread.length > 0 && (
+            <div className={`advisor-card__thread ${isExpanded ? '' : 'advisor-card__thread--preview'}`}>
+              <div className="thread-divider" />
+              {isExpanded ? (
+                <ThreadMessages thread={thread} isThinking={isThinking} />
+              ) : (
+                <div className="advisor-card__thread-preview">
+                  <div className={`thread-message thread-message--${thread[thread.length - 1].role}`}>
+                    <p className="thread-text">
+                      {thread[thread.length - 1].content.slice(0, 100)}
+                      {thread[thread.length - 1].content.length > 100 ? '…' : ''}
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
-          {/* Chat bar */}
+          {/* Chat bar — always shown in open panel */}
           <div className="advisor-card__chat-bar-wrapper">
             <CardChatBar
               onSend={handleSend}
@@ -319,8 +323,8 @@ function AdvisorCard({
             </button>
           </div>
 
-        </div>
-      </div>
+        </div>{/* end panel-inner — FIX: was missing */}
+      </div>{/* end panel */}
 
       {/* ── Open chevron — always visible below the body when closed ── */}
       {!panelOpen && (
@@ -372,7 +376,8 @@ function CardSkeleton() {
 }
 
 // ── Drag-and-drop feed ────────────────────────────────────────
-function DraggableFeed({ cards, threadMap, thinkingCards, expandedCards, onSaveToggle, onReorder, onSend, onExpand, onCollapse, onDelete }) {
+// FIX: Added pinnedCardId and onPinToggle to destructured props
+function DraggableFeed({ cards, threadMap, thinkingCards, expandedCards, pinnedCardId, onSaveToggle, onPinToggle, onReorder, onSend, onExpand, onCollapse, onDelete }) {
   const [items, setItems]     = useState(cards)
   const [dragIdx, setDragIdx] = useState(null)
   const [overIdx, setOverIdx] = useState(null)
@@ -467,10 +472,12 @@ export default function AdvisorCards({
   const [activeCategory, setActiveCategory] = useState('all')
   const [timeAgo, setTimeAgo] = useState('')
 
-  const storageKey = userId ? `advisor_threads_${userId}` : 'advisor_threads'
+  const storageKey  = userId ? `advisor_threads_${userId}` : 'advisor_threads'
+  // FIX: Define deletedKey so handleDelete can use it
+  const deletedKey  = userId ? `advisor_deleted_${userId}` : 'advisor_deleted'
 
   const [threadMap, setThreadMap] = useState(() => {
-    try { return JSON.parse(localStorage.getItem(userId ? `advisor_threads_${userId}` : 'advisor_threads') || '{}') } catch { return {} }
+    try { return JSON.parse(localStorage.getItem(storageKey) || '{}') } catch { return {} }
   })
   const [thinkingCards, setThinking] = useState(new Set())
   const [expandedCards, setExpanded] = useState(new Set())
@@ -493,10 +500,10 @@ export default function AdvisorCards({
     if (!generatedAt) return
     const update = () => {
       const diff = Math.floor((Date.now() - new Date(generatedAt).getTime()) / 60000)
-      if (diff < 1)  setTimeAgo('just now')
+      if (diff < 1)        setTimeAgo('just now')
       else if (diff === 1) setTimeAgo('1 min ago')
-      else if (diff < 60) setTimeAgo(`${diff} mins ago`)
-      else setTimeAgo(`${Math.floor(diff / 60)}h ago`)
+      else if (diff < 60)  setTimeAgo(`${diff} mins ago`)
+      else                 setTimeAgo(`${Math.floor(diff / 60)}h ago`)
     }
     update()
     const interval = setInterval(update, 60000)
@@ -534,6 +541,7 @@ export default function AdvisorCards({
     setExpanded(prev  => { const n = new Set(prev); n.delete(cardId); return n })
     setThreadMap(prev => { const n = { ...prev }; delete n[cardId]; return n })
     setThinking(prev  => { const n = new Set(prev); n.delete(cardId); return n })
+    // FIX: deletedKey is now defined at component scope above
     try {
       const existing = JSON.parse(localStorage.getItem(deletedKey) || '[]')
       if (!existing.includes(cardId)) {
@@ -541,7 +549,7 @@ export default function AdvisorCards({
       }
     } catch {}
     if (onDeleteCard) onDeleteCard(cardId)
-  }, [onDeleteCard])
+  }, [onDeleteCard, deletedKey])
 
   const handlePinToggle = useCallback((card, thread) => {
     const isCurrentlyPinned = card.id === pinnedCardId
