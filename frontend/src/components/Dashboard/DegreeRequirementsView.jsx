@@ -3,7 +3,7 @@ import { useLanguage } from '../../contexts/LanguageContext'
 import {
   FaGraduationCap, FaChevronDown, FaChevronUp, FaChevronRight,
   FaCheckCircle, FaCircle, FaStar, FaSearch,
-  FaLightbulb, FaExternalLinkAlt, FaTimes, FaBolt
+  FaLightbulb, FaExternalLinkAlt, FaTimes
 } from 'react-icons/fa'
 import './DegreeRequirementsView.css'
 
@@ -21,18 +21,18 @@ const TYPE_LABELS = {
   bscarch:       'B.Sc.(Arch.)',
 }
 const TYPE_COLORS = {
-  major:         '#2563eb',
-  minor:         '#7c3aed',
-  honours:       '#b45309',
+  major:         '#dc2626',
+  minor:         '#ea580c',
+  honours:       '#2563eb',
   joint_honours: '#0f766e',
   beng:          '#dc2626',
   bge:           '#0891b2',
   bscarch:       '#d97706',
 }
 const TYPE_BG = {
-  major:         '#eff6ff',
-  minor:         '#f5f3ff',
-  honours:       '#fef3c7',
+  major:         '#fef2f2',
+  minor:         '#fff7ed',
+  honours:       '#eff6ff',
   joint_honours: '#f0fdfa',
   beng:          '#fef2f2',
   bge:           '#ecfeff',
@@ -41,16 +41,17 @@ const TYPE_BG = {
 
 // Normalize short faculty names (as stored in profile) to full faculty strings
 const FACULTY_MAP = {
-  'Arts':        'Faculty of Arts',
-  'Science':     'Faculty of Science',
-  'Engineering': 'Faculty of Engineering',
-  'Agriculture': 'Faculty of Agricultural and Environmental Sciences',
-  'Education':   'Faculty of Education',
-  'Law':         'Faculty of Law',
-  'Management':  'Desautels Faculty of Management',
-  'Medicine':    'Faculty of Medicine and Health Sciences',
-  'Music':       'Schulich School of Music',
-  'Nursing':     'Ingram School of Nursing',
+  'Arts':                        'Faculty of Arts',
+  'Science':                     'Faculty of Science',
+  'Engineering':                 'Faculty of Engineering',
+  'Agriculture':                 'Faculty of Agricultural and Environmental Sciences',
+  'Education':                   'Faculty of Education',
+  'Law':                         'Faculty of Law',
+  'Management':                  'Desautels Faculty of Management',
+  'Medicine':                    'Faculty of Medicine and Health Sciences',
+  'Music':                       'Schulich School of Music',
+  'Nursing':                     'Ingram School of Nursing',
+  'Bachelor of Arts and Science': 'Faculty of Arts & Science',
 }
 
 function normalizeFaculty(f) {
@@ -101,6 +102,11 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
   const [facultyFilter, setFacultyFilter] = useState(normalizeFaculty(profile?.faculty))
 
   const advStanding = profile?.advanced_standing || []
+  const transferCredits = advStanding.reduce((s, c) => s + (c.credits || 0), 0)
+  const foundationWaived = transferCredits >= 24 &&
+    (profile?.faculty === 'Faculty of Arts' || profile?.faculty === 'Bachelor of Arts and Science')
+  const [collapsedGroups, setCollapsedGroups] = useState({})
+  const toggleGroup = (key) => setCollapsedGroups(prev => ({ ...prev, [key]: !prev[key] }))
 
   const allUserCourses = useMemo(
     () => [...completedCourses, ...currentCourses],
@@ -110,19 +116,38 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
   // Sync faculty filter when profile loads/changes (only if user hasn't manually changed it)
   useEffect(() => {
     if (profile?.faculty) {
-      setFacultyFilter(f => f || normalizeFaculty(profile.faculty))
+      setFacultyFilter(normalizeFaculty(profile.faculty))
     }
   }, [profile?.faculty])
 
   useEffect(() => {
-    const fParam = facultyFilter ? `?faculty=${encodeURIComponent(facultyFilter)}` : ''
-    fetch(`${API_BASE}/api/degree-requirements/programs${fParam}`)
-      .then(r => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`)
-        return r.json()
-      })
-      .then(data => { if (Array.isArray(data)) setPrograms(data) })
-      .catch(() => setError('Could not load programs. Try loading requirements first.'))
+    const isBaScFilter = facultyFilter === 'Faculty of Arts & Science'
+    if (isBaScFilter) {
+      // B.A. & Sc.: fetch interfaculty + all Arts + all Science programs
+      Promise.all([
+        fetch(`${API_BASE}/api/degree-requirements/programs?faculty=${encodeURIComponent('Faculty of Arts & Science')}`).then(r => r.json()),
+        fetch(`${API_BASE}/api/degree-requirements/programs?faculty=${encodeURIComponent('Faculty of Arts')}`).then(r => r.json()),
+        fetch(`${API_BASE}/api/degree-requirements/programs?faculty=${encodeURIComponent('Faculty of Science')}`).then(r => r.json()),
+      ])
+        .then(([basc, arts, sci]) => {
+          const all = [
+            ...(Array.isArray(basc) ? basc : []),
+            ...(Array.isArray(arts) ? arts : []),
+            ...(Array.isArray(sci)  ? sci  : []),
+          ]
+          setPrograms(all)
+        })
+        .catch(() => setError('Could not load programs. Try loading requirements first.'))
+    } else {
+      const fParam = facultyFilter ? `?faculty=${encodeURIComponent(facultyFilter)}` : ''
+      fetch(`${API_BASE}/api/degree-requirements/programs${fParam}`)
+        .then(r => {
+          if (!r.ok) throw new Error(`HTTP ${r.status}`)
+          return r.json()
+        })
+        .then(data => { if (Array.isArray(data)) setPrograms(data) })
+        .catch(() => setError('Could not load programs. Try loading requirements first.'))
+    }
   }, [seedDone, facultyFilter])
 
   useEffect(() => {
@@ -160,18 +185,33 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
     setSeeding(true)
     setError(null)
     try {
-      // First, check if programs already exist — if so, just refresh the list
-      const checkRes = await fetch(`${API_BASE}/api/degree-requirements/programs`)
+      // Map faculty filter to seed param
+      const seedFacultyMap = {
+        'Faculty of Arts':             'arts',
+        'Faculty of Science':          'science',
+        'Faculty of Arts & Science':   'arts_science',
+        'Faculty of Engineering':      'engineering',
+      }
+      const seedParam = seedFacultyMap[facultyFilter] || null
+
+      // Check if programs already exist for THIS faculty
+      const checkUrl = facultyFilter
+        ? `${API_BASE}/api/degree-requirements/programs?faculty=${encodeURIComponent(facultyFilter)}`
+        : `${API_BASE}/api/degree-requirements/programs`
+      const checkRes = await fetch(checkUrl)
       if (checkRes.ok) {
         const existing = await checkRes.json()
         if (Array.isArray(existing) && existing.length > 0) {
-          // Data already seeded — just update state to trigger re-fetch
           setSeedDone(v => !v)
           return
         }
       }
-      // Only seed if truly empty
-      const res = await fetch(`${API_BASE}/api/degree-requirements/seed`, { method: 'POST' })
+
+      // Seed for the specific faculty
+      const seedUrl = seedParam
+        ? `${API_BASE}/api/degree-requirements/seed?faculty=${seedParam}`
+        : `${API_BASE}/api/degree-requirements/seed`
+      const res = await fetch(seedUrl, { method: 'POST' })
       const data = await res.json()
       if (data.success) setSeedDone(v => !v)
       else setError('Load failed: ' + JSON.stringify(data.detail || data))
@@ -227,7 +267,7 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
             <option value="">All Faculties</option>
             <option value="Faculty of Agricultural and Environmental Sciences">Agricultural &amp; Environmental Sciences</option>
             <option value="Faculty of Arts">Faculty of Arts</option>
-            <option value="Bachelor of Arts and Science">Bachelor of Arts &amp; Science</option>
+            <option value="Faculty of Arts &amp; Science">Bachelor of Arts &amp; Science</option>
             <option value="Faculty of Dental Medicine and Oral Health Sciences">Dental Medicine &amp; Oral Health Sciences</option>
             <option value="Faculty of Education">Faculty of Education</option>
             <option value="Faculty of Engineering">Faculty of Engineering</option>
@@ -258,18 +298,37 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
             facultyFilter.toLowerCase().includes('engineering')
               ? ['all', 'beng', 'bge', 'bscarch', 'minor']
               : ['all', 'major', 'minor', 'honours']
-          ).map(t => (
-            <button
-              key={t}
-              className={`drv-type-chip ${typeFilter === t ? 'drv-type-chip--active' : ''}`}
-              onClick={() => setTypeFilter(t)}
-            >{t === 'all' ? 'All' : (TYPE_LABELS[t] || t)}</button>
-          ))}
+          ).map(t => {
+            const isActive = typeFilter === t
+            const color = TYPE_COLORS[t]
+            const bg    = TYPE_BG[t]
+            return (
+              <button
+                key={t}
+                className={`drv-type-chip ${isActive ? 'drv-type-chip--active' : ''}`}
+                onClick={() => setTypeFilter(t)}
+                style={t !== 'all' ? {
+                  borderColor: isActive ? color : `${color}55`,
+                  background:  isActive ? color : (typeFilter === 'all' ? bg : 'transparent'),
+                  color:       isActive ? '#fff' : color,
+                } : {}}
+              >
+                {t !== 'all' && (
+                  <span style={{
+                    display: 'inline-block', width: 7, height: 7, borderRadius: '50%',
+                    background: isActive ? '#ffffff99' : color,
+                    marginRight: 5, verticalAlign: 'middle',
+                  }} />
+                )}
+                {t === 'all' ? 'All' : (TYPE_LABELS[t] || t)}
+              </button>
+            )
+          })}
         </div>
 
         {programs.length === 0 && (
           <button className="drv-seed-btn" onClick={handleSeed} disabled={seeding}>
-            <FaBolt /> {seeding ? 'Loading…' : `Load ${facultyFilter ? facultyFilter.replace('Faculty of ', '') : 'All'} Requirements`}
+            {seeding ? 'Loading…' : `Load ${facultyFilter ? facultyFilter.replace('Faculty of ', '') : 'All'} Requirements`}
           </button>
         )}
 
@@ -277,17 +336,58 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
           {filteredPrograms.length === 0 && programs.length > 0 && (
             <div className="drv-empty-search">No programs match.</div>
           )}
-          {filteredPrograms.map(prog => (
-            <button
-              key={prog.program_key}
-              className={`drv-program-item ${selectedKey === prog.program_key ? 'drv-program-item--active' : ''}`}
-              onClick={() => { setSelectedKey(prog.program_key); setDetailError(null); if (window.innerWidth < 760) setSidebarOpen(false) }}
-            >
-              <span className="drv-type-dot" style={{ background: TYPE_COLORS[prog.program_type] }} />
-              <span className="drv-program-name">{prog.name}</span>
-              <span className="drv-program-credits">{prog.total_credits}cr</span>
-            </button>
-          ))}
+          {facultyFilter === 'Faculty of Arts & Science' ? (
+            (() => {
+              const groups = [
+                { label: 'Interfaculty Programs', faculty: 'Faculty of Arts & Science' },
+                { label: 'Arts Concentrations',   faculty: 'Faculty of Arts' },
+                { label: 'Science Concentrations', faculty: 'Faculty of Science' },
+              ]
+              return groups.map(({ label, faculty }) => {
+                const groupProgs = filteredPrograms.filter(p => p.faculty === faculty)
+                if (groupProgs.length === 0) return null
+                const isCollapsed = !!collapsedGroups[faculty]
+                return (
+                  <div key={faculty}>
+                    <button
+                      onClick={() => toggleGroup(faculty)}
+                      style={{
+                        width: '100%', background: 'none', border: 'none', cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        padding: '10px 12px 6px', gap: '6px',
+                      }}
+                    >
+                      <span style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#6b7280' }}>{label}</span>
+                      <span style={{ fontSize: '10px', color: '#9ca3af', transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)', transition: 'transform 0.2s', display: 'inline-block' }}>▾</span>
+                    </button>
+                    {!isCollapsed && groupProgs.map(prog => (
+                      <button
+                        key={prog.program_key}
+                        className={`drv-program-item ${selectedKey === prog.program_key ? 'drv-program-item--active' : ''}`}
+                        onClick={() => { setSelectedKey(prog.program_key); setDetailError(null); if (window.innerWidth < 760) setSidebarOpen(false) }}
+                      >
+                        <span className="drv-type-dot" style={{ background: TYPE_COLORS[prog.program_type] }} />
+                        <span className="drv-program-name">{prog.name}</span>
+                        <span className="drv-program-credits">{prog.total_credits}cr</span>
+                      </button>
+                    ))}
+                  </div>
+                )
+              })
+            })()
+          ) : (
+            filteredPrograms.map(prog => (
+              <button
+                key={prog.program_key}
+                className={`drv-program-item ${selectedKey === prog.program_key ? 'drv-program-item--active' : ''}`}
+                onClick={() => { setSelectedKey(prog.program_key); setDetailError(null); if (window.innerWidth < 760) setSidebarOpen(false) }}
+              >
+                <span className="drv-type-dot" style={{ background: TYPE_COLORS[prog.program_type] }} />
+                <span className="drv-program-name">{prog.name}</span>
+                <span className="drv-program-credits">{prog.total_credits}cr</span>
+              </button>
+            ))
+          )}
         </div>
       </aside>
 
@@ -302,7 +402,7 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
             {error}
             {programs.length === 0 && (
               <button className="drv-seed-btn drv-seed-btn--inline" onClick={handleSeed} disabled={seeding}>
-                <FaBolt /> {seeding ? 'Loading…' : `Load ${facultyFilter ? facultyFilter.replace('Faculty of ', '') : 'All'} Requirements`}
+                {seeding ? 'Loading…' : `Load ${facultyFilter ? facultyFilter.replace('Faculty of ', '') : 'All'} Requirements`}
               </button>
             )}
           </div>
@@ -318,7 +418,7 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
             )}
             {programs.length === 0 && (
               <button className="drv-seed-btn" onClick={handleSeed} disabled={seeding}>
-                <FaBolt /> {seeding ? 'Loading data…' : 'Load Requirements'}
+                {seeding ? 'Loading…' : 'Load Requirements'}
               </button>
             )}
           </div>
@@ -348,6 +448,22 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
         {!loading && selectedKey && detailError === 'error' && !programDetail && (
           <div className="drv-error">
             Could not load program details. Please try again.
+          </div>
+        )}
+
+        {/* Foundation year waived banner */}
+        {foundationWaived && selectedKey && (
+          <div style={{
+            background: '#e8f5e9', border: '1px solid #a5d6a7', borderRadius: '8px',
+            padding: '10px 14px', margin: '0 0 12px 0', fontSize: '13px',
+            display: 'flex', alignItems: 'center', gap: '8px', color: '#2e7d32'
+          }}>
+            <span>✓</span>
+            <span>
+              <strong>Foundation Year Waived</strong> — Your {transferCredits} transfer credits
+              exempt you from U0 Foundation requirements
+              {transferCredits < 30 ? ' (note: 30 cr for full exemption)' : ''}.
+            </span>
           </div>
         )}
 

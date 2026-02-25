@@ -3772,51 +3772,6 @@ ARTS_PROGRAMS = [
     ],
   },
 
-# ──────────────────────────────────────────────────────────────────
-  # SCIENCE FOR ARTS STUDENTS
-  # ──────────────────────────────────────────────────────────────────
-  {
-    "program_key": "science_for_arts_students_minor",
-    "name": "Science for Arts Students – Minor Concentration",
-    "program_type": "minor",
-    "faculty": "Faculty of Arts",
-    "total_credits": 18,
-    "description": (
-      "Designed for Arts students who wish to gain a broad understanding of the natural "
-      "sciences. Students complete courses across multiple science disciplines. No single "
-      "subject may contribute more than 6 credits."
-    ),
-    "ecalendar_url": "https://coursecatalogue.mcgill.ca/en/undergraduate/arts/programs/",
-    "blocks": [
-      {
-        "block_key": "science_courses",
-        "title": "Science Courses",
-        "block_type": "choose_credits",
-        "credits_needed": 18,
-        "notes": (
-          "18 credits from approved science courses. No more than 6 credits from "
-          "any single subject. Courses must be from: BIOL, CHEM, EPSC, MATH, PHYS, "
-          "ATOC, GEOG (physical), ENVR, or COMP."
-        ),
-        "sort_order": 1,
-        "courses": [
-          {"subject":"BIOL","catalog":"111","title":"Principles: Organismal Biology","credits":3,"is_required":False,"recommended":True,"recommendation_reason":"Accessible intro to biology; no prerequisites"},
-          {"subject":"BIOL","catalog":"112","title":"Cell and Molecular Biology","credits":3,"is_required":False,"recommended":True,"recommendation_reason":"Pairs well with BIOL 111"},
-          {"subject":"CHEM","catalog":"110","title":"General Chemistry 1","credits":3,"is_required":False,"recommended":True,"recommendation_reason":"Foundational chemistry; widely applicable"},
-          {"subject":"CHEM","catalog":"120","title":"General Chemistry 2","credits":3,"is_required":False},
-          {"subject":"PHYS","catalog":"101","title":"Introductory Physics – Mechanics","credits":3,"is_required":False,"recommended":True,"recommendation_reason":"Introductory physics for non-majors"},
-          {"subject":"PHYS","catalog":"102","title":"Introductory Physics – Electromagnetism","credits":3,"is_required":False},
-          {"subject":"MATH","catalog":"133","title":"Linear Algebra and Geometry","credits":3,"is_required":False,"recommended":True,"recommendation_reason":"Useful across many fields including CS and economics"},
-          {"subject":"MATH","catalog":"140","title":"Calculus 1","credits":3,"is_required":False},
-          {"subject":"EPSC","catalog":"201","title":"Understanding Planet Earth","credits":3,"is_required":False,"recommended":True,"recommendation_reason":"Very popular; engaging and accessible for non-science students"},
-          {"subject":"EPSC","catalog":"210","title":"Earth and Life History","credits":3,"is_required":False},
-          {"subject":"ATOC","catalog":"185","title":"Natural Disasters","credits":3,"is_required":False,"recommended":True,"recommendation_reason":"Popular science elective; covers earthquakes, hurricanes, etc."},
-          {"subject":"ENVR","catalog":"200","title":"The Global Environment","credits":3,"is_required":False,"recommended":True,"recommendation_reason":"Interdisciplinary; relevant to current environmental issues"},
-          {"subject":"COMP","catalog":"202","title":"Foundations of Programming","credits":3,"is_required":False,"recommended":True,"recommendation_reason":"Highly practical; complements any Arts major"},
-        ],
-      },
-    ],
-  },
 ]
 # ──────────────────────────────────────────────────────────────────
 # Database seed function
@@ -3885,14 +3840,14 @@ def seed_degree_requirements(supabase):
             block_id = block_result.data[0]["id"]
             inserted_blocks += 1
 
-            courses_to_insert = []
+            courses_batch = []
             for j, course in enumerate(block.get("courses", [])):
                 # Infer is_required from block_type if not explicitly set
                 is_required = course.get("is_required", False)
                 if block.get("block_type") == "required":
                     is_required = True
 
-                course_data = {
+                courses_batch.append({
                     "block_id":           block_id,
                     "subject":            course.get("subject", ""),
                     "catalog":            course.get("catalog"),
@@ -3905,12 +3860,12 @@ def seed_degree_requirements(supabase):
                     "recommended":        course.get("recommended", False),
                     "recommendation_reason": course.get("recommendation_reason"),
                     "sort_order":         j,
-                }
-                courses_to_insert.append(course_data)
-
-            if courses_to_insert:
-                supabase.table("requirement_courses").insert(courses_to_insert).execute()
-                inserted_courses += len(courses_to_insert)
+                })
+            for chunk_start in range(0, len(courses_batch), 50):
+                chunk = courses_batch[chunk_start:chunk_start + 50]
+                if chunk:
+                    supabase.table("requirement_courses").insert(chunk).execute()
+                    inserted_courses += len(chunk)
 
     return {
         "programs": inserted_programs,

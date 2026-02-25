@@ -20,6 +20,43 @@ export const FACULTIES = [
   'Study Abroad and Field Studies',
 ];
 
+// Arts majors available in B.A. & Sc. (Multi-track Arts concentration)
+export const ARTS_MAJORS_BASC = [
+  'Anthropology', 'Art History', 'Classical Studies', 'East Asian Studies',
+  'Economics', 'English', 'French', 'German Studies', 'Hispanic Studies',
+  'History', 'Italian Studies', 'Linguistics', 'Philosophy', 'Political Science',
+  'Psychology', 'Sociology', 'Geography', 'International Development Studies',
+  'Gender, Sexuality, Feminist and Social Justice Studies', 'Canadian Studies',
+  'Jewish Studies', 'Communication Studies', 'African Studies',
+  'Latin American and Caribbean Studies', 'World Islamic and Middle East Studies',
+]
+
+// Science majors available in B.A. & Sc. (Multi-track Science concentration)
+export const SCIENCE_MAJORS_BASC = [
+  'Biology', 'Chemistry', 'Physics', 'Mathematics', 'Statistics',
+  'Computer Science', 'Applied Mathematics', 'Biochemistry',
+  'Microbiology and Immunology', 'Physiology', 'Neuroscience',
+  'Atmospheric and Oceanic Sciences', 'Earth and Planetary Sciences',
+  'Environmental Science', 'Geography',
+]
+
+// B.A. & Sc. interfaculty programs (Interfaculty / Honours stream)
+export const BASC_INTERFACULTY_PROGRAMS = [
+  'Cognitive Science',
+  'Cognitive Science (Honours)',
+  'Sustainability, Science and Society',
+  'Sustainability, Science and Society (Honours)',
+  'Environment',
+  'Environment (Honours)',
+]
+
+// B.A. & Sc. program streams
+export const BASC_STREAMS = [
+  { value: 'Interfaculty', label: 'Interfaculty Program',  description: 'Cognitive Science, SSS, or Environment (54 cr)' },
+  { value: 'Multi-track',  label: 'Multi-track',           description: 'Arts major + Science major (36 + 36 cr)' },
+  { value: 'Joint Honours', label: 'Joint Honours',        description: 'Honours component in Arts + Science (30-36 + 36 cr)' },
+]
+
 // Credit requirements by faculty and specific programs
 export const FACULTY_CREDIT_REQUIREMENTS = {
   'Faculty of Agricultural and Environmental Sciences': 120,
