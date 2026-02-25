@@ -40,15 +40,11 @@ function ThreadMessages({ thread, isThinking }) {
     <div className="thread-messages" ref={scrollRef}>
       {thread.map((msg, i) => (
         <div key={i} className={`thread-message thread-message--${msg.role}`}>
-          <span className="thread-avatar">
-            {msg.role === 'user' ? '👤' : <FaRobot />}
-          </span>
           <p className="thread-text">{msg.content}</p>
         </div>
       ))}
       {isThinking && (
         <div className="thread-message thread-message--assistant">
-          <span className="thread-avatar"><FaRobot /></span>
           <p className="thread-text">
             <span className="thinking-dots"><span /><span /><span /></span>
           </p>
@@ -396,6 +392,34 @@ function DraggableFeed({
 
   useEffect(() => { setItems(cards) }, [cards])
 
+  const scrollAnimRef = useRef(null)
+
+  const startAutoScroll = (e) => {
+    const feed = document.querySelector('.advisor-cards-feed')
+    if (!feed) return
+    const cancelScroll = () => {
+      cancelAnimationFrame(scrollAnimRef.current)
+      scrollAnimRef.current = null
+    }
+    const ZONE = 80
+    const SPEED = 12
+    const tick = () => {
+      const rect = feed.getBoundingClientRect()
+      const y = e.clientY
+      if (y - rect.top < ZONE) {
+        feed.scrollTop -= SPEED
+      } else if (rect.bottom - y < ZONE) {
+        feed.scrollTop += SPEED
+      } else {
+        cancelScroll()
+        return
+      }
+      scrollAnimRef.current = requestAnimationFrame(tick)
+    }
+    cancelScroll()
+    scrollAnimRef.current = requestAnimationFrame(tick)
+  }
+
   const handleDragStart = (idx) => (e) => {
     setDragIdx(idx)
     e.dataTransfer.effectAllowed = 'move'
@@ -419,6 +443,8 @@ function DraggableFeed({
   }
 
   const handleDragEnd = () => {
+    cancelAnimationFrame(scrollAnimRef.current)
+    scrollAnimRef.current = null
     setDragIdx(null); setOverIdx(null)
     clearTimeout(commitRef.current)
     commitRef.current = setTimeout(() => {
@@ -435,7 +461,7 @@ function DraggableFeed({
           draggable
           onDragStart={handleDragStart(idx)}
           onDragEnter={handleDragEnter(idx)}
-          onDragOver={e => e.preventDefault()}
+          onDragOver={e => { e.preventDefault(); startAutoScroll(e) }}
           onDragEnd={handleDragEnd}
         >
           <AdvisorCard

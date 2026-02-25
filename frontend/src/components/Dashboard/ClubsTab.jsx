@@ -7,9 +7,8 @@ import {
   FaRegClock, FaInfoCircle, FaSort,
   FaBook, FaFootballBall, FaPalette, FaLaptopCode,
   FaGlobe, FaBriefcase, FaHeartbeat,
-  FaHandHoldingHeart, FaGraduationCap, FaChevronDown
+  FaHandHoldingHeart, FaGraduationCap, FaChevronDown, FaUsers
 } from 'react-icons/fa'
-import { MdGroups, MdOutlineExplore, MdPeopleAlt } from 'react-icons/md'
 import { useLanguage } from '../../contexts/LanguageContext'
 import clubsAPI from '../../lib/clubsAPI'
 import './ClubsTab.css'
@@ -103,7 +102,7 @@ function ClubDetailDrawer({ club, liveClub, joined, calSynced, onJoin, onLeave, 
           <div className="club-drawer__stats">
             {display.member_count != null && (
               <div className="club-drawer__stat">
-                <MdPeopleAlt size={22} style={{ color: meta.color }} />
+                <FaUsers size={22} style={{ color: meta.color }} />
                 <span className="club-drawer__stat-value">{display.member_count}</span>
                 <span className="club-drawer__stat-label">Members</span>
               </div>
@@ -611,7 +610,7 @@ export default function ClubsTab({ user, onClubEventsChange }) {
       <div className="clubs-header">
         <div className="clubs-header__left">
           <div className="clubs-header__icon-wrap">
-            <MdGroups size={26} />
+            <FaUsers size={26} />
           </div>
           <div>
             <h1 className="clubs-header__title">Student Clubs</h1>
@@ -626,7 +625,7 @@ export default function ClubsTab({ user, onClubEventsChange }) {
       {/* Tabs */}
       <div className="clubs-tabs">
         <button className={`clubs-tab-btn ${activeView === 'explore' ? 'active' : ''}`} onClick={() => setActiveView('explore')}>
-          <MdOutlineExplore size={15} /> Explore
+          <FaSearch size={15} /> Explore
         </button>
         <button className={`clubs-tab-btn ${activeView === 'my-clubs' ? 'active' : ''}`} onClick={() => setActiveView('my-clubs')}>
           <FaHeart size={12} /> My Clubs
@@ -761,7 +760,7 @@ export default function ClubsTab({ user, onClubEventsChange }) {
               <h3>No clubs joined yet</h3>
               <p>Find something you're passionate about in the Explore tab.</p>
               <button className="club-action-btn club-action-btn--join" onClick={() => setActiveView('explore')}>
-                <MdOutlineExplore size={13} /> Browse Clubs
+                <FaSearch size={13} /> Browse Clubs
               </button>
             </div>
           ) : (

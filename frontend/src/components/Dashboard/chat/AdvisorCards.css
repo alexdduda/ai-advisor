@@ -462,21 +462,23 @@
    ═══════════════════════════════════════════ */
 .advisor-card__panel {
   display: grid;
-  grid-template-rows: 0fr;
+  max-height: 0;
   transition:
-    grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-    opacity 0.25s ease;
+    max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.25s ease,
+    transform 0.25s ease;
   opacity: 0;
-  overflow: visible;
+  overflow: hidden;
+  transform: translateY(-6px);
 }
 
 .advisor-card__panel--open {
-  grid-template-rows: 1fr;
+  max-height: 600px;
   opacity: 1;
+  transform: translateY(0);
 }
 
 .advisor-card__panel-inner {
-  min-height: 0;
   overflow-x: hidden;
   overflow-y: visible;
   display: flex;
@@ -582,19 +584,19 @@
 
 .thread-message--user { flex-direction: row-reverse; }
 
-.thread-avatar {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent-primary) 0%, #B01B2E 100%);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.thread-avatar { display: none; }
+
+.thread-label {
   font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   flex-shrink: 0;
-  box-shadow: 0 2px 6px rgba(237, 27, 47, 0.25);
+  margin-top: 9px;
+  opacity: 0.5;
+  color: var(--text-primary);
 }
+.thread-message--user .thread-label { color: var(--accent-primary); }
 
 .thread-text {
   font-size: 0.84rem;
