@@ -2,17 +2,22 @@
 
 export const FACULTIES = [
   'Faculty of Agricultural and Environmental Sciences',
-  'School of Continuing Studies',
-  'Faculty of Education',
-  'Graduate and Postdoctoral Studies',
-  'Desautels Faculty of Management',
-  'Schulich School of Music',
   'Faculty of Arts',
+  'Bachelor of Arts and Science',
+  'School of Continuing Studies',
   'Faculty of Dental Medicine and Oral Health Sciences',
+  'Faculty of Education',
   'Faculty of Engineering',
+  'School of Environment',
+  'Graduate and Postdoctoral Studies',
   'Faculty of Law',
+  'Desautels Faculty of Management',
   'Faculty of Medicine and Health Sciences',
-  'Faculty of Science'
+  'Schulich School of Music',
+  'Ingram School of Nursing',
+  'School of Physical and Occupational Therapy',
+  'Faculty of Science',
+  'Study Abroad and Field Studies',
 ];
 
 // Credit requirements by faculty and specific programs
@@ -34,14 +39,18 @@ export const FACULTY_CREDIT_REQUIREMENTS = {
 // Program-specific credit requirements (overrides faculty defaults)
 export const PROGRAM_CREDIT_REQUIREMENTS = {
   'Mechanical Engineering': 142,
-  'Civil Engineering': 137,
-  'Electrical Engineering': 136,
-  'Computer Engineering': 136,
-  'Software Engineering': 143,
+  'Civil Engineering': 139,
+  'Electrical Engineering': 134,
+  'Computer Engineering': 133,
+  'Software Engineering (Co-op)': 141,
+  'Software Engineering': 141,
   'Bioengineering': 142,
-  'Chemical Engineering': 135,
-  'Mining Engineering': 135,
-  'Materials Engineering': 135
+  'Chemical Engineering': 143,
+  'Mining Engineering': 144,
+  'Materials Engineering': 148,
+  'Computer Engineering': 133,
+  'Global Engineering': 127,
+  'Architecture (B.Sc.)': 126,
 };
 
 export const MAJORS = [
@@ -61,7 +70,8 @@ export const MAJORS = [
   // Engineering
   'Chemical Engineering', 'Civil Engineering', 'Electrical Engineering',
   'Mechanical Engineering', 'Mining Engineering', 'Materials Engineering',
-  'Bioengineering',
+  'Bioengineering', 'Computer Engineering', 'Software Engineering (Co-op)',
+  'Global Engineering', 'Architecture (B.Sc.)',
   
   // Management
   'Accounting', 'Finance', 'Information Systems', 'International Management',

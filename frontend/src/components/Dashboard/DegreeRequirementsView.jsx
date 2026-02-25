@@ -12,13 +12,31 @@ const rawBase = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 const API_BASE = rawBase.replace(/\/api\/?$/, '')
 
 const TYPE_LABELS = {
-  major: 'Major', minor: 'Minor', honours: 'Honours', joint_honours: 'Joint Honours',
+  major:         'Major',
+  minor:         'Minor',
+  honours:       'Honours',
+  joint_honours: 'Joint Honours',
+  beng:          'B.Eng.',
+  bge:           'B.G.E.',
+  bscarch:       'B.Sc.(Arch.)',
 }
 const TYPE_COLORS = {
-  major: '#2563eb', minor: '#7c3aed', honours: '#b45309', joint_honours: '#0f766e',
+  major:         '#2563eb',
+  minor:         '#7c3aed',
+  honours:       '#b45309',
+  joint_honours: '#0f766e',
+  beng:          '#dc2626',
+  bge:           '#0891b2',
+  bscarch:       '#d97706',
 }
 const TYPE_BG = {
-  major: '#eff6ff', minor: '#f5f3ff', honours: '#fef3c7', joint_honours: '#f0fdfa',
+  major:         '#eff6ff',
+  minor:         '#f5f3ff',
+  honours:       '#fef3c7',
+  joint_honours: '#f0fdfa',
+  beng:          '#fef2f2',
+  bge:           '#ecfeff',
+  bscarch:       '#fffbeb',
 }
 
 function matchCourse(req, userCourses) {
@@ -28,6 +46,22 @@ function matchCourse(req, userCourses) {
     const cKey = `${c.subject || ''} ${c.catalog || ''}`.toUpperCase()
     return cKey === key
   }) || null
+}
+
+function normalizeCode(code) {
+  return (code || '').toUpperCase()
+    .replace(/([A-Z])(\d)/g, '$1 $2')  // COMP202 → COMP 202
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+function matchTransfer(req, advancedStanding = [], { requireMajorCredit = false } = {}) {
+  if (!req.catalog) return false
+  const key = normalizeCode(`${req.subject} ${req.catalog}`)
+  return advancedStanding.some(t => {
+    if (normalizeCode(t.course_code) !== key) return false
+    if (requireMajorCredit) return !!t.counts_toward_major
+    return true
+  })
 }
 
 export default function DegreeRequirementsView({ completedCourses = [], currentCourses = [], profile = {} }) {
@@ -44,12 +78,20 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
   const [showAllCourses, setShowAllCourses] = useState({})
   const [showRecommended, setShowRecommended] = useState(false)
   const [sidebarOpen, setSidebarOpen]     = useState(true)
-  const [facultyFilter, setFacultyFilter] = useState('Faculty of Arts')
+  // Initialize from user profile if available
+  const [facultyFilter, setFacultyFilter] = useState(profile?.faculty || '')
+
+  const advStanding = profile?.advanced_standing || []
 
   const allUserCourses = useMemo(
     () => [...completedCourses, ...currentCourses],
     [completedCourses, currentCourses]
   )
+
+  // Sync faculty filter when profile loads/changes (only if user hasn't manually changed it)
+  useEffect(() => {
+    if (profile?.faculty) setFacultyFilter(f => f || profile.faculty)
+  }, [profile?.faculty])
 
   useEffect(() => {
     const fParam = facultyFilter ? `?faculty=${encodeURIComponent(facultyFilter)}` : ''
@@ -81,7 +123,12 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
     setSeeding(true)
     setError(null)
     try {
-      const res = await fetch(`${API_BASE}/api/degree-requirements/seed`, { method: 'POST' })
+      const fParam = facultyFilter
+        ? `?faculty=${encodeURIComponent(
+            facultyFilter.toLowerCase().includes('engineering') ? 'engineering' : 'arts'
+          )}`
+        : '?faculty=all'
+      const res = await fetch(`${API_BASE}/api/degree-requirements/seed${fParam}`, { method: 'POST' })
       const data = await res.json()
       if (data.success) setSeedDone(v => !v)
       else setError('Load failed: ' + JSON.stringify(data.detail || data))
@@ -102,12 +149,15 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
       block.courses?.forEach(c => {
         if (c.is_required) {
           required += parseFloat(c.credits || 3)
-          if (matchCourse(c, allUserCourses)) completed += parseFloat(c.credits || 3)
+          // Count toward major/minor only if counts_toward_major flag is set
+          const transferCountsMajor = matchTransfer(c, advStanding, { requireMajorCredit: true })
+          if (transferCountsMajor || (!matchTransfer(c, advStanding) && matchCourse(c, allUserCourses)))
+            completed += parseFloat(c.credits || 3)
         }
       })
     })
     return { required, completed, pct: required > 0 ? Math.round((completed / required) * 100) : 0 }
-  }, [programDetail, allUserCourses])
+  }, [programDetail, allUserCourses, advStanding])
 
   const toggleBlock   = id => setOpenBlocks(p => ({ ...p, [id]: !p[id] }))
   const toggleShowAll = id => setShowAllCourses(p => ({ ...p, [id]: !p[id] }))
@@ -127,19 +177,24 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
           <select
             className="drv-faculty-select"
             value={facultyFilter}
-            onChange={e => { setFacultyFilter(e.target.value); setSelectedKey(null); setProgramDetail(null) }}
+            onChange={e => { setFacultyFilter(e.target.value); setSelectedKey(null); setProgramDetail(null); setTypeFilter('all') }}
           >
             <option value="">All Faculties</option>
+            <option value="Faculty of Agricultural and Environmental Sciences">Agricultural &amp; Environmental Sciences</option>
             <option value="Faculty of Arts">Faculty of Arts</option>
-            <option value="Faculty of Science">Faculty of Science</option>
-            <option value="Faculty of Engineering">Faculty of Engineering</option>
-            <option value="Desautels Faculty of Management">Management (Desautels)</option>
+            <option value="Bachelor of Arts and Science">Bachelor of Arts &amp; Science</option>
+            <option value="Faculty of Dental Medicine and Oral Health Sciences">Dental Medicine &amp; Oral Health Sciences</option>
             <option value="Faculty of Education">Faculty of Education</option>
+            <option value="Faculty of Engineering">Faculty of Engineering</option>
+            <option value="School of Environment">Environment</option>
             <option value="Faculty of Law">Faculty of Law</option>
+            <option value="Desautels Faculty of Management">Management (Desautels)</option>
+            <option value="Faculty of Medicine and Health Sciences">Medicine &amp; Health Sciences</option>
             <option value="Schulich School of Music">Schulich School of Music</option>
-            <option value="Faculty of Agricultural and Environmental Sciences">Agricultural & Environmental Sciences</option>
-            <option value="Faculty of Medicine and Health Sciences">Medicine & Health Sciences</option>
-            <option value="Faculty of Dental Medicine and Oral Health Sciences">Dental Medicine</option>
+            <option value="Ingram School of Nursing">Nursing</option>
+            <option value="School of Physical and Occupational Therapy">Physical &amp; Occupational Therapy</option>
+            <option value="Faculty of Science">Faculty of Science</option>
+            <option value="Study Abroad and Field Studies">Study Abroad &amp; Field Studies</option>
           </select>
         </div>
 
@@ -154,18 +209,22 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
         </div>
 
         <div className="drv-type-filters">
-          {['all','major','minor','honours'].map(t => (
+          {(
+            facultyFilter.toLowerCase().includes('engineering')
+              ? ['all', 'beng', 'bge', 'bscarch', 'minor']
+              : ['all', 'major', 'minor', 'honours']
+          ).map(t => (
             <button
               key={t}
               className={`drv-type-chip ${typeFilter === t ? 'drv-type-chip--active' : ''}`}
               onClick={() => setTypeFilter(t)}
-            >{t === 'all' ? 'All' : TYPE_LABELS[t]}</button>
+            >{t === 'all' ? 'All' : (TYPE_LABELS[t] || t)}</button>
           ))}
         </div>
 
         {programs.length === 0 && (
           <button className="drv-seed-btn" onClick={handleSeed} disabled={seeding}>
-            <FaBolt /> {seeding ? 'Loading…' : 'Load Requirements'}
+            <FaBolt /> {seeding ? 'Loading…' : `Load ${facultyFilter ? facultyFilter.replace('Faculty of ', '') : 'All'} Requirements`}
           </button>
         )}
 
@@ -198,7 +257,7 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
             {error}
             {programs.length === 0 && (
               <button className="drv-seed-btn drv-seed-btn--inline" onClick={handleSeed} disabled={seeding}>
-                <FaBolt /> {seeding ? 'Loading…' : 'Load Requirements'}
+                <FaBolt /> {seeding ? 'Loading…' : `Load ${facultyFilter ? facultyFilter.replace('Faculty of ', '') : 'All'} Requirements`}
               </button>
             )}
           </div>
@@ -210,11 +269,11 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
             <h2>Degree Requirements</h2>
             <p>Select a program from the sidebar to see its full requirements, your progress, and recommended courses.</p>
             {programs.length > 0 && (
-              <p className="drv-welcome-count">{programs.length} Arts programs available</p>
+              <p className="drv-welcome-count">{programs.length} program{programs.length !== 1 ? 's' : ''} available</p>
             )}
             {programs.length === 0 && (
               <button className="drv-seed-btn" onClick={handleSeed} disabled={seeding}>
-                <FaBolt /> {seeding ? 'Loading data…' : 'Load Arts Requirements'}
+                <FaBolt /> {seeding ? 'Loading data…' : 'Load Requirements'}
               </button>
             )}
           </div>
@@ -296,7 +355,9 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
                 const PREVIEW = 5
                 const visible      = showAll ? courses : courses?.slice(0, PREVIEW)
                 const required     = block.courses?.filter(c => c.is_required) || []
-                const completedReq = required.filter(c => matchCourse(c, allUserCourses))
+                const completedReq = required.filter(c =>
+                  matchTransfer(c, advStanding) || matchCourse(c, allUserCourses)
+                )
                 const blockDone    = required.length > 0 && completedReq.length === required.length
 
                 return (
@@ -336,11 +397,12 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
 
                         <div className="drv-course-list">
                           {visible?.map(course => {
-                            const isCompleted = completedCourses.some(c =>
+                            const isTransfer = matchTransfer(course, advStanding)
+                            const isCompleted = isTransfer || completedCourses.some(c =>
                               `${c.subject} ${c.catalog}`.toUpperCase() ===
                               `${course.subject} ${course.catalog}`.toUpperCase()
                             )
-                            const isCurrent = currentCourses.some(c =>
+                            const isCurrent = !isTransfer && currentCourses.some(c =>
                               `${c.subject} ${c.catalog}`.toUpperCase() ===
                               `${course.subject} ${course.catalog}`.toUpperCase()
                             )
@@ -385,8 +447,9 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
 
                                 <div className="drv-course-right">
                                   <span className="drv-course-credits">{course.credits}cr</span>
-                                  {isCompleted && <span className="drv-tag drv-tag--done">✓ Done</span>}
-                                  {isCurrent && !isCompleted && <span className="drv-tag drv-tag--cur">Taking</span>}
+                                  {isCompleted && isTransfer   && <span className="drv-tag drv-tag--transfer">↩ Transfer</span>}
+                                  {isCompleted && !isTransfer  && <span className="drv-tag drv-tag--done">✓ Done</span>}
+                                  {isCurrent && !isCompleted   && <span className="drv-tag drv-tag--cur">Taking</span>}
                                 </div>
                               </div>
                             )
