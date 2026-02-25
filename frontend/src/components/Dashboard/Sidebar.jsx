@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { FaChevronLeft, FaChevronRight, FaComments, FaBook, FaStar, FaUser, FaCog, FaPalette, FaSignOutAlt, FaCalendarAlt, FaGraduationCap } from 'react-icons/fa'
+import { FaChevronLeft, FaChevronRight, FaComments, FaBook, FaStar, FaUser, FaCog, FaPalette, FaSignOutAlt, FaCalendarAlt, FaGraduationCap, FaUsers } from 'react-icons/fa'
 import { MdLanguage } from 'react-icons/md'
 import { useTheme } from '../../contexts/ThemeContext'
 import { useLanguage } from '../../contexts/LanguageContext'
@@ -205,6 +205,7 @@ export default function Sidebar({
                 { key: 'calendar', icon: <FaCalendarAlt />, label: t('nav.calendar') },
                 { key: 'forum', icon: <FaComments />, label: t('nav.forum') },
                 { key: 'profile', icon: <FaUser />, label: t('nav.profile') },
+                { key: 'clubs',     icon: <FaUsers />,        label: 'Clubs' },
               ].map(({ key, icon, label, badge }) => (
                 <button
                   key={key}

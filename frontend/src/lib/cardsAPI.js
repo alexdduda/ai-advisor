@@ -15,7 +15,6 @@ export const CARD_CATEGORIES = [
   'grades',
   'planning',
   'opportunities',
-  'other',
 ]
 
 export const CATEGORY_LABELS = {
@@ -25,7 +24,6 @@ export const CATEGORY_LABELS = {
   grades:        'Grades',
   planning:      'Planning',
   opportunities: 'Opportunities',
-  other:         'Other',
 }
 
 export const CATEGORY_ICONS = {
@@ -35,7 +33,6 @@ export const CATEGORY_ICONS = {
   grades:        '📊',
   planning:      '🗺️',
   opportunities: '✨',
-  other:         '💬',
 }
 
 const cardsAPI = {
