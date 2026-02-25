@@ -1,20 +1,14 @@
 import { useState, useEffect } from 'react'
 import { FaCheck, FaTimes, FaFlag, FaClock } from 'react-icons/fa'
+import { BASE_URL } from '../../lib/apiConfig'
 import './AdminSuggestions.css'
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-const normalizeUrl = (url) => {
-  let n = url.replace(/\/$/, '')
-  if (n.endsWith('/api')) n = n.slice(0, -4)
-  return n
-}
-const BASE_URL = normalizeUrl(API_URL)
 
 const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || 'changeme'
 
 export default function AdminSuggestions() {
   const [authed, setAuthed] = useState(false)
   const [password, setPassword] = useState('')
+  const [adminSecret, setAdminSecret] = useState('')
   const [suggestions, setSuggestions] = useState([])
   const [filter, setFilter] = useState('pending') // pending | all
   const [actionLoading, setActionLoading] = useState(null)
@@ -22,14 +16,27 @@ export default function AdminSuggestions() {
 
   const login = (e) => {
     e.preventDefault()
-    if (password === ADMIN_PASSWORD) setAuthed(true)
-    else setError('Incorrect password')
+    if (password === ADMIN_PASSWORD) {
+      setAuthed(true)
+      setAdminSecret(password) // Use the password as the cron secret for API calls
+    } else {
+      setError('Incorrect password')
+    }
   }
 
   const fetchSuggestions = async () => {
     try {
       const endpoint = filter === 'pending' ? '/api/suggestions/admin/pending' : '/api/suggestions/admin/all'
-      const res = await fetch(`${BASE_URL}${endpoint}`)
+      const res = await fetch(`${BASE_URL}${endpoint}`, {
+        headers: { 'X-Cron-Secret': adminSecret },
+      })
+      if (!res.ok) {
+        if (res.status === 401) {
+          setError('Authentication failed. Check your admin credentials.')
+          return
+        }
+        throw new Error()
+      }
       const data = await res.json()
       setSuggestions(data.suggestions || [])
     } catch {
@@ -39,14 +46,17 @@ export default function AdminSuggestions() {
 
   useEffect(() => {
     if (authed) fetchSuggestions()
-  }, [authed, filter])
+  }, [authed, filter]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleReview = async (id, status) => {
     setActionLoading(id)
     try {
       const res = await fetch(`${BASE_URL}/api/suggestions/admin/${id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Cron-Secret': adminSecret,
+        },
         body: JSON.stringify({ status }),
       })
       if (!res.ok) throw new Error()

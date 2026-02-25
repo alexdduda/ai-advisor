@@ -1,22 +1,10 @@
 // Frontend API client for completed courses
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-
-// Remove trailing slash and /api if present to normalize
-const normalizeUrl = (url) => {
-  let normalized = url.replace(/\/$/, ''); // Remove trailing slash
-  if (normalized.endsWith('/api')) {
-    normalized = normalized.slice(0, -4); // Remove /api suffix
-  }
-  return normalized;
-};
-
-const BASE_URL = normalizeUrl(API_URL);
+import { BASE_URL } from './apiConfig'
 
 export const completedCoursesAPI = {
   // Get all completed courses for a user
   async getCompleted(userId) {
-    const response = await fetch(`${BASE_URL}/api/completed/${userId}?limit=200`, {
+    const response = await fetch(`${BASE_URL}/api/completed/${userId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

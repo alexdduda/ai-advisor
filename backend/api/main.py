@@ -20,7 +20,7 @@ from .exceptions import (
     RateLimitException,
 )
 
-from .routes import chat, courses, users, favorites, completed, notifications, current, suggestions, cards, transcript, degree_requirements, electives, clubs
+from .routes import chat, courses, users, favorites, completed, notifications, current, suggestions, cards, transcript, degree_requirements, electives
 
 # Setup logging
 logger = setup_logging()
@@ -54,83 +54,71 @@ def _validate_startup():
 class InMemoryRateLimiter:
     """Token-bucket style rate limiter keyed by client IP."""
 
-    def __init__(self):
-        self._requests: dict[str, list[float]] = defaultdict(list)
+    def __init__(self, default_rpm: int = 100):
+        self.default_rpm = default_rpm
+        self._buckets: dict[str, list] = defaultdict(list)
 
-    def is_allowed(self, key: str, max_requests: int, window_seconds: int = 60) -> bool:
+    def is_allowed(self, key: str, rpm: int | None = None) -> bool:
+        limit = rpm or self.default_rpm
         now = time.time()
-        cutoff = now - window_seconds
-        # Prune old entries
-        self._requests[key] = [t for t in self._requests[key] if t > cutoff]
-        if len(self._requests[key]) >= max_requests:
+        bucket = self._buckets[key]
+        # Remove entries older than 60 s
+        self._buckets[key] = bucket = [t for t in bucket if now - t < 60]
+        if len(bucket) >= limit:
             return False
-        self._requests[key].append(now)
+        bucket.append(now)
         return True
-
-
-rate_limiter = InMemoryRateLimiter()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Startup and shutdown events"""
     _validate_startup()
-    logger.info(f"🚀 Starting {settings.API_TITLE} v{settings.API_VERSION}")
-    logger.info(f"Environment: {settings.ENVIRONMENT}")
-    logger.info(f"Debug mode: {settings.DEBUG}")
+    logger.info(f"Starting {settings.API_TITLE} v{settings.API_VERSION}")
     yield
-    logger.info("👋 Shutting down gracefully...")
+    logger.info("Shutting down…")
 
 
 app = FastAPI(
     title=settings.API_TITLE,
-    description="AI-powered course recommendation system for McGill University",
     version=settings.API_VERSION,
     lifespan=lifespan,
-    docs_url="/api/docs" if settings.DEBUG else None,
-    redoc_url="/api/redoc" if settings.DEBUG else None,
+    docs_url=f"{settings.API_PREFIX}/docs" if settings.DEBUG else None,
+    redoc_url=f"{settings.API_PREFIX}/redoc" if settings.DEBUG else None,
 )
 
-# CORS configuration
+
+# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["X-Request-ID"],
+    expose_headers=["X-Process-Time", "X-Request-ID"],
 )
 
-@app.on_event("startup")
-async def startup_event():
-    """Warm up database connection on server start"""
-    import asyncio
-    from api.utils.supabase_client import get_supabase
-    loop = asyncio.get_event_loop()
-    await loop.run_in_executor(None, get_supabase)
-    logger.info("Startup complete - database connection ready")
+
+# Rate limiter instance
+_limiter = InMemoryRateLimiter(default_rpm=settings.RATE_LIMIT_PER_MINUTE)
+
 
 @app.middleware("http")
 async def rate_limit_middleware(request: Request, call_next):
-    """Apply per-IP rate limiting."""
-    client_ip = request.client.host if request.client else "unknown"
+    client_ip = request.headers.get("x-forwarded-for", request.client.host)
     path = request.url.path
 
-    # Determine limit based on endpoint
-    if "/chat/send" in path:
-        limit = settings.CHAT_RATE_LIMIT_PER_MINUTE
+    # Stricter limit for chat
+    if "/chat" in path:
+        rpm = settings.CHAT_RATE_LIMIT_PER_MINUTE
     else:
-        limit = settings.RATE_LIMIT_PER_MINUTE
+        rpm = settings.RATE_LIMIT_PER_MINUTE
 
-    if not rate_limiter.is_allowed(client_ip, limit):
-        logger.warning(f"Rate limit exceeded for {client_ip} on {path}")
+    if not _limiter.is_allowed(f"{client_ip}:{path}", rpm):
         from fastapi.responses import JSONResponse
-
         return JSONResponse(
             status_code=429,
             content={
-                "code": "rate_limit_exceeded",
-                "message": "Too many requests. Please try again later.",
+                "detail": "Too many requests. Please try again later.",
                 "details": {"retry_after": 60},
             },
         )
@@ -155,19 +143,19 @@ app.add_exception_handler(AppException, app_exception_handler)
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
 app.add_exception_handler(Exception, general_exception_handler)
 
+# FIX: Use settings.API_PREFIX consistently for ALL routes (was hardcoded for 3 routes)
 app.include_router(chat.router, prefix=f"{settings.API_PREFIX}/chat", tags=["Chat"])
 app.include_router(courses.router, prefix=f"{settings.API_PREFIX}/courses", tags=["Courses"])
 app.include_router(users.router, prefix=f"{settings.API_PREFIX}/users", tags=["Users"])
-app.include_router(favorites.router, prefix=f"{settings.API_PREFIX}/favorites", tags=["Favorites"])   # ← was "favorites"
-app.include_router(completed.router, prefix=f"{settings.API_PREFIX}/completed", tags=["Completed"])    # ← was "completed"
+app.include_router(favorites.router, prefix=f"{settings.API_PREFIX}/favorites", tags=["Favorites"])
+app.include_router(completed.router, prefix=f"{settings.API_PREFIX}/completed", tags=["Completed"])
 app.include_router(notifications.router, prefix=f"{settings.API_PREFIX}/notifications", tags=["Notifications"])
 app.include_router(current.router, prefix=f"{settings.API_PREFIX}/current", tags=["Current Courses"])
 app.include_router(suggestions.router, prefix=f"{settings.API_PREFIX}/suggestions", tags=["Suggestions"])
 app.include_router(cards.router, prefix=f"{settings.API_PREFIX}/cards", tags=["Cards"])
-app.include_router(transcript.router, prefix="/api/transcript", tags=["transcript"])
-app.include_router(degree_requirements.router, prefix="/api/degree-requirements", tags=["Degree Requirements"])
-app.include_router(electives.router, prefix="/api/electives", tags=["Electives"])
-app.include_router(clubs.router, prefix=f"{settings.API_PREFIX}/clubs", tags=["Clubs"])
+app.include_router(transcript.router, prefix=f"{settings.API_PREFIX}/transcript", tags=["Transcript"])
+app.include_router(degree_requirements.router, prefix=f"{settings.API_PREFIX}/degree-requirements", tags=["Degree Requirements"])
+app.include_router(electives.router, prefix=f"{settings.API_PREFIX}/electives", tags=["Electives"])
 
 
 @app.get("/")

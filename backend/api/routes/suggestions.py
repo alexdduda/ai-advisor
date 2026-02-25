@@ -4,11 +4,12 @@ Professor name suggestion/correction system.
 Users can flag incorrect professor names; submissions go to a pending queue
 for admin review before any data is updated.
 """
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Header, status
 from pydantic import BaseModel, Field
 from typing import Optional, List
 import logging
 
+from ..config import settings
 from ..utils.supabase_client import get_supabase, get_user_by_id
 from ..exceptions import DatabaseException, UserNotFoundException
 
@@ -25,6 +26,15 @@ class ProfSuggestion(BaseModel):
 
 class SuggestionReview(BaseModel):
     status: str = Field(..., pattern="^(approved|rejected)$")
+
+
+# ── Auth helper for admin endpoints ────────────────────────────
+def _verify_admin_secret(x_cron_secret: Optional[str]) -> None:
+    """Verify the admin secret header for protected endpoints."""
+    if not settings.CRON_SECRET:
+        raise HTTPException(status_code=500, detail="CRON_SECRET not configured")
+    if x_cron_secret != settings.CRON_SECRET:
+        raise HTTPException(status_code=401, detail="Invalid or missing X-Cron-Secret header")
 
 
 # ── Submit a suggestion ────────────────────────────────────────
@@ -87,8 +97,10 @@ async def submit_suggestion(suggestion: ProfSuggestion):
 
 # ── Admin: list all pending suggestions ───────────────────────
 @router.get("/admin/pending", response_model=dict)
-async def get_pending_suggestions():
-    """Admin endpoint — list all pending suggestions."""
+async def get_pending_suggestions(x_cron_secret: Optional[str] = Header(None)):
+    """Admin endpoint — list all pending suggestions. Protected by CRON_SECRET."""
+    _verify_admin_secret(x_cron_secret)
+
     try:
         supabase = get_supabase()
         response = (
@@ -99,6 +111,8 @@ async def get_pending_suggestions():
             .execute()
         )
         return {"suggestions": response.data or [], "count": len(response.data or [])}
+    except HTTPException:
+        raise
     except Exception as e:
         logger.exception(f"Error fetching pending suggestions: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch suggestions")
@@ -106,11 +120,18 @@ async def get_pending_suggestions():
 
 # ── Admin: approve or reject a suggestion ─────────────────────
 @router.patch("/admin/{suggestion_id}", response_model=dict)
-async def review_suggestion(suggestion_id: str, review: SuggestionReview):
+async def review_suggestion(
+    suggestion_id: str,
+    review: SuggestionReview,
+    x_cron_secret: Optional[str] = Header(None),
+):
     """
     Admin endpoint — approve or reject a pending suggestion.
     If approved, updates the instructor name in the courses table.
+    Protected by CRON_SECRET.
     """
+    _verify_admin_secret(x_cron_secret)
+
     try:
         supabase = get_supabase()
 
@@ -154,8 +175,10 @@ async def review_suggestion(suggestion_id: str, review: SuggestionReview):
 
 # ── Admin: list all suggestions (all statuses) ────────────────
 @router.get("/admin/all", response_model=dict)
-async def get_all_suggestions():
-    """Admin endpoint — list all suggestions regardless of status."""
+async def get_all_suggestions(x_cron_secret: Optional[str] = Header(None)):
+    """Admin endpoint — list all suggestions regardless of status. Protected by CRON_SECRET."""
+    _verify_admin_secret(x_cron_secret)
+
     try:
         supabase = get_supabase()
         response = (
@@ -165,6 +188,8 @@ async def get_all_suggestions():
             .execute()
         )
         return {"suggestions": response.data or [], "count": len(response.data or [])}
+    except HTTPException:
+        raise
     except Exception as e:
         logger.exception(f"Error fetching all suggestions: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch suggestions")

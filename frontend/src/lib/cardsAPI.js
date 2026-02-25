@@ -1,12 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-
-const normalizeUrl = (url) => {
-  let normalized = url.replace(/\/$/, '')
-  if (normalized.endsWith('/api')) normalized = normalized.slice(0, -4)
-  return normalized
-}
-
-const BASE_URL = normalizeUrl(API_URL)
+import { BASE_URL } from './apiConfig'
 
 export const CARD_CATEGORIES = [
   'deadlines',
@@ -15,6 +7,7 @@ export const CARD_CATEGORIES = [
   'grades',
   'planning',
   'opportunities',
+  'other',
 ]
 
 export const CATEGORY_LABELS = {
@@ -24,6 +17,7 @@ export const CATEGORY_LABELS = {
   grades:        'Grades',
   planning:      'Planning',
   opportunities: 'Opportunities',
+  other:         'Other',
 }
 
 export const CATEGORY_ICONS = {
@@ -33,6 +27,7 @@ export const CATEGORY_ICONS = {
   grades:        '📊',
   planning:      '🗺️',
   opportunities: '✨',
+  other:         '💬',
 }
 
 const cardsAPI = {
@@ -78,17 +73,6 @@ const cardsAPI = {
     if (!response.ok) throw new Error('Failed to send thread message')
     const data = await response.json()
     return data.response
-  },
-
-  /** Permanently delete a single card from the DB */
-  async deleteCard(userId, cardId) {
-    const response = await fetch(`${BASE_URL}/api/cards/${userId}/${cardId}`, {
-      method: 'DELETE',
-    })
-    // 204 No Content on success, 404 if already gone — both are fine
-    if (!response.ok && response.status !== 404) {
-      throw new Error('Failed to delete card')
-    }
   },
 
   /** Clear AI-generated, non-saved cards */

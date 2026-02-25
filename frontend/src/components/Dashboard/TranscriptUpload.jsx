@@ -1,14 +1,7 @@
 import { useState, useRef } from 'react'
 import { FaFileUpload, FaTimes, FaCheckCircle, FaSpinner, FaGraduationCap, FaBook, FaExclamationTriangle } from 'react-icons/fa'
+import { BASE_URL } from '../../lib/apiConfig'
 import './TranscriptUpload.css'
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-const normalizeUrl = (url) => {
-  let n = url.replace(/\/$/, '')
-  if (n.endsWith('/api')) n = n.slice(0, -4)
-  return n
-}
-const BASE_URL = normalizeUrl(API_URL)
 
 export default function TranscriptUpload({ userId, onImportComplete, onClose }) {
   const [step, setStep] = useState('upload')
@@ -63,183 +56,153 @@ export default function TranscriptUpload({ userId, onImportComplete, onClose }) 
       const data = await res.json()
       setResults(data.results)
       setStep('done')
-      onImportComplete?.(data)
+      onImportComplete?.()
     } catch (e) {
       setErrorMsg(e.message)
       setStep('error')
     }
   }
 
-  const studentInfo = parsed?.student_info || {}
-  const completedCourses = parsed?.completed_courses || []
-  const currentCourses = parsed?.current_courses || []
-  const advancedStanding = studentInfo?.advanced_standing || []
+  const handleReset = () => {
+    setStep('upload')
+    setFile(null)
+    setParsed(null)
+    setResults(null)
+    setErrorMsg('')
+  }
 
   return (
-    <div className="transcript-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div className="transcript-overlay">
       <div className="transcript-modal">
-        <div className="transcript-header">
-          <div className="transcript-header-left">
-            <FaGraduationCap className="transcript-header-icon" />
-            <div>
-              <h2 className="transcript-title">Import Transcript</h2>
-              <p className="transcript-subtitle">Upload your McGill unofficial transcript PDF</p>
-            </div>
-          </div>
-          <button className="transcript-close-btn" onClick={onClose}><FaTimes /></button>
-        </div>
+        <button className="transcript-close" onClick={onClose}><FaTimes /></button>
 
         {step === 'upload' && (
-          <>
-            <div className="transcript-body">
-              <div
-                className={`transcript-dropzone ${dragOver ? 'drag-over' : ''} ${file ? 'has-file' : ''}`}
-                onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
-                onDragLeave={() => setDragOver(false)}
-                onDrop={handleDrop}
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <input ref={fileInputRef} type="file" accept=".pdf" style={{ display: 'none' }}
-                  onChange={(e) => handleFile(e.target.files[0])} />
-                {file ? (
-                  <div className="dropzone-file-selected">
-                    <FaCheckCircle className="dropzone-check" />
-                    <span className="dropzone-filename">{file.name}</span>
-                    <span className="dropzone-filesize">({(file.size / 1024).toFixed(0)} KB)</span>
-                  </div>
-                ) : (
-                  <>
-                    <FaFileUpload className="dropzone-icon" />
-                    <p className="dropzone-main">Drop your transcript PDF here</p>
-                    <p className="dropzone-sub">or click to browse</p>
-                    <p className="dropzone-note">Download from Minerva → Student Records → Unofficial Transcript</p>
-                  </>
-                )}
-              </div>
-              {errorMsg && <div className="transcript-error-msg"><FaExclamationTriangle /> {errorMsg}</div>}
+          <div className="transcript-step">
+            <h2><FaGraduationCap /> Import Transcript</h2>
+            <p className="transcript-desc">Upload your unofficial McGill transcript PDF to auto-import your courses and grades.</p>
+
+            <div
+              className={`transcript-dropzone ${dragOver ? 'drag-over' : ''} ${file ? 'has-file' : ''}`}
+              onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={handleDrop}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <input ref={fileInputRef} type="file" accept=".pdf" onChange={(e) => handleFile(e.target.files[0])} hidden />
+              {file ? (
+                <div className="transcript-file-info">
+                  <FaBook size={24} />
+                  <span>{file.name}</span>
+                  <span className="file-size">({(file.size / 1024 / 1024).toFixed(1)} MB)</span>
+                </div>
+              ) : (
+                <>
+                  <FaFileUpload size={32} />
+                  <p>Drop your transcript PDF here, or click to browse</p>
+                </>
+              )}
             </div>
-            <div className="transcript-footer">
-              <button className="btn-transcript-secondary" onClick={onClose}>Cancel</button>
-              <button className="btn-transcript-primary" onClick={handleParse} disabled={!file}>Parse Transcript</button>
-            </div>
-          </>
+
+            {errorMsg && <p className="transcript-error"><FaExclamationTriangle /> {errorMsg}</p>}
+
+            <button className="transcript-btn primary" onClick={handleParse} disabled={!file}>
+              Parse Transcript
+            </button>
+          </div>
         )}
 
         {step === 'parsing' && (
-          <div className="transcript-body transcript-loading">
-            <FaSpinner className="transcript-spinner" />
-            <p className="loading-title">Analyzing your transcript…</p>
-            <p className="loading-sub">Claude is reading your courses, grades, and program info</p>
+          <div className="transcript-step center">
+            <FaSpinner className="spin" size={32} />
+            <p>Parsing your transcript with AI...</p>
+            <p className="transcript-desc">This may take 10–20 seconds.</p>
           </div>
         )}
 
-        {step === 'preview' && (
-          <>
-            <div className="transcript-body">
-              {(studentInfo.major || studentInfo.cum_gpa || studentInfo.year) && (
-                <div className="preview-section">
-                  <h3 className="preview-section-title">📋 Profile Info Detected</h3>
-                  <div className="preview-info-grid">
-                    {studentInfo.major && <div className="preview-info-item"><span className="info-label">Major</span><span className="info-value">{studentInfo.major}</span></div>}
-                    {studentInfo.minor && <div className="preview-info-item"><span className="info-label">Minor</span><span className="info-value">{studentInfo.minor}</span></div>}
-                    {studentInfo.faculty && <div className="preview-info-item"><span className="info-label">Faculty</span><span className="info-value">{studentInfo.faculty}</span></div>}
-                    {studentInfo.year && <div className="preview-info-item"><span className="info-label">Year</span><span className="info-value">Year {studentInfo.year}</span></div>}
-                    {studentInfo.cum_gpa && <div className="preview-info-item"><span className="info-label">Cumulative GPA</span><span className="info-value gpa-value">{studentInfo.cum_gpa}</span></div>}
-                  </div>
+        {step === 'preview' && parsed && (
+          <div className="transcript-step">
+            <h2><FaCheckCircle color="#16a34a" /> Parsed Successfully</h2>
+
+            {parsed.student_info && (
+              <div className="transcript-section">
+                <h3>Student Info</h3>
+                <div className="transcript-info-grid">
+                  {parsed.student_info.major && <div><strong>Major:</strong> {parsed.student_info.major}</div>}
+                  {parsed.student_info.minor && <div><strong>Minor:</strong> {parsed.student_info.minor}</div>}
+                  {parsed.student_info.faculty && <div><strong>Faculty:</strong> {parsed.student_info.faculty}</div>}
+                  {parsed.student_info.year && <div><strong>Year:</strong> U{parsed.student_info.year}</div>}
+                  {parsed.student_info.cum_gpa && <div><strong>Cumulative GPA:</strong> {parsed.student_info.cum_gpa}</div>}
                 </div>
-              )}
-              {advancedStanding.length > 0 && (
-                <div className="preview-section">
-                  <h3 className="preview-section-title">🏆 Advanced Standing / AP Credits ({advancedStanding.length})</h3>
-                  <div className="preview-course-list">
-                    {advancedStanding.map((c, i) => (
-                      <div key={i} className="preview-course-item preview-course-item--ap">
-                        <span className="course-code">{c.course_code}</span>
-                        <span className="course-title">{c.course_title || ''}</span>
-                        <span className="course-credits">{c.credits || 3} cr</span>
-                      </div>
-                    ))}
+              </div>
+            )}
+
+            <div className="transcript-section">
+              <h3>Completed Courses ({parsed.completed_courses?.length || 0})</h3>
+              <div className="transcript-course-list">
+                {(parsed.completed_courses || []).slice(0, 10).map((c, i) => (
+                  <div key={i} className="transcript-course-item">
+                    <span className="course-code">{c.course_code}</span>
+                    <span className="course-title">{c.course_title}</span>
+                    <span className="course-grade">{c.grade || '—'}</span>
                   </div>
-                </div>
-              )}
-              {completedCourses.length > 0 && (
-                <div className="preview-section">
-                  <h3 className="preview-section-title">✅ Completed Courses ({completedCourses.length})</h3>
-                  <div className="preview-course-list">
-                    {completedCourses.map((c, i) => (
-                      <div key={i} className="preview-course-item">
-                        <span className="course-code">{c.course_code}</span>
-                        <span className="course-title">{c.course_title}</span>
-                        <span className="course-term">{c.term} {c.year}</span>
-                        {c.grade && <span className={`course-grade grade-${c.grade.replace('+', 'plus').replace('-', 'minus')}`}>{c.grade}</span>}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {currentCourses.length > 0 && (
-                <div className="preview-section">
-                  <h3 className="preview-section-title"><FaBook style={{ display: 'inline', marginRight: 6 }} />Current Courses ({currentCourses.length})</h3>
-                  <div className="preview-course-list">
-                    {currentCourses.map((c, i) => (
-                      <div key={i} className="preview-course-item preview-course-item--current">
-                        <span className="course-code">{c.course_code}</span>
-                        <span className="course-title">{c.course_title}</span>
-                        <span className="course-badge-current">In Progress</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+                ))}
+                {(parsed.completed_courses?.length || 0) > 10 && (
+                  <p className="transcript-more">... and {parsed.completed_courses.length - 10} more</p>
+                )}
+              </div>
             </div>
-            <div className="transcript-footer">
-              <button className="btn-transcript-secondary" onClick={() => setStep('upload')}>← Back</button>
-              <button className="btn-transcript-primary" onClick={handleImport}>
-                Replace & Import {completedCourses.length + currentCourses.length} Courses
-              </button>
+
+            {(parsed.current_courses?.length || 0) > 0 && (
+              <div className="transcript-section">
+                <h3>Current Courses ({parsed.current_courses.length})</h3>
+                <div className="transcript-course-list">
+                  {parsed.current_courses.map((c, i) => (
+                    <div key={i} className="transcript-course-item">
+                      <span className="course-code">{c.course_code}</span>
+                      <span className="course-title">{c.course_title}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="transcript-actions">
+              <button className="transcript-btn secondary" onClick={handleReset}>Re-upload</button>
+              <button className="transcript-btn primary" onClick={handleImport}>Import All</button>
             </div>
-          </>
+          </div>
         )}
 
         {step === 'importing' && (
-          <div className="transcript-body transcript-loading">
-            <FaSpinner className="transcript-spinner" />
-            <p className="loading-title">Importing your courses…</p>
-            <p className="loading-sub">Saving to your profile</p>
+          <div className="transcript-step center">
+            <FaSpinner className="spin" size={32} />
+            <p>Importing courses into your profile...</p>
           </div>
         )}
 
-        {step === 'done' && results && (
-          <div className="transcript-body transcript-done">
-            <FaCheckCircle className="done-icon" />
-            <h3 className="done-title">Import Complete!</h3>
-            <div className="done-stats">
-              <div className="done-stat"><span className="done-stat-num">{results.completed_added}</span><span className="done-stat-label">Completed courses added</span></div>
-              <div className="done-stat"><span className="done-stat-num">{results.current_added}</span><span className="done-stat-label">Current courses added</span></div>
-              {results.profile_updated && <div className="done-stat done-stat--green"><span className="done-stat-num">✓</span><span className="done-stat-label">Profile updated</span></div>}
-              {(results.completed_skipped + results.current_skipped) > 0 && (
-                <div className="done-stat done-stat--gray">
-                  <span className="done-stat-num">{results.completed_skipped + results.current_skipped}</span>
-                  <span className="done-stat-label">Already in profile (skipped)</span>
-                </div>
-              )}
-            </div>
-            <button className="btn-transcript-primary" onClick={onClose}>Done</button>
+        {step === 'done' && (
+          <div className="transcript-step center">
+            <FaCheckCircle color="#16a34a" size={40} />
+            <h2>Import Complete!</h2>
+            {results && (
+              <div className="transcript-results">
+                <p>{results.completed_added} completed courses added</p>
+                {results.completed_skipped > 0 && <p>{results.completed_skipped} already existed (skipped)</p>}
+                <p>{results.current_added} current courses added</p>
+                {results.profile_updated && <p>Profile info updated</p>}
+              </div>
+            )}
+            <button className="transcript-btn primary" onClick={onClose}>Done</button>
           </div>
         )}
 
         {step === 'error' && (
-          <>
-            <div className="transcript-body transcript-error-state">
-              <FaExclamationTriangle className="error-state-icon" />
-              <h3 className="error-state-title">Something went wrong</h3>
-              <p className="error-state-msg">{errorMsg}</p>
-            </div>
-            <div className="transcript-footer">
-              <button className="btn-transcript-secondary" onClick={() => { setStep('upload'); setErrorMsg('') }}>Try Again</button>
-              <button className="btn-transcript-secondary" onClick={onClose}>Close</button>
-            </div>
-          </>
+          <div className="transcript-step center">
+            <FaExclamationTriangle color="#dc2626" size={32} />
+            <h2>Something went wrong</h2>
+            <p className="transcript-error">{errorMsg}</p>
+            <button className="transcript-btn secondary" onClick={handleReset}>Try Again</button>
+          </div>
         )}
       </div>
     </div>
