@@ -28,11 +28,14 @@ function toProgramKey(name, type = 'major') {
     'History': 'history',
     'Philosophy': 'philosophy',
     'English': 'english_literature',
+    'English Literature': 'english_literature',
     'Communication Studies': 'communication_studies',
     'International Development Studies': 'intl_development',
+    'International Development': 'intl_development',
     'Gender, Sexuality, Feminist and Social Justice Studies': 'gsfsj',
     'Canadian Studies': 'canadian_studies',
     'Classical Studies': 'classics',
+    'Classics': 'classics',
     'Jewish Studies': 'jewish_studies',
     'East Asian Studies': 'east_asian_studies',
     'Geography': 'geography',
@@ -44,6 +47,25 @@ function toProgramKey(name, type = 'major') {
     'African Studies': 'african_studies',
     'Information Studies': 'information_studies',
     'Latin American and Caribbean Studies': 'latin_american_caribbean',
+    'Liberal Arts': 'liberal_arts',
+    'French': 'french',
+    'French Language and Literature': 'french',
+    'Cognitive Science': 'cognitive_science',
+    'European Literature and Culture': 'european_lit_culture',
+    'World Islamic and Middle East Studies': 'world_islamic_middle_east',
+    // Science for Arts
+    'Science for Arts Students': 'science_for_arts_students',
+    'Science for Arts': 'science_for_arts_students',
+    // Engineering programs
+    'Software Engineering': 'software_engineering_coop',
+    'Computer Engineering': 'computer_engineering',
+    'Electrical Engineering': 'electrical_engineering',
+    'Mechanical Engineering': 'mechanical_engineering',
+    'Civil Engineering': 'civil_engineering',
+    'Chemical Engineering': 'chemical_engineering',
+    'Bioengineering': 'bioengineering',
+    'Mining Engineering': 'mining_engineering',
+    'Materials Engineering': 'materials_engineering_coop',
   }
   const slug = map[name] || name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '')
   return `${slug}_${type}`
@@ -359,13 +381,15 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
   const [openBlocks, setOpenBlocks]   = useState({})
   const [activeTab, setActiveTab]     = useState('major')
   const [loadFailed, setLoadFailed]   = useState(false)
+  // Track which programs returned 404 even after seeding (truly unavailable)
+  const [unavailable, setUnavailable] = useState({ major: false, minor: false })
 
   const advStanding = profile?.advanced_standing || []
   const majorKey    = toProgramKey(profile?.major, 'major')
   const minorKey    = toProgramKey(profile?.minor, 'minor')
 
   const fetchProgram = async (key, setter, autoSeedOnMiss = false) => {
-    if (!key) return
+    if (!key) return 'skip'
     try {
       const res = await fetch(`${API_BASE}/api/degree-requirements/programs/${key}`, {
         cache: 'no-store'
@@ -373,26 +397,35 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
       if (res.status === 404) {
         if (autoSeedOnMiss) {
           // Trigger seed and wait for it to fully complete
-          await fetch(`${API_BASE}/api/degree-requirements/seed`, { method: 'POST' })
-          // Poll up to 8 times (up to ~16s) for the program to appear
-          for (let i = 0; i < 8; i++) {
+          try {
+            await fetch(`${API_BASE}/api/degree-requirements/seed`, { method: 'POST' })
+          } catch {
+            // seed endpoint failed — still try fetching
+          }
+          // Poll up to 4 times (up to ~8s) for the program to appear
+          for (let i = 0; i < 4; i++) {
             await new Promise(r => setTimeout(r, 2000))
-            const retry = await fetch(`${API_BASE}/api/degree-requirements/programs/${key}`, { cache: 'no-store' })
-            if (retry.ok) {
-              const retryData = await retry.json()
-              setter(retryData)
-              setOpenBlocks(prev => {
-                const init = { ...prev }
-                retryData.blocks?.forEach((b, i) => { if (i < 2) init[b.id] = true })
-                return init
-              })
-              return
+            try {
+              const retry = await fetch(`${API_BASE}/api/degree-requirements/programs/${key}`, { cache: 'no-store' })
+              if (retry.ok) {
+                const retryData = await retry.json()
+                setter(retryData)
+                setOpenBlocks(prev => {
+                  const init = { ...prev }
+                  retryData.blocks?.forEach((b, i) => { if (i < 2) init[b.id] = true })
+                  return init
+                })
+                return 'ok'
+              }
+            } catch {
+              // retry failed, continue polling
             }
           }
         }
-        return
+        // Still 404 after seeding — this program genuinely doesn't exist in the DB
+        return 'not_found'
       }
-      if (!res.ok) return
+      if (!res.ok) return 'error'
       const data = await res.json()
       setter(data)
       setOpenBlocks(prev => {
@@ -400,7 +433,10 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
         data.blocks?.forEach((b, i) => { if (i < 2) init[b.id] = true })
         return init
       })
-    } catch {}
+      return 'ok'
+    } catch {
+      return 'error'
+    }
   }
 
   // profile loads async — track whether we've fetched once this session
@@ -414,11 +450,18 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
     setLoadFailed(false)
     setProgramData(null)
     setMinorData(null)
+    setUnavailable({ major: false, minor: false })
     fetchedRef.current = true
+
     Promise.all([
       fetchProgram(majorKey, setProgramData, true),
       fetchProgram(minorKey, setMinorData, true),
-    ]).finally(() => setLoading(false))
+    ]).then(([majorResult, minorResult]) => {
+      setUnavailable({
+        major: majorResult === 'not_found',
+        minor: minorResult === 'not_found',
+      })
+    }).finally(() => setLoading(false))
   // profile being truthy for first time triggers this, as do key changes
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [majorKey, minorKey, !!profile])
@@ -435,10 +478,14 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
       const res = await fetch(`${API_BASE}/api/degree-requirements/seed`, { method: 'POST' })
       const data = await res.json()
       if (data.success) {
-        await Promise.all([
-          fetchProgram(majorKey, setProgramData, true),
-          fetchProgram(minorKey, setMinorData, true),
+        const [majorResult, minorResult] = await Promise.all([
+          fetchProgram(majorKey, setProgramData, false),
+          fetchProgram(minorKey, setMinorData, false),
         ])
+        setUnavailable({
+          major: majorResult === 'not_found',
+          minor: minorResult === 'not_found',
+        })
       }
     } catch {}
     finally { setSeeding(false) }
@@ -452,9 +499,11 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
 
   // Tabs: only show tabs that have data or are expected
   const tabs = []
-  if (profile?.major) tabs.push({ id: 'major', label: profile.major, data: programData })
-  if (profile?.minor) tabs.push({ id: 'minor', label: profile.minor, data: minorData })
-  const currentTabData = tabs.find(t => t.id === activeTab)?.data
+  if (profile?.major) tabs.push({ id: 'major', label: profile.major, data: programData, unavailable: unavailable.major })
+  if (profile?.minor) tabs.push({ id: 'minor', label: profile.minor, data: minorData, unavailable: unavailable.minor })
+  const currentTab = tabs.find(t => t.id === activeTab)
+  const currentTabData = currentTab?.data
+  const currentTabUnavailable = currentTab?.unavailable
 
   // Quick progress for ring display
   const calcRingProgress = (prog) => {
@@ -494,12 +543,29 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
         <div className="dp-req-loading"><div className="dp-req-spinner" /> Loading requirements…</div>
       )}
 
-      {!loading && !hasAny && (
+      {!loading && !hasAny && !unavailable.major && !unavailable.minor && (
         <div className="dp-req-empty">
           <p>Requirements not loaded yet.</p>
           <button className="dp-req-seed-btn" onClick={handleSeed} disabled={seeding}>
             <FaBolt /> {seeding ? 'Loading…' : 'Load Requirements'}
           </button>
+        </div>
+      )}
+
+      {/* Show a message if ALL programs are unavailable (no data at all) */}
+      {!loading && !hasAny && (unavailable.major || unavailable.minor) && (
+        <div className="dp-req-empty">
+          <p style={{ color: 'var(--text-secondary, #6b7280)', fontSize: '0.9rem' }}>
+            Detailed requirements for{' '}
+            {[
+              unavailable.major && profile?.major,
+              unavailable.minor && profile?.minor,
+            ].filter(Boolean).join(' and ')}{' '}
+            are not yet available. We're working on adding more programs!
+          </p>
+          <p style={{ color: 'var(--text-tertiary, #9ca3af)', fontSize: '0.8rem', marginTop: '0.25rem' }}>
+            You can still browse available programs in the Degree Requirements tab.
+          </p>
         </div>
       )}
 
@@ -557,6 +623,9 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
                 onClick={() => setActiveTab(tab.id)}
               >
                 {tab.id === 'major' ? 'Major' : 'Minor'}: {tab.label}
+                {tab.unavailable && !tab.data && (
+                  <span style={{ fontSize: '0.7rem', opacity: 0.6, marginLeft: '0.25rem' }}>(N/A)</span>
+                )}
               </button>
             ))}
             <button
@@ -568,7 +637,7 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
           </div>
 
           {/* Active program blocks */}
-          {activeTab !== 'electives' && (
+          {activeTab !== 'electives' && currentTabData && (
             <ProgramSection
               prog={currentTabData}
               completedCourses={completedCourses}
@@ -577,6 +646,18 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
               openBlocks={openBlocks}
               setOpenBlocks={setOpenBlocks}
             />
+          )}
+
+          {/* Show friendly message when a tab's program is unavailable */}
+          {activeTab !== 'electives' && !currentTabData && currentTabUnavailable && (
+            <div className="dp-req-empty" style={{ padding: '1.5rem', textAlign: 'center' }}>
+              <p style={{ color: 'var(--text-secondary, #6b7280)', fontSize: '0.9rem', margin: 0 }}>
+                Detailed requirements for <strong>{currentTab?.label}</strong> are not yet available.
+              </p>
+              <p style={{ color: 'var(--text-tertiary, #9ca3af)', fontSize: '0.8rem', marginTop: '0.5rem' }}>
+                Check the Degree Requirements tab to browse all available programs.
+              </p>
+            </div>
           )}
 
           {/* Electives tab */}
