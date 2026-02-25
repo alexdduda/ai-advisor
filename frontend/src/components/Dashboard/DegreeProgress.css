@@ -3,19 +3,21 @@
   background: var(--bg-primary);
   padding: 2rem;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
   margin-bottom: 2rem;
 }
 
 .progress-card {
-  background: #F8F9FA;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
   padding: 1.5rem;
   border-radius: 12px;
   margin-bottom: 1rem;
 }
 
 .progress-card.overall-progress {
-  background: linear-gradient(135deg, var(--accent-primary) 0%, #B01B2E 100%);
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-active) 100%);
+  border-color: transparent;
   color: white;
 }
 
@@ -54,19 +56,19 @@
 }
 
 .progress-bar-container {
-  height: 12px;
+  height: 10px;
   background: rgba(0, 0, 0, 0.1);
-  border-radius: 50px;
+  border-radius: 6px;
   overflow: hidden;
 }
 
 .progress-card.overall-progress .progress-bar-container {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.25);
 }
 
 .progress-bar-fill {
   height: 100%;
-  border-radius: 50px;
+  border-radius: 6px;
   transition: width 0.5s ease;
 }
 
@@ -74,12 +76,14 @@
   background: rgba(255, 255, 255, 0.9);
 }
 
+/* Major and minor bars use the accent red spectrum */
 .progress-bar-fill.major {
-  background: linear-gradient(90deg, #4CAF50 0%, #45A049 100%);
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-active));
 }
 
 .progress-bar-fill.minor {
-  background: linear-gradient(90deg, #2196F3 0%, #1976D2 100%);
+  background: linear-gradient(90deg, var(--accent-hover), var(--accent-active));
+  opacity: 0.75;
 }
 
 .progress-group {
@@ -120,7 +124,7 @@
     flex-direction: column;
     gap: 0.5rem;
   }
-  
+
   .progress-percentage {
     align-self: flex-end;
   }
