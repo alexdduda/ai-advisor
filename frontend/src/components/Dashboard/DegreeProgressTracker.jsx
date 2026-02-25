@@ -15,8 +15,9 @@ export default function DegreeProgressTracker({ completedCourses = [], profile =
       return sum + (course.credits || 3) // Default to 3 if not specified
     }, 0)
 
-    // Calculate advanced standing credits
+    // Calculate advanced standing credits (only entries with counts_toward_degree not explicitly false)
     const advancedStandingCredits = (profile?.advanced_standing || []).reduce((sum, course) => {
+      if (course.counts_toward_degree === false) return sum
       return sum + (course.credits || 0)
     }, 0)
 

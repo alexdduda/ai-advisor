@@ -80,6 +80,17 @@ const cardsAPI = {
     return data.response
   },
 
+  /** Permanently delete a single card from the DB */
+  async deleteCard(userId, cardId) {
+    const response = await fetch(`${BASE_URL}/api/cards/${userId}/${cardId}`, {
+      method: 'DELETE',
+    })
+    // 204 No Content on success, 404 if already gone — both are fine
+    if (!response.ok && response.status !== 404) {
+      throw new Error('Failed to delete card')
+    }
+  },
+
   /** Clear AI-generated, non-saved cards */
   async clearCards(userId) {
     const response = await fetch(`${BASE_URL}/api/cards/${userId}`, {
