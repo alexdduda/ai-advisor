@@ -26,7 +26,8 @@ class ElectivesRequest(BaseModel):
 @router.post("/recommend")
 async def recommend_electives(req: ElectivesRequest):
     try:
-        client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
+        # FIX: Use AsyncAnthropic to avoid blocking the event loop
+        client = anthropic.AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
 
         course_list = ", ".join(req.courses_taken) if req.courses_taken else "None yet"
 
@@ -63,7 +64,8 @@ Respond ONLY with valid JSON, no markdown, no explanation:
   ]
 }}"""
 
-        message = client.messages.create(
+        # FIX: Use await with the async client
+        message = await client.messages.create(
             model="claude-haiku-4-5-20251001",
             max_tokens=1200,
             messages=[{"role": "user", "content": prompt}]

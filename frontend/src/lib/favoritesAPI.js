@@ -1,17 +1,5 @@
 // Frontend API client for favorites
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-
-// Remove trailing slash and /api if present to normalize
-const normalizeUrl = (url) => {
-  let normalized = url.replace(/\/$/, ''); // Remove trailing slash
-  if (normalized.endsWith('/api')) {
-    normalized = normalized.slice(0, -4); // Remove /api suffix
-  }
-  return normalized;
-};
-
-const BASE_URL = normalizeUrl(API_URL);
+import { BASE_URL } from './apiConfig'
 
 export const favoritesAPI = {
   // Get all favorites for a user

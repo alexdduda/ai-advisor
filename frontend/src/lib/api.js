@@ -219,13 +219,12 @@ export const usersAPI = {
   
   updateUser: async (userId, updates) => {
     try {
-      console.log('usersAPI.updateUser: Sending request with:', { userId, updates: JSON.stringify(updates, null, 2) })
+      // FIX: Removed verbose debug console.log statements that were
+      // logging full request payloads and responses in production
       const response = await api.patch(`/users/${userId}`, updates)
-      console.log('usersAPI.updateUser: Response received:', JSON.stringify(response.data, null, 2))
       return response.data
     } catch (error) {
       console.error('Update user error:', error)
-      console.error('Error response:', error.response?.data)
       throw error
     }
   },

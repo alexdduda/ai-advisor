@@ -1,14 +1,5 @@
 // Frontend API client for current courses
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-
-const normalizeUrl = (url) => {
-  let normalized = url.replace(/\/$/, '')
-  if (normalized.endsWith('/api')) normalized = normalized.slice(0, -4)
-  return normalized
-}
-
-const BASE_URL = normalizeUrl(API_URL)
+import { BASE_URL } from './apiConfig'
 
 export const currentCoursesAPI = {
   async getCurrent(userId) {
