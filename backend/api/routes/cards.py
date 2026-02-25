@@ -34,7 +34,6 @@ CARD_CATEGORIES = [
     "grades",
     "planning",
     "opportunities",
-    "other",
 ]
 CATEGORIES_PROMPT_LIST = "\n".join(f'  - "{c}"' for c in CARD_CATEGORIES)
 
@@ -120,8 +119,8 @@ def cards_are_fresh(user_id: str, max_age_hours: int = 12) -> bool:
 
 
 def _sanitise_category(card: dict) -> str:
-    cat = card.get("category", "other")
-    return cat if cat in CARD_CATEGORIES else "other"
+    cat = card.get("category", "planning")
+    return cat if cat in CARD_CATEGORIES else "planning"
 
 
 def save_cards(user_id: str, cards: list) -> None:
@@ -236,7 +235,7 @@ def build_rich_context(ctx: dict, saved_cards: list = None) -> str:
     saved_section = ""
     if saved_cards:
         saved_lines = "\n".join(
-            f"  - [{c.get('category','other')}] {c['title']}: {c['body'][:120]}"
+            f"  - [{c.get('category','planning')}] {c['title']}: {c['body'][:120]}"
             for c in saved_cards
         )
         saved_section = f"""
@@ -380,30 +379,102 @@ async def clear_cards(user_id: str):
 async def delete_card(user_id: str, card_id: str):
     """Permanently delete a single advisor card for a user."""
     try:
+        get_user_by_id(user_id)
         supabase = get_supabase()
-        result = (supabase.table("advisor_cards")
-            .delete()
-            .eq("id", card_id)
-            .eq("user_id", user_id)  # Ensure user can only delete their own cards
-            .execute())
-        if not result.data:
-            raise HTTPException(status_code=404, detail="Card not found")
-    except HTTPException:
-        raise
+        supabase.table("advisor_cards").delete() \
+            .eq("id", card_id) \
+            .eq("user_id", user_id) \
+            .execute()
+    except UserNotFoundException:
+        raise HTTPException(status_code=404, detail="User not found")
     except Exception as e:
-        logger.exception(f"Failed to delete card {card_id}: {e}")
+        logger.exception(f"Failed to delete card {card_id} for {user_id}: {e}")
         raise HTTPException(status_code=500, detail="Failed to delete card")
 
 
+@router.post("/ask/{user_id}", response_model=dict)
+async def ask_card(user_id: str, request: AskRequest):
+    try:
+        get_user_by_id(user_id)
+        ctx = fetch_student_context(user_id)
+
+        prompt = f"""You are a proactive AI academic advisor for McGill University.
+A student has asked: "{request.question}"
+
+Based on their profile below, generate a single helpful advisor card that directly answers their question.
+
+{build_rich_context(ctx)}
+
+Return a single JSON object (not an array) with these fields:
+  "type"     : one of "urgent" | "warning" | "insight" | "progress"
+  "icon"     : single emoji relevant to the answer
+  "label"    : short ALL-CAPS label (≤ 4 words)
+  "title"    : concise headline answering the question (≤ 12 words)
+  "body"     : 2–4 sentence answer with specific, actionable detail
+  "actions"  : array of 2–3 follow-up question strings
+  "category" : one of: {", ".join(f'"{c}"' for c in CARD_CATEGORIES)}
+
+Return ONLY the JSON object — no markdown, no commentary."""
+
+        client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
+        message = client.messages.create(
+            model="claude-opus-4-5",
+            max_tokens=1024,
+            messages=[{"role": "user", "content": prompt}],
+        )
+
+        raw = message.content[0].text.strip()
+        if raw.startswith("```"):
+            raw = raw.split("\n", 1)[1].rsplit("```", 1)[0].strip()
+
+        card_data = json.loads(raw)
+        card = insert_user_card(user_id, card_data, request.question)
+        return {"card": card}
+
+    except UserNotFoundException:
+        raise HTTPException(status_code=404, detail="User not found")
+    except json.JSONDecodeError as e:
+        logger.error(f"Ask card JSON parse error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to parse AI response")
+    except Exception as e:
+        logger.exception(f"Ask card failed for {user_id}: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate card from question")
+
+
+@router.post("/{card_id}/thread", response_model=dict)
+async def thread_message(card_id: str, request: ThreadRequest):
+    try:
+        prompt = f"""You are a helpful AI academic advisor for McGill University.
+The student is asking a follow-up question about this advisor card:
+
+Card context: {request.card_context}
+
+Student's follow-up: {request.message}
+
+Provide a concise, helpful, and specific response (2–4 sentences). Be direct and actionable."""
+
+        client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
+        message = client.messages.create(
+            model="claude-opus-4-5",
+            max_tokens=512,
+            messages=[{"role": "user", "content": prompt}],
+        )
+
+        return {"response": message.content[0].text.strip()}
+
+    except Exception as e:
+        logger.exception(f"Thread message failed for card {card_id}: {e}")
+        raise HTTPException(status_code=500, detail="Failed to process thread message")
+
+
 @router.patch("/{card_id}/save", response_model=dict)
-async def toggle_save_card(card_id: str, request: SaveRequest):
-    """Pin or unpin a card so the nightly cron won't delete it."""
+async def save_card(card_id: str, request: SaveRequest):
     try:
         supabase = get_supabase()
-        result = (supabase.table("advisor_cards")
-            .update({"is_saved": request.is_saved})
-            .eq("id", card_id)
-            .execute())
+        result = supabase.table("advisor_cards") \
+            .update({"is_saved": request.is_saved}) \
+            .eq("id", card_id) \
+            .execute()
         if not result.data:
             raise HTTPException(status_code=404, detail="Card not found")
         card = result.data[0]
@@ -413,16 +484,12 @@ async def toggle_save_card(card_id: str, request: SaveRequest):
     except HTTPException:
         raise
     except Exception as e:
-        logger.exception(f"Failed to toggle save for card {card_id}: {e}")
+        logger.exception(f"Failed to save card {card_id}: {e}")
         raise HTTPException(status_code=500, detail="Failed to update card")
 
 
 @router.patch("/{user_id}/reorder", response_model=dict)
 async def reorder_cards(user_id: str, request: ReorderRequest):
-    """
-    Persist a new drag-and-drop order.
-    Expects: { order: [ { id: "...", sort_order: 0 }, ... ] }
-    """
     try:
         get_user_by_id(user_id)
         supabase = get_supabase()
@@ -432,89 +499,9 @@ async def reorder_cards(user_id: str, request: ReorderRequest):
                 .eq("id", item["id"]) \
                 .eq("user_id", user_id) \
                 .execute()
-        return {"success": True, "updated": len(request.order)}
+        return {"reordered": len(request.order)}
     except UserNotFoundException:
         raise HTTPException(status_code=404, detail="User not found")
     except Exception as e:
         logger.exception(f"Failed to reorder cards for {user_id}: {e}")
         raise HTTPException(status_code=500, detail="Failed to reorder cards")
-
-
-@router.post("/ask/{user_id}", response_model=dict)
-async def ask_card(user_id: str, request: AskRequest):
-    try:
-        get_user_by_id(user_id)
-        question = request.question.strip()
-        if not question:
-            raise HTTPException(status_code=400, detail="Question cannot be empty")
-
-        ctx = fetch_student_context(user_id)
-        client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
-        message = client.messages.create(
-            model="claude-opus-4-5",
-            max_tokens=1024,
-            messages=[{
-                "role": "user",
-                "content": f"""{build_rich_context(ctx)}
-
-The student has asked a specific question. Generate exactly ONE card answering it.
-Question: {question}
-
-Return ONLY a single JSON object (not an array) with the same fields as above."""
-            }],
-        )
-
-        raw = message.content[0].text.strip()
-        if raw.startswith("```"):
-            raw = raw.split("\n", 1)[1].rsplit("```", 1)[0].strip()
-
-        card_data = json.loads(raw)
-        if isinstance(card_data, list):
-            card_data = card_data[0]
-
-        card_data["category"] = _sanitise_category(card_data)
-        inserted = insert_user_card(user_id, card_data, question)
-        return {"card": inserted}
-
-    except UserNotFoundException:
-        raise HTTPException(status_code=404, detail="User not found")
-    except json.JSONDecodeError as e:
-        logger.error(f"Ask card JSON parse error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to parse AI response")
-    except Exception as e:
-        logger.exception(f"Ask card failed for {user_id}: {type(e).__name__}: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to generate card: {type(e).__name__}: {str(e)}")
-
-
-@router.post("/{card_id}/thread", response_model=dict)
-async def append_thread_message(card_id: str, request: ThreadRequest):
-    try:
-        supabase = get_supabase()
-        card_resp = (supabase.table("advisor_cards")
-            .select("title, body")
-            .eq("id", card_id)
-            .single()
-            .execute())
-        if not card_resp.data:
-            raise HTTPException(status_code=404, detail="Card not found")
-
-        client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
-        message = client.messages.create(
-            model="claude-opus-4-5",
-            max_tokens=512,
-            system=(
-                "You are a helpful McGill academic advisor. "
-                "Answer follow-up questions about the academic insight card concisely and helpfully. "
-                "Keep responses under 150 words."
-            ),
-            messages=[{
-                "role": "user",
-                "content": f"Card context: {request.card_context}\n\nQuestion: {request.message}"
-            }],
-        )
-        return {"response": message.content[0].text.strip()}
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.exception(f"Thread message failed for card {card_id}: {e}")
-        raise HTTPException(status_code=500, detail="Failed to send thread message")

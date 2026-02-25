@@ -6,7 +6,7 @@ Endpoints for degree requirement programs, blocks, and courses.
 
 from fastapi import APIRouter, HTTPException, Query
 from typing import Optional, List
-from ..utils.supabase_client import get_supabase
+from ..utils.supabase_client import get_supabase, with_retry
 
 router = APIRouter()
 
@@ -17,60 +17,85 @@ def list_programs(
     program_type: Optional[str] = Query(None),  # major, minor, honours
 ):
     """List all degree programs, optionally filtered."""
-    supabase = get_supabase()
-    q = supabase.table("degree_programs").select("*")
-    if faculty:
-        q = q.eq("faculty", faculty)
-    if program_type:
-        q = q.eq("program_type", program_type)
-    result = q.order("name").execute()
-    return result.data
+    def _fetch():
+        supabase = get_supabase()
+        q = supabase.table("degree_programs").select("*")
+        if faculty:
+            q = q.eq("faculty", faculty)
+        if program_type:
+            q = q.eq("program_type", program_type)
+        return q.order("name").execute()
+
+    try:
+        result = with_retry("list_programs", _fetch)
+        return result.data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 
 @router.get("/programs/{program_key}")
 def get_program(program_key: str):
     """Get full program details including all requirement blocks and courses."""
-    supabase = get_supabase()
 
-    # Get program — use limit(1) instead of .single() to avoid exception on missing row
-    try:
-        prog_result = (
+    # Get program
+    def _fetch_program():
+        supabase = get_supabase()
+        return (
             supabase.table("degree_programs")
             .select("*")
             .eq("program_key", program_key)
             .limit(1)
             .execute()
         )
+
+    try:
+        prog_result = with_retry("get_program:program", _fetch_program)
         if not prog_result.data:
             raise HTTPException(status_code=404, detail="Program not found")
     except HTTPException:
         raise
-    except Exception:
-        raise HTTPException(status_code=404, detail="Program not found")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
     program = prog_result.data[0]
     prog_id = program["id"]
 
     # Get blocks
-    blocks_result = (
-        supabase.table("requirement_blocks")
-        .select("*")
-        .eq("program_id", prog_id)
-        .order("sort_order")
-        .execute()
-    )
+    def _fetch_blocks():
+        supabase = get_supabase()
+        return (
+            supabase.table("requirement_blocks")
+            .select("*")
+            .eq("program_id", prog_id)
+            .order("sort_order")
+            .execute()
+        )
+
+    try:
+        blocks_result = with_retry("get_program:blocks", _fetch_blocks)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
     blocks = blocks_result.data
 
     # Get all courses for all blocks at once
     block_ids = [b["id"] for b in blocks]
     if block_ids:
-        courses_result = (
-            supabase.table("requirement_courses")
-            .select("*")
-            .in_("block_id", block_ids)
-            .order("sort_order")
-            .execute()
-        )
+        def _fetch_courses():
+            supabase = get_supabase()
+            return (
+                supabase.table("requirement_courses")
+                .select("*")
+                .in_("block_id", block_ids)
+                .order("sort_order")
+                .execute()
+            )
+
+        try:
+            courses_result = with_retry("get_program:courses", _fetch_courses)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
         courses_by_block = {}
         for c in courses_result.data:
             courses_by_block.setdefault(c["block_id"], []).append(c)
@@ -88,40 +113,63 @@ def get_program(program_key: str):
 @router.get("/programs/{program_key}/recommended")
 def get_recommended_courses(program_key: str):
     """Return only recommended courses for a program with reasons."""
-    supabase = get_supabase()
 
-    prog_result = (
-        supabase.table("degree_programs")
-        .select("id, name")
-        .eq("program_key", program_key)
-        .single()
-        .execute()
-    )
-    if not prog_result.data:
-        raise HTTPException(status_code=404, detail="Program not found")
+    def _fetch_program():
+        supabase = get_supabase()
+        return (
+            supabase.table("degree_programs")
+            .select("id, name")
+            .eq("program_key", program_key)
+            .limit(1)
+            .execute()
+        )
 
-    prog_id = prog_result.data["id"]
+    try:
+        prog_result = with_retry("get_recommended:program", _fetch_program)
+        if not prog_result.data:
+            raise HTTPException(status_code=404, detail="Program not found")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
-    blocks_result = (
-        supabase.table("requirement_blocks")
-        .select("id, title, block_key")
-        .eq("program_id", prog_id)
-        .execute()
-    )
+    prog_id = prog_result.data[0]["id"]
+
+    def _fetch_blocks():
+        supabase = get_supabase()
+        return (
+            supabase.table("requirement_blocks")
+            .select("id, title, block_key")
+            .eq("program_id", prog_id)
+            .execute()
+        )
+
+    try:
+        blocks_result = with_retry("get_recommended:blocks", _fetch_blocks)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
     block_ids = [b["id"] for b in blocks_result.data]
     block_map = {b["id"]: b for b in blocks_result.data}
 
     if not block_ids:
         return []
 
-    courses_result = (
-        supabase.table("requirement_courses")
-        .select("*")
-        .in_("block_id", block_ids)
-        .eq("recommended", True)
-        .order("sort_order")
-        .execute()
-    )
+    def _fetch_courses():
+        supabase = get_supabase()
+        return (
+            supabase.table("requirement_courses")
+            .select("*")
+            .in_("block_id", block_ids)
+            .eq("recommended", True)
+            .order("sort_order")
+            .execute()
+        )
+
+    try:
+        courses_result = with_retry("get_recommended:courses", _fetch_courses)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
     for c in courses_result.data:
         c["block_title"] = block_map.get(c["block_id"], {}).get("title", "")
