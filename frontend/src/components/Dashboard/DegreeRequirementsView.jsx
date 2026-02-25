@@ -89,9 +89,24 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
     [completedCourses, currentCourses]
   )
 
-  // Sync faculty filter when profile loads/changes (only if user hasn't manually changed it)
+  const FACULTY_MAP = {
+    'Arts':        'Faculty of Arts',
+    'Science':     'Faculty of Science',
+    'Engineering': 'Faculty of Engineering',
+    'Agriculture': 'Faculty of Agricultural and Environmental Sciences',
+    'Education':   'Faculty of Education',
+    'Law':         'Faculty of Law',
+    'Management':  'Desautels Faculty of Management',
+    'Medicine':    'Faculty of Medicine and Health Sciences',
+    'Music':       'Schulich School of Music',
+    'Nursing':     'Ingram School of Nursing',
+  }
+
   useEffect(() => {
-    if (profile?.faculty) setFacultyFilter(f => f || profile.faculty)
+    if (profile?.faculty) {
+      const normalized = FACULTY_MAP[profile.faculty] || profile.faculty
+      setFacultyFilter(f => f || normalized)
+    }
   }, [profile?.faculty])
 
   useEffect(() => {
