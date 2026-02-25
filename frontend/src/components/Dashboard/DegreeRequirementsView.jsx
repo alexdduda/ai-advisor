@@ -39,6 +39,24 @@ const TYPE_BG = {
   bscarch:       '#fffbeb',
 }
 
+// Normalize short faculty names (as stored in profile) to full faculty strings
+const FACULTY_MAP = {
+  'Arts':        'Faculty of Arts',
+  'Science':     'Faculty of Science',
+  'Engineering': 'Faculty of Engineering',
+  'Agriculture': 'Faculty of Agricultural and Environmental Sciences',
+  'Education':   'Faculty of Education',
+  'Law':         'Faculty of Law',
+  'Management':  'Desautels Faculty of Management',
+  'Medicine':    'Faculty of Medicine and Health Sciences',
+  'Music':       'Schulich School of Music',
+  'Nursing':     'Ingram School of Nursing',
+}
+
+function normalizeFaculty(f) {
+  return FACULTY_MAP[f] || f || ''
+}
+
 function matchCourse(req, userCourses) {
   if (!req.catalog) return null
   const key = `${req.subject} ${req.catalog}`.toUpperCase()
@@ -54,6 +72,7 @@ function normalizeCode(code) {
     .replace(/\s+/g, ' ')
     .trim()
 }
+
 function matchTransfer(req, advancedStanding = [], { requireMajorCredit = false } = {}) {
   if (!req.catalog) return false
   const key = normalizeCode(`${req.subject} ${req.catalog}`)
@@ -72,15 +91,14 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
   const [seeding, setSeeding]             = useState(false)
   const [seedDone, setSeedDone]           = useState(false)
   const [error, setError]                 = useState(null)
-  const [detailError, setDetailError]     = useState(null)   // ← NEW: separate error for detail fetch
+  const [detailError, setDetailError]     = useState(null)
   const [search, setSearch]               = useState('')
   const [typeFilter, setTypeFilter]       = useState('all')
   const [openBlocks, setOpenBlocks]       = useState({})
   const [showAllCourses, setShowAllCourses] = useState({})
   const [showRecommended, setShowRecommended] = useState(false)
   const [sidebarOpen, setSidebarOpen]     = useState(true)
-  // Initialize from user profile if available
-  const [facultyFilter, setFacultyFilter] = useState(profile?.faculty || '')
+  const [facultyFilter, setFacultyFilter] = useState(normalizeFaculty(profile?.faculty))
 
   const advStanding = profile?.advanced_standing || []
 
@@ -89,23 +107,10 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
     [completedCourses, currentCourses]
   )
 
-  const FACULTY_MAP = {
-    'Arts':        'Faculty of Arts',
-    'Science':     'Faculty of Science',
-    'Engineering': 'Faculty of Engineering',
-    'Agriculture': 'Faculty of Agricultural and Environmental Sciences',
-    'Education':   'Faculty of Education',
-    'Law':         'Faculty of Law',
-    'Management':  'Desautels Faculty of Management',
-    'Medicine':    'Faculty of Medicine and Health Sciences',
-    'Music':       'Schulich School of Music',
-    'Nursing':     'Ingram School of Nursing',
-  }
-
+  // Sync faculty filter when profile loads/changes (only if user hasn't manually changed it)
   useEffect(() => {
     if (profile?.faculty) {
-      const normalized = FACULTY_MAP[profile.faculty] || profile.faculty
-      setFacultyFilter(f => f || normalized)
+      setFacultyFilter(f => f || normalizeFaculty(profile.faculty))
     }
   }, [profile?.faculty])
 
@@ -190,7 +195,6 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
       block.courses?.forEach(c => {
         if (c.is_required) {
           required += parseFloat(c.credits || 3)
-          // Count toward major/minor only if counts_toward_major flag is set
           const transferCountsMajor = matchTransfer(c, advStanding, { requireMajorCredit: true })
           if (transferCountsMajor || (!matchTransfer(c, advStanding) && matchCourse(c, allUserCourses)))
             completed += parseFloat(c.credits || 3)
@@ -327,7 +331,6 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
           </div>
         )}
 
-        {/* ── NEW: Graceful 404 handling ──────────────────── */}
         {!loading && selectedKey && detailError === 'not_found' && !programDetail && (
           <div className="drv-welcome">
             <div className="drv-welcome-icon-wrap" style={{ opacity: 0.5 }}><FaGraduationCap /></div>
@@ -342,7 +345,6 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
           </div>
         )}
 
-        {/* ── NEW: Generic error handling ──────────────────── */}
         {!loading && selectedKey && detailError === 'error' && !programDetail && (
           <div className="drv-error">
             Could not load program details. Please try again.
