@@ -140,17 +140,26 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
     setSeeding(true)
     setError(null)
     try {
-      const fParam = facultyFilter
-        ? `?faculty=${encodeURIComponent(
-            facultyFilter.toLowerCase().includes('engineering') ? 'engineering' : 'arts'
-          )}`
-        : '?faculty=all'
-      const res = await fetch(`${API_BASE}/api/degree-requirements/seed${fParam}`, { method: 'POST' })
+      // First, check if programs already exist — if so, just refresh the list
+      const checkRes = await fetch(`${API_BASE}/api/degree-requirements/programs`)
+      if (checkRes.ok) {
+        const existing = await checkRes.json()
+        if (Array.isArray(existing) && existing.length > 0) {
+          // Data already seeded — just update state to trigger re-fetch
+          setSeedDone(v => !v)
+          return
+        }
+      }
+      // Only seed if truly empty
+      const res = await fetch(`${API_BASE}/api/degree-requirements/seed`, { method: 'POST' })
       const data = await res.json()
       if (data.success) setSeedDone(v => !v)
       else setError('Load failed: ' + JSON.stringify(data.detail || data))
-    } catch { setError('Load request failed. Is the backend running?') }
-    finally { setSeeding(false) }
+    } catch {
+      setError('Load request failed. Is the backend running?')
+    } finally {
+      setSeeding(false)
+    }
   }
 
   const filteredPrograms = useMemo(() => programs.filter(p => {
