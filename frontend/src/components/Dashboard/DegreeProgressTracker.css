@@ -1,4 +1,4 @@
-/* Degree Progress Tracker Styles - Cool Colors + Dark Mode */
+/* Degree Progress Tracker Styles */
 
 .degree-progress-tracker {
   display: flex;
@@ -6,7 +6,7 @@
   gap: 24px;
 }
 
-/* Progress Bar Section */
+/* ── Progress Bar Section ── */
 .progress-section {
   display: flex;
   flex-direction: column;
@@ -29,27 +29,21 @@
 .progress-percentage {
   font-size: 24px;
   font-weight: 700;
-  color: #dc2626;  /* Red instead of blue */
+  color: var(--accent-primary);
 }
 
 .progress-bar-container {
-  height: 24px;
-  background: var(--gray-200);
-  border-radius: 12px;
+  height: 10px;
+  background: var(--border-primary);
+  border-radius: 6px;
   overflow: hidden;
   position: relative;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
-}
-
-[data-theme="dark"] .progress-bar-container {
-  background: var(--gray-700);
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .progress-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, #dc2626 0%, #b91c1c 100%);  /* Red gradient */
-  border-radius: 12px;
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-active));
+  border-radius: 6px;
   transition: width 0.8s ease;
   position: relative;
   overflow: hidden;
@@ -71,7 +65,7 @@
 }
 
 @keyframes shine {
-  0% { left: -100%; }
+  0%   { left: -100%; }
   100% { left: 100%; }
 }
 
@@ -82,7 +76,7 @@
   color: var(--text-secondary);
 }
 
-/* Credits Breakdown - COOLER COLORS + DARK MODE */
+/* ── Credits Breakdown ── */
 .credits-breakdown {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -94,93 +88,64 @@
   align-items: center;
   gap: 12px;
   padding: 16px;
-  background: var(--card-bg);
-  border: 1.5px solid var(--border-color);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
   border-radius: 12px;
   transition: all 0.2s;
 }
 
 .credit-item:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px var(--shadow-md);
+  box-shadow: var(--shadow-md);
 }
 
-/* Completed Courses - Cool Blue */
+/* Completed Courses */
 .credit-item:nth-child(1) {
-  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
-  border-color: #0ea5e9;
+  background: var(--accent-lighter);
+  border-color: var(--accent-light);
 }
 
-[data-theme="dark"] .credit-item:nth-child(1) {
-  background: linear-gradient(135deg, #0c4a6e 0%, #075985 100%);
-  border-color: #0ea5e9;
-}
-
-/* Advanced Standing - Cool Amber/Gold */
+/* Advanced Standing */
 .credit-item.highlight {
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-  border-color: #f59e0b;
+  background: var(--warning-light);
+  border-color: #fde68a;
 }
 
 [data-theme="dark"] .credit-item.highlight {
-  background: linear-gradient(135deg, #78350f 0%, #92400e 100%);
-  border-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.25);
 }
 
-/* Total Earned - Cool Teal/Cyan */
+/* Total Earned */
 .credit-item.total {
-  background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
-  border-color: #14b8a6;
+  background: var(--success-light);
+  border-color: #bbf7d0;
 }
 
 [data-theme="dark"] .credit-item.total {
-  background: linear-gradient(135deg, #134e4a 0%, #115e59 100%);
-  border-color: #14b8a6;
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.25);
 }
 
-/* Remaining - Cool Gray */
+/* Remaining */
 .credit-item.remaining {
-  background: var(--card-bg);
-  border-color: var(--border-color);
+  background: var(--bg-secondary);
+  border-color: var(--border-secondary);
   border-style: dashed;
 }
 
 .credit-icon {
-  font-size: 24px;
+  font-size: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 40px;
+  min-width: 36px;
 }
 
-/* Icon colors - cooler tones */
-.credit-item:nth-child(1) .credit-icon {
-  color: #0284c7; /* Cool blue */
-}
-
-[data-theme="dark"] .credit-item:nth-child(1) .credit-icon {
-  color: #38bdf8; /* Light cyan */
-}
-
-.credit-item.highlight .credit-icon {
-  color: #f59e0b; /* Amber */
-}
-
-[data-theme="dark"] .credit-item.highlight .credit-icon {
-  color: #fbbf24; /* Lighter amber */
-}
-
-.credit-item.total .credit-icon {
-  color: #0d9488; /* Teal */
-}
-
-[data-theme="dark"] .credit-item.total .credit-icon {
-  color: #2dd4bf; /* Light teal */
-}
-
-.credit-item.remaining .credit-icon {
-  color: var(--text-tertiary);
-}
+.credit-item:nth-child(1) .credit-icon { color: var(--accent-primary); }
+.credit-item.highlight .credit-icon    { color: var(--warning-primary); }
+.credit-item.total .credit-icon        { color: var(--success-primary); }
+.credit-item.remaining .credit-icon    { color: var(--text-tertiary); }
 
 .credit-details {
   display: flex;
@@ -190,7 +155,7 @@
 }
 
 .credit-label {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--text-secondary);
   text-transform: uppercase;
@@ -212,7 +177,7 @@
   color: var(--text-secondary);
 }
 
-/* Milestones - COOLER COLORS + DARK MODE */
+/* ── Milestones ── */
 .milestones {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -225,81 +190,67 @@
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
-  background: #f0f2f4;        /* Light: slightly darker than page, clearly visible */
-  border: 1.5px solid #b0b7c0; /* Stronger outline so uncompleted stand out */
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
   border-radius: 10px;
   transition: all 0.2s;
 }
 
-[data-theme="dark"] .milestone {
-  background: var(--card-bg);
-  border-color: var(--border-color);
+.milestone:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
 }
 
 .milestone.completed {
-  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-  border-color: #10b981;
+  background: var(--success-light);
+  border-color: #bbf7d0;
 }
 
 [data-theme="dark"] .milestone.completed {
-  background: linear-gradient(135deg, #064e3b 0%, #065f46 100%);
-  border-color: #10b981;
-}
-
-.milestone:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 6px var(--shadow-sm);
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.3);
 }
 
 .milestone-marker {
-  width: 32px;
-  height: 32px;
-  min-width: 32px;        /* prevent shrinking */
-  flex-shrink: 0;         /* prevent shrinking */
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  flex-shrink: 0;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
-  font-weight: 700;
-  background: #e4e7ea;
-  color: #6b7280;
-  border: 2px solid #b0b7c0;
+  font-size: 13px;
+  background: var(--bg-tertiary);
+  color: var(--text-tertiary);
+  border: 1.5px solid var(--border-secondary);
   transition: all 0.2s;
 }
 
-[data-theme="dark"] .milestone-marker {
-  background: #0f172a;
-  color: #94a3b8;
-  border-color: #475569;
-}
-
 .milestone-marker svg {
-  width: 14px;
-  height: 14px;
+  width: 13px;
+  height: 13px;
   flex-shrink: 0;
 }
 
 .milestone-check,
 .milestone-circle {
   color: inherit;
-  font-size: 14px;
-  width: 14px;
-  height: 14px;
+  font-size: 13px;
+  width: 13px;
+  height: 13px;
 }
 
 .milestone.completed .milestone-marker {
-  background: #10b981;
+  background: var(--success-primary);
   color: white;
-  border-color: #059669;
+  border-color: var(--success-hover);
 }
 
-.milestone.completed .milestone-check {
-  color: white;
-}
+.milestone.completed .milestone-check { color: white; }
 
 .milestone-text {
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 500;
   color: var(--text-secondary);
   flex: 1;
@@ -309,7 +260,7 @@
 }
 
 .milestone.completed .milestone-text {
-  color: #065f46;
+  color: var(--success-text);
   font-weight: 600;
 }
 
@@ -318,67 +269,39 @@
 }
 
 /* Celebration icons */
-.milestone-graduation-icon {
-  color: #f59e0b;
-  display: inline-block;
-  font-size: 16px;
-}
+.milestone-graduation-icon { color: var(--warning-primary); display: inline-block; font-size: 15px; }
+.milestone-party-icon      { color: var(--accent-primary);  display: inline-block; font-size: 15px; }
+.milestone-biceps-icon     { color: var(--accent-primary);  display: inline-block; font-size: 15px; }
 
-.milestone-party-icon {
-  color: #ec4899;
-  display: inline-block;
-  font-size: 16px;
-}
-
-.milestone-biceps-icon {
-  color: #8b5cf6;
-  display: inline-block;
-  font-size: 16px;
-}
-
-/* Info Note - COOLER AMBER + DARK MODE */
+/* ── Info Note ── */
 .info-note {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 14px 16px;
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-  border-left: 4px solid #f59e0b;
+  padding: 12px 16px;
+  background: var(--warning-light);
+  border-left: 3px solid var(--warning-primary);
   border-radius: 8px;
-  font-size: 14px;
-  color: #92400e;
+  font-size: 13.5px;
+  color: var(--warning-text);
   font-weight: 500;
 }
 
 [data-theme="dark"] .info-note {
-  background: linear-gradient(135deg, #78350f 0%, #92400e 100%);
+  background: rgba(245, 158, 11, 0.1);
   color: #fde68a;
 }
 
 .info-icon {
-  font-size: 20px;
-  color: #f59e0b;
+  font-size: 18px;
+  color: var(--warning-primary);
+  flex-shrink: 0;
 }
 
-[data-theme="dark"] .info-icon {
-  color: #fbbf24;
-}
-
-/* Responsive */
+/* ── Responsive ── */
 @media (max-width: 768px) {
-  .credits-breakdown {
-    grid-template-columns: 1fr;
-  }
-
-  .milestones {
-    grid-template-columns: 1fr;
-  }
-
-  .progress-percentage {
-    font-size: 20px;
-  }
-
-  .credit-value {
-    font-size: 16px;
-  }
+  .credits-breakdown { grid-template-columns: 1fr; }
+  .milestones        { grid-template-columns: 1fr; }
+  .progress-percentage { font-size: 20px; }
+  .credit-value        { font-size: 16px; }
 }
