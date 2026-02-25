@@ -105,8 +105,8 @@
 /* ── Category bar ── */
 .category-bar {
   display: flex;
-  gap: 0;
-  padding: 0 16px;
+  gap: 2px;
+  padding: 0 24px;
   background: var(--card-bg, var(--bg-primary));
   border-bottom: 1px solid var(--card-border, var(--border-primary));
   overflow-x: auto;
@@ -119,13 +119,13 @@
 .category-tab {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 10px 9px;
+  gap: 6px;
+  padding: 10px 12px;
   border: none;
   border-bottom: 2px solid transparent;
   background: transparent;
   color: var(--text-muted, var(--text-tertiary));
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.18s ease;
@@ -143,10 +143,9 @@
   font-weight: 600;
 }
 
-/* Tab icons */
 .category-tab__icon {
   display: inline-block;
-  font-size: 0.72rem;
+  font-size: 0.78rem;
   color: var(--accent-primary);
   opacity: 0.7;
   flex-shrink: 0;
@@ -155,11 +154,11 @@
 .category-tab.active .category-tab__icon { opacity: 1; }
 
 .category-tab__count {
-  font-size: 0.65rem;
+  font-size: 0.68rem;
   background: var(--bg-secondary);
   color: var(--text-muted, var(--text-tertiary));
   border-radius: 10px;
-  padding: 1px 5px;
+  padding: 1px 6px;
   font-weight: 600;
 }
 
@@ -319,7 +318,7 @@
   margin: 0;
 }
 
-/* ── Header actions: save then trash ── */
+/* ── Header actions ── */
 .advisor-card__header-actions {
   display: flex;
   align-items: center;
@@ -401,6 +400,62 @@
   border-color: rgba(237, 27, 47, 0.35);
 }
 
+/* ── Pin button ── */
+.advisor-card__pin {
+  background: none;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  color: var(--text-secondary, #9ca3af);
+  padding: 4px 6px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  transition: color 0.15s, transform 0.15s;
+  box-shadow: none;
+  margin-top: 2px;
+}
+
+.advisor-card__pin:hover {
+  color: var(--accent-primary, #ED1B2F);
+  transform: rotate(-20deg) scale(1.15);
+}
+
+.advisor-card__pin--active {
+  color: var(--accent-primary, #ED1B2F);
+}
+
+.advisor-card__pin--active:hover {
+  color: #c0152a;
+  transform: rotate(0deg) scale(1.1);
+}
+
+.advisor-card__pin:focus { outline: none; box-shadow: none; }
+
+/* ── Pinned badge ── */
+.advisor-card__pinned-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--accent-primary, #ED1B2F);
+  background: rgba(237, 27, 47, 0.08);
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.02em;
+}
+
+.pinned-badge__icon { font-size: 0.65rem; }
+
+/* ── Pinned card glow ── */
+.advisor-card--pinned {
+  border-color: rgba(237, 27, 47, 0.3) !important;
+  box-shadow: 0 0 0 2px rgba(237, 27, 47, 0.1), var(--card-shadow, 0 2px 8px rgba(0,0,0,0.08));
+}
+
 /* ═══════════════════════════════════════════
    COLLAPSIBLE PANEL
    ═══════════════════════════════════════════ */
@@ -471,6 +526,13 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  overflow: hidden;
+  animation: threadExpand 0.28s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes threadExpand {
+  from { opacity: 0; max-height: 0; transform: translateY(-6px); }
+  to   { opacity: 1; max-height: 2000px; transform: translateY(0); }
 }
 
 .thread-divider {
@@ -479,7 +541,7 @@
   opacity: 0.6;
 }
 
-/* ── Inline thread messages — scroll internally ── */
+/* ── Thread messages ── */
 .thread-messages {
   max-height: 240px;
   overflow-y: auto;
@@ -491,17 +553,30 @@
   scroll-behavior: smooth;
 }
 
-.thread-message {
-  display: flex;
-  align-items: flex-end;
-  gap: 6px;
-  animation: cardSlide 0.2s ease;
-}
-
 .thread-messages::-webkit-scrollbar { width: 3px; }
 .thread-messages::-webkit-scrollbar-thumb {
   background: var(--border-primary);
   border-radius: 3px;
+}
+
+/* Override for expanded inline thread */
+.advisor-card__thread .thread-messages {
+  max-height: 900px;
+}
+
+.advisor-card--expanded .advisor-card__thread {
+  min-height: 227px;
+}
+
+.advisor-card--expanded .advisor-card__thread .thread-messages {
+  min-height: 187px;
+}
+
+.thread-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  animation: cardSlide 0.22s ease;
 }
 
 .thread-message--user { flex-direction: row-reverse; }
@@ -524,9 +599,9 @@
   font-size: 0.84rem;
   line-height: 1.6;
   margin: 0;
-  padding: 8px 13px;
-  border-radius: 18px;
-  max-width: 84%;
+  padding: 8px 14px;
+  border-radius: 20px;
+  max-width: 86%;
   word-break: break-word;
 }
 
@@ -537,12 +612,12 @@
 }
 
 .thread-message--user .thread-text {
-  background: var(--accent-primary);
+  background: var(--user-msg-bg, var(--accent-primary));
   color: #fff;
   border-bottom-right-radius: 4px;
 }
 
-/* Thinking dots */
+/* ── Thinking dots ── */
 .thinking-dots {
   display: inline-flex;
   gap: 3px;
@@ -603,6 +678,10 @@
 
 .card-chat-bar__input:disabled { opacity: 0.6; }
 
+.advisor-card__chat-bar-wrapper {
+  margin-top: 4px;
+}
+
 .card-chat-bar__send {
   width: 30px;
   height: 30px;
@@ -633,9 +712,7 @@
   cursor: default;
 }
 
-/* ═══════════════════════════════════════════
-   CHEVRON TOGGLE ROW
-   ═══════════════════════════════════════════ */
+/* ── Toggle row ── */
 .advisor-card__toggle-row {
   display: flex;
   justify-content: center;
@@ -683,7 +760,7 @@
   background: rgba(237, 27, 47, 0.06);
 }
 
-/* ── Peek strip (collapsed, thread exists) ── */
+/* ── Peek strip ── */
 .advisor-card__thread-peek {
   display: flex;
   align-items: baseline;
@@ -717,6 +794,25 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* ── Collapsed thread preview ── */
+.advisor-card__thread--preview {
+  animation: none;
+  min-height: 0;
+}
+
+.advisor-card__thread-preview { pointer-events: none; }
+
+.advisor-card__thread--preview .thread-message { opacity: 0.55; }
+
+.advisor-card__thread--preview .thread-text {
+  font-size: 0.8rem;
+  max-width: 100%;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 /* ── Skeletons ── */
@@ -855,9 +951,7 @@
   .advisor-cards-feed,
   .advisor-cards-header,
   .advisor-cards-freeform { padding-left: 16px; padding-right: 16px; }
-  .category-bar           { padding-left: 8px; padding-right: 8px; }
-  .thread-modal-overlay   { padding: 0; align-items: flex-end; }
-  .thread-modal           { border-radius: 14px 14px 0 0; max-width: 100%; max-height: 88vh; }
+  .category-bar           { padding-left: 16px; padding-right: 16px; }
 }
 
 @media (max-width: 480px) {
@@ -865,7 +959,6 @@
   .advisor-card        { padding: 14px 14px 12px 20px; }
   .advisor-card__title { font-size: 0.88rem; }
   .freeform-input      { font-size: 16px; }
-  .category-tab        { padding: 10px 7px; font-size: 0.7rem; }
 }
 
 /* ── Drag handle ── */
@@ -894,628 +987,24 @@
 /* ── Drag-and-drop row wrapper ── */
 .dnd-row {
   position: relative;
-  transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1),
-              opacity  0.22s cubic-bezier(0.4, 0, 0.2, 1);
-  will-change: transform;
+  transition: transform 0.15s ease;
 }
 
-.dnd-row--dragging {
-  opacity: 0.35;
-  transform: scale(0.98);
-  z-index: 100;
-}
-
-.dnd-row--over {
-  transform: translateY(2px);
-}
+.dnd-row--dragging { opacity: 0.4; z-index: 100; }
 
 .dnd-row--over::before {
   content: '';
   display: block;
-  height: 2px;
-  border-radius: 2px;
-  background: linear-gradient(90deg, var(--accent-primary), rgba(237,27,47,0.3));
-  margin-bottom: 6px;
-  animation: dropIndicator 0.18s cubic-bezier(0.4, 0, 0.2, 1);
-  transform-origin: left center;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--accent-primary);
+  margin-bottom: 4px;
+  animation: dropIndicator 0.2s ease;
 }
 
 @keyframes dropIndicator {
-  from { transform: scaleX(0); opacity: 0; }
-  to   { transform: scaleX(1); opacity: 1; }
+  from { transform: scaleX(0.5); opacity: 0; }
+  to   { transform: scaleX(1);   opacity: 1; }
 }
 
 .advisor-cards-feed.is-dragging { cursor: grabbing; }
-
-/* ── Inline thread: scroll internally, never push the feed ── */
-/* Override the base .thread-messages so new messages stay inside the card */
-.advisor-card__thread .thread-messages {
-  max-height: 900px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  scrollbar-width: thin;
-  scrollbar-color: var(--border-primary) transparent;
-  scroll-behavior: smooth;
-}
-
-.advisor-card__thread .thread-messages::-webkit-scrollbar { width: 3px; }
-.advisor-card__thread .thread-messages::-webkit-scrollbar-thumb {
-  background: var(--border-primary);
-  border-radius: 3px;
-}
-/* ═══════════════════════════════════════════════════════════════
-   NEW FEATURES: Chat Bar, Saved Tab, History Tab, Close Chat
-   ═══════════════════════════════════════════════════════════════ */
-
-/* ── Header actions group ── */
-.advisor-card__header-actions {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-/* ── Delete button ── */
-.advisor-card__delete {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 4px 6px;
-  border-radius: 6px;
-  color: var(--text-muted, var(--text-tertiary));
-  font-size: 0.75rem;
-  display: flex;
-  align-items: center;
-  transition: color 0.15s ease;
-  flex-shrink: 0;
-  opacity: 0;
-}
-
-.advisor-card:hover .advisor-card__delete {
-  opacity: 1;
-}
-
-.advisor-card__delete:hover {
-  color: #ef4444;
-}
-
-/* ── Expanded card style ── */
-.advisor-card--expanded {
-  border-left-width: 3px;
-  box-shadow: 0 0 0 2px rgba(237, 27, 47, 0.12);
-}
-
-.advisor-card--expanded .advisor-card__thread {
-  min-height: 227px;
-}
-
-.advisor-card--expanded .advisor-card__thread .thread-messages {
-  min-height: 187px;
-}
-
-/* ── Card chat bar (replaces plus button) ── */
-.advisor-card__chat-bar-wrapper {
-  margin-top: 4px;
-}
-
-.card-chat-bar {
-  display: flex;
-  gap: 8px;
-  align-items: flex-end;
-  background: transparent;
-  border: none;
-  border-radius: 0;
-  padding: 4px 0;
-  transition: none;
-}
-
-.card-chat-bar:focus-within {
-  background: transparent;
-  box-shadow: none;
-}
-
-.card-chat-bar--expanded {
-  background: transparent;
-}
-
-.card-chat-bar__input {
-  flex: 1;
-  border: none;
-  background: transparent;
-  font-family: inherit;
-  font-size: 0.83rem;
-  color: var(--text-primary);
-  outline: none;
-  resize: none;
-  min-height: 20px;
-  max-height: 120px;
-  line-height: 1.5;
-  padding: 0;
-  scrollbar-width: thin;
-  scrollbar-color: var(--border-primary) transparent;
-}
-
-.card-chat-bar__input::placeholder {
-  color: var(--text-muted, var(--text-tertiary));
-}
-
-.card-chat-bar__input:disabled {
-  opacity: 0.6;
-}
-
-.card-chat-bar__send {
-  width: 30px;
-  height: 30px;
-  flex-shrink: 0;
-  border-radius: 50%;
-  border: none;
-  background: linear-gradient(135deg, var(--accent-primary) 0%, #B01B2E 100%);
-  color: #fff;
-  cursor: pointer;
-  font-size: 0.72rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(237, 27, 47, 0.28);
-  align-self: flex-end;
-}
-
-.card-chat-bar__send:hover:not(:disabled) {
-  transform: scale(1.08);
-  background: #d4192a;
-}
-
-.card-chat-bar__send:disabled {
-  background: var(--bg-quaternary, #e5e7eb);
-  color: #a1a1aa;
-  box-shadow: none;
-  cursor: default;
-}
-
-/* ── Close Chat button ── */
-.advisor-card__close-chat {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  border: 1px solid var(--border-primary);
-  border-radius: 8px;
-  background: transparent;
-  color: var(--text-muted, var(--text-tertiary));
-  font-size: 0.78rem;
-  font-weight: 500;
-  cursor: pointer;
-  font-family: inherit;
-  align-self: flex-start;
-  transition: all 0.18s ease;
-  margin-top: 2px;
-}
-
-.advisor-card__close-chat:hover {
-  border-color: #ef4444;
-  color: #ef4444;
-  background: rgba(239, 68, 68, 0.05);
-}
-
-.close-chat__icon {
-  font-size: 0.7rem;
-}
-
-/* ── Saved tab accent ── */
-.category-tab--saved {
-  border-bottom-color: transparent;
-}
-
-.category-tab--saved.active {
-  color: #f59e0b;
-  border-bottom-color: #f59e0b;
-}
-
-.category-tab--saved .category-tab__icon {
-  color: #f59e0b;
-}
-
-.category-tab--saved.active .category-tab__icon {
-  opacity: 1;
-}
-
-.category-tab__count--saved {
-  background: rgba(245, 158, 11, 0.1);
-  color: #f59e0b;
-}
-
-/* ── History tab accent ── */
-.category-tab--history.active {
-  color: #8b5cf6;
-  border-bottom-color: #8b5cf6;
-}
-
-.category-tab--history .category-tab__icon {
-  color: #8b5cf6;
-}
-
-.category-tab--history.active .category-tab__icon {
-  opacity: 1;
-}
-
-/* ── History list ── */
-.history-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.history-preview-card {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  width: 100%;
-  text-align: left;
-  background: var(--bg-primary);
-  border: 1px solid var(--card-border, var(--border-primary));
-  border-left: 3px solid #8b5cf6;
-  border-radius: 10px;
-  padding: 14px 16px;
-  cursor: pointer;
-  font-family: inherit;
-  transition: box-shadow 0.18s ease, border-color 0.18s ease;
-  animation: cardSlide 0.25s ease both;
-}
-
-.history-preview-card:hover {
-  box-shadow: var(--shadow-md);
-  border-color: #8b5cf6;
-}
-
-.history-preview-card__header {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-}
-
-.history-preview-card__icon {
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  background: rgba(139, 92, 246, 0.1);
-  color: #8b5cf6;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.78rem;
-  flex-shrink: 0;
-}
-
-.history-preview-card__meta {
-  flex: 1;
-  min-width: 0;
-}
-
-.history-preview-card__category {
-  display: block;
-  font-size: 0.62rem;
-  font-weight: 700;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: #8b5cf6;
-  margin-bottom: 2px;
-}
-
-.history-preview-card__title {
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin: 0;
-  line-height: 1.3;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.history-preview-card__count {
-  font-size: 0.68rem;
-  font-weight: 600;
-  color: #8b5cf6;
-  background: rgba(139, 92, 246, 0.1);
-  border-radius: 10px;
-  padding: 2px 8px;
-  flex-shrink: 0;
-}
-
-.history-preview-card__last {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  margin: 0;
-  line-height: 1.5;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.history-preview-card__role {
-  font-weight: 600;
-}
-
-.history-preview-card__role--user {
-  color: var(--accent-primary);
-}
-
-.history-preview-card__role--assistant {
-  color: var(--text-muted, var(--text-tertiary));
-}
-
-/* ── Thread divider in chat wrapper ── */
-.advisor-card__chat-bar-wrapper .thread-divider {
-  margin-bottom: 8px;
-}
-
-/* ── Tabs: fill full width in one line ── */
-.category-bar {
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  scrollbar-width: none;
-  padding: 0 12px;
-  justify-content: space-between;
-}
-
-.category-bar::-webkit-scrollbar { display: none; }
-
-.category-tab {
-  flex: 1;
-  justify-content: center;
-  padding: 8px 4px;
-  font-size: 0.71rem;
-  gap: 3px;
-  min-width: 0;
-}
-
-/* Hide tab icons to save space */
-.category-tab__icon {
-  display: none;
-}
-
-/* Shrink count badges */
-.category-tab__count {
-  font-size: 0.6rem;
-  padding: 1px 4px;
-}
-
-/* ── Custom refresh icon image ── */
-.refresh-icon-img {
-  width: 22px;
-  height: 22px;
-  object-fit: contain;
-  display: block;
-}
-
-.advisor-cards-refresh.spinning .refresh-icon-img {
-  animation: spin 0.8s linear infinite;
-}
-
-/* ── Card expansion: smooth grow when chat opens ── */
-.advisor-card {
-  transition: box-shadow 0.2s ease, border-color 0.2s ease;
-}
-
-.advisor-card__thread {
-  overflow: hidden;
-  animation: threadExpand 0.28s cubic-bezier(0.4, 0, 0.2, 1) both;
-}
-
-@keyframes threadExpand {
-  from {
-    opacity: 0;
-    max-height: 0;
-    transform: translateY(-6px);
-  }
-  to {
-    opacity: 1;
-    max-height: 2000px;
-    transform: translateY(0);
-  }
-}
-
-/* ── Chat bar: subtle underline only, no box ── */
-.card-chat-bar__input {
-  border-bottom: 1.5px solid var(--border-primary);
-  border-radius: 0;
-  padding-bottom: 4px;
-  transition: border-color 0.2s;
-}
-
-.card-chat-bar__input:focus {
-  border-bottom-color: var(--accent-primary);
-  outline: none;
-}
-
-/* ── Typing indicator: plain bouncing dots, no bubble ── */
-.card-typing-indicator {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding: 8px 4px;
-}
-
-.card-typing-indicator span {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--text-muted, #9ca3af);
-  display: block;
-  animation: typingBounce 1.2s ease-in-out infinite;
-}
-
-.card-typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
-.card-typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
-
-@keyframes typingBounce {
-  0%, 60%, 100% { transform: translateY(0); opacity: 0.35; }
-  30%           { transform: translateY(-5px); opacity: 1; }
-}
-
-/* ── Collapsed thread: show last message as a faded preview ── */
-.advisor-card__thread--preview {
-  animation: none;
-  min-height: 0;
-}
-
-.advisor-card__thread-preview {
-  pointer-events: none;
-}
-
-.advisor-card__thread--preview .thread-message {
-  opacity: 0.55;
-}
-
-.advisor-card__thread--preview .thread-text {
-  font-size: 0.8rem;
-  max-width: 100%;
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-}
-
-/* ── History icon-only button (sits after Saved tab) ── */
-.category-tab-icon-only {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  border: none;
-  background: transparent;
-  color: var(--text-muted, var(--text-tertiary));
-  font-size: 0.95rem;
-  cursor: pointer;
-  flex-shrink: 0;
-  margin: auto 6px auto 4px;
-  transition: all 0.18s ease;
-  font-family: inherit;
-}
-
-.category-tab-icon-only:hover {
-  color: #8b5cf6;
-  border-color: #8b5cf6;
-  background: rgba(139, 92, 246, 0.08);
-}
-
-.category-tab-icon-only:hover::after {
-  content: 'History';
-  position: absolute;
-  bottom: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--bg-primary);
-  border: 1px solid var(--border-primary);
-  color: var(--text-primary);
-  font-size: 0.7rem;
-  font-weight: 600;
-  padding: 3px 8px;
-  border-radius: 6px;
-  white-space: nowrap;
-  box-shadow: var(--shadow-md);
-  pointer-events: none;
-  z-index: 10;
-}
-
-.category-tab-icon-only.active {
-  color: #8b5cf6;
-  border-color: #8b5cf6;
-  background: rgba(139, 92, 246, 0.1);
-}
-
-.category-tab-icon-only__badge {
-  position: absolute;
-  top: -5px;
-  right: -5px;
-  background: #8b5cf6;
-  color: #fff;
-  font-size: 0.55rem;
-  font-weight: 700;
-  border-radius: 10px;
-  padding: 1px 4px;
-  line-height: 1.4;
-  min-width: 14px;
-  text-align: center;
-}
-
-/* ── History custom icon image ── */
-.history-icon-img {
-  width: 18px;
-  height: 18px;
-  object-fit: contain;
-  display: block;
-  opacity: 0.55;
-  transition: opacity 0.18s ease;
-  filter: invert(0);
-}
-
-.category-tab-icon-only:hover .history-icon-img,
-.category-tab-icon-only.active .history-icon-img {
-  opacity: 1;
-  filter: invert(40%) sepia(80%) saturate(500%) hue-rotate(230deg);
-}
-
-/* ── Pin button ── */
-.advisor-card__pin {
-  background: none;
-  border: none;
-  outline: none;
-  cursor: pointer;
-  color: var(--text-secondary, #9ca3af);
-  padding: 4px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.05rem;
-  transition: color 0.15s, transform 0.15s;
-  box-shadow: none;
-}
-
-.advisor-card__pin:hover {
-  color: var(--accent-primary, #ED1B2F);
-  transform: rotate(-20deg) scale(1.15);
-}
-
-.advisor-card__pin--active {
-  color: var(--accent-primary, #ED1B2F);
-}
-
-.advisor-card__pin--active:hover {
-  color: #c0152a;
-  transform: rotate(0deg) scale(1.1);
-}
-
-.advisor-card__pin:focus { outline: none; box-shadow: none; }
-
-/* ── Pinned badge ── */
-.advisor-card__pinned-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  font-size: 0.65rem;
-  font-weight: 600;
-  color: var(--accent-primary, #ED1B2F);
-  background: rgba(237, 27, 47, 0.08);
-  padding: 2px 6px;
-  border-radius: 4px;
-  letter-spacing: 0.02em;
-}
-
-.pinned-badge__icon {
-  font-size: 0.65rem;
-}
-
-/* ── Pinned card glow ── */
-.advisor-card--pinned {
-  border-color: rgba(237, 27, 47, 0.3) !important;
-  box-shadow: 0 0 0 2px rgba(237, 27, 47, 0.1), var(--card-shadow, 0 2px 8px rgba(0,0,0,0.08));
-}
