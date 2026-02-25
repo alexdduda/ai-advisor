@@ -102,11 +102,11 @@
   to   { transform: rotate(360deg); }
 }
 
-/* ── Category bar — exactly Doc 4 style ── */
+/* ── Category bar ── */
 .category-bar {
   display: flex;
-  gap: 2px;
-  padding: 0 24px;
+  gap: 0;
+  padding: 0 16px;
   background: var(--card-bg, var(--bg-primary));
   border-bottom: 1px solid var(--card-border, var(--border-primary));
   overflow-x: auto;
@@ -119,13 +119,13 @@
 .category-tab {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 10px 12px;
+  gap: 4px;
+  padding: 10px 9px;
   border: none;
   border-bottom: 2px solid transparent;
   background: transparent;
   color: var(--text-muted, var(--text-tertiary));
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.18s ease;
@@ -143,10 +143,10 @@
   font-weight: 600;
 }
 
-/* Tab icons — visible, Doc 4 sizing */
+/* Tab icons */
 .category-tab__icon {
   display: inline-block;
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   color: var(--accent-primary);
   opacity: 0.7;
   flex-shrink: 0;
@@ -155,11 +155,11 @@
 .category-tab.active .category-tab__icon { opacity: 1; }
 
 .category-tab__count {
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   background: var(--bg-secondary);
   color: var(--text-muted, var(--text-tertiary));
   border-radius: 10px;
-  padding: 1px 6px;
+  padding: 1px 5px;
   font-weight: 600;
 }
 
@@ -168,7 +168,7 @@
   color: var(--accent-primary);
 }
 
-/* Saved tab — amber accent (from Doc 5), otherwise same structure */
+/* Saved tab */
 .category-tab--saved.active {
   color: var(--accent-primary);
   border-bottom-color: var(--accent-primary);
@@ -403,8 +403,6 @@
 
 /* ═══════════════════════════════════════════
    COLLAPSIBLE PANEL
-   grid-template-rows 0fr → 1fr for smooth
-   height animation with no JS measurement.
    ═══════════════════════════════════════════ */
 .advisor-card__panel {
   display: grid;
@@ -413,7 +411,6 @@
     grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1),
     opacity 0.25s ease;
   opacity: 0;
-  /* keep the toggle-row below visible when closed */
   overflow: visible;
 }
 
@@ -424,9 +421,6 @@
 
 .advisor-card__panel-inner {
   min-height: 0;
-  /* overflow-x clips horizontal overflow during animation;
-     overflow-y must remain visible so the textarea focus
-     bottom-border is never clipped by the grid container. */
   overflow-x: hidden;
   overflow-y: visible;
   display: flex;
@@ -436,9 +430,6 @@
   padding-bottom: 4px;
 }
 
-/* Prevent the card article from showing a browser focus outline
-   when an inner element (e.g. the chat textarea) is focused. *
-   /
 /* ── Chips ── */
 .advisor-card__chips {
   display: flex;
@@ -603,7 +594,7 @@
 
 .card-chat-bar__input:focus {
   border-bottom-color: var(--accent-primary);
-  outline: none
+  outline: none;
 }
 
 .card-chat-bar__input::placeholder {
@@ -644,10 +635,6 @@
 
 /* ═══════════════════════════════════════════
    CHEVRON TOGGLE ROW
-   Icon-only pill, centered, with a faint
-   rule running behind it.
-   Used both inside the panel (close) and
-   outside it (open).
    ═══════════════════════════════════════════ */
 .advisor-card__toggle-row {
   display: flex;
@@ -668,7 +655,7 @@
 }
 
 .advisor-card__toggle {
-  position: relative; /* floats above the rule */
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -690,7 +677,6 @@
   background: rgba(237, 27, 47, 0.04);
 }
 
-/* Active / open state — filled accent ring */
 .advisor-card__toggle--open {
   border-color: var(--accent-primary);
   color: var(--accent-primary);
@@ -869,7 +855,7 @@
   .advisor-cards-feed,
   .advisor-cards-header,
   .advisor-cards-freeform { padding-left: 16px; padding-right: 16px; }
-  .category-bar           { padding-left: 16px; padding-right: 16px; }
+  .category-bar           { padding-left: 8px; padding-right: 8px; }
   .thread-modal-overlay   { padding: 0; align-items: flex-end; }
   .thread-modal           { border-radius: 14px 14px 0 0; max-width: 100%; max-height: 88vh; }
 }
@@ -879,6 +865,7 @@
   .advisor-card        { padding: 14px 14px 12px 20px; }
   .advisor-card__title { font-size: 0.88rem; }
   .freeform-input      { font-size: 16px; }
+  .category-tab        { padding: 10px 7px; font-size: 0.7rem; }
 }
 
 /* ── Drag handle ── */
@@ -928,4 +915,3 @@
 }
 
 .advisor-cards-feed.is-dragging { cursor: grabbing; }
-

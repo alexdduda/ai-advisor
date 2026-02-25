@@ -17,7 +17,6 @@ const CATEGORY_ICON_COMPONENTS = {
   grades:        FaChartBar,
   planning:      FaMapMarkedAlt,
   opportunities: FaLightbulb,
-  other:         FaComments,
 }
 
 const CARD_CONFIG = {
@@ -134,7 +133,7 @@ function AdvisorCard({
   const cardRef = useRef(null)
 
   const config   = CARD_CONFIG[card.card_type || card.type] || CARD_CONFIG.insight
-  const CardIcon = CATEGORY_ICON_COMPONENTS[card.category || 'other'] || FaComments
+  const CardIcon = CATEGORY_ICON_COMPONENTS[card.category || 'planning'] || FaMapMarkedAlt
   const isSaved  = card.is_saved || false
   const isUser   = card.source === 'user'
   const chips    = card.actions || []
@@ -435,7 +434,7 @@ export default function AdvisorCards({
   })
   const [thinkingCards, setThinking] = useState(new Set())
   const [expandedCards, setExpanded] = useState(new Set())
-// Comment
+
   useEffect(() => {
     try { localStorage.setItem(storageKey, JSON.stringify(threadMap)) } catch {}
   }, [threadMap, storageKey])
@@ -507,7 +506,7 @@ export default function AdvisorCards({
   const showSkeletons = isLoading || isGenerating
 
   const categoryCounts = cards.reduce((acc, card) => {
-    const cat = card.category || 'other'
+    const cat = card.category || 'planning'
     acc[cat] = (acc[cat] || 0) + 1
     return acc
   }, {})
@@ -517,7 +516,7 @@ export default function AdvisorCards({
   const filteredCards =
     activeCategory === 'all'   ? cards :
     activeCategory === 'saved' ? savedCards :
-    cards.filter(c => (c.category || 'other') === activeCategory)
+    cards.filter(c => (c.category || 'planning') === activeCategory)
 
   const activeCats = CARD_CATEGORIES.filter(cat => categoryCounts[cat])
 
@@ -556,7 +555,7 @@ export default function AdvisorCards({
           </button>
 
           {activeCats.map(cat => {
-            const CatIcon = CATEGORY_ICON_COMPONENTS[cat] || FaComments
+            const CatIcon = CATEGORY_ICON_COMPONENTS[cat] || FaMapMarkedAlt
             return (
               <button
                 key={cat}
@@ -600,7 +599,7 @@ export default function AdvisorCards({
           </div>
         ) : filteredCards.length === 0 ? (
           <div className="advisor-cards-empty">
-            {(() => { const I = CATEGORY_ICON_COMPONENTS[activeCategory] || FaComments; return <I className="empty-icon" /> })()}
+            {(() => { const I = CATEGORY_ICON_COMPONENTS[activeCategory] || FaMapMarkedAlt; return <I className="empty-icon" /> })()}
             <p>No {CATEGORY_LABELS[activeCategory]} cards right now.</p>
           </div>
         ) : (
