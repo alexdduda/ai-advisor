@@ -130,12 +130,28 @@ def get_recommended_courses(program_key: str):
 
 
 @router.post("/seed")
-def seed_requirements():
-    """Seed all Arts degree requirements into the database."""
+def seed_requirements(faculty: Optional[str] = Query(None, description="arts | engineering | all (default: all)")):
+    """
+    Seed degree requirements into the database.
+    - faculty=arts        → seed only Faculty of Arts programs
+    - faculty=engineering → seed only Faculty of Engineering programs
+    - faculty=all or omit → seed both
+    """
     try:
-        from ..seeds.arts_degree_requirements import seed_degree_requirements
         supabase = get_supabase()
-        stats = seed_degree_requirements(supabase)
-        return {"success": True, "seeded": stats}
+        results = {}
+
+        run_arts = faculty in (None, "all", "arts")
+        run_eng  = faculty in (None, "all", "engineering")
+
+        if run_arts:
+            from ..seeds.arts_degree_requirements import seed_degree_requirements as seed_arts
+            results["arts"] = seed_arts(supabase)
+
+        if run_eng:
+            from ..seeds.engineering_degree_requirements import seed_degree_requirements as seed_eng
+            results["engineering"] = seed_eng(supabase)
+
+        return {"success": True, "seeded": results}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

@@ -64,10 +64,14 @@ function normalizeCode(code) {
     .replace(/\s+/g, ' ')
     .trim()
 }
-function matchTransfer(req, advancedStanding = []) {
+function matchTransfer(req, advancedStanding = [], { requireMajorCredit = false } = {}) {
   if (!req.catalog) return false
   const key = normalizeCode(`${req.subject} ${req.catalog}`)
-  return advancedStanding.some(t => normalizeCode(t.course_code) === key)
+  return advancedStanding.some(t => {
+    if (normalizeCode(t.course_code) !== key) return false
+    if (requireMajorCredit) return !!t.counts_toward_major
+    return true
+  })
 }
 
 // ── Accordion ─────────────────────────────────────────────────────────────────
@@ -132,8 +136,12 @@ function ElectivesPanel({ profile, completedCourses, currentCourses, programData
     setLoading(true)
     setError(null)
     try {
+      const advancedStanding = profile?.advanced_standing || []
       const allCourses = [...completedCourses, ...currentCourses]
-      const coursesTaken = allCourses.map(c => `${c.subject} ${c.catalog} ${c.course_title || ''}`.trim())
+      const coursesTaken = [
+        ...allCourses.map(c => `${c.subject} ${c.catalog} ${c.course_title || ''}`.trim()),
+        ...advancedStanding.map(t => `${t.course_code} ${t.course_title || '(transfer)'}`.trim()),
+      ]
 
       // Build list of required major/minor courses to exclude from electives
       const requiredCodes = new Set()
@@ -284,8 +292,7 @@ function ProgramSection({ prog, completedCourses, currentCourses, advStanding, o
         const blockCourses = block.courses?.filter(c => c.catalog) || []
         const blockMatched = blockCourses.filter(c => {
           const key = `${c.subject} ${c.catalog}`.toUpperCase()
-          const isTransfer = matchTransfer(c, advStanding)
-          if (isTransfer) return false
+          if (matchTransfer(c, advStanding)) return false
           return completedCourses.some(uc => `${uc.subject} ${uc.catalog}`.toUpperCase() === key) ||
                  currentCourses.some(uc => `${uc.subject} ${uc.catalog}`.toUpperCase() === key)
         })

@@ -39,7 +39,11 @@ export default function EnhancedProfileForm({ profile, onSave, onCancel }) {
         year: profile.year || '',
         interests: profile.interests || '',
         current_gpa: profile.current_gpa || '',
-        advanced_standing: profile.advanced_standing || []
+        advanced_standing: (profile.advanced_standing || []).map(c => ({
+          counts_toward_degree: true,
+          counts_toward_major: false,
+          ...c,
+        }))
       })
     }
   }, [profile])
@@ -90,11 +94,22 @@ export default function EnhancedProfileForm({ profile, onSave, onCancel }) {
         advanced_standing: [...prev.advanced_standing, {
           course_code: newAdvancedCourse.course_code,
           course_title: newAdvancedCourse.course_title || null,
-          credits: newAdvancedCourse.credits
+          credits: newAdvancedCourse.credits,
+          counts_toward_degree: true,
+          counts_toward_major: false,
         }]
       }))
       setNewAdvancedCourse({ course_code: '', course_title: '', credits: 3 })
     }
+  }
+
+  const handleToggleAdvancedFlag = (index, flag) => {
+    setFormData(prev => ({
+      ...prev,
+      advanced_standing: prev.advanced_standing.map((c, i) =>
+        i === index ? { ...c, [flag]: !c[flag] } : c
+      )
+    }))
   }
 
   const handleRemoveAdvancedCourse = (index) => {
@@ -476,17 +491,35 @@ export default function EnhancedProfileForm({ profile, onSave, onCancel }) {
               {formData.advanced_standing.length > 0 && (
                 <div className="advanced-courses-list">
                   {formData.advanced_standing.map((course, index) => (
-                    <div key={index} className="advanced-course-chip">
-                      <span className="course-code">{course.course_code}</span>
-                      <span className="course-credits">({course.credits} cr)</span>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveAdvancedCourse(index)}
-                        className="remove-chip-btn"
-                        title="Remove"
-                      >
-                        ✕
-                      </button>
+                    <div key={index} className="advanced-course-card">
+                      <div className="advanced-course-card-header">
+                        <span className="course-code">{course.course_code}</span>
+                        <span className="course-credits">{course.credits} cr</span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveAdvancedCourse(index)}
+                          className="remove-chip-btn"
+                          title="Remove"
+                        >✕</button>
+                      </div>
+                      <div className="advanced-course-toggles">
+                        <label className="toggle-label">
+                          <input
+                            type="checkbox"
+                            checked={course.counts_toward_degree !== false}
+                            onChange={() => handleToggleAdvancedFlag(index, 'counts_toward_degree')}
+                          />
+                          <span>Counts toward degree total</span>
+                        </label>
+                        <label className="toggle-label">
+                          <input
+                            type="checkbox"
+                            checked={!!course.counts_toward_major}
+                            onChange={() => handleToggleAdvancedFlag(index, 'counts_toward_major')}
+                          />
+                          <span>Counts toward major / minor</span>
+                        </label>
+                      </div>
                     </div>
                   ))}
                 </div>
