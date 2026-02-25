@@ -134,11 +134,10 @@ def get_recommended_courses(program_key: str):
 def seed_requirements(x_cron_secret: Optional[str] = Header(None)):
     """
     Seed all Arts degree requirements into the database.
-    Protected by CRON_SECRET header to prevent unauthorized access.
+    If CRON_SECRET is configured, requires matching header.
+    If not configured, allows unauthenticated access.
     """
-    if not settings.CRON_SECRET:
-        raise HTTPException(status_code=500, detail="CRON_SECRET not configured")
-    if x_cron_secret != settings.CRON_SECRET:
+    if settings.CRON_SECRET and x_cron_secret != settings.CRON_SECRET:
         raise HTTPException(status_code=401, detail="Invalid or missing X-Cron-Secret header")
 
     try:

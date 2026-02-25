@@ -72,6 +72,7 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
   const [seeding, setSeeding]             = useState(false)
   const [seedDone, setSeedDone]           = useState(false)
   const [error, setError]                 = useState(null)
+  const [detailError, setDetailError]     = useState(null)   // ← NEW: separate error for detail fetch
   const [search, setSearch]               = useState('')
   const [typeFilter, setTypeFilter]       = useState('all')
   const [openBlocks, setOpenBlocks]       = useState({})
@@ -96,7 +97,10 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
   useEffect(() => {
     const fParam = facultyFilter ? `?faculty=${encodeURIComponent(facultyFilter)}` : ''
     fetch(`${API_BASE}/api/degree-requirements/programs${fParam}`)
-      .then(r => r.json())
+      .then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`)
+        return r.json()
+      })
       .then(data => { if (Array.isArray(data)) setPrograms(data) })
       .catch(() => setError('Could not load programs. Try loading requirements first.'))
   }, [seedDone, facultyFilter])
@@ -107,15 +111,28 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
     setProgramDetail(null)
     setOpenBlocks({})
     setShowAllCourses({})
+    setDetailError(null)
     fetch(`${API_BASE}/api/degree-requirements/programs/${selectedKey}`)
-      .then(r => r.json())
-      .then(data => {
-        setProgramDetail(data)
-        const initial = {}
-        data.blocks?.forEach((b, i) => { if (i < 2) initial[b.id] = true })
-        setOpenBlocks(initial)
+      .then(r => {
+        if (r.status === 404) {
+          setDetailError('not_found')
+          return null
+        }
+        if (!r.ok) {
+          setDetailError('error')
+          return null
+        }
+        return r.json()
       })
-      .catch(() => setError('Could not load program details.'))
+      .then(data => {
+        if (data) {
+          setProgramDetail(data)
+          const initial = {}
+          data.blocks?.forEach((b, i) => { if (i < 2) initial[b.id] = true })
+          setOpenBlocks(initial)
+        }
+      })
+      .catch(() => setDetailError('error'))
       .finally(() => setLoading(false))
   }, [selectedKey])
 
@@ -177,7 +194,7 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
           <select
             className="drv-faculty-select"
             value={facultyFilter}
-            onChange={e => { setFacultyFilter(e.target.value); setSelectedKey(null); setProgramDetail(null); setTypeFilter('all') }}
+            onChange={e => { setFacultyFilter(e.target.value); setSelectedKey(null); setProgramDetail(null); setDetailError(null); setTypeFilter('all') }}
           >
             <option value="">All Faculties</option>
             <option value="Faculty of Agricultural and Environmental Sciences">Agricultural &amp; Environmental Sciences</option>
@@ -236,7 +253,7 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
             <button
               key={prog.program_key}
               className={`drv-program-item ${selectedKey === prog.program_key ? 'drv-program-item--active' : ''}`}
-              onClick={() => { setSelectedKey(prog.program_key); if (window.innerWidth < 760) setSidebarOpen(false) }}
+              onClick={() => { setSelectedKey(prog.program_key); setDetailError(null); if (window.innerWidth < 760) setSidebarOpen(false) }}
             >
               <span className="drv-type-dot" style={{ background: TYPE_COLORS[prog.program_type] }} />
               <span className="drv-program-name">{prog.name}</span>
@@ -283,6 +300,28 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
           <div className="drv-loading">
             <div className="drv-spinner" />
             <span>Loading requirements…</span>
+          </div>
+        )}
+
+        {/* ── NEW: Graceful 404 handling ──────────────────── */}
+        {!loading && selectedKey && detailError === 'not_found' && !programDetail && (
+          <div className="drv-welcome">
+            <div className="drv-welcome-icon-wrap" style={{ opacity: 0.5 }}><FaGraduationCap /></div>
+            <h2>Program Not Yet Available</h2>
+            <p style={{ color: 'var(--text-secondary, #6b7280)' }}>
+              Detailed requirements for this program haven't been added yet.
+              We're working on expanding our coverage!
+            </p>
+            <p style={{ color: 'var(--text-tertiary, #9ca3af)', fontSize: '0.85rem', marginTop: '0.5rem' }}>
+              Try selecting a different program from the sidebar, or check back later.
+            </p>
+          </div>
+        )}
+
+        {/* ── NEW: Generic error handling ──────────────────── */}
+        {!loading && selectedKey && detailError === 'error' && !programDetail && (
+          <div className="drv-error">
+            Could not load program details. Please try again.
           </div>
         )}
 
