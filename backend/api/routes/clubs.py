@@ -17,8 +17,6 @@ logger = logging.getLogger(__name__)
 
 
 # ── Hardcoded starter clubs seeded by major keywords ─────────────────────────
-# These map to clubs that should exist in the `clubs` table.
-# Key = lowercase major keyword, value = list of club names to surface.
 MAJOR_CLUB_MAP = {
     "computer science": ["McGill AI Society", "HackMcGill", "McGill Robotics", "McGill Cybersecurity Club"],
     "software":         ["HackMcGill", "McGill AI Society", "McGill Cybersecurity Club"],
@@ -115,13 +113,10 @@ async def get_starter_clubs(user_id: str, major: Optional[str] = None):
     try:
         supabase = get_supabase()
         names = _get_starter_names(major)
-        # Fetch clubs matching those names from DB
         result = supabase.table("clubs").select("*").eq("is_verified", True).execute()
         all_clubs = result.data or []
-        # Filter to matched names (case-insensitive)
         names_lower = [n.lower() for n in names]
         matched = [c for c in all_clubs if c["name"].lower() in names_lower]
-        # Also fetch clubs the user has already joined so we can mark them
         joined_result = (
             supabase.table("user_clubs")
             .select("club_id")
@@ -135,6 +130,21 @@ async def get_starter_clubs(user_id: str, major: Optional[str] = None):
     except Exception as e:
         logger.exception(f"Error fetching starter clubs: {e}")
         raise HTTPException(status_code=500, detail="Failed to retrieve starter clubs")
+
+
+# ── STATIC routes must come before dynamic /{user_id} routes ─────────────────
+
+@router.get("/categories")
+async def get_categories():
+    """Return the distinct club categories in the DB."""
+    return {
+        "categories": [
+            "Academic", "Arts & Culture", "Athletics & Recreation",
+            "Community Service", "Debate & Politics", "Engineering & Technology",
+            "Environment", "Health & Wellness", "International", "Professional",
+            "Science", "Social", "Spiritual & Religious",
+        ]
+    }
 
 
 @router.get("/user/{user_id}")
@@ -166,7 +176,6 @@ async def join_club(user_id: str, body: JoinClubRequest):
     """Add a club to the user's joined list."""
     try:
         supabase = get_supabase()
-        # Check not already joined
         existing = (
             supabase.table("user_clubs")
             .select("id")
@@ -231,16 +240,3 @@ async def submit_club(submission: ClubSubmission):
     except Exception as e:
         logger.exception(f"Error submitting club: {e}")
         raise HTTPException(status_code=500, detail="Failed to submit club")
-
-
-@router.get("/categories")
-async def get_categories():
-    """Return the distinct club categories in the DB."""
-    return {
-        "categories": [
-            "Academic", "Arts & Culture", "Athletics & Recreation",
-            "Community Service", "Debate & Politics", "Engineering & Technology",
-            "Environment", "Health & Wellness", "International", "Professional",
-            "Science", "Social", "Spiritual & Religious",
-        ]
-    }
