@@ -1,0 +1,33 @@
+/* ══════════════════════════════════════════════════════
+   CoursesView.css
+   Layout wrapper for the "Courses" tab, which contains
+   two sub-tabs: My Courses (SavedCoursesView) and
+   Course Search (CoursesTab).
+   ══════════════════════════════════════════════════════ */
+
+/* ── Outer shell ────────────────────────────────────────── */
+.courses-view {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+/* ── Course-search panel: undo the fixed-height/overflow-hidden
+      that dp-req-tab-wrap applies (it was built for the degree
+      requirements tree, not a full scrolling search panel).   */
+.courses-view .courses-search-panel {
+  width: 100%;
+}
+
+/* Make CoursesTab's own root element render normally here */
+.courses-view .courses-search-panel > * {
+  height: auto !important;
+  min-height: unset !important;
+  overflow: visible !important;
+}
+
+/* ── My Courses panel ───────────────────────────────────── */
+.courses-view .courses-my-panel {
+  width: 100%;
+}

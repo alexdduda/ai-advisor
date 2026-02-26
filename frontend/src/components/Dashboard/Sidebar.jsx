@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { FaChevronLeft, FaChevronRight, FaComments, FaBook, FaStar, FaUser, FaCog, FaPalette, FaSignOutAlt, FaCalendarAlt, FaGraduationCap, FaUsers } from 'react-icons/fa'
+import { FaChevronLeft, FaChevronRight, FaComments, FaBook, FaUser, FaCog, FaPalette, FaSignOutAlt, FaCalendarAlt, FaGraduationCap, FaUsers } from 'react-icons/fa'
 import { MdLanguage } from 'react-icons/md'
 import { useTheme } from '../../contexts/ThemeContext'
 import { useLanguage } from '../../contexts/LanguageContext'
@@ -23,7 +23,6 @@ export default function Sidebar({
   const { theme, setTheme } = useTheme()
   const { language, setLanguage, t } = useLanguage()
 
-  // Draggable toggle button position (in pixels, like the original)
   const [leftToggleY, setLeftToggleY] = useState(() => {
     const saved = localStorage.getItem('leftSidebarButtonY')
     return saved ? parseFloat(saved) : window.innerHeight / 2
@@ -31,7 +30,6 @@ export default function Sidebar({
   
   const [isDraggingLeft, setIsDraggingLeft] = useState(false)
 
-  // Save position to localStorage
   useEffect(() => {
     localStorage.setItem('leftSidebarButtonY', leftToggleY.toString())
   }, [leftToggleY])
@@ -47,48 +45,32 @@ export default function Sidebar({
 
   const handleMouseMove = (e) => {
     if (!isDraggingLeft) return
-    
     const windowHeight = window.innerHeight
     const newY = e.clientY
-    
-    // Constrain between 10% and 90% of window height
     const minY = windowHeight * 0.1
     const maxY = windowHeight * 0.9
-    const constrainedY = Math.min(Math.max(newY, minY), maxY)
-    
-    setLeftToggleY(constrainedY)
+    setLeftToggleY(Math.min(Math.max(newY, minY), maxY))
   }
 
   const handleTouchMove = (e) => {
     if (!isDraggingLeft) return
-    
     const windowHeight = window.innerHeight
     const touch = e.touches[0]
     const newY = touch.clientY
-    
     const minY = windowHeight * 0.1
     const maxY = windowHeight * 0.9
-    const constrainedY = Math.min(Math.max(newY, minY), maxY)
-    
-    setLeftToggleY(constrainedY)
+    setLeftToggleY(Math.min(Math.max(newY, minY), maxY))
   }
 
-  const handleMouseUp = () => {
-    setIsDraggingLeft(false)
-  }
+  const handleMouseUp = () => setIsDraggingLeft(false)
+  const handleTouchEnd = () => setIsDraggingLeft(false)
 
-  const handleTouchEnd = () => {
-    setIsDraggingLeft(false)
-  }
-
-  // Mouse event listeners for dragging
   useEffect(() => {
     if (isDraggingLeft) {
       document.addEventListener('mousemove', handleMouseMove)
       document.addEventListener('mouseup', handleMouseUp)
       document.addEventListener('touchmove', handleTouchMove)
       document.addEventListener('touchend', handleTouchEnd)
-      
       return () => {
         document.removeEventListener('mousemove', handleMouseMove)
         document.removeEventListener('mouseup', handleMouseUp)
@@ -98,10 +80,8 @@ export default function Sidebar({
     }
   }, [isDraggingLeft])
 
-  // Close popup on outside click
   useEffect(() => {
     if (!popupOpen) return
-
     const handleClickOutside = (e) => {
       if (
         popupRef.current && !popupRef.current.contains(e.target) &&
@@ -110,12 +90,10 @@ export default function Sidebar({
         setPopupOpen(false)
       }
     }
-
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [popupOpen])
 
-  // Close popup when sidebar closes
   useEffect(() => {
     if (!sidebarOpen) setPopupOpen(false)
   }, [sidebarOpen])
@@ -141,18 +119,12 @@ export default function Sidebar({
   }
 
   const handleLanguageToggle = () => {
-    const cycleLanguage = () => {
-      if (language === 'en') setLanguage('fr')
-      else setLanguage('en')
-    }
-    cycleLanguage()
+    if (language === 'en') setLanguage('fr')
+    else setLanguage('en')
     setPopupOpen(false)
   }
 
-  const handleThemeClick = () => {
-    cycleTheme()
-    // Keep popup open so user can cycle through options
-  }
+  const handleThemeClick = () => cycleTheme()
 
   const handleLogOut = () => {
     setPopupOpen(false)
@@ -199,14 +171,13 @@ export default function Sidebar({
           <>
             <nav className="sidebar-nav">
               {[
-                { key: 'chat', icon: <FaComments />, label: 'Academic Brief' },
-                { key: 'favorites', icon: <FaGraduationCap />, label: 'Degree Planning', badge: null },
-                { key: 'courses', icon: <FaBook />, label: t('nav.courses') },
-                { key: 'saved', icon: <FaStar />, label: t('nav.saved') },
-                { key: 'calendar', icon: <FaCalendarAlt />, label: t('nav.calendar') },
-                { key: 'clubs', icon: <FaUsers />, label: 'Clubs' },
-                { key: 'forum', icon: <FaComments />, label: t('nav.forum') },
-                { key: 'profile', icon: <FaUser />, label: t('nav.profile') },
+                { key: 'chat',      icon: <FaComments />,     label: 'Academic Brief' },
+                { key: 'favorites', icon: <FaGraduationCap />, label: 'Degree Planning' },
+                { key: 'courses',   icon: <FaBook />,          label: 'Courses' },
+                { key: 'calendar',  icon: <FaCalendarAlt />,   label: t('nav.calendar') },
+                { key: 'clubs',     icon: <FaUsers />,         label: 'Clubs' },
+                { key: 'forum',     icon: <FaComments />,      label: t('nav.forum') },
+                { key: 'profile',   icon: <FaUser />,          label: t('nav.profile') },
               ].map(({ key, icon, label, badge }) => (
                 <button
                   key={key}
@@ -221,7 +192,6 @@ export default function Sidebar({
             </nav>
 
             <div className="sidebar-footer">
-              {/* Popup Menu */}
               {popupOpen && (
                 <div className="sidebar-popup" ref={popupRef}>
                   <button className="sidebar-popup-item" onClick={handleSettingsClick}>
@@ -249,7 +219,6 @@ export default function Sidebar({
                 </div>
               )}
 
-              {/* User Profile Button */}
               <button
                 className="user-info"
                 ref={triggerRef}
@@ -272,7 +241,6 @@ export default function Sidebar({
         )}
       </aside>
 
-      {/* Mobile overlay */}
       {sidebarOpen && (
         <div
           className={`sidebar-overlay ${sidebarOpen ? 'active' : ''}`}

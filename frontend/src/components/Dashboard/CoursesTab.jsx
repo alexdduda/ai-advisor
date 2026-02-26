@@ -46,19 +46,16 @@ export default function CoursesTab({
     setOpenFlagCard(prev => prev === key ? null : key)
   }
 
-  // Reset to page 1 whenever sort changes
   const handleSortChange = (val) => {
     setSortBy(val)
     setCurrentPage(1)
   }
 
-  // Wrap the parent search handler to also reset page
   const handleSearch = (e) => {
     setCurrentPage(1)
     handleCourseSearch(e)
   }
 
-  // Paginate the sorted results
   const sortedResults = sortCourses(searchResults, sortBy)
   const totalPages    = Math.ceil(sortedResults.length / PAGE_SIZE)
   const pageStart     = (currentPage - 1) * PAGE_SIZE
@@ -67,7 +64,6 @@ export default function CoursesTab({
 
   const goToPage = (page) => {
     setCurrentPage(page)
-    // Scroll the results back to top smoothly
     document.querySelector('.search-results')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
@@ -128,7 +124,7 @@ export default function CoursesTab({
 
           <div className="course-list">
             {pageResults.map((course) => {
-              const cardKey   = `${course.subject}-${course.catalog}`
+              const cardKey    = `${course.subject}-${course.catalog}`
               const isFlagOpen = openFlagCard === cardKey
 
               return (
@@ -184,7 +180,6 @@ export default function CoursesTab({
                     )}
                   </div>
 
-                  {/* Flag button */}
                   {course.instructor && (
                     <div className="prof-flag-wrapper">
                       <button
@@ -248,12 +243,10 @@ export default function CoursesTab({
 
               <div className="pagination-pages">
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => {
-                  // Always show first, last, current, and neighbours; collapse the rest
                   const isNearCurrent = Math.abs(page - currentPage) <= 1
                   const isEdge        = page === 1 || page === totalPages
 
                   if (!isNearCurrent && !isEdge) {
-                    // Show a single ellipsis between each gap
                     if (page === 2 || page === totalPages - 1) {
                       return <span key={page} className="pagination-ellipsis">…</span>
                     }
@@ -296,30 +289,35 @@ export default function CoursesTab({
             <h2 className="course-details-title">
               {selectedCourse.subject} {selectedCourse.catalog}: {selectedCourse.title}
             </h2>
-            {(selectedCourse.last_year_average || selectedCourse.average_grade) && (
+
+            {/* GPA badge — API returns `average` (most recent year) */}
+            {selectedCourse.average && (
               <div className="course-stat-badge">
-                {(selectedCourse.last_year_average || selectedCourse.average_grade)} GPA ({gpaToLetterGrade(selectedCourse.last_year_average || selectedCourse.average_grade)})
+                {selectedCourse.average} GPA ({gpaToLetterGrade(selectedCourse.average)})
               </div>
             )}
 
-            {selectedCourse.professor_rating && (
+            {/* RMP — API returns flat rmp_* fields on the course object */}
+            {selectedCourse.rmp_rating && (
               <div className="course-professor-rating">
-                <h3><FaChartBar /> {t('courses.professorRating')}: {selectedCourse.professor_rating.instructor}</h3>
+                {selectedCourse.instructors?.[0] && (
+                  <h3><FaChartBar /> {t('courses.professorRating')}: {selectedCourse.instructors[0]}</h3>
+                )}
                 <div className="rmp-stats-grid">
                   <div className="rmp-stat-card">
-                    <div className="rmp-stat-value">{selectedCourse.professor_rating.rmp_rating?.toFixed(1) || t('common.na')}</div>
+                    <div className="rmp-stat-value">{selectedCourse.rmp_rating?.toFixed(1) || t('common.na')}</div>
                     <div className="rmp-stat-label">{t('courses.rating')}</div>
                   </div>
                   <div className="rmp-stat-card">
-                    <div className="rmp-stat-value">{selectedCourse.professor_rating.rmp_difficulty?.toFixed(1) || t('common.na')}</div>
+                    <div className="rmp-stat-value">{selectedCourse.rmp_difficulty?.toFixed(1) || t('common.na')}</div>
                     <div className="rmp-stat-label">{t('courses.difficulty')}</div>
                   </div>
                   <div className="rmp-stat-card">
-                    <div className="rmp-stat-value">{selectedCourse.professor_rating.rmp_num_ratings ? Math.round(selectedCourse.professor_rating.rmp_num_ratings) : t('common.na')}</div>
+                    <div className="rmp-stat-value">{selectedCourse.rmp_num_ratings ? Math.round(selectedCourse.rmp_num_ratings) : t('common.na')}</div>
                     <div className="rmp-stat-label">{t('courses.reviews')}</div>
                   </div>
                   <div className="rmp-stat-card">
-                    <div className="rmp-stat-value">{selectedCourse.professor_rating.rmp_would_take_again ? Math.round(selectedCourse.professor_rating.rmp_would_take_again) + '%' : t('common.na')}</div>
+                    <div className="rmp-stat-value">{selectedCourse.rmp_would_take_again ? Math.round(selectedCourse.rmp_would_take_again) + '%' : t('common.na')}</div>
                     <div className="rmp-stat-label">{t('courses.wouldRetake')}</div>
                   </div>
                 </div>
@@ -327,17 +325,40 @@ export default function CoursesTab({
             )}
           </div>
 
-          {selectedCourse.sections && selectedCourse.sections.length > 0 && (
+          {/* Instructors list */}
+          {selectedCourse.instructors?.length > 0 && (
             <div className="course-sections">
-              <h3 className="sections-header">{t('courses.sections')} ({selectedCourse.sections.length})</h3>
+              <h3 className="sections-header">
+                <FaUser style={{ marginRight: 8 }} />
+                Instructors ({selectedCourse.instructors.length})
+              </h3>
               <div className="sections-grid">
-                {selectedCourse.sections.map((section, idx) => (
+                {selectedCourse.instructors.map((instructor, idx) => (
                   <div key={idx} className="section-card-compact">
                     <div className="section-compact-header">
-                      <span className="section-term">{section.term || t('common.na')}</span>
-                      {section.average && (
+                      <span className="section-term">{instructor}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Grade trend — API returns grade_trend: [{year, average, sections}] */}
+          {selectedCourse.grade_trend?.length > 0 && (
+            <div className="course-sections">
+              <h3 className="sections-header">
+                {t('courses.sections')} ({selectedCourse.num_sections})
+              </h3>
+              <div className="sections-grid">
+                {selectedCourse.grade_trend.map((entry, idx) => (
+                  <div key={idx} className="section-card-compact">
+                    <div className="section-compact-header">
+                      <span className="section-term">{entry.year}</span>
+                      {entry.average && (
                         <span className="section-average">
-                          {parseFloat(section.average).toFixed(1)} ({gpaToLetterGrade(section.average)})
+                          {parseFloat(entry.average).toFixed(2)} ({gpaToLetterGrade(entry.average)})
+                          <span className="average-note"></span>
                         </span>
                       )}
                     </div>

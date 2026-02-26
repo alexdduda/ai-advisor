@@ -11,10 +11,9 @@ import AdvisorCards from './chat/AdvisorCards'
 import FeedbackModal from './FeedbackModal'
 import ClubsTab from './ClubsTab'
 import RightSidebar from './RightSidebar'
-import SavedCoursesView from './SavedCoursesView'
+import CoursesView from './CoursesView'
 
 import Sidebar from './Sidebar'
-import CoursesTab from './CoursesTab'
 import ProfileTab from './ProfileTab'
 import DegreePlanningView from './DegreePlanningView'
 import Forum from '../Forum/Forum'
@@ -153,7 +152,6 @@ export default function Dashboard() {
     }
   }
 
-  // Toggle the saved/pinned state of a single card
   const handleCardSaveToggle = async (cardId, isSaved) => {
     if (!user?.id) return
     try {
@@ -166,7 +164,6 @@ export default function Dashboard() {
     }
   }
 
-  // Persist drag-and-drop order sent up from AdvisorCards component
   const handleCardsReorder = async (order) => {
     if (!user?.id) return
     try {
@@ -210,7 +207,6 @@ export default function Dashboard() {
   // ── Pinned card handler ───────────────────────────────────
   const handlePinToggle = (card, thread) => {
     if (!card) {
-      // unpin
       setPinnedCard(null)
       setPinnedThread([])
       setRightSidebarOpen(false)
@@ -306,6 +302,7 @@ export default function Dashboard() {
 
   const handleCourseClick = async (course) => {
     setIsLoadingCourse(true)
+    setSelectedCourse(null)
     try {
       const data = await coursesAPI.getDetails(course.subject, course.catalog)
       setSelectedCourse(data.course || data)
@@ -516,9 +513,7 @@ export default function Dashboard() {
               onChipClick={handleCardChipClick}
               onFollowUp={handleCardChipClick}
               onDeleteCard={async (cardId) => {
-                // Optimistically remove from UI immediately
                 setAdvisorCards(prev => prev.filter(c => c.id !== cardId))
-                // Permanently delete from DB so it doesn't come back on refresh
                 try { await cardsAPI.deleteCard(user.id, cardId) } catch (e) {
                   console.warn('Failed to delete card from DB:', e)
                 }
@@ -539,7 +534,17 @@ export default function Dashboard() {
           )}
 
           {activeTab === 'courses' && (
-            <CoursesTab
+            <CoursesView
+              favorites={favorites}
+              completedCourses={completedCourses}
+              completedCoursesMap={completedCoursesMap}
+              currentCourses={currentCourses}
+              currentCoursesMap={currentCoursesMap}
+              favoritesMap={favoritesMap}
+              onToggleFavorite={handleToggleFavorite}
+              onToggleCompleted={handleToggleCompleted}
+              onToggleCurrent={handleToggleCurrent}
+              onCourseClick={handleCourseClick}
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
               searchResults={searchResults}
@@ -554,12 +559,12 @@ export default function Dashboard() {
               sortCourses={sortCourses}
               isFavorited={isFavorited}
               isCompleted={isCompleted}
+              isCurrent={isCurrent}
               handleCourseSearch={handleCourseSearch}
               handleCourseClick={handleCourseClick}
               handleToggleFavorite={handleToggleFavorite}
               handleToggleCompleted={handleToggleCompleted}
               handleToggleCurrent={handleToggleCurrent}
-              isCurrent={isCurrent}
               gpaToLetterGrade={gpaToLetterGrade}
             />
           )}
@@ -590,30 +595,6 @@ export default function Dashboard() {
             />
           )}
 
-          {activeTab === 'saved' && (
-            <SavedCoursesView
-              favorites={favorites}
-              completedCourses={completedCourses}
-              completedCoursesMap={completedCoursesMap}
-              currentCourses={currentCourses}
-              currentCoursesMap={currentCoursesMap}
-              favoritesMap={favoritesMap}
-              onToggleFavorite={handleToggleFavorite}
-              onToggleCompleted={handleToggleCompleted}
-              onToggleCurrent={handleToggleCurrent}
-              onCourseClick={async (course) => {
-                setActiveTab('courses')
-                setTimeout(async () => {
-                  await handleCourseClick({
-                    subject: course.subject,
-                    catalog: course.catalog,
-                    title: course.course_title,
-                  })
-                }, 100)
-              }}
-            />
-          )}
-          
           {activeTab === 'forum' && <Forum />}
 
           {activeTab === 'calendar' && (
