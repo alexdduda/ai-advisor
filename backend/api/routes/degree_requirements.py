@@ -177,12 +177,13 @@ def seed_requirements(
         supabase = get_supabase()
         results = {}
 
-        run_arts       = faculty in (None, "all", "arts")
-        run_sci        = faculty in (None, "all", "science")
-        run_eng        = faculty in (None, "all", "engineering")
-        run_arts_sci   = faculty in (None, "all", "arts_science")
-        run_management = faculty in (None, "all", "management")
-        run_education  = faculty in (None, "all", "education")
+        run_arts        = faculty in (None, "all", "arts")
+        run_sci         = faculty in (None, "all", "science")
+        run_eng         = faculty in (None, "all", "engineering")
+        run_arts_sci    = faculty in (None, "all", "arts_science")
+        run_management  = faculty in (None, "all", "management")
+        run_education   = faculty in (None, "all", "education")
+        run_environment = faculty in (None, "all", "environment")
 
         if run_arts:
             from ..seeds.arts_degree_requirements import seed_degree_requirements as seed_arts
@@ -207,6 +208,10 @@ def seed_requirements(
         if run_education:
             from ..seeds.education_degree_requirements import seed_degree_requirements as seed_edu
             results["education"] = seed_edu(supabase)
+
+        if run_environment:
+            from ..seeds.environment_degree_requirements import seed_degree_requirements as seed_env
+            results["environment"] = seed_env(supabase)
 
         return {"success": True, "seeded": results}
 

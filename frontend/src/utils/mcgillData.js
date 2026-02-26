@@ -120,6 +120,12 @@ export const MAJORS = [
   'Agricultural Economics', 'Food Science', 'Wildlife Biology'
 ];
 
+export const ENVIRONMENT_MAJORS = [
+  'Ecological Determinants of Health in Society',
+  'Economics and the Earth\'s Environment',
+  'Environment and Development',
+];
+
 export const MINORS = [
   'Anthropology', 'Art History', 'Biology', 'Chemistry', 'Classics',
   'Computer Science', 'Economics', 'English', 'Environmental Studies',
@@ -131,7 +137,8 @@ export const MINORS = [
   'Latin American and Caribbean Studies', 'Middle Eastern Studies',
   'World Cinemas', 'Urban Systems', 'Communication Studies',
   'Linguistics', 'Cognitive Science', 'Entrepreneurship',
-  'Business', 'Management', 'Sustainability Science and Society'
+  'Business', 'Management', 'Sustainability Science and Society',
+  'Environment'
 ];
 
 export const YEAR_OPTIONS = [

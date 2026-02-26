@@ -22,10 +22,11 @@ const TYPE_LABELS = {
   concentration: 'Concentration',
   core:          'Core',
   required:      'Core',
+  diploma:       'Diploma',
 }
 const TYPE_COLORS = {
   major:         '#dc2626',
-  minor:         '#ea580c',
+  minor:         '#ca8a04',
   honours:       '#2563eb',
   joint_honours: '#0f766e',
   beng:          '#dc2626',
@@ -34,10 +35,11 @@ const TYPE_COLORS = {
   concentration: '#7c3aed',
   core:          '#0f766e',
   required:      '#0f766e',
+  diploma:       '#059669',
 }
 const TYPE_BG = {
   major:         '#fef2f2',
-  minor:         '#fff7ed',
+  minor:         '#fefce8',
   honours:       '#eff6ff',
   joint_honours: '#f0fdfa',
   beng:          '#fef2f2',
@@ -46,6 +48,7 @@ const TYPE_BG = {
   concentration: '#faf5ff',
   core:          '#f0fdfa',
   required:      '#f0fdfa',
+  diploma:       '#ecfdf5',
 }
 
 // Normalize short faculty names (as stored in profile) to full faculty strings
@@ -309,7 +312,9 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
               ? ['all', 'beng', 'bge', 'bscarch', 'minor']
               : facultyFilter.toLowerCase().includes('management') || facultyFilter.toLowerCase().includes('desautels')
                 ? ['all', 'core', 'major', 'concentration', 'honours']
-                : ['all', 'major', 'minor', 'honours']
+                : facultyFilter === 'School of Environment'
+                  ? ['all', 'major', 'minor', 'diploma']
+                  : ['all', 'major', 'minor', 'honours']
           ).map(t => {
             const isActive = typeFilter === t
             const color = TYPE_COLORS[t]

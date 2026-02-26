@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { MAJORS, MINORS, FACULTIES } from '../../utils/mcgillData'
+import { MAJORS, MINORS, FACULTIES, ENVIRONMENT_MAJORS } from '../../utils/mcgillData'
 import './EnhancedProfileForm.css'
 
 const BASC_PROGRAMS = [
@@ -12,6 +12,7 @@ const BASC_PROGRAMS = [
 ]
 
 const isBasc = (faculty) => faculty === 'Bachelor of Arts and Science'
+const isEnv  = (faculty) => faculty === 'School of Environment'
 
 export default function EnhancedProfileForm({ profile, onSave, onCancel }) {
   const [formData, setFormData] = useState({
@@ -395,7 +396,7 @@ export default function EnhancedProfileForm({ profile, onSave, onCancel }) {
                     required
                   >
                     <option value="">Select your major</option>
-                    {MAJORS.map(major => (
+                    {(isEnv(formData.faculty) ? ENVIRONMENT_MAJORS : MAJORS).map(major => (
                       <option key={major} value={major}>{major}</option>
                     ))}
                   </select>

@@ -21,6 +21,19 @@ function toProgramKey(name, type = 'major', faculty = '') {
   const isSci = fl.includes('science') && !fl.includes('arts & science') && !fl.includes('arts and science')
   const isBasc = fl.includes('arts & science') || fl.includes('arts and science')
   const isEng  = fl.includes('engineering')
+  const isEnv  = fl.includes('environment') || fl.includes('bieler')
+
+  // Bieler School of Environment B.A. programs
+  if (isEnv) {
+    const envMap = {
+      'Ecological Determinants of Health in Society': 'environment_ecological_determinants_ba',
+      'Economics and the Earth\'s Environment': 'environment_economics_earth_ba',
+      'Environment and Development': 'environment_development_ba',
+    }
+    if (envMap[name]) return envMap[name]
+    if (type === 'minor') return 'environment_minor_ba'
+    if (type === 'diploma') return 'environment_diploma'
+  }
 
   // B.A. & Sc. interfaculty programs
   if (isBasc) {
