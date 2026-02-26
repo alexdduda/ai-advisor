@@ -1,6 +1,18 @@
 import { useState, useEffect } from 'react'
-import { MAJORS, MINORS, FACULTIES } from '../../utils/mcgillData'
+import { MAJORS, MINORS, FACULTIES, ENVIRONMENT_MAJORS } from '../../utils/mcgillData'
 import './EnhancedProfileForm.css'
+
+const BASC_PROGRAMS = [
+  'Cognitive Science',
+  'Cognitive Science (Honours)',
+  'Sustainability, Science and Society',
+  'Sustainability, Science and Society (Honours)',
+  'Environment',
+  'Environment (Honours)',
+]
+
+const isBasc = (faculty) => faculty === 'Bachelor of Arts and Science'
+const isEnv  = (faculty) => faculty === 'School of Environment'
 
 export default function EnhancedProfileForm({ profile, onSave, onCancel }) {
   const [formData, setFormData] = useState({
@@ -256,7 +268,7 @@ export default function EnhancedProfileForm({ profile, onSave, onCancel }) {
                 onChange={handleChange}
               >
                 <option value="">Select year</option>
-                <option value="0">U0</option>
+                <option value="0">U0 (Foundation)</option>
                 <option value="1">U1</option>
                 <option value="2">U2</option>
                 <option value="3">U3</option>
@@ -266,147 +278,209 @@ export default function EnhancedProfileForm({ profile, onSave, onCancel }) {
             </div>
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="major">
-                Primary Major <span className="required-star">*</span>
-              </label>
-              <select
-                id="major"
-                name="major"
-                value={formData.major}
-                onChange={handleChange}
-                required
-              >
-                <option value="">Select your major</option>
-                {MAJORS.map(major => (
-                  <option key={major} value={major}>{major}</option>
-                ))}
-              </select>
-            </div>
+          {/* B.A. & Sc. specific program selection */}
+          {isBasc(formData.faculty) ? (
+            <>
+              {/* Stream selector */}
+              <div className="form-group">
+                <label htmlFor="basc-stream">
+                  Program Stream <span className="required-star">*</span>
+                </label>
+                <select
+                  id="basc-stream"
+                  value={
+                    formData.concentration === 'Multi-track' || formData.concentration === 'Joint Honours'
+                      ? formData.concentration
+                      : 'Interfaculty'
+                  }
+                  onChange={(e) => {
+                    const stream = e.target.value
+                    setFormData(prev => ({
+                      ...prev,
+                      concentration: stream === 'Interfaculty' ? '' : stream,
+                      major: '',
+                      other_majors: [],
+                    }))
+                  }}
+                >
+                  {BASC_STREAMS.map(s => (
+                    <option key={s.value} value={s.value}>{s.label} — {s.description}</option>
+                  ))}
+                </select>
+              </div>
 
-            <div className="form-group">
-              <label htmlFor="minor">Minor</label>
-              <select
-                id="minor"
-                name="minor"
-                value={formData.minor}
-                onChange={handleChange}
-              >
-                <option value="">Select a minor (optional)</option>
-                {MINORS.map(minor => (
-                  <option key={minor} value={minor}>{minor}</option>
-                ))}
-              </select>
-            </div>
-          </div>
+              {/* Interfaculty/Honours stream */}
+              {(!formData.concentration || (!bascIsMultiTrack(formData.concentration))) && (
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="major">
+                      Interfaculty Program <span className="required-star">*</span>
+                    </label>
+                    <select
+                      id="major"
+                      name="major"
+                      value={formData.major}
+                      onChange={handleChange}
+                    >
+                      <option value="">Select your program</option>
+                      {BASC_INTERFACULTY_PROGRAMS.map(prog => (
+                        <option key={prog} value={prog}>{prog}</option>
+                      ))}
+                    </select>
+                    <span className="helper-text">The interfaculty concentration you are completing</span>
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="minor">Minor (optional)</label>
+                    <select id="minor" name="minor" value={formData.minor} onChange={handleChange}>
+                      <option value="">Select a minor</option>
+                      {MINORS.map(m => <option key={m} value={m}>{m}</option>)}
+                    </select>
+                  </div>
+                </div>
+              )}
 
-          {/* Additional Majors */}
-          <div className="form-group">
-            <label>
-              Additional Majors
-              <span className="helper-text">For double/joint majors</span>
-            </label>
-            <div className="multi-select-container">
-              {formData.other_majors.map(major => (
-                <div key={major} className="selected-tag">
-                  <span>{major}</span>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveMajor(major)}
-                    className="remove-tag"
+              {/* Multi-track / Joint Honours stream */}
+              {bascIsMultiTrack(formData.concentration) && (
+                <>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label htmlFor="major">
+                        Arts Concentration <span className="required-star">*</span>
+                      </label>
+                      <select id="major" name="major" value={formData.major} onChange={handleChange}>
+                        <option value="">Select Arts program</option>
+                        {ARTS_MAJORS_BASC.map(m => <option key={m} value={m}>{m}</option>)}
+                      </select>
+                      <span className="helper-text">36-credit Arts major concentration</span>
+                    </div>
+                    <div className="form-group">
+                      <label>
+                        Science Concentration <span className="required-star">*</span>
+                      </label>
+                      <select
+                        value={formData.other_majors[0] || ''}
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev,
+                          other_majors: e.target.value ? [e.target.value] : []
+                        }))}
+                      >
+                        <option value="">Select Science program</option>
+                        {SCIENCE_MAJORS_BASC.map(m => <option key={m} value={m}>{m}</option>)}
+                      </select>
+                      <span className="helper-text">36-credit Science major concentration</span>
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="minor">Minor (optional)</label>
+                    <select id="minor" name="minor" value={formData.minor} onChange={handleChange}>
+                      <option value="">Select a minor</option>
+                      {MINORS.map(m => <option key={m} value={m}>{m}</option>)}
+                    </select>
+                  </div>
+                </>
+              )}
+            </>
+          ) : (
+            /* Non-BASC: standard major/minor/additional */
+            <>
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="major">
+                    Primary Major <span className="required-star">*</span>
+                  </label>
+                  <select
+                    id="major"
+                    name="major"
+                    value={formData.major}
+                    onChange={handleChange}
+                    required
                   >
-                    ✕
+                    <option value="">Select your major</option>
+                    {(isEnv(formData.faculty) ? ENVIRONMENT_MAJORS : MAJORS).map(major => (
+                      <option key={major} value={major}>{major}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="minor">Minor</label>
+                  <select id="minor" name="minor" value={formData.minor} onChange={handleChange}>
+                    <option value="">Select a minor (optional)</option>
+                    {MINORS.map(minor => (
+                      <option key={minor} value={minor}>{minor}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Additional Majors */}
+              <div className="form-group">
+                <label>
+                  Additional Majors
+                  <span className="helper-text">For double/joint majors</span>
+                </label>
+                <div className="multi-select-container">
+                  {formData.other_majors.map(major => (
+                    <div key={major} className="selected-tag">
+                      <span>{major}</span>
+                      <button type="button" onClick={() => handleRemoveMajor(major)} className="remove-tag">✕</button>
+                    </div>
+                  ))}
+                  <button type="button" onClick={() => setShowMajorDropdown(!showMajorDropdown)} className="add-more-btn">
+                    + Add Major
                   </button>
                 </div>
-              ))}
-              <button
-                type="button"
-                onClick={() => setShowMajorDropdown(!showMajorDropdown)}
-                className="add-more-btn"
-              >
-                + Add Major
-              </button>
-            </div>
-            
-            {showMajorDropdown && (
-              <div className="dropdown-list">
-                {MAJORS.filter(m => 
-                  m !== formData.major && !formData.other_majors.includes(m)
-                ).map(major => (
-                  <button
-                    key={major}
-                    type="button"
-                    onClick={() => handleAddMajor(major)}
-                    className="dropdown-item"
-                  >
-                    {major}
-                  </button>
-                ))}
+                {showMajorDropdown && (
+                  <div className="dropdown-list">
+                    {MAJORS.filter(m => m !== formData.major && !formData.other_majors.includes(m)).map(major => (
+                      <button key={major} type="button" onClick={() => handleAddMajor(major)} className="dropdown-item">{major}</button>
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
 
-          {/* Additional Minors */}
-          <div className="form-group">
-            <label>
-              Additional Minors
-              <span className="helper-text">If you have multiple minors</span>
-            </label>
-            <div className="multi-select-container">
-              {formData.other_minors.map(minor => (
-                <div key={minor} className="selected-tag">
-                  <span>{minor}</span>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveMinor(minor)}
-                    className="remove-tag"
-                  >
-                    ✕
+              {/* Additional Minors */}
+              <div className="form-group">
+                <label>
+                  Additional Minors
+                  <span className="helper-text">If you have multiple minors</span>
+                </label>
+                <div className="multi-select-container">
+                  {formData.other_minors.map(minor => (
+                    <div key={minor} className="selected-tag">
+                      <span>{minor}</span>
+                      <button type="button" onClick={() => handleRemoveMinor(minor)} className="remove-tag">✕</button>
+                    </div>
+                  ))}
+                  <button type="button" onClick={() => setShowMinorDropdown(!showMinorDropdown)} className="add-more-btn">
+                    + Add Minor
                   </button>
                 </div>
-              ))}
-              <button
-                type="button"
-                onClick={() => setShowMinorDropdown(!showMinorDropdown)}
-                className="add-more-btn"
-              >
-                + Add Minor
-              </button>
-            </div>
-            
-            {showMinorDropdown && (
-              <div className="dropdown-list">
-                {MINORS.filter(m => 
-                  m !== formData.minor && !formData.other_minors.includes(m)
-                ).map(minor => (
-                  <button
-                    key={minor}
-                    type="button"
-                    onClick={() => handleAddMinor(minor)}
-                    className="dropdown-item"
-                  >
-                    {minor}
-                  </button>
-                ))}
+                {showMinorDropdown && (
+                  <div className="dropdown-list">
+                    {MINORS.filter(m => m !== formData.minor && !formData.other_minors.includes(m)).map(minor => (
+                      <button key={minor} type="button" onClick={() => handleAddMinor(minor)} className="dropdown-item">{minor}</button>
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
 
-          <div className="form-group">
-            <label htmlFor="concentration">
-              Concentration / Specialization
-              <span className="helper-text">e.g., AI/ML, Software Systems</span>
-            </label>
-            <input
-              type="text"
-              id="concentration"
-              name="concentration"
-              value={formData.concentration}
-              onChange={handleChange}
-              placeholder="Your area of focus"
-            />
-          </div>
+              <div className="form-group">
+                <label htmlFor="concentration">
+                  Concentration / Specialization
+                  <span className="helper-text">e.g., AI/ML, Software Systems</span>
+                </label>
+                <input
+                  type="text"
+                  id="concentration"
+                  name="concentration"
+                  value={formData.concentration}
+                  onChange={handleChange}
+                  placeholder="Your area of focus"
+                />
+              </div>
+            </>
+          )}
         </div>
       </div>
 

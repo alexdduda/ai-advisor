@@ -531,6 +531,7 @@ export default function Dashboard() {
 
           {activeTab === 'clubs' && (
             <ClubsTab
+              key="clubs-tab-v2"
               user={user}
               profile={profile}
               onClubEventsChange={setClubCalendarEvents}

@@ -888,3 +888,39 @@
   .pagination-btn,
   .pagination-page { width: 32px; height: 32px; min-width: 32px; font-size: 0.8rem; }
 }
+/* ── Instant tooltips on course action buttons ── */
+.favorite-btn[data-tooltip],
+.completed-btn[data-tooltip],
+.current-btn[data-tooltip],
+.prof-flag-btn[data-tooltip] {
+  position: relative;
+}
+
+.favorite-btn[data-tooltip]::after,
+.completed-btn[data-tooltip]::after,
+.current-btn[data-tooltip]::after,
+.prof-flag-btn[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(17, 24, 39, 0.92);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  padding: 4px 8px;
+  border-radius: 5px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.1s;
+  z-index: 100;
+}
+
+.favorite-btn[data-tooltip]:hover::after,
+.completed-btn[data-tooltip]:hover::after,
+.current-btn[data-tooltip]:hover::after,
+.prof-flag-btn[data-tooltip]:hover::after {
+  opacity: 1;
+}

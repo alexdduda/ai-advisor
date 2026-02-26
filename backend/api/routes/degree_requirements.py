@@ -159,3 +159,63 @@ def get_recommended_courses(program_key: str):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/seed")
+def seed_requirements(
+    faculty: Optional[str] = Query(
+        None,
+        description="arts | science | engineering | arts_science | management | education | all (default: all)"
+
+    )
+):
+    """
+    Seed degree requirement programs into the database.
+    Delegates to each faculty seed file which handles the correct schema.
+    """
+    def _run():
+        supabase = get_supabase()
+        results = {}
+
+        run_arts        = faculty in (None, "all", "arts")
+        run_sci         = faculty in (None, "all", "science")
+        run_eng         = faculty in (None, "all", "engineering")
+        run_arts_sci    = faculty in (None, "all", "arts_science")
+        run_management  = faculty in (None, "all", "management")
+        run_education   = faculty in (None, "all", "education")
+        run_environment = faculty in (None, "all", "environment")
+
+        if run_arts:
+            from ..seeds.arts_degree_requirements import seed_degree_requirements as seed_arts
+            results["arts"] = seed_arts(supabase)
+
+        if run_eng:
+            from ..seeds.engineering_degree_requirements import seed_degree_requirements as seed_eng
+            results["engineering"] = seed_eng(supabase)
+
+        if run_sci:
+            from ..seeds.science_degree_requirements import seed_degree_requirements as seed_sci
+            results["science"] = seed_sci(supabase)
+
+        if run_arts_sci:
+            from ..seeds.arts_science_degree_requirements import seed_degree_requirements as seed_basc
+            results["arts_science"] = seed_basc(supabase)
+
+        if run_management:
+            from ..seeds.management_degree_requirements import seed_degree_requirements as seed_mgmt
+            results["management"] = seed_mgmt(supabase)
+
+        if run_education:
+            from ..seeds.education_degree_requirements import seed_degree_requirements as seed_edu
+            results["education"] = seed_edu(supabase)
+
+        if run_environment:
+            from ..seeds.environment_degree_requirements import seed_degree_requirements as seed_env
+            results["environment"] = seed_env(supabase)
+
+        return {"success": True, "seeded": results}
+
+    try:
+        return with_retry("seed_requirements", _run)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
