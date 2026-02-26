@@ -11,6 +11,7 @@ import AdvisorCards from './chat/AdvisorCards'
 import FeedbackModal from './FeedbackModal'
 import ClubsTab from './ClubsTab'
 import RightSidebar from './RightSidebar'
+import SavedCoursesView from './SavedCoursesView'
 
 import Sidebar from './Sidebar'
 import CoursesTab from './CoursesTab'
@@ -588,6 +589,30 @@ export default function Dashboard() {
             />
           )}
 
+          {activeTab === 'saved' && (
+            <SavedCoursesView
+              favorites={favorites}
+              completedCourses={completedCourses}
+              completedCoursesMap={completedCoursesMap}
+              currentCourses={currentCourses}
+              currentCoursesMap={currentCoursesMap}
+              favoritesMap={favoritesMap}
+              onToggleFavorite={handleToggleFavorite}
+              onToggleCompleted={handleToggleCompleted}
+              onToggleCurrent={handleToggleCurrent}
+              onCourseClick={async (course) => {
+                setActiveTab('courses')
+                setTimeout(async () => {
+                  await handleCourseClick({
+                    subject: course.subject,
+                    catalog: course.catalog,
+                    title: course.course_title,
+                  })
+                }, 100)
+              }}
+            />
+          )}
+          
           {activeTab === 'forum' && <Forum />}
 
           {activeTab === 'calendar' && (

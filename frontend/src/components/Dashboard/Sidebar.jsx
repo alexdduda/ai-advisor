@@ -200,12 +200,13 @@ export default function Sidebar({
             <nav className="sidebar-nav">
               {[
                 { key: 'chat', icon: <FaComments />, label: t('nav.chat') },
-                { key: 'courses', icon: <FaBook />, label: t('nav.courses') },
                 { key: 'favorites', icon: <FaGraduationCap />, label: 'Degree Planning', badge: null },
+                { key: 'courses', icon: <FaBook />, label: t('nav.courses') },
+                { key: 'saved', icon: <FaStar />, label: t('nav.saved') },
                 { key: 'calendar', icon: <FaCalendarAlt />, label: t('nav.calendar') },
                 { key: 'forum', icon: <FaComments />, label: t('nav.forum') },
+                { key: 'clubs',     icon: <FaUsers />,        label: t('Clubs') },
                 { key: 'profile', icon: <FaUser />, label: t('nav.profile') },
-                { key: 'clubs',     icon: <FaUsers />,        label: 'Clubs' },
               ].map(({ key, icon, label, badge }) => (
                 <button
                   key={key}
