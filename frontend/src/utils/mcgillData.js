@@ -63,7 +63,7 @@ export const FACULTY_CREDIT_REQUIREMENTS = {
   'School of Continuing Studies': 90,
   'Faculty of Education': 120,
   'Graduate and Postdoctoral Studies': 45,
-  'Desautels Faculty of Management': 120,
+  'Desautels Faculty of Management': 90,  // CEGEP entry; out-of-province/international = 120
   'Schulich School of Music': 120,
   'Faculty of Arts': 120,
   'Faculty of Dental Medicine and Oral Health Sciences': 120,

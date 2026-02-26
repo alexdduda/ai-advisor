@@ -19,6 +19,9 @@ const TYPE_LABELS = {
   beng:          'B.Eng.',
   bge:           'B.G.E.',
   bscarch:       'B.Sc.(Arch.)',
+  concentration: 'Concentration',
+  core:          'Core',
+  required:      'Core',
 }
 const TYPE_COLORS = {
   major:         '#dc2626',
@@ -28,6 +31,9 @@ const TYPE_COLORS = {
   beng:          '#dc2626',
   bge:           '#0891b2',
   bscarch:       '#d97706',
+  concentration: '#7c3aed',
+  core:          '#0f766e',
+  required:      '#0f766e',
 }
 const TYPE_BG = {
   major:         '#fef2f2',
@@ -37,6 +43,9 @@ const TYPE_BG = {
   beng:          '#fef2f2',
   bge:           '#ecfeff',
   bscarch:       '#fffbeb',
+  concentration: '#faf5ff',
+  core:          '#f0fdfa',
+  required:      '#f0fdfa',
 }
 
 // Normalize short faculty names (as stored in profile) to full faculty strings
@@ -187,10 +196,11 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
     try {
       // Map faculty filter to seed param
       const seedFacultyMap = {
-        'Faculty of Arts':             'arts',
-        'Faculty of Science':          'science',
-        'Faculty of Arts & Science':   'arts_science',
-        'Faculty of Engineering':      'engineering',
+        'Faculty of Arts':                  'arts',
+        'Faculty of Science':               'science',
+        'Faculty of Arts & Science':        'arts_science',
+        'Faculty of Engineering':           'engineering',
+        'Desautels Faculty of Management':  'management',
       }
       const seedParam = seedFacultyMap[facultyFilter] || null
 
@@ -297,7 +307,9 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
           {(
             facultyFilter.toLowerCase().includes('engineering')
               ? ['all', 'beng', 'bge', 'bscarch', 'minor']
-              : ['all', 'major', 'minor', 'honours']
+              : facultyFilter.toLowerCase().includes('management') || facultyFilter.toLowerCase().includes('desautels')
+                ? ['all', 'core', 'major', 'concentration', 'honours']
+                : ['all', 'major', 'minor', 'honours']
           ).map(t => {
             const isActive = typeFilter === t
             const color = TYPE_COLORS[t]
