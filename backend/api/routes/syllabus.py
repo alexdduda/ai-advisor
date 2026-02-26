@@ -4,15 +4,16 @@ backend/api/routes/syllabus.py
 Parse one or more McGill syllabus PDFs using Claude.
 Extracts course metadata, schedule, assessments, and instructor info,
 then populates calendar_events and enriches current_courses.
+
 """
-from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Request
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from typing import List, Optional
 import anthropic
 import base64
 import logging
 import json
 import re
-from datetime import date, datetime
+from datetime import date, datetime, timedelta  # FIX #2: import timedelta directly
 
 from ..utils.supabase_client import get_supabase, get_user_by_id
 from ..exceptions import UserNotFoundException
@@ -20,6 +21,17 @@ from ..config import settings
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
+
+# FIX #9: Module-level AsyncAnthropic singleton — created once, reused across all requests.
+_async_anthropic_client: anthropic.AsyncAnthropic | None = None
+
+
+def _get_async_client() -> anthropic.AsyncAnthropic:
+    global _async_anthropic_client
+    if _async_anthropic_client is None:
+        _async_anthropic_client = anthropic.AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
+    return _async_anthropic_client
+
 
 # ── Extraction prompt ──────────────────────────────────────────────────────────
 
@@ -134,12 +146,23 @@ def _strip_json_fences(raw: str) -> str:
     return raw.strip()
 
 
+def normalize_course_code(code: str) -> str:
+    """Ensure course code has a space between subject and number: 'COMP251' → 'COMP 251'."""
+    code = code.strip().upper()
+    code = re.sub(r"^([A-Z]{2,4})(\d)", r"\1 \2", code)
+    code = re.sub(r"\s{2,}", " ", code)
+    return code
+
+
+# FIX #1: Declare as async and use AsyncAnthropic + await so the Claude API call
+# doesn't block FastAPI's event loop during the ~5–15 second extraction.
+# FIX #9: Use the module-level singleton client instead of creating one per call.
 async def _extract_syllabus_data(pdf_bytes: bytes) -> dict:
-    client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
+    client = _get_async_client()
     b64 = base64.standard_b64encode(pdf_bytes).decode("utf-8")
 
-    msg = client.messages.create(
-        model="claude-opus-4-5",
+    msg = await client.messages.create(  # FIX #1: await the async call
+        model=settings.CLAUDE_CARDS_MODEL,
         max_tokens=4096,
         messages=[
             {
@@ -168,12 +191,15 @@ async def _extract_syllabus_data(pdf_bytes: bytes) -> dict:
 
 
 def _normalize_time(t: Optional[str]) -> Optional[str]:
-    """Ensure time is HH:MM format."""
+    """Normalise any time string to 24-hour HH:MM format."""
     if not t:
         return None
     t = t.strip()
-    # Handle formats like "10:05am", "10:05 AM", "10:05"
-    t = re.sub(r'\s*(am|pm)$', lambda m: m.group(0), t, flags=re.IGNORECASE)
+    # FIX #4: The original regex replaced am/pm with itself (no-op).
+    # Correct fix: collapse any whitespace immediately before am/pm so that
+    # "10:05 AM" becomes "10:05AM", which then matches the "%I:%M%p" strptime
+    # format and gets converted to proper 24-hour "10:05" / "22:05" output.
+    t = re.sub(r'\s+(am|pm)$', r'\1', t, flags=re.IGNORECASE)
     try:
         for fmt in ("%H:%M", "%I:%M %p", "%I:%M%p", "%I%p"):
             try:
@@ -193,6 +219,46 @@ def _day_abbrev(day: str) -> str:
     return mapping.get(day.lower(), day[:3].capitalize())
 
 
+def _next_weekday_date(day_name: str, term: str, year: int) -> Optional[str]:
+    """
+    Return the ISO date string of the first upcoming occurrence of `day_name`
+    within the given term's approximate start window.
+    Winter: Jan 5, Summer: May 1, Fall: Sep 1
+
+    FIX #2: Use the already-imported timedelta instead of __import__("datetime").
+    FIX #3: If the computed date is already in the past (e.g. mid-semester upload),
+            advance by one week so the calendar event lands in the future.
+    """
+    if not day_name:
+        return None
+
+    term_starts = {
+        "winter": date(year, 1, 5),
+        "summer": date(year, 5, 1),
+        "fall":   date(year, 9, 1),
+    }
+    day_numbers = {
+        "monday": 0, "tuesday": 1, "wednesday": 2,
+        "thursday": 3, "friday": 4, "saturday": 5, "sunday": 6,
+    }
+
+    start = term_starts.get(term.lower(), date(year, 1, 5))
+    target = day_numbers.get(day_name.lower())
+    if target is None:
+        return None
+
+    days_ahead = (target - start.weekday()) % 7
+    result_date = start + timedelta(days=days_ahead)  # FIX #2: direct timedelta
+
+    # FIX #3: If the computed date is already past (mid-semester upload),
+    # advance by one week so the anchor event appears in the future.
+    today = date.today()
+    if result_date < today:
+        result_date += timedelta(weeks=1)
+
+    return result_date.isoformat()
+
+
 # ── Route ──────────────────────────────────────────────────────────────────────
 
 @router.post("/parse/{user_id}")
@@ -204,7 +270,7 @@ async def parse_syllabuses(
     """
     Accept one or more syllabus PDFs.
     For each: extract data with Claude, then:
-      - Save recurring lecture/lab slots as calendar_events (type='class')
+      - Save recurring lecture/lab slots as calendar_events (type='academic')
       - Save assessments (exams, assignments) as calendar_events
       - Enrich matching current_courses row with professor, room, schedule string
     Returns per-file results.
@@ -278,7 +344,13 @@ async def parse_syllabuses(
             "current_course_updated": False,
         }
 
-        course_code = (extracted.get("course_code") or "").strip().upper()
+        # FIX #6: Normalize the course code so "COMP251" → "COMP 251" before
+        # any DB lookups. Without this, the current_courses update silently
+        # finds 0 rows when Claude omits the space.
+        raw_code = extracted.get("course_code") or ""
+        course_code = normalize_course_code(raw_code) if raw_code else ""
+        result["course_code"] = course_code or None
+
         course_title = extracted.get("course_title") or course_code
         term = extracted.get("term") or "Winter"
         year = extracted.get("year") or date.today().year
@@ -289,10 +361,9 @@ async def parse_syllabuses(
         # ── 1. Enrich current_courses row ─────────────────────────────────────
         if course_code:
             try:
-                # Build a human-readable schedule string e.g. "Mon/Wed 2:35–3:55 ENGMC 204"
                 if schedule_slots:
                     day_parts = []
-                    seen = set()
+                    seen: set = set()
                     for slot in schedule_slots:
                         d = _day_abbrev(slot.get("day", ""))
                         if d not in seen:
@@ -306,7 +377,7 @@ async def parse_syllabuses(
                 else:
                     schedule_str = None
 
-                updates = {}
+                updates: dict = {}
                 if instructor.get("name"):
                     updates["professor"] = instructor["name"]
                 if schedule_str:
@@ -319,7 +390,6 @@ async def parse_syllabuses(
                     updates["room"] = schedule_slots[0]["location"]
 
                 if updates:
-                    # Try updating by course_code + user_id
                     res = supabase.table("current_courses") \
                         .update(updates) \
                         .eq("user_id", user_id) \
@@ -330,137 +400,164 @@ async def parse_syllabuses(
             except Exception as e:
                 logger.warning(f"Could not update current_courses for {course_code}: {e}")
 
-        # ── 2. Save recurring lecture slots as calendar events ─────────────────
-        # We create events for each week of the term. 
-        # As a simpler approach, create one "recurring" event per schedule slot
-        # with a description noting the recurrence. This keeps it practical.
-        for slot in schedule_slots:
+        # FIX #8: Delete existing syllabus-generated calendar events for this
+        # course before inserting new ones. Prevents duplicates when a student
+        # re-uploads the same (or updated) syllabus.
+        if course_code:
             try:
-                day = slot.get("day", "")
-                start_time = _normalize_time(slot.get("start_time"))
-                end_time = _normalize_time(slot.get("end_time"))
-                location = slot.get("location") or ""
-                slot_type = slot.get("type") or "Lecture"
-
-                event_row = {
-                    "user_id": user_id,
-                    "title": f"{course_code} {slot_type}",
-                    "date": _next_weekday_date(day, term, year),
-                    "time": start_time,
-                    "end_time": end_time,
-                    "type": "academic",
-                    "category": course_code,
-                    "description": (
-                        f"{course_title}\n"
-                        f"Every {day} {start_time}–{end_time}\n"
-                        f"Location: {location}\n"
-                        f"Instructor: {instructor.get('name') or 'TBD'}"
-                    ),
-                    "location": location,
-                    "course_code": course_code,
-                    "recurrence": f"weekly_{day.lower()}",
-                    "notify_enabled": False,
-                    "notify_email": False,
-                    "notify_sms": False,
-                    "notify_email_addr": None,
-                    "notify_phone": None,
-                    "notify_same_day": False,
-                    "notify_1day": False,
-                    "notify_7days": False,
-                }
-
-                supabase.table("calendar_events").insert(event_row).execute()
-                result["calendar_events_added"] += 1
+                supabase.table("calendar_events") \
+                    .delete() \
+                    .eq("user_id", user_id) \
+                    .eq("course_code", course_code) \
+                    .eq("type", "academic") \
+                    .execute()
             except Exception as e:
-                logger.warning(f"Could not save lecture slot for {course_code}: {e}")
+                logger.warning(f"Could not clear existing events for {course_code}: {e}")
 
-        # ── 3. Save assessments (exams, assignments) as calendar events ────────
+        # FIX #5: Collect all rows to insert, then do one bulk INSERT per table
+        # instead of an individual INSERT per event (was O(n) round-trips).
+        calendar_rows: list[dict] = []
+
+        # ── 2. Build recurring lecture slot rows ───────────────────────────────
+        for slot in schedule_slots:
+            day = slot.get("day", "")
+            start_time = _normalize_time(slot.get("start_time"))
+            end_time = _normalize_time(slot.get("end_time"))
+            location = slot.get("location") or ""
+            slot_type = slot.get("type") or "Lecture"
+            slot_date = _next_weekday_date(day, term, year)
+            if not slot_date:
+                continue
+
+            calendar_rows.append({
+                "user_id": user_id,
+                "title": f"{course_code} {slot_type}",
+                "date": slot_date,
+                "time": start_time,
+                "end_time": end_time,
+                "type": "academic",
+                "category": course_code,
+                "description": (
+                    f"{course_title}\n"
+                    f"Every {day} {start_time}–{end_time}\n"
+                    f"Location: {location}\n"
+                    f"Instructor: {instructor.get('name') or 'TBD'}"
+                ),
+                "location": location or None,
+                "course_code": course_code,
+                "recurrence": f"weekly_{day.lower()}",
+                "notify_enabled": False,
+                "notify_email": False,
+                "notify_sms": False,
+                "notify_email_addr": None,
+                "notify_phone": None,
+                "notify_same_day": False,
+                "notify_1day": False,
+                "notify_7days": False,
+            })
+
+        # ── 3. Build assessment rows ───────────────────────────────────────────
         for assessment in assessments:
             event_date = assessment.get("date") or assessment.get("due_date")
             if not event_date:
                 continue  # skip undated finals — they'll be set later
-            try:
-                a_type = assessment.get("type", "other")
-                a_title = assessment.get("title") or a_type.capitalize()
-                a_time = _normalize_time(assessment.get("time"))
-                a_location = assessment.get("location") or ""
-                a_weight = assessment.get("weight")
 
-                # Determine notification defaults: exams get 7-day + 1-day reminders
-                is_exam = a_type in ("midterm", "final", "quiz")
-                notify_7 = is_exam
-                notify_1 = is_exam
-                notify_same = False
+            a_type = assessment.get("type", "other")
+            a_title = assessment.get("title") or a_type.capitalize()
+            a_time = _normalize_time(assessment.get("time"))
+            a_location = assessment.get("location") or ""
+            a_weight = assessment.get("weight")
 
-                weight_str = f" ({a_weight}%)" if a_weight else ""
-                desc_parts = [f"{course_code} — {a_title}{weight_str}"]
-                if assessment.get("description"):
-                    desc_parts.append(assessment["description"])
-                if a_location:
-                    desc_parts.append(f"Location: {a_location}")
-                category_label = f"{course_code} · {'Exam' if is_exam else 'Assignment'}"
+            is_exam = a_type in ("midterm", "final", "quiz")
+            weight_str = f" ({a_weight}%)" if a_weight else ""
+            desc_parts = [f"{course_code} — {a_title}{weight_str}"]
+            if assessment.get("description"):
+                desc_parts.append(assessment["description"])
+            if a_location:
+                desc_parts.append(f"Location: {a_location}")
 
-                event_row = {
-                    "user_id": user_id,
-                    "title": f"{course_code} — {a_title}",
-                    "date": event_date,
-                    "time": a_time,
-                    "type": "academic",
-                    "category": category_label,
-                    "description": "\n".join(desc_parts),
-                    "location": a_location or None,
-                    "course_code": course_code,
-                    "notify_enabled": is_exam,
-                    "notify_email": is_exam,
-                    "notify_sms": False,
-                    "notify_email_addr": None,
-                    "notify_phone": None,
-                    "notify_same_day": notify_same,
-                    "notify_1day": notify_1,
-                    "notify_7days": notify_7,
-                }
+            calendar_rows.append({
+                "user_id": user_id,
+                "title": f"{course_code} — {a_title}",
+                "date": event_date,
+                "time": a_time,
+                "type": "academic",
+                "category": f"{course_code} · {'Exam' if is_exam else 'Assignment'}",
+                "description": "\n".join(desc_parts),
+                "location": a_location or None,
+                "course_code": course_code,
+                "notify_enabled": is_exam,
+                "notify_email": is_exam,
+                "notify_sms": False,
+                "notify_email_addr": None,
+                "notify_phone": None,
+                "notify_same_day": False,
+                "notify_1day": is_exam,
+                "notify_7days": is_exam,
+            })
 
-                supabase.table("calendar_events").insert(event_row).execute()
-                result["calendar_events_added"] += 1
-            except Exception as e:
-                logger.warning(f"Could not save assessment {assessment.get('title')} for {course_code}: {e}")
-
-        # ── 4. Save office hours as calendar events ────────────────────────────
+        # ── 4. Build office hours rows ─────────────────────────────────────────
+        # Office hours use type="personal" so they are NOT wiped by the academic
+        # dedup delete above and are tracked separately.
+        oh_rows: list[dict] = []
         for oh in (instructor.get("office_hours") or []):
+            oh_date = _next_weekday_date(oh.get("day", ""), term, year)
+            if not oh_date:
+                continue
+            oh_rows.append({
+                "user_id": user_id,
+                "title": f"{course_code} Office Hours — {instructor.get('name') or 'Instructor'}",
+                "date": oh_date,
+                "time": _normalize_time(oh.get("start_time")),
+                "end_time": _normalize_time(oh.get("end_time")),
+                "type": "personal",
+                "category": course_code,
+                "description": (
+                    f"Office hours for {course_code}\n"
+                    f"Instructor: {instructor.get('name') or 'TBD'}\n"
+                    f"Location: {oh.get('location') or instructor.get('office') or 'TBD'}\n"
+                    f"Every {oh.get('day')} {oh.get('start_time')}–{oh.get('end_time')}"
+                ),
+                "location": oh.get("location") or instructor.get("office") or None,
+                "course_code": course_code,
+                "recurrence": f"weekly_{oh.get('day', '').lower()}",
+                "notify_enabled": False,
+                "notify_email": False,
+                "notify_sms": False,
+                "notify_email_addr": None,
+                "notify_phone": None,
+                "notify_same_day": False,
+                "notify_1day": False,
+                "notify_7days": False,
+            })
+
+        # FIX #5: Single bulk INSERT for academic events, another for office hours.
+        if calendar_rows:
             try:
-                oh_date = _next_weekday_date(oh.get("day", ""), term, year)
-                if not oh_date:
-                    continue
-                event_row = {
-                    "user_id": user_id,
-                    "title": f"{course_code} Office Hours — {instructor.get('name') or 'Instructor'}",
-                    "date": oh_date,
-                    "time": _normalize_time(oh.get("start_time")),
-                    "end_time": _normalize_time(oh.get("end_time")),
-                    "type": "personal",
-                    "category": course_code,
-                    "description": (
-                        f"Office hours for {course_code}\n"
-                        f"Instructor: {instructor.get('name') or 'TBD'}\n"
-                        f"Location: {oh.get('location') or instructor.get('office') or 'TBD'}\n"
-                        f"Every {oh.get('day')} {oh.get('start_time')}–{oh.get('end_time')}"
-                    ),
-                    "location": oh.get("location") or instructor.get("office") or None,
-                    "course_code": course_code,
-                    "recurrence": f"weekly_{oh.get('day', '').lower()}",
-                    "notify_enabled": False,
-                    "notify_email": False,
-                    "notify_sms": False,
-                    "notify_email_addr": None,
-                    "notify_phone": None,
-                    "notify_same_day": False,
-                    "notify_1day": False,
-                    "notify_7days": False,
-                }
-                supabase.table("calendar_events").insert(event_row).execute()
-                result["calendar_events_added"] += 1
+                supabase.table("calendar_events").insert(calendar_rows).execute()
+                result["calendar_events_added"] += len(calendar_rows)
             except Exception as e:
-                logger.warning(f"Could not save office hours for {course_code}: {e}")
+                logger.warning(f"Bulk insert of academic events failed for {course_code}: {e}")
+                # Row-by-row fallback so partial success is still possible
+                for row in calendar_rows:
+                    try:
+                        supabase.table("calendar_events").insert(row).execute()
+                        result["calendar_events_added"] += 1
+                    except Exception as row_err:
+                        logger.warning(f"Could not save event '{row.get('title')}': {row_err}")
+
+        if oh_rows:
+            try:
+                supabase.table("calendar_events").insert(oh_rows).execute()
+                result["calendar_events_added"] += len(oh_rows)
+            except Exception as e:
+                logger.warning(f"Bulk insert of office hours failed for {course_code}: {e}")
+                for row in oh_rows:
+                    try:
+                        supabase.table("calendar_events").insert(row).execute()
+                        result["calendar_events_added"] += 1
+                    except Exception as row_err:
+                        logger.warning(f"Could not save office hours row: {row_err}")
 
         logger.info(
             f"Syllabus import for user {user_id}, course {course_code}: "
@@ -476,34 +573,3 @@ async def parse_syllabuses(
         "total_events_added": sum(r.get("calendar_events_added", 0) for r in all_results if r.get("success")),
         "total_courses_updated": sum(1 for r in all_results if r.get("current_course_updated")),
     }
-
-
-# ── Helpers ────────────────────────────────────────────────────────────────────
-
-def _next_weekday_date(day_name: str, term: str, year: int) -> Optional[str]:
-    """
-    Return the ISO date string of the first occurrence of `day_name`
-    within the given term's approximate start window.
-    Winter: Jan 5, Summer: May 1, Fall: Sep 1
-    """
-    if not day_name:
-        return None
-
-    term_starts = {
-        "winter": date(year, 1, 5),
-        "summer": date(year, 5, 1),
-        "fall": date(year, 9, 1),
-    }
-    day_numbers = {
-        "monday": 0, "tuesday": 1, "wednesday": 2,
-        "thursday": 3, "friday": 4, "saturday": 5, "sunday": 6,
-    }
-
-    start = term_starts.get(term.lower(), date(year, 1, 5))
-    target = day_numbers.get(day_name.lower())
-    if target is None:
-        return None
-
-    days_ahead = (target - start.weekday()) % 7
-    result_date = start + __import__("datetime").timedelta(days=days_ahead)
-    return result_date.isoformat()

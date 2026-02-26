@@ -25,6 +25,19 @@ from api.exceptions import UserNotFoundException
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
+# ── Anthropic client singleton ───────────────────────────────────
+# FIX: Create once at module level instead of per-request to avoid
+# repeated object allocation and connection overhead.
+_anthropic_client: anthropic.Anthropic | None = None
+
+
+def get_anthropic_client() -> anthropic.Anthropic:
+    """Return the shared Anthropic client, initialising it on first use."""
+    global _anthropic_client
+    if _anthropic_client is None:
+        _anthropic_client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
+    return _anthropic_client
+
 
 # ── Permanent category set ───────────────────────────────────────
 CARD_CATEGORIES = [
@@ -322,9 +335,11 @@ async def generate_cards(user_id: str, request: GenerateRequest):
         saved = fetch_saved_cards(user_id)
         prompt = build_rich_context(ctx, saved_cards=saved)
 
-        client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
+        # FIX: Use module-level singleton instead of creating a new client per request.
+        # FIX: Use settings.CLAUDE_CARDS_MODEL so model is configurable without code changes.
+        client = get_anthropic_client()
         message = client.messages.create(
-            model="claude-opus-4-5",
+            model=settings.CLAUDE_CARDS_MODEL,
             max_tokens=4096,
             messages=[{"role": "user", "content": prompt}],
         )
@@ -416,9 +431,10 @@ Return a single JSON object (not an array) with these fields:
 
 Return ONLY the JSON object — no markdown, no commentary."""
 
-        client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
+        # FIX: Use module-level singleton instead of creating a new client per request.
+        client = get_anthropic_client()
         message = client.messages.create(
-            model="claude-opus-4-5",
+            model=settings.CLAUDE_CARDS_MODEL,
             max_tokens=1024,
             messages=[{"role": "user", "content": prompt}],
         )
@@ -453,9 +469,10 @@ Student's follow-up: {request.message}
 
 Provide a concise, helpful, and specific response (2–4 sentences). Be direct and actionable."""
 
-        client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
+        # FIX: Use module-level singleton instead of creating a new client per request.
+        client = get_anthropic_client()
         message = client.messages.create(
-            model="claude-opus-4-5",
+            model=settings.CLAUDE_CARDS_MODEL,
             max_tokens=512,
             messages=[{"role": "user", "content": prompt}],
         )
@@ -490,15 +507,16 @@ async def save_card(card_id: str, request: SaveRequest):
 
 @router.patch("/{user_id}/reorder", response_model=dict)
 async def reorder_cards(user_id: str, request: ReorderRequest):
+    # FIX: Use upsert instead of N individual UPDATE calls (one DB round-trip vs N).
+    # Each item already has the card's id and new sort_order; upsert merges on id.
     try:
         get_user_by_id(user_id)
         supabase = get_supabase()
-        for item in request.order:
-            supabase.table("advisor_cards") \
-                .update({"sort_order": item["sort_order"]}) \
-                .eq("id", item["id"]) \
-                .eq("user_id", user_id) \
-                .execute()
+        rows = [
+            {"id": item["id"], "user_id": user_id, "sort_order": item["sort_order"]}
+            for item in request.order
+        ]
+        supabase.table("advisor_cards").upsert(rows, on_conflict="id").execute()
         return {"reordered": len(request.order)}
     except UserNotFoundException:
         raise HTTPException(status_code=404, detail="User not found")

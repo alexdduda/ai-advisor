@@ -16,20 +16,16 @@ from typing import Optional, List
 from pydantic import BaseModel
 import logging
 import re
-import time
 
 from ..config import settings
 from ..utils.supabase_client import get_supabase
 from ..exceptions import DatabaseException
-from ..utils.cache import search_cache
+# FIX: Import both caches and use each for its intended purpose.
+# subjects_cache replaces the redundant module-level _subjects_cache variables.
+from ..utils.cache import search_cache, subjects_cache
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
-
-# ── Subjects cache ────────────────────────────────────────────────────────────
-_subjects_cache: list = []
-_subjects_cache_ts: float = 0.0
-_SUBJECTS_CACHE_TTL: float = 3600.0
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 SUPABASE_PAGE_SIZE = 1000
@@ -42,6 +38,9 @@ _COURSE_COLS = (
     'Course, course_name, "Class Ave.1", instructor, '
     'rmp_rating, rmp_difficulty, rmp_num_ratings, rmp_would_take_again'
 )
+
+# Cache key for the full subjects list
+_SUBJECTS_CACHE_KEY = "all_subjects"
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -260,13 +259,16 @@ async def get_subjects():
     """
     Return all unique subject codes. Cached in memory for 1 hour.
     MUST be declared before /{subject}/{catalog} to avoid route shadowing.
-    """
-    global _subjects_cache, _subjects_cache_ts
 
-    now = time.monotonic()
-    if _subjects_cache and (now - _subjects_cache_ts) < _SUBJECTS_CACHE_TTL:
+    FIX: Removed the redundant module-level (_subjects_cache / _subjects_cache_ts)
+    variables that duplicated the SimpleCache instance from cache.py. All caching
+    now goes through subjects_cache so there is a single source of truth.
+    """
+    # FIX: Use the shared subjects_cache (TTL=3600) instead of manual time tracking.
+    cached = subjects_cache.get(_SUBJECTS_CACHE_KEY)
+    if cached is not None:
         logger.debug("Returning cached subjects list")
-        return {"subjects": _subjects_cache, "count": len(_subjects_cache)}
+        return cached
 
     try:
         supabase = get_supabase()
@@ -279,11 +281,13 @@ async def get_subjects():
                 subjects.add(subj)
 
         sorted_subjects = sorted(subjects)
-        _subjects_cache    = sorted_subjects
-        _subjects_cache_ts = now
+        result = {"subjects": sorted_subjects, "count": len(sorted_subjects)}
+
+        # FIX: Store via subjects_cache — TTL already set to 3600 s on the instance.
+        subjects_cache.set(_SUBJECTS_CACHE_KEY, result)
 
         logger.info(f"Retrieved and cached {len(sorted_subjects)} unique subjects")
-        return {"subjects": sorted_subjects, "count": len(sorted_subjects)}
+        return result
 
     except DatabaseException:
         raise
