@@ -38,6 +38,7 @@ class Settings(BaseSettings):
     # ── AI ───────────────────────────────────────────────────────────────
     ANTHROPIC_API_KEY: str
     CLAUDE_MODEL: str = "claude-haiku-4-5-20251001"
+    CLAUDE_CARDS_MODEL: str = "claude-haiku-4-5-20251001"
     CLAUDE_MAX_TOKENS: int = 2048   # Balanced between quality and cost; increase for longer responses
 
     # ── Chat Configuration ───────────────────────────────────────────────
