@@ -238,7 +238,11 @@ async def parse_transcript(
         logger.warning(f"Could not clear existing completed courses: {e}")
 
     # 3. Insert completed courses from transcript
+    # FIX: Validate all rows first, then bulk-insert in a single DB round-trip
+    # instead of one INSERT per course (was O(n) calls, now O(1)).
     inserted_completed: set[str] = set()
+    completed_rows = []
+
     for course in extracted.get("completed_courses", []):
         code = (course.get("course_code") or "").strip()
         if not code or not COURSE_CODE_PATTERN.match(code):
@@ -255,23 +259,34 @@ async def parse_transcript(
             grade = None
 
         parts = code.split()
+        completed_rows.append({
+            "user_id": user_id,
+            "course_code": code,
+            "course_title": course.get("course_title") or code,
+            "subject": (course.get("subject") or parts[0]).upper(),
+            "catalog": str(course.get("catalog") or (parts[1] if len(parts) > 1 else "")),
+            "term": term,
+            "year": int(course.get("year") or 2024),
+            "grade": grade,
+            "credits": int(course.get("credits") or 3),
+        })
+        inserted_completed.add(code)
+
+    if completed_rows:
         try:
-            supabase.table("completed_courses").insert({
-                "user_id": user_id,
-                "course_code": code,
-                "course_title": course.get("course_title") or code,
-                "subject": (course.get("subject") or parts[0]).upper(),
-                "catalog": str(course.get("catalog") or (parts[1] if len(parts) > 1 else "")),
-                "term": term,
-                "year": int(course.get("year") or 2024),
-                "grade": grade,
-                "credits": int(course.get("credits") or 3),
-            }).execute()
-            inserted_completed.add(code)
-            results["completed_added"] += 1
+            supabase.table("completed_courses").insert(completed_rows).execute()
+            results["completed_added"] = len(completed_rows)
         except Exception as e:
-            logger.warning(f"Failed to insert completed course {code}: {e}")
-            results["completed_skipped"] += 1
+            logger.warning(f"Bulk insert of completed courses failed: {e}")
+            # Fall back to row-by-row so partial success is still possible
+            for row in completed_rows:
+                try:
+                    supabase.table("completed_courses").insert(row).execute()
+                    results["completed_added"] += 1
+                except Exception as row_err:
+                    logger.warning(f"Failed to insert completed course {row['course_code']}: {row_err}")
+                    results["completed_skipped"] += 1
+                    inserted_completed.discard(row["course_code"])
 
     # 4. Wipe existing current courses — transcript is the source of truth
     try:
@@ -281,6 +296,9 @@ async def parse_transcript(
         logger.warning(f"Could not clear existing current courses: {e}")
 
     # 5. Insert current courses from transcript (skip if already in completed)
+    # FIX: Same bulk-insert pattern — validate all rows, then one INSERT call.
+    current_rows = []
+
     for course in extracted.get("current_courses", []):
         code = (course.get("course_code") or "").strip()
         if not code or not COURSE_CODE_PATTERN.match(code):
@@ -292,19 +310,29 @@ async def parse_transcript(
             continue
 
         parts = code.split()
+        current_rows.append({
+            "user_id": user_id,
+            "course_code": code,
+            "course_title": course.get("course_title") or code,
+            "subject": (course.get("subject") or parts[0]).upper(),
+            "catalog": str(course.get("catalog") or (parts[1] if len(parts) > 1 else "")),
+            "credits": int(course.get("credits") or 3),
+        })
+
+    if current_rows:
         try:
-            supabase.table("current_courses").insert({
-                "user_id": user_id,
-                "course_code": code,
-                "course_title": course.get("course_title") or code,
-                "subject": (course.get("subject") or parts[0]).upper(),
-                "catalog": str(course.get("catalog") or (parts[1] if len(parts) > 1 else "")),
-                "credits": int(course.get("credits") or 3),
-            }).execute()
-            results["current_added"] += 1
+            supabase.table("current_courses").insert(current_rows).execute()
+            results["current_added"] = len(current_rows)
         except Exception as e:
-            logger.warning(f"Failed to insert current course {code}: {e}")
-            results["current_skipped"] += 1
+            logger.warning(f"Bulk insert of current courses failed: {e}")
+            # Fall back to row-by-row so partial success is still possible
+            for row in current_rows:
+                try:
+                    supabase.table("current_courses").insert(row).execute()
+                    results["current_added"] += 1
+                except Exception as row_err:
+                    logger.warning(f"Failed to insert current course {row['course_code']}: {row_err}")
+                    results["current_skipped"] += 1
 
     logger.info(
         f"Transcript import for {user_id}: "
