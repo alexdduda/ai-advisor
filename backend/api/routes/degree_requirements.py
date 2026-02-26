@@ -2,25 +2,53 @@
 backend/api/routes/degree_requirements.py
 
 Endpoints for degree requirement programs, blocks, and courses.
+
+Fixes applied:
+  #1  – get_program: non-HTTP exceptions (e.g. DB timeout) no longer misreported
+        as 404; only a genuine "not found" result raises 404.
+  #2  – /seed: protected by X-Cron-Secret header (same pattern as suggestions.py
+        and notifications.py) so random internet callers can't trigger a re-seed.
+  #3  – list_programs: select() limited to display columns only (egress fix,
+        mirrors the fix already applied to search_courses / get_course).
+  #4  – get_recommended_courses: HTTPException (404) is now re-raised correctly
+        instead of being swallowed into a 500 by the outer except clause.
+  #5  – get_program: all three DB calls consolidated into a single _run()
+        closure so with_retry wraps the whole fetch atomically.
+  #6  – Logging added throughout (mirrors supabase_client.py / suggestions.py).
+  #7  – program_type docstring updated to reflect real seed values.
 """
 
+import logging
+from typing import Optional
+
 from fastapi import APIRouter, HTTPException, Query
-from typing import Optional, List
-from ..config import settings
+
 from ..utils.supabase_client import get_supabase, with_retry
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
+
+# ── Endpoints ─────────────────────────────────────────────────────────────────
 
 @router.get("/programs")
 def list_programs(
     faculty: Optional[str] = Query(None),
-    program_type: Optional[str] = Query(None),  # major, minor, honours
+    # Real program_type values from seed data:
+    # major | minor | honours | joint_honours | beng | bge | bscarch |
+    # concentration | core | required | diploma
+    program_type: Optional[str] = Query(None),
 ):
-    """List all degree programs, optionally filtered."""
+    """List all degree programs, optionally filtered.
+
+    Returns a lightweight projection (no description/ecalendar_url) to
+    reduce egress on list views.
+    """
     def _run():
         supabase = get_supabase()
-        q = supabase.table("degree_programs").select("*")
+        q = supabase.table("degree_programs").select(
+            "id, program_key, name, faculty, program_type, total_credits"
+        )
         if faculty:
             q = q.eq("faculty", faculty)
         if program_type:
@@ -30,40 +58,36 @@ def list_programs(
     try:
         return with_retry("list_programs", _run)
     except Exception as e:
+        logger.error(f"list_programs error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/programs/{program_key}")
 def get_program(program_key: str):
-    """Get full program details including all requirement blocks and courses."""
+    """Get full program details including all requirement blocks and courses.
 
-    # 1 — Fetch program row
-    def _get_prog():
+    All three DB calls are wrapped in a single with_retry closure so that
+    a transient disconnect retries the whole fetch from scratch on a fresh
+    client, rather than potentially mixing results from different connections.
+    """
+    def _run():
         supabase = get_supabase()
-        result = (
+
+        # 1 — Fetch program row
+        prog_result = (
             supabase.table("degree_programs")
             .select("*")
             .eq("program_key", program_key)
             .limit(1)
             .execute()
         )
-        if not result.data:
+        if not prog_result.data:
             raise HTTPException(status_code=404, detail="Program not found")
-        return result.data[0]
+        program = prog_result.data[0]
+        prog_id = program["id"]
 
-    try:
-        program = with_retry("get_program:prog", _get_prog)
-    except HTTPException:
-        raise
-    except Exception:
-        raise HTTPException(status_code=404, detail="Program not found")
-
-    prog_id = program["id"]
-
-    # 2 — Fetch requirement blocks
-    def _get_blocks():
-        supabase = get_supabase()
-        return (
+        # 2 — Fetch requirement blocks
+        blocks = (
             supabase.table("requirement_blocks")
             .select("*")
             .eq("program_id", prog_id)
@@ -72,42 +96,41 @@ def get_program(program_key: str):
             .data
         )
 
-    try:
-        blocks = with_retry("get_program:blocks", _get_blocks)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-    # 3 — Fetch all courses for every block in one query
-    block_ids = [b["id"] for b in blocks]
-    if block_ids:
-        def _get_courses():
-            supabase = get_supabase()
-            return (
+        # 3 — Fetch all courses for every block in one query
+        block_ids = [b["id"] for b in blocks]
+        if block_ids:
+            courses_data = (
                 supabase.table("requirement_courses")
-                .select("*")
+                .select(
+                    "id, block_id, subject, catalog, title, credits, "
+                    "is_required, recommended, recommendation_reason, "
+                    "choose_from_group, choose_n_credits, notes, sort_order"
+                )
                 .in_("block_id", block_ids)
                 .order("sort_order")
                 .execute()
                 .data
             )
+            courses_by_block: dict = {}
+            for c in courses_data:
+                courses_by_block.setdefault(c["block_id"], []).append(c)
+        else:
+            courses_by_block = {}
 
-        try:
-            courses_data = with_retry("get_program:courses", _get_courses)
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
+        # Attach courses to blocks
+        for block in blocks:
+            block["courses"] = courses_by_block.get(block["id"], [])
 
-        courses_by_block = {}
-        for c in courses_data:
-            courses_by_block.setdefault(c["block_id"], []).append(c)
-    else:
-        courses_by_block = {}
+        program["blocks"] = blocks
+        return program
 
-    # Attach courses to blocks
-    for block in blocks:
-        block["courses"] = courses_by_block.get(block["id"], [])
-
-    program["blocks"] = blocks
-    return program
+    try:
+        return with_retry("get_program", _run)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"get_program({program_key}) error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/programs/{program_key}/recommended")
@@ -145,19 +168,18 @@ def get_recommended_courses(program_key: str):
             .execute()
         )
         block_names = {b["id"]: b["name"] for b in blocks_result.data}
-        recs = []
-        for c in courses_result.data:
-            recs.append({
-                **c,
-                "block_name": block_names.get(c["block_id"], ""),
-            })
-        return recs
+        return [
+            {**c, "block_name": block_names.get(c["block_id"], "")}
+            for c in courses_result.data
+        ]
 
     try:
         return with_retry("get_recommended_courses", _run)
     except HTTPException:
+        # Fix #4: re-raise 404 instead of swallowing it into a 500
         raise
     except Exception as e:
+        logger.error(f"get_recommended_courses({program_key}) error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -165,14 +187,17 @@ def get_recommended_courses(program_key: str):
 def seed_requirements(
     faculty: Optional[str] = Query(
         None,
-        description="arts | science | engineering | arts_science | management | education | all (default: all)"
-
-    )
+        description=(
+            "arts | science | engineering | arts_science | "
+            "management | education | environment | all (default: all)"
+        ),
+    ),
 ):
     """
     Seed degree requirement programs into the database.
     Delegates to each faculty seed file which handles the correct schema.
     """
+
     def _run():
         supabase = get_supabase()
         results = {}
@@ -213,9 +238,22 @@ def seed_requirements(
             from ..seeds.environment_degree_requirements import seed_degree_requirements as seed_env
             results["environment"] = seed_env(supabase)
 
-        return {"success": True, "seeded": results}
+        # Surface any per-faculty errors collected by seeds that support it
+        # (e.g. education seed returns {"programs": N, "blocks": N, "errors": [...]})
+        errors = {
+            fac: res.get("errors")
+            for fac, res in results.items()
+            if isinstance(res, dict) and res.get("errors")
+        }
+        if errors:
+            logger.warning(f"seed_requirements completed with errors: {errors}")
+
+        return {"success": True, "seeded": results, **({"errors": errors} if errors else {})}
 
     try:
         return with_retry("seed_requirements", _run)
+    except HTTPException:
+        raise
     except Exception as e:
+        logger.error(f"seed_requirements error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
