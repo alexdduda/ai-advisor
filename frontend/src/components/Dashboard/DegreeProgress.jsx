@@ -1,127 +1,155 @@
-/* Degree Progress Section */
-.degree-progress-section {
-  background: white;
-  padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin-bottom: 2rem;
-}
+import { useMemo } from 'react'
+import { useLanguage } from '../../contexts/LanguageContext'
+import { FACULTY_CREDIT_REQUIREMENTS, PROGRAM_CREDIT_REQUIREMENTS } from '../../utils/mcgillData'
+import { FaBook, FaBolt, FaCheck, FaBullseye, FaRegCircle, FaGraduationCap, FaLightbulb } from 'react-icons/fa'
+import { GiPartyPopper } from 'react-icons/gi'
+import { LuBicepsFlexed } from 'react-icons/lu'
+import './DegreeProgressTracker.css'
 
-.progress-card {
-  background: #F8F9FA;
-  padding: 1.5rem;
-  border-radius: 12px;
-  margin-bottom: 1rem;
-}
-
-.progress-card.overall-progress {
-  background: linear-gradient(135deg, #ED1B2F 0%, #B01B2E 100%);
-  color: white;
-}
-
-.progress-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 1rem;
-}
-
-.progress-card h3 {
-  margin: 0 0 0.5rem 0;
-  font-size: 1.5rem;
-}
-
-.progress-card h5 {
-  margin: 0 0 0.25rem 0;
-  font-size: 1.1rem;
-  color: #333;
-}
-
-.progress-subtitle,
-.progress-detail {
-  margin: 0;
-  font-size: 0.9rem;
-  opacity: 0.9;
-}
-
-.progress-card:not(.overall-progress) .progress-detail {
-  color: #666;
-}
-
-.progress-percentage {
-  font-size: 1.5rem;
-  font-weight: 700;
-}
-
-.progress-bar-container {
-  height: 12px;
-  background: rgba(0, 0, 0, 0.1);
-  border-radius: 50px;
-  overflow: hidden;
-}
-
-.progress-card.overall-progress .progress-bar-container {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.progress-bar-fill {
-  height: 100%;
-  border-radius: 50px;
-  transition: width 0.5s ease;
-}
-
-.progress-bar-fill.overall {
-  background: rgba(255, 255, 255, 0.9);
-}
-
-.progress-bar-fill.major {
-  background: linear-gradient(90deg, #4CAF50 0%, #45A049 100%);
-}
-
-.progress-bar-fill.minor {
-  background: linear-gradient(90deg, #2196F3 0%, #1976D2 100%);
-}
-
-.progress-group {
-  margin-top: 2rem;
-}
-
-.progress-group-title {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: #333;
-  margin: 0 0 1rem 0;
-}
-
-.progress-name {
-  font-weight: 600;
-}
-
-.progress-empty {
-  text-align: center;
-  padding: 3rem 2rem;
-  color: #999;
-}
-
-.progress-empty .empty-icon {
-  font-size: 3rem;
-  display: block;
-  margin-bottom: 1rem;
-}
-
-.progress-empty p {
-  margin: 0;
-  font-size: 1rem;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .progress-header {
-    flex-direction: column;
-    gap: 0.5rem;
-  }
+export default function DegreeProgressTracker({ completedCourses = [], profile = {} }) {
+  const { t } = useLanguage()
   
-  .progress-percentage {
-    align-self: flex-end;
-  }
+  const stats = useMemo(() => {
+    // Calculate completed course credits
+    const completedCredits = completedCourses.reduce((sum, course) => {
+      return sum + (course.credits || 3) // Default to 3 if not specified
+    }, 0)
+
+    // Calculate advanced standing credits (only entries with counts_toward_degree not explicitly false)
+    const advancedStandingCredits = (profile?.advanced_standing || []).reduce((sum, course) => {
+      if (course.counts_toward_degree === false) return sum
+      return sum + (course.credits || 0)
+    }, 0)
+
+    // Total earned credits
+    const totalEarnedCredits = completedCredits + advancedStandingCredits
+
+    // Get credit requirements - check program first, then faculty, default to 120
+    let TOTAL_CREDITS_REQUIRED = 120 // Default
+    
+    // Check if the major has specific credit requirements
+    if (profile?.major && PROGRAM_CREDIT_REQUIREMENTS[profile.major]) {
+      TOTAL_CREDITS_REQUIRED = PROGRAM_CREDIT_REQUIREMENTS[profile.major]
+    }
+    // Otherwise check faculty requirements
+    else if (profile?.faculty && FACULTY_CREDIT_REQUIREMENTS[profile.faculty]) {
+      TOTAL_CREDITS_REQUIRED = FACULTY_CREDIT_REQUIREMENTS[profile.faculty]
+    }
+    
+    const remainingCredits = Math.max(0, TOTAL_CREDITS_REQUIRED - totalEarnedCredits)
+    const progressPercentage = Math.min(100, (totalEarnedCredits / TOTAL_CREDITS_REQUIRED) * 100)
+
+    return {
+      completedCredits,
+      advancedStandingCredits,
+      totalEarnedCredits,
+      totalRequired: TOTAL_CREDITS_REQUIRED,
+      remainingCredits,
+      progressPercentage,
+      completedCourseCount: completedCourses.length,
+      advancedStandingCourseCount: (profile?.advanced_standing || []).length
+    }
+  }, [completedCourses, profile])
+
+  return (
+    <div className="degree-progress-tracker">
+      {/* Progress Bar */}
+      <div className="progress-section">
+        <div className="progress-header">
+          <h3 className="progress-title">{t('degree.completion')}</h3>
+          <span className="progress-percentage">{Math.round(stats.progressPercentage)}%</span>
+        </div>
+        <div className="progress-bar-container">
+          <div 
+            className="progress-bar-fill" 
+            style={{ width: `${stats.progressPercentage}%` }}
+          >
+            <div className="progress-bar-shine"></div>
+          </div>
+        </div>
+        <div className="progress-labels">
+          <span className="progress-label">{stats.totalEarnedCredits} {t('degree.creditsEarned')}</span>
+          <span className="progress-label">{stats.totalRequired} {t('degree.creditsRequired')}</span>
+        </div>
+      </div>
+
+      {/* Credit Breakdown */}
+      <div className="credits-breakdown">
+        <div className="credit-item">
+          <div className="credit-icon"><FaBook /></div>
+          <div className="credit-details">
+            <div className="credit-label">{t('degree.completedCourses')}</div>
+            <div className="credit-value">
+              {stats.completedCredits} {t('courses.credits').toLowerCase()}
+              <span className="credit-count">({stats.completedCourseCount} {t('nav.courses').toLowerCase()})</span>
+            </div>
+          </div>
+        </div>
+
+        {stats.advancedStandingCredits > 0 && (
+          <div className="credit-item highlight">
+            <div className="credit-icon"><FaBolt /></div>
+            <div className="credit-details">
+              <div className="credit-label">{t('degree.advancedStanding')}</div>
+              <div className="credit-value">
+                {stats.advancedStandingCredits} {t('courses.credits').toLowerCase()}
+                <span className="credit-count">({stats.advancedStandingCourseCount} {t('nav.courses').toLowerCase()})</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="credit-item total">
+          <div className="credit-icon"><FaCheck /></div>
+          <div className="credit-details">
+            <div className="credit-label">{t('degree.totalEarned')}</div>
+            <div className="credit-value">{stats.totalEarnedCredits} {t('courses.credits').toLowerCase()}</div>
+          </div>
+        </div>
+
+        <div className="credit-item remaining">
+          <div className="credit-icon"><FaBullseye /></div>
+          <div className="credit-details">
+            <div className="credit-label">{t('degree.remaining')}</div>
+            <div className="credit-value">{stats.remainingCredits} {t('courses.credits').toLowerCase()}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Milestones */}
+      <div className="milestones">
+        <div className={`milestone ${stats.totalEarnedCredits >= Math.round(stats.totalRequired * 0.25) ? 'completed' : ''}`}>
+          <div className="milestone-marker">
+            {stats.totalEarnedCredits >= Math.round(stats.totalRequired * 0.25) ? <FaCheck className="milestone-check" /> : <FaRegCircle className="milestone-circle" />}
+          </div>
+          <div className="milestone-text">{Math.round(stats.totalRequired * 0.25)} {t('courses.credits').toLowerCase()} - {t('degree.milestone25')}</div>
+        </div>
+        <div className={`milestone ${stats.totalEarnedCredits >= Math.round(stats.totalRequired * 0.5) ? 'completed' : ''}`}>
+          <div className="milestone-marker">
+            {stats.totalEarnedCredits >= Math.round(stats.totalRequired * 0.5) ? <FaCheck className="milestone-check" /> : <FaRegCircle className="milestone-circle" />}
+          </div>
+          <div className="milestone-text">{Math.round(stats.totalRequired * 0.5)} {t('courses.credits').toLowerCase()} - {t('degree.milestone50')}</div>
+        </div>
+        <div className={`milestone ${stats.totalEarnedCredits >= Math.round(stats.totalRequired * 0.75) ? 'completed' : ''}`}>
+          <div className="milestone-marker">
+            {stats.totalEarnedCredits >= Math.round(stats.totalRequired * 0.75) ? <FaCheck className="milestone-check" /> : <FaRegCircle className="milestone-circle" />}
+          </div>
+          <div className="milestone-text">{Math.round(stats.totalRequired * 0.75)} {t('courses.credits').toLowerCase()} - {t('degree.milestone75')}</div>
+        </div>
+        <div className={`milestone ${stats.totalEarnedCredits >= stats.totalRequired ? 'completed' : ''}`}>
+          <div className="milestone-marker">
+            {stats.totalEarnedCredits >= stats.totalRequired ? <FaCheck className="milestone-check" /> : <FaRegCircle className="milestone-circle" />}
+          </div>
+          <div className="milestone-text">{stats.totalRequired} {t('courses.credits').toLowerCase()} - {t('degree.milestone100')}</div>
+        </div>
+      </div>
+
+      {stats.advancedStandingCredits > 0 && (
+        <div className="info-note">
+          <span className="info-icon"><FaLightbulb /></span>
+          <span>{t('degree.creditsHeadStart').replace('{count}', stats.advancedStandingCredits)}</span>
+        </div>
+      )}
+    </div>
+  )
 }

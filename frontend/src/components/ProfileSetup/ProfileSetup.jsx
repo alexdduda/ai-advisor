@@ -5,7 +5,8 @@ import { validateUsername } from '../../utils/validation'
 import {
   FaUser, FaGraduationCap, FaFileUpload, FaCheckCircle,
   FaExclamationTriangle, FaArrowRight, FaLightbulb, FaSpinner,
-  FaTimes, FaCloudUploadAlt, FaCheck,
+  FaTimes, FaCloudUploadAlt, FaCheck, FaBook, FaCalendarAlt,
+  FaChalkboardTeacher, FaPlus,
 } from 'react-icons/fa'
 import './ProfileSetup.css'
 
@@ -15,9 +16,10 @@ const BASE_URL = API_URL.replace(/\/api\/?$/, '').replace(/\/$/, '')
 export default function ProfileSetup() {
   const { user, completeOnboarding } = useAuth()
 
+  // 'profile' | 'transcript' | 'syllabus'
   const [step, setStep] = useState('profile')
 
-  // Profile form
+  // ── Profile form ───────────────────────────────────────
   const [username, setUsername]     = useState('')
   const [major, setMajor]           = useState('')
   const [year, setYear]             = useState('')
@@ -26,20 +28,30 @@ export default function ProfileSetup() {
   const [saving, setSaving]         = useState(false)
   const [formError, setFormError]   = useState('')
 
-  // Transcript
+  // ── Transcript ─────────────────────────────────────────
   const [txStep, setTxStep]       = useState('idle')
   const [dragOver, setDragOver]   = useState(false)
   const [file, setFile]           = useState(null)
   const [txError, setTxError]     = useState('')
   const [txResults, setTxResults] = useState(null)
-  const [finishing, setFinishing] = useState(false)
   const fileRef = useRef(null)
+
+  // ── Syllabus ───────────────────────────────────────────
+  const [sylStep, setSylStep]     = useState('idle')   // idle | uploading | done | error
+  const [sylFiles, setSylFiles]   = useState([])       // array of File objects
+  const [sylDragOver, setSylDragOver] = useState(false)
+  const [sylError, setSylError]   = useState('')
+  const [sylResults, setSylResults] = useState(null)
+  const sylFileRef = useRef(null)
+
+  const [finishing, setFinishing] = useState(false)
 
   const finish = async () => {
     setFinishing(true)
     await completeOnboarding()
   }
 
+  // ── Profile submit ─────────────────────────────────────
   const handleProfileSubmit = async (e) => {
     e.preventDefault()
     setFormError('')
@@ -101,6 +113,7 @@ export default function ProfileSetup() {
     setStep('transcript')
   }
 
+  // ── Transcript helpers ─────────────────────────────────
   const pickFile = (f) => {
     if (!f) return
     if (!f.name.toLowerCase().endsWith('.pdf')) { setTxError('Please upload a PDF file.'); return }
@@ -137,22 +150,91 @@ export default function ProfileSetup() {
     }
   }
 
+  // ── Syllabus helpers ───────────────────────────────────
+  const pickSylFiles = (fileList) => {
+    const valid = []
+    for (const f of fileList) {
+      if (!f.name.toLowerCase().endsWith('.pdf')) continue
+      if (f.size > 15 * 1024 * 1024) continue
+      valid.push(f)
+    }
+    if (valid.length === 0) { setSylError('Please upload PDF files only (max 15 MB each).'); return }
+    setSylError('')
+    setSylFiles(prev => {
+      const existing = new Set(prev.map(f => f.name))
+      return [...prev, ...valid.filter(f => !existing.has(f.name))]
+    })
+  }
+
+  const handleSylDrop = (e) => {
+    e.preventDefault()
+    setSylDragOver(false)
+    pickSylFiles(Array.from(e.dataTransfer.files))
+  }
+
+  const removeSylFile = (name) => {
+    setSylFiles(prev => prev.filter(f => f.name !== name))
+  }
+
+  const handleSylUpload = async () => {
+    if (sylFiles.length === 0) return
+    setSylStep('uploading')
+    setSylError('')
+    try {
+      const form = new FormData()
+      sylFiles.forEach(f => form.append('files', f))
+      form.append('dry_run', 'false')
+      const res = await fetch(`${BASE_URL}/api/syllabus/parse/${user.id}`, { method: 'POST', body: form })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.detail || `Upload failed (${res.status})`)
+      }
+      const data = await res.json()
+      setSylResults(data)
+      setSylStep('done')
+    } catch (err) {
+      setSylError(err.message)
+      setSylStep('error')
+    }
+  }
+
+  // ── Step bar ───────────────────────────────────────────
+  const stepOrder = ['profile', 'transcript', 'syllabus']
+  const stepIdx = stepOrder.indexOf(step)
+
   const StepBar = () => (
     <div className="ps-stepbar">
-      <div className={`ps-stepbar-item ${step === 'profile' ? 'active' : 'done'}`}>
+      {/* Step 1: Profile */}
+      <div className={`ps-stepbar-item ${stepIdx === 0 ? 'active' : 'done'}`}>
         <div className="ps-stepbar-dot">
-          {step !== 'profile' ? <FaCheck size={10} /> : <span>1</span>}
+          {stepIdx > 0 ? <FaCheck size={10} /> : <span>1</span>}
         </div>
         <span className="ps-stepbar-label">Profile</span>
       </div>
-      <div className={`ps-stepbar-line ${step === 'transcript' ? 'filled' : ''}`} />
-      <div className={`ps-stepbar-item ${step === 'transcript' ? 'active' : ''}`}>
-        <div className="ps-stepbar-dot"><span>2</span></div>
+
+      <div className={`ps-stepbar-line ${stepIdx > 0 ? 'filled' : ''}`} />
+
+      {/* Step 2: Transcript */}
+      <div className={`ps-stepbar-item ${stepIdx === 1 ? 'active' : stepIdx > 1 ? 'done' : ''}`}>
+        <div className="ps-stepbar-dot">
+          {stepIdx > 1 ? <FaCheck size={10} /> : <span>2</span>}
+        </div>
         <span className="ps-stepbar-label">Transcript</span>
+      </div>
+
+      <div className={`ps-stepbar-line ${stepIdx > 1 ? 'filled' : ''}`} />
+
+      {/* Step 3: Syllabuses */}
+      <div className={`ps-stepbar-item ${stepIdx === 2 ? 'active' : ''}`}>
+        <div className="ps-stepbar-dot"><span>3</span></div>
+        <span className="ps-stepbar-label">Syllabuses</span>
       </div>
     </div>
   )
 
+  // ══════════════════════════════════════════════════════════
+  // Step 1: Profile
+  // ══════════════════════════════════════════════════════════
   if (step === 'profile') {
     return (
       <div className="ps-page">
@@ -222,118 +304,289 @@ export default function ProfileSetup() {
     )
   }
 
+  // ══════════════════════════════════════════════════════════
+  // Step 2: Transcript
+  // ══════════════════════════════════════════════════════════
+  if (step === 'transcript') {
+    return (
+      <div className="ps-page">
+        <div className="ps-container">
+          <div className="ps-header">
+            <div className="ps-header-icon ps-header-icon--green"><FaGraduationCap /></div>
+            <div>
+              <h1 className="ps-title">Import your transcript</h1>
+              <p className="ps-subtitle">We'll automatically pull your courses, grades, GPA, and program info.</p>
+            </div>
+          </div>
+          <StepBar />
+
+          {txStep === 'idle' && (
+            <>
+              <div
+                className={`ps-dropzone ${dragOver ? 'ps-dropzone--over' : ''} ${file ? 'ps-dropzone--has-file' : ''}`}
+                onDragOver={e => { e.preventDefault(); setDragOver(true) }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={handleDrop}
+                onClick={() => !file && fileRef.current?.click()}
+              >
+                <input ref={fileRef} type="file" accept=".pdf" style={{ display: 'none' }}
+                  onChange={e => pickFile(e.target.files[0])} />
+                {file ? (
+                  <div className="ps-dropzone-file">
+                    <FaCheckCircle className="ps-dropzone-check" />
+                    <div>
+                      <p className="ps-dropzone-filename">{file.name}</p>
+                      <p className="ps-dropzone-filesize">{(file.size / 1024).toFixed(0)} KB</p>
+                    </div>
+                    <button className="ps-dropzone-remove" onClick={e => { e.stopPropagation(); setFile(null) }}>
+                      <FaTimes />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="ps-dropzone-empty">
+                    <FaCloudUploadAlt className="ps-dropzone-icon" />
+                    <p className="ps-dropzone-main">Drop your unofficial transcript here</p>
+                    <p className="ps-dropzone-sub">or click to browse · PDF only · max 10 MB</p>
+                  </div>
+                )}
+              </div>
+
+              {txError && (
+                <div className="ps-alert ps-alert--error">
+                  <FaExclamationTriangle className="ps-alert-icon" />
+                  <span>{txError}</span>
+                </div>
+              )}
+
+              <div className="ps-actions">
+                <button className="ps-btn ps-btn--primary" onClick={handleUpload} disabled={!file}>
+                  Import Transcript <FaArrowRight />
+                </button>
+                <button className="ps-btn ps-btn--ghost" onClick={() => setStep('syllabus')}>
+                  Skip for now
+                </button>
+              </div>
+              <div className="ps-hint">
+                <FaLightbulb className="ps-hint-icon" />
+                <p>You can also do this later from the <strong>Profile tab</strong> — find <strong>Import Transcript</strong> in the Degree Progress card.</p>
+              </div>
+            </>
+          )}
+
+          {txStep === 'uploading' && (
+            <div className="ps-status">
+              <div className="ps-status-icon ps-status-icon--spin"><FaSpinner /></div>
+              <h3 className="ps-status-title">Importing your transcript…</h3>
+              <p className="ps-status-sub">Claude is reading your courses, grades, and program info.</p>
+            </div>
+          )}
+
+          {txStep === 'done' && txResults && (
+            <div className="ps-status">
+              <div className="ps-status-icon ps-status-icon--success"><FaCheckCircle /></div>
+              <h3 className="ps-status-title">Transcript imported!</h3>
+              <p className="ps-status-sub">Your academic history is ready. Next, upload your syllabuses.</p>
+              <div className="ps-chips">
+                {txResults.completed_added > 0 && (
+                  <div className="ps-chip">
+                    <span className="ps-chip-num">{txResults.completed_added}</span>
+                    <span className="ps-chip-label">completed courses</span>
+                  </div>
+                )}
+                {txResults.current_added > 0 && (
+                  <div className="ps-chip">
+                    <span className="ps-chip-num">{txResults.current_added}</span>
+                    <span className="ps-chip-label">current courses</span>
+                  </div>
+                )}
+                {txResults.profile_updated && (
+                  <div className="ps-chip ps-chip--success">
+                    <FaCheck className="ps-chip-check" />
+                    <span className="ps-chip-label">profile updated</span>
+                  </div>
+                )}
+              </div>
+              <button className="ps-btn ps-btn--primary" onClick={() => setStep('syllabus')}>
+                Continue to Syllabuses <FaArrowRight />
+              </button>
+            </div>
+          )}
+
+          {txStep === 'error' && (
+            <div className="ps-status">
+              <div className="ps-status-icon ps-status-icon--warning"><FaExclamationTriangle /></div>
+              <h3 className="ps-status-title">Import failed</h3>
+              <p className="ps-status-sub">{txError}</p>
+              <div className="ps-actions ps-actions--center">
+                <button className="ps-btn ps-btn--secondary" onClick={() => { setTxStep('idle'); setTxError('') }}>Try Again</button>
+                <button className="ps-btn ps-btn--ghost" onClick={() => setStep('syllabus')}>
+                  Skip to Syllabuses
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // Step 3: Syllabuses
+  // ══════════════════════════════════════════════════════════
   return (
     <div className="ps-page">
       <div className="ps-container">
         <div className="ps-header">
-          <div className="ps-header-icon ps-header-icon--green"><FaGraduationCap /></div>
+          <div className="ps-header-icon ps-header-icon--blue"><FaBook /></div>
           <div>
-            <h1 className="ps-title">Import your transcript</h1>
-            <p className="ps-subtitle">We'll automatically pull your courses, grades, GPA, and program info.</p>
+            <h1 className="ps-title">Upload your syllabuses</h1>
+            <p className="ps-subtitle">We'll extract schedules, exams, and professor info — and fill in your calendar automatically.</p>
           </div>
         </div>
         <StepBar />
 
-        {txStep === 'idle' && (
+        {sylStep === 'idle' && (
           <>
-            <div
-              className={`ps-dropzone ${dragOver ? 'ps-dropzone--over' : ''} ${file ? 'ps-dropzone--has-file' : ''}`}
-              onDragOver={e => { e.preventDefault(); setDragOver(true) }}
-              onDragLeave={() => setDragOver(false)}
-              onDrop={handleDrop}
-              onClick={() => !file && fileRef.current?.click()}
-            >
-              <input ref={fileRef} type="file" accept=".pdf" style={{ display: 'none' }}
-                onChange={e => pickFile(e.target.files[0])} />
-              {file ? (
-                <div className="ps-dropzone-file">
-                  <FaCheckCircle className="ps-dropzone-check" />
-                  <div className="ps-dropzone-file-meta">
-                    <span className="ps-dropzone-name">{file.name}</span>
-                    <span className="ps-dropzone-size">{(file.size / 1024).toFixed(0)} KB · PDF</span>
-                  </div>
-                  <button className="ps-dropzone-clear" title="Remove file"
-                    onClick={e => { e.stopPropagation(); setFile(null); setTxError('') }}>
-                    <FaTimes />
-                  </button>
-                </div>
-              ) : (
-                <div className="ps-dropzone-empty">
-                  <FaCloudUploadAlt className="ps-dropzone-icon" />
-                  <p className="ps-dropzone-main">Drop your transcript here, or <span className="ps-dropzone-link">browse</span></p>
-                  <p className="ps-dropzone-hint">Minerva → Student Records → Unofficial Transcript · PDF only · max 10 MB</p>
-                </div>
-              )}
+            {/* What we extract — info chips */}
+            <div className="ps-syl-info">
+              <div className="ps-syl-info-item">
+                <FaCalendarAlt className="ps-syl-info-icon" />
+                <span>Lecture times &amp; rooms added to your calendar</span>
+              </div>
+              <div className="ps-syl-info-item">
+                <FaChalkboardTeacher className="ps-syl-info-icon" />
+                <span>Professor, office hours &amp; contact info</span>
+              </div>
+              <div className="ps-syl-info-item">
+                <FaCheck className="ps-syl-info-icon ps-syl-info-icon--green" />
+                <span>Exams &amp; assignment deadlines with reminders</span>
+              </div>
             </div>
-            {txError && (
-              <div className="ps-alert ps-alert--error">
-                <FaExclamationTriangle className="ps-alert-icon" />
-                <span>{txError}</span>
+
+            {/* Drop zone */}
+            <div
+              className={`ps-dropzone ps-dropzone--multi ${sylDragOver ? 'ps-dropzone--over' : ''}`}
+              onDragOver={e => { e.preventDefault(); setSylDragOver(true) }}
+              onDragLeave={() => setSylDragOver(false)}
+              onDrop={handleSylDrop}
+              onClick={() => sylFileRef.current?.click()}
+            >
+              <input
+                ref={sylFileRef} type="file" accept=".pdf" multiple
+                style={{ display: 'none' }}
+                onChange={e => pickSylFiles(Array.from(e.target.files))}
+              />
+              <FaCloudUploadAlt className="ps-dropzone-icon" />
+              <p className="ps-dropzone-main">Drop syllabus PDFs here</p>
+              <p className="ps-dropzone-sub">Upload all at once · PDF only · max 15 MB each</p>
+            </div>
+
+            {/* File list */}
+            {sylFiles.length > 0 && (
+              <div className="ps-syl-filelist">
+                {sylFiles.map(f => (
+                  <div key={f.name} className="ps-syl-filerow">
+                    <FaBook className="ps-syl-filerow-icon" />
+                    <span className="ps-syl-filerow-name">{f.name}</span>
+                    <span className="ps-syl-filerow-size">{(f.size / 1024).toFixed(0)} KB</span>
+                    <button className="ps-syl-filerow-remove" onClick={() => removeSylFile(f.name)}>
+                      <FaTimes />
+                    </button>
+                  </div>
+                ))}
+                <button className="ps-syl-add-more" onClick={() => sylFileRef.current?.click()}>
+                  <FaPlus /> Add more
+                </button>
               </div>
             )}
+
+            {sylError && (
+              <div className="ps-alert ps-alert--error">
+                <FaExclamationTriangle className="ps-alert-icon" />
+                <span>{sylError}</span>
+              </div>
+            )}
+
             <div className="ps-actions">
-              <button className="ps-btn ps-btn--primary" onClick={handleUpload} disabled={!file}>
-                <FaFileUpload /> Import & Replace Courses
+              <button
+                className="ps-btn ps-btn--primary"
+                onClick={handleSylUpload}
+                disabled={sylFiles.length === 0}
+              >
+                Import {sylFiles.length > 0 ? `${sylFiles.length} Syllabus${sylFiles.length > 1 ? 'es' : ''}` : 'Syllabuses'} <FaArrowRight />
               </button>
               <button className="ps-btn ps-btn--ghost" onClick={finish} disabled={finishing}>
                 {finishing ? <><FaSpinner className="ps-spin" /> Loading…</> : 'Skip for now'}
               </button>
             </div>
+
             <div className="ps-hint">
               <FaLightbulb className="ps-hint-icon" />
-              <p>You can also do this later from the <strong>Profile tab</strong> — find <strong>Import Transcript</strong> in the Degree Progress card.</p>
+              <p>You can upload syllabuses anytime from the <strong>Calendar</strong> or <strong>Profile</strong> tab.</p>
             </div>
           </>
         )}
 
-        {txStep === 'uploading' && (
+        {sylStep === 'uploading' && (
           <div className="ps-status">
             <div className="ps-status-icon ps-status-icon--spin"><FaSpinner /></div>
-            <h3 className="ps-status-title">Importing your transcript…</h3>
-            <p className="ps-status-sub">Claude is reading your courses, grades, and program info.</p>
+            <h3 className="ps-status-title">Processing your syllabuses…</h3>
+            <p className="ps-status-sub">Claude is reading course schedules, exams, and professor info from {sylFiles.length} file{sylFiles.length > 1 ? 's' : ''}.</p>
           </div>
         )}
 
-        {txStep === 'done' && txResults && (
+        {sylStep === 'done' && sylResults && (
           <div className="ps-status">
             <div className="ps-status-icon ps-status-icon--success"><FaCheckCircle /></div>
-            <h3 className="ps-status-title">All set!</h3>
-            <p className="ps-status-sub">Your academic history has been imported successfully.</p>
+            <h3 className="ps-status-title">Syllabuses imported!</h3>
+            <p className="ps-status-sub">Your calendar and course profiles have been updated.</p>
             <div className="ps-chips">
-              {txResults.completed_added > 0 && (
+              {sylResults.total_events_added > 0 && (
                 <div className="ps-chip">
-                  <span className="ps-chip-num">{txResults.completed_added}</span>
-                  <span className="ps-chip-label">completed courses</span>
+                  <span className="ps-chip-num">{sylResults.total_events_added}</span>
+                  <span className="ps-chip-label">calendar events added</span>
                 </div>
               )}
-              {txResults.current_added > 0 && (
-                <div className="ps-chip">
-                  <span className="ps-chip-num">{txResults.current_added}</span>
-                  <span className="ps-chip-label">current courses</span>
-                </div>
-              )}
-              {txResults.profile_updated && (
+              {sylResults.total_courses_updated > 0 && (
                 <div className="ps-chip ps-chip--success">
                   <FaCheck className="ps-chip-check" />
-                  <span className="ps-chip-label">profile updated</span>
+                  <span className="ps-chip-label">{sylResults.total_courses_updated} course{sylResults.total_courses_updated > 1 ? 's' : ''} enriched</span>
                 </div>
               )}
+              {/* Per-file breakdown */}
+              {sylResults.results?.filter(r => r.success).map(r => (
+                <div key={r.filename} className="ps-chip ps-chip--neutral">
+                  <span className="ps-chip-label">{r.course_code || r.filename}</span>
+                </div>
+              ))}
             </div>
+
+            {/* Show any failures */}
+            {sylResults.results?.some(r => !r.success) && (
+              <div className="ps-syl-errors">
+                {sylResults.results.filter(r => !r.success).map(r => (
+                  <p key={r.filename} className="ps-syl-error-row">
+                    <FaExclamationTriangle /> {r.filename}: {r.error}
+                  </p>
+                ))}
+              </div>
+            )}
+
             <button className="ps-btn ps-btn--primary" onClick={finish} disabled={finishing}>
               {finishing ? <><FaSpinner className="ps-spin" /> Loading…</> : <>Go to Dashboard <FaArrowRight /></>}
             </button>
           </div>
         )}
 
-        {txStep === 'error' && (
+        {sylStep === 'error' && (
           <div className="ps-status">
             <div className="ps-status-icon ps-status-icon--warning"><FaExclamationTriangle /></div>
             <h3 className="ps-status-title">Import failed</h3>
-            <p className="ps-status-sub">{txError}</p>
+            <p className="ps-status-sub">{sylError}</p>
             <div className="ps-actions ps-actions--center">
-              <button className="ps-btn ps-btn--secondary" onClick={() => { setTxStep('idle'); setTxError('') }}>Try Again</button>
+              <button className="ps-btn ps-btn--secondary" onClick={() => { setSylStep('idle'); setSylError('') }}>Try Again</button>
               <button className="ps-btn ps-btn--ghost" onClick={finish} disabled={finishing}>
-                {finishing ? <><FaSpinner className="ps-spin" /> Loading…</> : 'Skip for now'}
+                {finishing ? <><FaSpinner className="ps-spin" /> Loading…</> : 'Skip to Dashboard'}
               </button>
             </div>
           </div>
