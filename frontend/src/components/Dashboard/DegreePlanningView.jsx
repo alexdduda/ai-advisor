@@ -527,8 +527,6 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
         cache: 'no-store'
       })
       if (res.status === 404) {
-        // Program not seeded yet — show "Load Requirements" button, never auto-seed
-        // (auto-seeding concurrent requests corrupt DB foreign keys)
         return 'not_found'
       }
       if (!res.ok) return 'error'
@@ -545,11 +543,9 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
     }
   }
 
-  // profile loads async — track whether we've fetched once this session
   const fetchedRef = React.useRef(false)
 
   useEffect(() => {
-    // Wait until profile is loaded (non-null) before fetching
     if (!profile) return
     if (!majorKey && !minorKey && !sciKey) return
     setLoading(true)
@@ -577,7 +573,6 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [majorKey, minorKey, sciKey, coreKey, concentrationKey, !!profile, profile?.concentration])
 
-  // Re-render on course changes — no re-fetch needed, just re-renders
   const allCourseKeys = useMemo(
     () => [...completedCourses, ...currentCourses].map(c => `${c.subject} ${c.catalog}`).join(','),
     [completedCourses, currentCourses]
@@ -618,10 +613,8 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
   const hasConcentration = !!concentrationData
   const hasAny          = hasMajor || hasMinor || hasCore || hasConcentration
 
-  // Tabs: only show tabs that have data or are expected
   const tabs = []
   if (isMgmt) {
-    // Management students: Core | Major | Concentration (if applicable)
     tabs.push({ id: 'core', label: 'BCom Core', data: coreData, unavailable: unavailable.core })
     if (profile?.major) tabs.push({ id: 'major', label: profile.major, data: programData, unavailable: unavailable.major })
     if (profile?.concentration) tabs.push({ id: 'concentration', label: profile.concentration, data: concentrationData, unavailable: unavailable.concentration })
@@ -642,7 +635,6 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
   const currentTabData = currentTab?.data
   const currentTabUnavailable = currentTab?.unavailable
 
-  // Quick progress for ring display
   const calcRingProgress = (prog) => {
     if (!prog) return { pct: 0, earned: 0, total: prog?.total_credits || 36 }
     const total = prog.total_credits || 36
@@ -694,7 +686,6 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
         </div>
       )}
 
-      {/* Show a message if ALL programs are unavailable (no data at all) */}
       {!loading && !hasAny && (unavailable.major || unavailable.minor) && (
         <div className="dp-req-empty">
           <p style={{ color: 'var(--text-secondary, #6b7280)', fontSize: '0.9rem' }}>
@@ -820,7 +811,7 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
             )}
           </div>
 
-          {/* Tab switcher: Core / Major / Concentration / Minor / Electives */}
+          {/* Tab switcher */}
           <div className="dp-prog-tabs">
             {tabs.map(tab => (
               <button
@@ -875,7 +866,7 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
             />
           )}
 
-          {/* Show friendly message when a tab's program is unavailable */}
+          {/* Unavailable tab message */}
           {activeTab !== 'electives' && !currentTabData && currentTabUnavailable && (
             <div className="dp-req-empty" style={{ padding: '1.5rem', textAlign: 'center' }}>
               <p style={{ color: 'var(--text-secondary, #6b7280)', fontSize: '0.9rem', margin: 0 }}>
@@ -917,6 +908,7 @@ export default function DegreePlanningView({
   onToggleCurrent,
   onCourseClick,
   onImportTranscript,
+  onImportSyllabus,
 }) {
   const { t } = useLanguage()
   const [subTab, setSubTab] = useState('my_courses')
@@ -928,7 +920,7 @@ export default function DegreePlanningView({
   return (
     <div className="dp-view">
 
-      {/* ── Beautiful sub-tabs ────────────────────────────── */}
+      {/* ── Sub-tabs ──────────────────────────────────────── */}
       <div className="dp-subtab-bar">
         <button
           className={`dp-subtab-btn ${subTab === 'my_courses' ? 'dp-subtab-btn--active' : ''}`}
@@ -970,11 +962,18 @@ export default function DegreePlanningView({
             <div className="dp-section-header">
               <span className="dp-section-icon"><FaBullseye /></span>
               <h2 className="dp-section-title">{t('profile.degreeProgress')}</h2>
-              {onImportTranscript && (
-                <button className="dp-import-btn" onClick={onImportTranscript}>
-                  <FaFileUpload /> Import Transcript
-                </button>
-              )}
+              <div className="dp-import-btns">
+                {onImportTranscript && (
+                  <button className="dp-import-btn" onClick={onImportTranscript}>
+                    <FaFileUpload /> Transcript
+                  </button>
+                )}
+                {onImportSyllabus && (
+                  <button className="dp-import-btn dp-import-btn--secondary" onClick={onImportSyllabus}>
+                    <FaBook /> Syllabuses
+                  </button>
+                )}
+              </div>
             </div>
             <DegreeProgressTracker completedCourses={completedCourses} profile={profile} />
           </div>
