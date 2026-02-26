@@ -42,6 +42,7 @@ export default function Dashboard() {
 
   // ── Transcript upload ──────────────────────────────────
   const [showTranscriptUpload, setShowTranscriptUpload] = useState(false)
+  const [transcriptUploadTab, setTranscriptUploadTab] = useState('transcript')
 
   // ── Advisor cards ──────────────────────────────────────
   const [advisorCards, setAdvisorCards] = useState([])
@@ -581,7 +582,8 @@ export default function Dashboard() {
               onToggleFavorite={handleToggleFavorite}
               onToggleCompleted={handleToggleCompleted}
               onToggleCurrent={handleToggleCurrent}
-              onImportTranscript={() => setShowTranscriptUpload(true)}
+              onImportTranscript={() => { setTranscriptUploadTab('transcript'); setShowTranscriptUpload(true) }}
+              onImportSyllabus={() => { setTranscriptUploadTab('syllabus'); setShowTranscriptUpload(true) }}
               onCourseClick={async (course) => {
                 setActiveTab('courses')
                 setTimeout(async () => {
@@ -615,7 +617,7 @@ export default function Dashboard() {
               completedCourses={completedCourses}
               favorites={favorites}
               chatHistory={[]}
-              onImportTranscript={() => setShowTranscriptUpload(true)}
+              onImportTranscript={() => { setTranscriptUploadTab('transcript'); setShowTranscriptUpload(true) }}
             />
           )}
         </div>
@@ -634,6 +636,7 @@ export default function Dashboard() {
       {showTranscriptUpload && (
         <TranscriptUpload
           userId={user?.id}
+          defaultTab={transcriptUploadTab}
           onClose={() => setShowTranscriptUpload(false)}
           onImportComplete={handleTranscriptImportComplete}
         />

@@ -1093,3 +1093,23 @@
   .dp-action-btn { width: 30px; height: 30px; font-size: 0.75rem; }
   .dp-import-btn { font-size: 0.75rem; padding: 5px 10px; }
 }
+
+/* ── Import button group ──────────────────────────────── */
+.dp-import-btns {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* Secondary (outline) variant for syllabus button */
+.dp-import-btn--secondary {
+  background: transparent;
+  color: var(--accent-primary);
+  border: 1.5px solid var(--accent-primary);
+}
+
+.dp-import-btn--secondary:hover {
+  background: var(--accent-lighter);
+  box-shadow: none;
+  transform: translateY(-1px);
+}
