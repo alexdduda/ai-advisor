@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import {
   FaChevronLeft, FaChevronRight, FaPlus, FaTimes, FaBell,
   FaCalendarAlt, FaBullhorn, FaGraduationCap, FaUser,
@@ -11,6 +11,8 @@ import useNotificationPrefs from '../../hooks/useNotificationPrefs'
 import { scheduleNotification, deleteEvent as deleteEventAPI } from '../../services/notificationService'
 import { lookupExam, formatExamTime } from '../../utils/examSchedule2026'
 import currentCoursesAPI from '../../lib/currentCoursesAPI'
+// FIX #16: Import Supabase calendar API instead of reading/writing localStorage
+import { getEvents, saveEvent, deleteEvent as deleteEventDB, migrateLocalStorageEvents } from '../../lib/calendarAPI'
 import './CalendarTab.css'
 
 // ── McGill Academic Dates 2025–26 ────────────────────────────────
@@ -46,8 +48,6 @@ const MCGILL_ACADEMIC_DATES = [
   { id: 'w-14', title: 'Winter Exams End',                             date: '2026-04-30', type: 'academic', category: 'Winter 2026' },
 ]
 
-// ── Club category colors — must match ClubsTab CATEGORY_META ────
-// Used to colour club events on the calendar per their category.
 const CLUB_CATEGORY_COLORS = {
   'Academic':                 { color: '#2563eb', bg: '#dbeafe' },
   'Engineering & Technology': { color: '#7c3aed', bg: '#ede9fe' },
@@ -64,7 +64,6 @@ const CLUB_CATEGORY_COLORS = {
   'Spiritual & Religious':    { color: '#a16207', bg: '#fefce8' },
 }
 
-// Returns color+bg for a club event, falling back to a default amber.
 function getClubEventStyle(event) {
   if (event.category && CLUB_CATEGORY_COLORS[event.category]) {
     return CLUB_CATEGORY_COLORS[event.category]
@@ -101,11 +100,11 @@ function EventModal({ event, onSave, onDelete, onClose, t, notifPrefs, user }) {
   })
 
   const [form, setForm] = useState(() => ({
-    title:    event?.title    || '',
-    date:     event?.date     || today,
-    time:     event?.time     || '',
-    type:     event?.type     || 'personal',
-    category: event?.category || '',
+    title:       event?.title       || '',
+    date:        event?.date        || today,
+    time:        event?.time        || '',
+    type:        event?.type        || 'personal',
+    category:    event?.category    || '',
     description: event?.description || '',
     ...(event?.id && !event?.titleKey
       ? {
@@ -271,9 +270,6 @@ function EventPopup({ event, onClose, onEdit, canEdit, t, language, formatDate, 
 }
 
 // ── Day Events Drawer ─────────────────────────────────────────────
-// FIX: Replaces the single-event popup. Shows ALL events for a day
-// plus an "Add Event" button so users can always create new events
-// even when events already exist on that date.
 function DayDrawer({ date, events, onClose, onAddEvent, onEditEvent, onSelectEvent, t, language, formatDate, typeConfig, getEventStyle, userEventIds }) {
   const [expanded, setExpanded] = useState(null)
 
@@ -351,7 +347,6 @@ export default function CalendarTab({ user, clubEvents = [] }) {
   const MONTHS = language === 'fr' ? MONTHS_FR : MONTHS_EN
   const DAYS   = language === 'fr' ? DAYS_FR   : DAYS_EN
 
-  // Base type config — club type uses dynamic colors via getEventStyle()
   const typeConfig = {
     academic: { color: '#ed1b2f', bg: '#fef2f2', icon: <FaGraduationCap />, label: t('calendar.academicDates') },
     exam:     { color: '#7c3aed', bg: '#f5f3ff', icon: <FaClipboardList />, label: language === 'fr' ? 'Examens finaux' : 'Final Exams' },
@@ -359,18 +354,22 @@ export default function CalendarTab({ user, clubEvents = [] }) {
     club:     { color: '#d97706', bg: '#fef3c7', icon: <FaUsers />,         label: language === 'fr' ? 'Réunion de club' : 'Club Meeting' },
   }
 
-  // FIX: Returns the full style for any event type, with club events
-  // getting their category-specific color instead of flat amber.
-  const getEventStyle = (event, cfg) => {
+  const getEventStyle = useCallback((event, cfg) => {
     if (event.type === 'club') {
       const clubStyle = getClubEventStyle(event)
       return { ...clubStyle, icon: <FaUsers />, label: language === 'fr' ? 'Réunion de club' : 'Club Meeting' }
     }
     return cfg[event.type] || cfg.personal
-  }
+  }, [language])
 
   const [examEvents, setExamEvents] = useState([])
 
+  // FIX #16: userEvents now lives in Supabase, not localStorage.
+  // isLoadingEvents shows a spinner while the initial fetch is in flight.
+  const [userEvents, setUserEvents]       = useState([])
+  const [isLoadingEvents, setIsLoadingEvents] = useState(true)
+
+  // ── Load exam schedule from current courses ─────────────────────
   useEffect(() => {
     if (!user?.id) return
     let cancelled = false
@@ -400,50 +399,70 @@ export default function CalendarTab({ user, clubEvents = [] }) {
       setExamEvents(events)
     }).catch(() => {})
     return () => { cancelled = true }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id])
 
-  const tEvent = (ev) => ({
-    ...ev,
-    title:       ev.titleKey    ? t(ev.titleKey)    : ev.title    || '',
-    category:    ev.categoryKey ? t(ev.categoryKey) : ev.category || '',
-    description: ev.descKey     ? t(ev.descKey)     : ev.description || '',
-  })
+  // ── FIX #16: Load user events from Supabase on mount ───────────
+  useEffect(() => {
+    if (!user?.id) return
+    let cancelled = false
 
-  const formatDate = (dateStr) => {
+    const load = async () => {
+      try {
+        // Migrate any events still in localStorage before the first fetch.
+        // migrateLocalStorageEvents is idempotent — safe to call on every login.
+        await migrateLocalStorageEvents(user.id)
+
+        if (cancelled) return
+        const events = await getEvents(user.id)
+        if (!cancelled) setUserEvents(events)
+      } catch (err) {
+        console.error('Failed to load calendar events from Supabase:', err)
+        // Fallback: try reading from localStorage so the user sees their data
+        try {
+          const local = JSON.parse(localStorage.getItem('mcgill_calendar_events') || '[]')
+          if (!cancelled) setUserEvents(local)
+        } catch { /* ignore */ }
+      } finally {
+        if (!cancelled) setIsLoadingEvents(false)
+      }
+    }
+
+    load()
+    return () => { cancelled = true }
+  }, [user?.id])
+
+  const formatDate = useCallback((dateStr) => {
     const [y, m, d] = dateStr.split('-')
     return `${MONTHS[parseInt(m) - 1]} ${parseInt(d)}, ${y}`
-  }
+  }, [MONTHS])
 
   const [view, setView]               = useState('calendar')
   const [currentYear, setCurrentYear] = useState(today.getFullYear())
   const [currentMonth, setCurrentMonth] = useState(today.getMonth())
-  const [userEvents, setUserEvents]   = useState(() => {
-    try { return JSON.parse(localStorage.getItem('mcgill_calendar_events') || '[]') } catch { return [] }
-  })
   const [filter, setFilter]           = useState({ academic: true, exam: true, personal: true, club: true })
   const [showModal, setShowModal]     = useState(false)
   const [editEvent, setEditEvent]     = useState(null)
   const [preselectedDate, setPreselectedDate] = useState(null)
-
-  // FIX: Day drawer state replaces single-event popup
-  const [dayDrawer, setDayDrawer]     = useState(null)   // { date, events }
-  // Legacy single-event popup (for announcements view)
+  const [dayDrawer, setDayDrawer]     = useState(null)
   const [popupEvent, setPopupEvent]   = useState(null)
-
   const [notifSaved, setNotifSaved]   = useState(false)
 
-  useEffect(() => {
-    localStorage.setItem('mcgill_calendar_events', JSON.stringify(userEvents))
-  }, [userEvents])
-
-  const allEvents = useMemo(() => [
-    ...MCGILL_ACADEMIC_DATES.map(tEvent),
-    ...examEvents,
-    ...userEvents,
-    ...clubEvents,
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  ], [userEvents, examEvents, clubEvents, language])
+  // FIX #19: tEvent defined inside useMemo so it always captures the current
+  // translation function. language is a real dependency — no eslint-disable needed.
+  const allEvents = useMemo(() => {
+    const tEvent = (ev) => ({
+      ...ev,
+      title:       ev.titleKey    ? t(ev.titleKey)    : ev.title    || '',
+      category:    ev.categoryKey ? t(ev.categoryKey) : ev.category || '',
+      description: ev.descKey     ? t(ev.descKey)     : ev.description || '',
+    })
+    return [
+      ...MCGILL_ACADEMIC_DATES.map(tEvent),
+      ...examEvents,
+      ...userEvents,
+      ...clubEvents,
+    ]
+  }, [userEvents, examEvents, clubEvents, language, t])
 
   const filteredEvents = useMemo(() =>
     allEvents.filter(e => filter[e.type] !== false),
@@ -459,7 +478,6 @@ export default function CalendarTab({ user, clubEvents = [] }) {
     return map
   }, [filteredEvents])
 
-  // Set of user-owned event IDs for editable check
   const userEventIds = useMemo(() => new Set(userEvents.map(e => e.id)), [userEvents])
 
   const prevMonth = () => {
@@ -477,36 +495,64 @@ export default function CalendarTab({ user, clubEvents = [] }) {
   for (let i = 0; i < firstDay; i++) cells.push(null)
   for (let d = 1; d <= daysInMonth; d++) cells.push(d)
 
+  // ── FIX #16: Save handler writes to Supabase ────────────────────
   const handleSaveEvent = async (event) => {
     const isEdit = event.id && userEvents.some(e => e.id === event.id)
+
+    // Optimistic update — patch local state immediately so UI feels instant
     if (isEdit) {
       setUserEvents(prev => prev.map(e => e.id === event.id ? event : e))
     } else {
       const newEvent = { ...event, id: event.id || `user-${Date.now()}` }
       setUserEvents(prev => [...prev, newEvent])
-      if (user?.id && event.notifyEnabled) {
-        try { await scheduleNotification(event, user.id, user.email) }
-        catch (err) { console.error('Failed to schedule notification:', err) }
+      event = newEvent
+    }
+
+    setShowModal(false); setEditEvent(null); setPreselectedDate(null)
+
+    // Persist to Supabase in the background
+    try {
+      await saveEvent(event, user.id)
+    } catch (err) {
+      console.error('Failed to save event to Supabase:', err)
+      // Revert optimistic update on failure
+      if (isEdit) {
+        setUserEvents(prev => prev.map(e => e.id === event.id ? editEvent : e))
+      } else {
+        setUserEvents(prev => prev.filter(e => e.id !== event.id))
       }
     }
-    setShowModal(false); setEditEvent(null); setPreselectedDate(null)
+
+    // Schedule notification if requested
     if (event.notifyEnabled) {
+      try { await scheduleNotification(event, user.id, user.email) }
+      catch (err) { console.error('Failed to schedule notification:', err) }
       setNotifSaved(true)
       setTimeout(() => setNotifSaved(false), 3000)
     }
   }
 
+  // ── FIX #16: Delete handler removes from Supabase ──────────────
   const handleDeleteEvent = async (id) => {
+    const deleted = userEvents.find(e => e.id === id)
     setUserEvents(prev => prev.filter(e => e.id !== id))
     setShowModal(false); setEditEvent(null); setPopupEvent(null); setDayDrawer(null)
+
+    try {
+      await deleteEventDB(id, user.id)
+    } catch (err) {
+      console.error('Failed to delete event from Supabase:', err)
+      // Revert optimistic delete on failure
+      if (deleted) setUserEvents(prev => [...prev, deleted])
+    }
+
+    // Also clean up any backend notification record
     if (user?.id && id && !id.startsWith('user-')) {
       try { await deleteEventAPI(id, user.id) }
-      catch (err) { console.error('Failed to delete event from backend:', err) }
+      catch (err) { console.error('Failed to delete event from notification backend:', err) }
     }
   }
 
-  // FIX: Clicking a day always opens the day drawer.
-  // From there users can view all events AND add a new one.
   const handleDayClick = (day) => {
     if (!day) return
     const dateStr = toDateStr(currentYear, currentMonth, day)
@@ -514,7 +560,6 @@ export default function CalendarTab({ user, clubEvents = [] }) {
     if (eventsOnDay.length > 0) {
       setDayDrawer({ date: dateStr, events: eventsOnDay })
     } else {
-      // Empty day — go straight to add modal
       setPreselectedDate(dateStr); setEditEvent(null); setShowModal(true)
     }
   }
@@ -532,9 +577,11 @@ export default function CalendarTab({ user, clubEvents = [] }) {
 
   const upcomingEvents = useMemo(() => {
     const todayStr = getTodayStr()
-    return [...filteredEvents].filter(e => e.date >= todayStr).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 30)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filteredEvents])
+    return [...filteredEvents]
+      .filter(e => e.date >= todayStr)
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .slice(0, 30)
+  }, [filteredEvents, getTodayStr])
 
   const urgentEvents = upcomingEvents.filter(e => daysUntil(e.date) <= 7)
 
@@ -587,8 +634,16 @@ export default function CalendarTab({ user, clubEvents = [] }) {
         ))}
       </div>
 
+      {/* FIX #16: Loading state while fetching from Supabase */}
+      {isLoadingEvents && (
+        <div className="cal-loading">
+          <div className="cal-loading-spinner" />
+          <span>Loading your events…</span>
+        </div>
+      )}
+
       {/* Calendar View */}
-      {view === 'calendar' && (
+      {view === 'calendar' && !isLoadingEvents && (
         <div className="cal-body">
           <div className="cal-month-nav">
             <button onClick={prevMonth}><FaChevronLeft /></button>
@@ -616,7 +671,6 @@ export default function CalendarTab({ user, clubEvents = [] }) {
                   <span className={`cal-cell-number ${isToday ? 'today' : ''}`}>{day}</span>
                   <div className="cal-cell-events">
                     {eventsOnDay.slice(0, 3).map(e => {
-                      // FIX: Use per-event style so club events show category color
                       const style = getEventStyle(e, typeConfig)
                       return (
                         <div key={e.id} className="cal-event-dot" style={{ background: style.color, color: '#fff' }} title={e.title}>
@@ -644,7 +698,7 @@ export default function CalendarTab({ user, clubEvents = [] }) {
       )}
 
       {/* Announcements View */}
-      {view === 'announcements' && (
+      {view === 'announcements' && !isLoadingEvents && (
         <div className="cal-announcements">
           {urgentEvents.length > 0 && (
             <div className="cal-urgent-banner">
@@ -691,7 +745,7 @@ export default function CalendarTab({ user, clubEvents = [] }) {
         </div>
       )}
 
-      {/* Day Events Drawer (calendar view) */}
+      {/* Day Events Drawer */}
       {dayDrawer && (
         <DayDrawer
           date={dayDrawer.date}
