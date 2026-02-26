@@ -162,7 +162,7 @@ async def _extract_syllabus_data(pdf_bytes: bytes) -> dict:
     b64 = base64.standard_b64encode(pdf_bytes).decode("utf-8")
 
     msg = await client.messages.create(  # FIX #1: await the async call
-        model=settings.CLAUDE_CARDS_MODEL,
+        model=settings.CLAUDE_MODEL,
         max_tokens=4096,
         messages=[
             {
