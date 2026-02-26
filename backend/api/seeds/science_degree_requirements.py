@@ -1187,12 +1187,12 @@ def seed_degree_requirements(supabase):
             block_id = block_result.data[0]["id"]
             inserted_blocks += 1
 
-            courses_to_insert = []
+            courses_batch = []
             for j, course in enumerate(block.get("courses", [])):
                 is_required = course.get("is_required", False)
                 if block.get("block_type") == "required":
                     is_required = True
-                course_data = {
+                courses_batch.append({
                     "block_id":              block_id,
                     "subject":               course.get("subject", ""),
                     "catalog":               course.get("catalog"),
@@ -1205,12 +1205,12 @@ def seed_degree_requirements(supabase):
                     "recommended":           course.get("recommended", False),
                     "recommendation_reason": course.get("recommendation_reason"),
                     "sort_order":            j,
-                }
-                courses_to_insert.append(course_data)
-
-            if courses_to_insert:
-                supabase.table("requirement_courses").insert(courses_to_insert).execute()
-                inserted_courses += len(courses_to_insert)
+                })
+            for chunk_start in range(0, len(courses_batch), 50):
+                chunk = courses_batch[chunk_start:chunk_start + 50]
+                if chunk:
+                    supabase.table("requirement_courses").insert(chunk).execute()
+                    inserted_courses += len(chunk)
 
     return {
         "programs": inserted_programs,

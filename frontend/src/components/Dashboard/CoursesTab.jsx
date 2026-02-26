@@ -190,7 +190,7 @@ export default function CoursesTab({
                       <button
                         className={`prof-flag-btn ${isFlagOpen ? 'active' : ''}`}
                         onClick={(e) => toggleFlagCard(e, cardKey)}
-                        title="Professor incorrect? Flag it"
+                        data-tooltip="Wrong Professor? Flag it"
                       >
                         <FaFlag />
                       </button>
@@ -208,7 +208,7 @@ export default function CoursesTab({
                     <button
                       className={`favorite-btn ${isFavorited(course.subject, course.catalog) ? 'favorited' : ''}`}
                       onClick={(e) => { e.stopPropagation(); handleToggleFavorite(course) }}
-                      title={isFavorited(course.subject, course.catalog) ? t('courses.removeFromFavorites') : t('courses.addToFavorites')}
+                      data-tooltip={isFavorited(course.subject, course.catalog) ? "Remove saved" : "Save course"}
                     >
                       {isFavorited(course.subject, course.catalog)
                         ? <FaHeart className="favorite-icon" />
@@ -217,14 +217,14 @@ export default function CoursesTab({
                     <button
                       className={`completed-btn ${isCompleted(course.subject, course.catalog) ? 'completed' : ''}`}
                       onClick={(e) => { e.stopPropagation(); handleToggleCompleted(course) }}
-                      title={isCompleted(course.subject, course.catalog) ? t('courses.markIncomplete') : t('courses.markComplete')}
+                      data-tooltip={isCompleted(course.subject, course.catalog) ? "Mark incomplete" : "Mark complete"}
                     >
                       <FaCheckCircle className="completed-icon" />
                     </button>
                     <button
                       className={`current-btn ${isCurrent(course.subject, course.catalog) ? 'current' : ''}`}
                       onClick={(e) => { e.stopPropagation(); handleToggleCurrent(course) }}
-                      title={isCurrent(course.subject, course.catalog) ? t('courses.removeFromCurrent') : t('courses.addToCurrent')}
+                      data-tooltip={isCurrent(course.subject, course.catalog) ? "Remove from current" : "Add to current"}
                     >
                       <FaCheckCircle className="current-icon" />
                     </button>

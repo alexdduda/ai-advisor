@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
+import historyIconSrc from '../../../assets/history-icon.png'
 import {
   FaRobot, FaSync, FaChevronDown, FaChevronUp,
   FaBolt, FaArrowRight, FaGraduationCap,
   FaClipboardList, FaComments, FaCalendarAlt,
   FaChartBar, FaMapMarkedAlt, FaLightbulb,
   FaBookmark, FaRegBookmark, FaThumbtack,
-  FaGripVertical, FaTrash, FaMapPin,
+  FaGripVertical, FaTrash, FaMapPin, FaHistory,
 } from 'react-icons/fa'
 import { CARD_CATEGORIES, CATEGORY_LABELS } from '../../../lib/cardsAPI'
 import './AdvisorCards.css'
@@ -39,15 +40,11 @@ function ThreadMessages({ thread, isThinking }) {
     <div className="thread-messages" ref={scrollRef}>
       {thread.map((msg, i) => (
         <div key={i} className={`thread-message thread-message--${msg.role}`}>
-          <span className="thread-avatar">
-            {msg.role === 'user' ? '👤' : <FaRobot />}
-          </span>
           <p className="thread-text">{msg.content}</p>
         </div>
       ))}
       {isThinking && (
         <div className="thread-message thread-message--assistant">
-          <span className="thread-avatar"><FaRobot /></span>
           <p className="thread-text">
             <span className="thinking-dots"><span /><span /><span /></span>
           </p>
@@ -156,8 +153,12 @@ function AdvisorCard({
   // Sync with parent expanded state
   useEffect(() => { if (isExpanded) setPanelOpen(true) }, [isExpanded])
 
-  // Auto-open when thread arrives
-  useEffect(() => { if (thread.length > 0) setPanelOpen(true) }, [thread.length])
+  // Auto-open only when a NEW message arrives (not on initial mount from localStorage)
+  const prevThreadLen = useRef(thread.length)
+  useEffect(() => {
+    if (thread.length > prevThreadLen.current) setPanelOpen(true)
+    prevThreadLen.current = thread.length
+  }, [thread.length])
 
   const handleSave = async (e) => {
     e.stopPropagation()
@@ -391,6 +392,34 @@ function DraggableFeed({
 
   useEffect(() => { setItems(cards) }, [cards])
 
+  const scrollAnimRef = useRef(null)
+
+  const startAutoScroll = (e) => {
+    const feed = document.querySelector('.advisor-cards-feed')
+    if (!feed) return
+    const cancelScroll = () => {
+      cancelAnimationFrame(scrollAnimRef.current)
+      scrollAnimRef.current = null
+    }
+    const ZONE = 80
+    const SPEED = 12
+    const tick = () => {
+      const rect = feed.getBoundingClientRect()
+      const y = e.clientY
+      if (y - rect.top < ZONE) {
+        feed.scrollTop -= SPEED
+      } else if (rect.bottom - y < ZONE) {
+        feed.scrollTop += SPEED
+      } else {
+        cancelScroll()
+        return
+      }
+      scrollAnimRef.current = requestAnimationFrame(tick)
+    }
+    cancelScroll()
+    scrollAnimRef.current = requestAnimationFrame(tick)
+  }
+
   const handleDragStart = (idx) => (e) => {
     setDragIdx(idx)
     e.dataTransfer.effectAllowed = 'move'
@@ -414,6 +443,8 @@ function DraggableFeed({
   }
 
   const handleDragEnd = () => {
+    cancelAnimationFrame(scrollAnimRef.current)
+    scrollAnimRef.current = null
     setDragIdx(null); setOverIdx(null)
     clearTimeout(commitRef.current)
     commitRef.current = setTimeout(() => {
@@ -430,7 +461,7 @@ function DraggableFeed({
           draggable
           onDragStart={handleDragStart(idx)}
           onDragEnter={handleDragEnter(idx)}
-          onDragOver={e => e.preventDefault()}
+          onDragOver={e => { e.preventDefault(); startAutoScroll(e) }}
           onDragEnd={handleDragEnd}
         >
           <AdvisorCard
@@ -457,6 +488,34 @@ function DraggableFeed({
 }
 
 // ── Main export ───────────────────────────────────────────────
+function HistoryPreviewCard({ card, thread, onClick }) {
+  const CardIcon = CATEGORY_ICON_COMPONENTS[card.category || 'other'] || FaComments
+  const last = thread[thread.length - 1]
+  return (
+    <button className="history-preview-card" onClick={onClick} type="button">
+      <div className="history-preview-card__header">
+        <span className="history-preview-card__icon"><CardIcon /></span>
+        <div className="history-preview-card__meta">
+          <span className="history-preview-card__category">
+            {CATEGORY_LABELS[card.category || 'other']}
+          </span>
+          <h4 className="history-preview-card__title">{card.title}</h4>
+        </div>
+        <span className="history-preview-card__count">{thread.length} msg{thread.length !== 1 ? 's' : ''}</span>
+      </div>
+      {last && (
+        <p className="history-preview-card__last">
+          <span className={`history-preview-card__role history-preview-card__role--${last.role}`}>
+            {last.role === 'user' ? 'You' : 'AI'}:
+          </span>{' '}
+          {last.content.slice(0, 90)}{last.content.length > 90 ? '…' : ''}
+        </p>
+      )}
+    </button>
+  )
+}
+
+
 export default function AdvisorCards({
   userId = null,
   cards = [],
@@ -546,6 +605,15 @@ export default function AdvisorCards({
   }, [onChipClick])
 
   const handleExpand   = useCallback((id) => setExpanded(prev => new Set([...prev, id])), [])
+
+  const handleHistoryCardClick = (card) => {
+    setActiveCategory(card.category || 'other')
+    setExpanded(prev => new Set([...prev, card.id]))
+    setTimeout(() => {
+      document.querySelector(`[data-card-id="${card.id}"]`)
+        ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 150)
+  }
   const handleCollapse = useCallback((id) => setExpanded(prev => { const n = new Set(prev); n.delete(id); return n }), [])
 
   const handleDelete = useCallback((cardId) => {
@@ -574,11 +642,13 @@ export default function AdvisorCards({
     return acc
   }, {})
 
-  const savedCards = visibleCards.filter(c => c.is_saved)
+  const savedCards   = visibleCards.filter(c => c.is_saved)
+  const historyCards = cards.filter(c => (threadMap[c.id] || []).length > 0)
 
   const filteredCards =
-    activeCategory === 'all'   ? visibleCards :
-    activeCategory === 'saved' ? savedCards :
+    activeCategory === 'all'     ? visibleCards :
+    activeCategory === 'saved'   ? savedCards :
+    activeCategory === 'history' ? historyCards :
     visibleCards.filter(c => (c.category || 'other') === activeCategory)
 
   const activeCats = CARD_CATEGORIES.filter(cat => categoryCounts[cat])
@@ -606,41 +676,41 @@ export default function AdvisorCards({
       </header>
 
       {/* ── Category bar ── */}
-      {!showSkeletons && activeCats.length > 1 && (
+      {!showSkeletons && (
         <nav className="category-bar">
           <button
             className={`category-tab ${activeCategory === 'all' ? 'active' : ''}`}
             onClick={() => setActiveCategory('all')}
           >
-            <FaClipboardList className="category-tab__icon" />
             All
             <span className="category-tab__count">{cards.length}</span>
           </button>
 
-          {activeCats.map(cat => {
-            const CatIcon = CATEGORY_ICON_COMPONENTS[cat] || FaComments
-            return (
-              <button
-                key={cat}
-                className={`category-tab ${activeCategory === cat ? 'active' : ''}`}
-                onClick={() => setActiveCategory(cat)}
-              >
-                <CatIcon className="category-tab__icon" />
-                {CATEGORY_LABELS[cat]}
-                <span className="category-tab__count">{categoryCounts[cat]}</span>
-              </button>
-            )
-          })}
+          {activeCats.map(cat => (
+            <button
+              key={cat}
+              className={`category-tab ${activeCategory === cat ? 'active' : ''}`}
+              onClick={() => setActiveCategory(cat)}
+            >
+              {CATEGORY_LABELS[cat]}
+              {categoryCounts[cat] > 0 && <span className="category-tab__count">{categoryCounts[cat]}</span>}
+            </button>
+          ))}
 
           <button
-            className={`category-tab category-tab--saved ${activeCategory === 'saved' ? 'active' : ''}`}
+            className={`category-tab ${activeCategory === 'saved' ? 'active' : ''}`}
             onClick={() => setActiveCategory('saved')}
           >
-            <FaBookmark className="category-tab__icon" />
             Saved
-            {savedCards.length > 0 && (
-              <span className="category-tab__count category-tab__count--saved">{savedCards.length}</span>
-            )}
+            {savedCards.length > 0 && <span className="category-tab__count">{savedCards.length}</span>}
+          </button>
+
+          <button
+            className={`category-tab category-tab--history-icon ${activeCategory === 'history' ? 'active' : ''}`}
+            onClick={() => setActiveCategory('history')}
+            title="History"
+          >
+            <img src={historyIconSrc} className="history-icon-img" alt="History" />
           </button>
         </nav>
       )}
@@ -655,6 +725,24 @@ export default function AdvisorCards({
             <p>Your academic brief is being prepared.</p>
             <button className="btn-primary" onClick={onRefresh}>Generate Now</button>
           </div>
+        ) : activeCategory === 'history' ? (
+          historyCards.length === 0 ? (
+            <div className="advisor-cards-empty">
+              <FaHistory className="empty-icon" />
+              <p>No chat history yet. Start a conversation on any card.</p>
+            </div>
+          ) : (
+            <div className="history-list">
+              {historyCards.map(card => (
+                <HistoryPreviewCard
+                  key={card.id}
+                  card={card}
+                  thread={threadMap[card.id] || []}
+                  onClick={() => handleHistoryCardClick(card)}
+                />
+              ))}
+            </div>
+          )
         ) : filteredCards.length === 0 && activeCategory === 'saved' ? (
           <div className="advisor-cards-empty">
             <FaBookmark className="empty-icon" />

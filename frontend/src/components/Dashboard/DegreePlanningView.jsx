@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useRef } from 'react'
 import {
   FaHeart, FaRegHeart, FaCheckCircle, FaStar, FaBook,
   FaBullseye, FaFileUpload, FaChevronDown, FaChevronUp,
@@ -15,8 +15,87 @@ const rawBase = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 const API_BASE = rawBase.replace(/\/api\/?$/, '')
 
 // Map profile major/minor names to program_keys
-function toProgramKey(name, type = 'major') {
+function toProgramKey(name, type = 'major', faculty = '') {
   if (!name) return null
+  const fl = faculty.toLowerCase()
+  const isSci = fl.includes('science') && !fl.includes('arts & science') && !fl.includes('arts and science')
+  const isBasc = fl.includes('arts & science') || fl.includes('arts and science')
+  const isEng  = fl.includes('engineering')
+  const isEnv  = fl.includes('environment') || fl.includes('bieler')
+
+  // Bieler School of Environment B.A. programs
+  if (isEnv) {
+    const envMap = {
+      'Ecological Determinants of Health in Society': 'environment_ecological_determinants_ba',
+      'Economics and the Earth\'s Environment': 'environment_economics_earth_ba',
+      'Environment and Development': 'environment_development_ba',
+    }
+    if (envMap[name]) return envMap[name]
+    if (type === 'minor') return 'environment_minor_ba'
+    if (type === 'diploma') return 'environment_diploma'
+  }
+
+  // B.A. & Sc. interfaculty programs
+  if (isBasc) {
+    const bascMap = {
+      'Cognitive Science': 'cogs_interfaculty',
+      'Cognitive Science (Honours)': 'cogs_honours',
+      'Sustainability, Science and Society': 'sss_interfaculty',
+      'Sustainability, Science and Society (Honours)': 'sss_honours',
+      'Environment': 'environment_interfaculty',
+      'Environment (Honours)': 'environment_honours',
+    }
+    if (bascMap[name]) return `${bascMap[name]}_basc`
+    // Fall through to arts/science maps for multi-track
+  }
+
+  // Science programs use _bsc suffix
+  if (isSci) {
+    const sciMap = {
+      'Computer Science': 'cs',
+      'Software Engineering': 'software_engineering',
+      'Mathematics': 'mathematics',
+      'Statistics': 'statistics',
+      'Applied Mathematics': 'applied_mathematics',
+      'Physics': 'physics',
+      'Biology': 'biology',
+      'Chemistry': 'chemistry',
+      'Biochemistry': 'biochemistry',
+      'Neuroscience': 'neuroscience',
+      'Physiology': 'physiology',
+      'Microbiology and Immunology': 'micro_immuno',
+      'Earth and Planetary Sciences': 'earth_planetary',
+      'Atmospheric and Oceanic Sciences': 'atmos_oceanic',
+      'Environmental Science': 'environmental_science',
+      'Geography': 'geography_sci',
+    }
+    const slug = sciMap[name] || name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '')
+    return `${slug}_${type}_bsc`
+  }
+
+  // Management (Desautels) programs
+  if (fl.includes('management') || fl.includes('desautels')) {
+    const mgmtSlugMap = {
+      'Accounting': 'accounting',
+      'Finance': 'finance',
+      'Marketing': 'marketing',
+      'Business Analytics': 'business_analytics',
+      'Strategic Management': 'strategic_management',
+      'Information Technology Management': 'it_management',
+      'Organizational Behaviour and Human Resources': 'ob_hr',
+      'International Management': 'intl_management',
+      'Managing for Sustainability': 'managing_sustainability',
+      'Retail Management': 'retail_management',
+      'Economics for Management Students': 'economics_management',
+      'Mathematics and Statistics for Management': 'math_stats_management',
+      'Investment Management': 'investment_management',
+    }
+    const slug = mgmtSlugMap[name] || name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '')
+    if (type === 'honours') return `${slug}_honours_bcom`
+    if (type === 'concentration') return `${slug}_concentration_bcom`
+    return `${slug}_major_bcom`
+  }
+
   const map = {
     'Anthropology': 'anthropology',
     'Art History': 'art_history',
@@ -150,9 +229,17 @@ function ElectivesPanel({ profile, completedCourses, currentCourses, programData
   const [recs, setRecs]       = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError]     = useState(null)
+  const hasLoaded             = useRef(false)
 
-  const allCourses = [...completedCourses, ...currentCourses]
-  const courseList = allCourses.map(c => `${c.subject} ${c.catalog} ${c.course_title || ''}`).join(', ')
+  const allCourses = useMemo(
+    () => [...completedCourses, ...currentCourses],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [completedCourses.length, currentCourses.length]
+  )
+  const courseList = useMemo(
+    () => allCourses.map(c => `${c.subject} ${c.catalog} ${c.course_title || ''}`).join(', '),
+    [allCourses]
+  )
 
   const generateRecs = async () => {
     setLoading(true)
@@ -198,9 +285,24 @@ function ElectivesPanel({ profile, completedCourses, currentCourses, programData
     }
   }
 
-  // Auto-generate when profile changes
+  // Auto-generate once on first mount; re-generate only when major/minor/interests change
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { generateRecs() }, [profile?.major, profile?.minor, profile?.interests, courseList])
+  useEffect(() => {
+    if (hasLoaded.current) return
+    hasLoaded.current = true
+    generateRecs()
+  }, [])
+
+  // Re-generate when profile identity changes (not on every course list tweak)
+  const profileKey = `${profile?.major}|${profile?.minor}|${profile?.interests}`
+  const prevProfileKey = useRef(profileKey)
+  useEffect(() => {
+    if (!hasLoaded.current) return
+    if (prevProfileKey.current === profileKey) return
+    prevProfileKey.current = profileKey
+    generateRecs()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profileKey])
 
   const CATEGORY_COLORS = {
     'Breadth':         { bg: '#eff6ff', color: '#1d4ed8' },
@@ -374,55 +476,59 @@ function ProgramSection({ prog, completedCourses, currentCourses, advStanding, o
 }
 
 function MyProgramCard({ profile, completedCourses, currentCourses }) {
-  const [programData, setProgramData] = useState(null)
-  const [minorData, setMinorData]     = useState(null)
-  const [loading, setLoading]         = useState(false)
-  const [seeding, setSeeding]         = useState(false)
-  const [openBlocks, setOpenBlocks]   = useState({})
-  const [activeTab, setActiveTab]     = useState('major')
-  const [loadFailed, setLoadFailed]   = useState(false)
-  // Track which programs returned 404 even after seeding (truly unavailable)
-  const [unavailable, setUnavailable] = useState({ major: false, minor: false })
+  const [programData, setProgramData]         = useState(null)
+  const [minorData, setMinorData]             = useState(null)
+  const [sciData, setSciData]                 = useState(null)
+  const [coreData, setCoreData]               = useState(null)
+  const [concentrationData, setConcentrationData] = useState(null)
+  const [loading, setLoading]                 = useState(false)
+  const [seeding, setSeeding]                 = useState(false)
+  const [openBlocks, setOpenBlocks]           = useState({})
+  const [activeTab, setActiveTab]             = useState('major')
+  const [loadFailed, setLoadFailed]           = useState(false)
+  const [unavailable, setUnavailable]         = useState({ major: false, minor: false, core: false, concentration: false })
 
   const advStanding = profile?.advanced_standing || []
-  const majorKey    = toProgramKey(profile?.major, 'major')
-  const minorKey    = toProgramKey(profile?.minor, 'minor')
 
-  const fetchProgram = async (key, setter, autoSeedOnMiss = false) => {
+  const isBasc          = profile?.faculty === 'Bachelor of Arts and Science'
+  const bascStream      = isBasc ? (profile?.concentration || 'Interfaculty') : null
+  const bascIsMultiTrack = bascStream === 'Multi-track' || bascStream === 'Joint Honours'
+
+  const isMgmt = !isBasc && (
+    profile?.faculty === 'Management' ||
+    (profile?.faculty || '').toLowerCase().includes('management') ||
+    (profile?.faculty || '').toLowerCase().includes('desautels')
+  )
+
+  // Foundation year waived if Arts or B.A. & Sc. with 24+ transfer credits
+  const transferCredits = advStanding.reduce((s, c) => s + (c.credits || 0), 0)
+  const foundationWaived = transferCredits >= 24 &&
+    (profile?.faculty === 'Faculty of Arts' || isBasc)
+
+  const majorKey = toProgramKey(
+    profile?.major,
+    'major',
+    isBasc && !bascIsMultiTrack ? 'Faculty of Arts & Science' : (profile?.faculty || '')
+  )
+  const sciKey = isBasc && bascIsMultiTrack
+    ? toProgramKey(profile?.other_majors?.[0], 'major', 'Faculty of Science')
+    : null
+  const minorKey = !isMgmt ? toProgramKey(profile?.minor, 'minor', profile?.faculty || '') : null
+  // Management-specific keys
+  const coreKey          = isMgmt ? 'bcom_core' : null
+  const concentrationKey = isMgmt && profile?.concentration
+    ? toProgramKey(profile.concentration, 'concentration', profile?.faculty || '')
+    : null
+
+  const fetchProgram = async (key, setter) => {
     if (!key) return 'skip'
     try {
       const res = await fetch(`${API_BASE}/api/degree-requirements/programs/${key}`, {
         cache: 'no-store'
       })
       if (res.status === 404) {
-        if (autoSeedOnMiss) {
-          // Trigger seed and wait for it to fully complete
-          try {
-            await fetch(`${API_BASE}/api/degree-requirements/seed`, { method: 'POST' })
-          } catch {
-            // seed endpoint failed — still try fetching
-          }
-          // Poll up to 4 times (up to ~8s) for the program to appear
-          for (let i = 0; i < 4; i++) {
-            await new Promise(r => setTimeout(r, 2000))
-            try {
-              const retry = await fetch(`${API_BASE}/api/degree-requirements/programs/${key}`, { cache: 'no-store' })
-              if (retry.ok) {
-                const retryData = await retry.json()
-                setter(retryData)
-                setOpenBlocks(prev => {
-                  const init = { ...prev }
-                  retryData.blocks?.forEach((b, i) => { if (i < 2) init[b.id] = true })
-                  return init
-                })
-                return 'ok'
-              }
-            } catch {
-              // retry failed, continue polling
-            }
-          }
-        }
-        // Still 404 after seeding — this program genuinely doesn't exist in the DB
+        // Program not seeded yet — show "Load Requirements" button, never auto-seed
+        // (auto-seeding concurrent requests corrupt DB foreign keys)
         return 'not_found'
       }
       if (!res.ok) return 'error'
@@ -445,26 +551,31 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
   useEffect(() => {
     // Wait until profile is loaded (non-null) before fetching
     if (!profile) return
-    if (!majorKey && !minorKey) return
+    if (!majorKey && !minorKey && !sciKey) return
     setLoading(true)
     setLoadFailed(false)
     setProgramData(null)
     setMinorData(null)
+    setSciData(null)
     setUnavailable({ major: false, minor: false })
     fetchedRef.current = true
 
     Promise.all([
-      fetchProgram(majorKey, setProgramData, true),
-      fetchProgram(minorKey, setMinorData, true),
-    ]).then(([majorResult, minorResult]) => {
+      fetchProgram(majorKey, setProgramData),
+      fetchProgram(minorKey, setMinorData),
+      fetchProgram(sciKey, setSciData),
+      fetchProgram(coreKey, setCoreData),
+      fetchProgram(concentrationKey, setConcentrationData),
+    ]).then(([majorResult, minorResult, , coreResult, concResult]) => {
       setUnavailable({
-        major: majorResult === 'not_found',
-        minor: minorResult === 'not_found',
+        major:         majorResult === 'not_found',
+        minor:         minorResult === 'not_found',
+        core:          coreResult  === 'not_found',
+        concentration: concResult  === 'not_found',
       })
     }).finally(() => setLoading(false))
-  // profile being truthy for first time triggers this, as do key changes
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [majorKey, minorKey, !!profile])
+  }, [majorKey, minorKey, sciKey, coreKey, concentrationKey, !!profile, profile?.concentration])
 
   // Re-render on course changes — no re-fetch needed, just re-renders
   const allCourseKeys = useMemo(
@@ -478,30 +589,56 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
       const res = await fetch(`${API_BASE}/api/degree-requirements/seed`, { method: 'POST' })
       const data = await res.json()
       if (data.success) {
-        const [majorResult, minorResult] = await Promise.all([
-          fetchProgram(majorKey, setProgramData, false),
-          fetchProgram(minorKey, setMinorData, false),
+        const [majorResult, minorResult, , coreResult, concResult] = await Promise.all([
+          fetchProgram(majorKey, setProgramData),
+          fetchProgram(minorKey, setMinorData),
+          fetchProgram(sciKey, setSciData),
+          fetchProgram(coreKey, setCoreData),
+          fetchProgram(concentrationKey, setConcentrationData),
         ])
         setUnavailable({
-          major: majorResult === 'not_found',
-          minor: minorResult === 'not_found',
+          major:         majorResult === 'not_found',
+          minor:         minorResult === 'not_found',
+          core:          coreResult  === 'not_found',
+          concentration: concResult  === 'not_found',
         })
       }
     } catch {}
     finally { setSeeding(false) }
   }
 
-  if (!profile?.major && !profile?.minor) return null
+  const hasSomething = profile?.major || profile?.minor ||
+    (isBasc && profile?.other_majors?.length > 0) ||
+    isMgmt
+  if (!hasSomething) return null
 
-  const hasMajor = !!programData
-  const hasMinor = !!minorData
-  const hasAny   = hasMajor || hasMinor
+  const hasMajor        = !!programData
+  const hasMinor        = !!minorData
+  const hasCore         = !!coreData
+  const hasConcentration = !!concentrationData
+  const hasAny          = hasMajor || hasMinor || hasCore || hasConcentration
 
   // Tabs: only show tabs that have data or are expected
   const tabs = []
-  if (profile?.major) tabs.push({ id: 'major', label: profile.major, data: programData, unavailable: unavailable.major })
-  if (profile?.minor) tabs.push({ id: 'minor', label: profile.minor, data: minorData, unavailable: unavailable.minor })
-  const currentTab = tabs.find(t => t.id === activeTab)
+  if (isMgmt) {
+    // Management students: Core | Major | Concentration (if applicable)
+    tabs.push({ id: 'core', label: 'BCom Core', data: coreData, unavailable: unavailable.core })
+    if (profile?.major) tabs.push({ id: 'major', label: profile.major, data: programData, unavailable: unavailable.major })
+    if (profile?.concentration) tabs.push({ id: 'concentration', label: profile.concentration, data: concentrationData, unavailable: unavailable.concentration })
+  } else {
+    let majorLabel
+    if (isBasc && bascIsMultiTrack) {
+      majorLabel = profile?.major ? `${profile.major} (Arts)` : null
+    } else {
+      majorLabel = profile?.major || null
+    }
+    if (majorLabel) tabs.push({ id: 'major', label: majorLabel, data: programData, unavailable: unavailable.major })
+    if (isBasc && bascIsMultiTrack && profile?.other_majors?.[0]) {
+      tabs.push({ id: 'sci', label: `${profile.other_majors[0]} (Science)`, data: sciData, unavailable: false })
+    }
+    if (profile?.minor) tabs.push({ id: 'minor', label: profile.minor, data: minorData, unavailable: unavailable.minor })
+  }
+  const currentTab = tabs.find(t => t.id === activeTab) || tabs[0]
   const currentTabData = currentTab?.data
   const currentTabUnavailable = currentTab?.unavailable
 
@@ -524,8 +661,10 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
     return { pct: Math.min(100, Math.round((earned / total) * 100)), earned, total }
   }
 
-  const majorRing = calcRingProgress(programData)
-  const minorRing = calcRingProgress(minorData)
+  const majorRing        = calcRingProgress(programData)
+  const minorRing        = calcRingProgress(minorData)
+  const coreRing         = calcRingProgress(coreData)
+  const concentrationRing = calcRingProgress(concentrationData)
 
   return (
     <div className="dp-req-card">
@@ -534,7 +673,10 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
         <div>
           <h2 className="dp-req-card-title">My Program Requirements</h2>
           <p className="dp-req-card-sub">
-            {[profile?.major, profile?.minor].filter(Boolean).join(' · ')}
+            {isMgmt
+              ? ['BCom Core', profile?.major, profile?.concentration].filter(Boolean).join(' · ')
+              : [profile?.major, profile?.minor].filter(Boolean).join(' · ')
+            }
           </p>
         </div>
       </div>
@@ -574,47 +716,111 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
 
           {/* Progress rings */}
           <div className="dp-req-progress-row">
-            {hasMajor && (
-              <div className="dp-req-progress-item">
-                <div className="dp-req-ring">
-                  <svg viewBox="0 0 36 36" className="dp-req-ring-svg">
-                    <circle cx="18" cy="18" r="15.9" className="dp-req-ring-bg" />
-                    <circle cx="18" cy="18" r="15.9"
-                      className="dp-req-ring-fill dp-req-ring-fill--major"
-                      strokeDasharray={`${majorRing.pct} ${100 - majorRing.pct}`}
-                      strokeDashoffset="25"
-                    />
-                  </svg>
-                  <span className="dp-req-ring-label">{majorRing.pct}%</span>
-                </div>
-                <div className="dp-req-prog-text">
-                  <span className="dp-req-prog-name">Major</span>
-                  <span className="dp-req-prog-detail">{majorRing.earned}/{majorRing.total} credits</span>
-                </div>
-              </div>
-            )}
-            {hasMinor && (
-              <div className="dp-req-progress-item">
-                <div className="dp-req-ring">
-                  <svg viewBox="0 0 36 36" className="dp-req-ring-svg">
-                    <circle cx="18" cy="18" r="15.9" className="dp-req-ring-bg" />
-                    <circle cx="18" cy="18" r="15.9"
-                      className="dp-req-ring-fill dp-req-ring-fill--minor"
-                      strokeDasharray={`${minorRing.pct} ${100 - minorRing.pct}`}
-                      strokeDashoffset="25"
-                    />
-                  </svg>
-                  <span className="dp-req-ring-label">{minorRing.pct}%</span>
-                </div>
-                <div className="dp-req-prog-text">
-                  <span className="dp-req-prog-name">Minor</span>
-                  <span className="dp-req-prog-detail">{minorRing.earned}/{minorRing.total} credits</span>
-                </div>
-              </div>
+            {isMgmt ? (
+              <>
+                {hasCore && (
+                  <div className="dp-req-progress-item">
+                    <div className="dp-req-ring">
+                      <svg viewBox="0 0 36 36" className="dp-req-ring-svg">
+                        <circle cx="18" cy="18" r="15.9" className="dp-req-ring-bg" />
+                        <circle cx="18" cy="18" r="15.9"
+                          className="dp-req-ring-fill dp-req-ring-fill--minor"
+                          strokeDasharray={`${coreRing.pct} ${100 - coreRing.pct}`}
+                          strokeDashoffset="25"
+                        />
+                      </svg>
+                      <span className="dp-req-ring-label">{coreRing.pct}%</span>
+                    </div>
+                    <div className="dp-req-prog-text">
+                      <span className="dp-req-prog-name">Core</span>
+                      <span className="dp-req-prog-detail">{coreRing.earned}/{coreRing.total} credits</span>
+                    </div>
+                  </div>
+                )}
+                {hasMajor && (
+                  <div className="dp-req-progress-item">
+                    <div className="dp-req-ring">
+                      <svg viewBox="0 0 36 36" className="dp-req-ring-svg">
+                        <circle cx="18" cy="18" r="15.9" className="dp-req-ring-bg" />
+                        <circle cx="18" cy="18" r="15.9"
+                          className="dp-req-ring-fill dp-req-ring-fill--major"
+                          strokeDasharray={`${majorRing.pct} ${100 - majorRing.pct}`}
+                          strokeDashoffset="25"
+                        />
+                      </svg>
+                      <span className="dp-req-ring-label">{majorRing.pct}%</span>
+                    </div>
+                    <div className="dp-req-prog-text">
+                      <span className="dp-req-prog-name">Major</span>
+                      <span className="dp-req-prog-detail">{majorRing.earned}/{majorRing.total} credits</span>
+                    </div>
+                  </div>
+                )}
+                {hasConcentration && (
+                  <div className="dp-req-progress-item">
+                    <div className="dp-req-ring">
+                      <svg viewBox="0 0 36 36" className="dp-req-ring-svg">
+                        <circle cx="18" cy="18" r="15.9" className="dp-req-ring-bg" />
+                        <circle cx="18" cy="18" r="15.9"
+                          className="dp-req-ring-fill" style={{ stroke: '#7c3aed' }}
+                          strokeDasharray={`${concentrationRing.pct} ${100 - concentrationRing.pct}`}
+                          strokeDashoffset="25"
+                        />
+                      </svg>
+                      <span className="dp-req-ring-label">{concentrationRing.pct}%</span>
+                    </div>
+                    <div className="dp-req-prog-text">
+                      <span className="dp-req-prog-name">Concentration</span>
+                      <span className="dp-req-prog-detail">{concentrationRing.earned}/{concentrationRing.total} credits</span>
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                {hasMajor && (
+                  <div className="dp-req-progress-item">
+                    <div className="dp-req-ring">
+                      <svg viewBox="0 0 36 36" className="dp-req-ring-svg">
+                        <circle cx="18" cy="18" r="15.9" className="dp-req-ring-bg" />
+                        <circle cx="18" cy="18" r="15.9"
+                          className="dp-req-ring-fill dp-req-ring-fill--major"
+                          strokeDasharray={`${majorRing.pct} ${100 - majorRing.pct}`}
+                          strokeDashoffset="25"
+                        />
+                      </svg>
+                      <span className="dp-req-ring-label">{majorRing.pct}%</span>
+                    </div>
+                    <div className="dp-req-prog-text">
+                      <span className="dp-req-prog-name">Major</span>
+                      <span className="dp-req-prog-detail">{majorRing.earned}/{majorRing.total} credits</span>
+                    </div>
+                  </div>
+                )}
+                {hasMinor && (
+                  <div className="dp-req-progress-item">
+                    <div className="dp-req-ring">
+                      <svg viewBox="0 0 36 36" className="dp-req-ring-svg">
+                        <circle cx="18" cy="18" r="15.9" className="dp-req-ring-bg" />
+                        <circle cx="18" cy="18" r="15.9"
+                          className="dp-req-ring-fill dp-req-ring-fill--minor"
+                          strokeDasharray={`${minorRing.pct} ${100 - minorRing.pct}`}
+                          strokeDashoffset="25"
+                        />
+                      </svg>
+                      <span className="dp-req-ring-label">{minorRing.pct}%</span>
+                    </div>
+                    <div className="dp-req-prog-text">
+                      <span className="dp-req-prog-name">Minor</span>
+                      <span className="dp-req-prog-detail">{minorRing.earned}/{minorRing.total} credits</span>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
 
-          {/* Tab switcher: Major / Minor / Electives */}
+          {/* Tab switcher: Core / Major / Concentration / Minor / Electives */}
           <div className="dp-prog-tabs">
             {tabs.map(tab => (
               <button
@@ -622,7 +828,12 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
                 className={`dp-prog-tab ${activeTab === tab.id ? 'dp-prog-tab--active' : ''}`}
                 onClick={() => setActiveTab(tab.id)}
               >
-                {tab.id === 'major' ? 'Major' : 'Minor'}: {tab.label}
+                {tab.id === 'core'          ? `Core: ${tab.label}`
+                  : tab.id === 'concentration' ? `Concentration: ${tab.label}`
+                  : tab.id === 'sci'           ? `Science: ${tab.label}`
+                  : tab.id === 'minor'         ? `Minor: ${tab.label}`
+                  : `Major: ${tab.label}`
+                }
                 {tab.unavailable && !tab.data && (
                   <span style={{ fontSize: '0.7rem', opacity: 0.6, marginLeft: '0.25rem' }}>(N/A)</span>
                 )}
@@ -635,6 +846,22 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
               ✦ Electives
             </button>
           </div>
+
+          {/* Foundation year waived banner */}
+          {foundationWaived && (
+            <div style={{
+              background: '#e8f5e9', border: '1px solid #a5d6a7', borderRadius: '8px',
+              padding: '10px 14px', marginBottom: '12px', fontSize: '13px',
+              display: 'flex', alignItems: 'center', gap: '8px', color: '#2e7d32'
+            }}>
+              <span>✓</span>
+              <span>
+                <strong>Foundation Year Waived</strong> — Your {transferCredits} transfer credits
+                exempt you from U0 Foundation requirements
+                {transferCredits < 30 ? ' (note: 30 cr for full exemption)' : ''}.
+              </span>
+            </div>
+          )}
 
           {/* Active program blocks */}
           {activeTab !== 'electives' && currentTabData && (
@@ -660,8 +887,8 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
             </div>
           )}
 
-          {/* Electives tab */}
-          {activeTab === 'electives' && (
+          {/* Electives tab — always mounted to preserve state, hidden when inactive */}
+          <div style={{ display: activeTab === 'electives' ? 'block' : 'none' }}>
             <ElectivesPanel
               profile={profile}
               completedCourses={completedCourses}
@@ -669,7 +896,7 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
               programData={programData}
               minorData={minorData}
             />
-          )}
+          </div>
         </div>
       )}
     </div>
