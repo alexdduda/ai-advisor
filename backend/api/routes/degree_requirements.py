@@ -165,7 +165,8 @@ def get_recommended_courses(program_key: str):
 def seed_requirements(
     faculty: Optional[str] = Query(
         None,
-        description="arts | science | engineering | arts_science | management | all (default: all)"
+        description="arts | science | engineering | arts_science | management | education | all (default: all)"
+
     )
 ):
     """
@@ -181,6 +182,7 @@ def seed_requirements(
         run_eng        = faculty in (None, "all", "engineering")
         run_arts_sci   = faculty in (None, "all", "arts_science")
         run_management = faculty in (None, "all", "management")
+        run_education  = faculty in (None, "all", "education")
 
         if run_arts:
             from ..seeds.arts_degree_requirements import seed_degree_requirements as seed_arts
@@ -201,6 +203,10 @@ def seed_requirements(
         if run_management:
             from ..seeds.management_degree_requirements import seed_degree_requirements as seed_mgmt
             results["management"] = seed_mgmt(supabase)
+
+        if run_education:
+            from ..seeds.education_degree_requirements import seed_degree_requirements as seed_edu
+            results["education"] = seed_edu(supabase)
 
         return {"success": True, "seeded": results}
 
