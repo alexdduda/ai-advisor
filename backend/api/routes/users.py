@@ -2,7 +2,8 @@
 User management endpoints with improved error handling
 """
 from fastapi import APIRouter, HTTPException, status
-from pydantic import BaseModel, EmailStr, Field, validator, field_validator
+# FIX #20/#26: Import field_validator and ConfigDict; remove old `validator`
+from pydantic import BaseModel, EmailStr, Field, field_validator, ConfigDict
 from typing import Optional, List
 import logging
 
@@ -37,15 +38,20 @@ class UserCreate(BaseModel):
     interests: Optional[str] = Field(None, max_length=500)
     current_gpa: Optional[float] = Field(None, ge=0.0, le=4.0)
     advanced_standing: Optional[List[dict]] = Field(default_factory=list)
-    
-    @validator('username')
+
+    # FIX #20: Replace deprecated Pydantic v1 @validator with Pydantic v2
+    # @field_validator. The @classmethod decorator is required in v2.
+    @field_validator('username', mode='before')
+    @classmethod
     def validate_username(cls, v):
-        if v and not v.replace('_', '').isalnum():
+        if v and not str(v).replace('_', '').isalnum():
             raise ValueError('Username must contain only letters, numbers, and underscores')
         return v
-    
-    class Config:
-        schema_extra = {
+
+    # FIX #26: Replace deprecated Pydantic v1 `class Config` / `schema_extra`
+    # with Pydantic v2 `model_config` / `json_schema_extra`.
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "id": "123e4567-e89b-12d3-a456-426614174000",
                 "email": "student@mail.mcgill.ca",
@@ -63,10 +69,11 @@ class UserCreate(BaseModel):
                 ]
             }
         }
+    )
 
 
 class UserUpdate(BaseModel):
-    """User update schema - FIXED to properly handle null values for clearing fields"""
+    """User update schema - handles null values for clearing fields"""
     username: Optional[str] = Field(None, min_length=3, max_length=20)
     major: Optional[str] = Field(None, max_length=100)
     other_majors: Optional[List[str]] = None
@@ -79,33 +86,32 @@ class UserUpdate(BaseModel):
     current_gpa: Optional[float] = Field(None, ge=0.0, le=4.0)
     advanced_standing: Optional[List[dict]] = None
     notification_prefs: Optional[dict] = None
-    
-    @field_validator('username')
+    profile_image: Optional[str] = None
+
+    @field_validator('username', mode='before')
     @classmethod
     def validate_username(cls, v):
-        if v and not v.replace('_', '').isalnum():
+        if v and not str(v).replace('_', '').isalnum():
             raise ValueError('Username must contain only letters, numbers, and underscores')
         return v
-    
-    # REMOVED the strip_empty_strings validator - we handle this in the update logic instead
 
 
 class UserResponse(BaseModel):
     """User response schema"""
     id: str
     email: str
-    username: Optional[str]
-    major: Optional[str]
-    other_majors: Optional[List[str]]
-    minor: Optional[str]
-    other_minors: Optional[List[str]]
-    concentration: Optional[str]
-    faculty: Optional[str]
-    year: Optional[int]
-    interests: Optional[str]
-    current_gpa: Optional[float]
-    advanced_standing: Optional[List[dict]]
-    created_at: Optional[str]
+    username: Optional[str] = None
+    major: Optional[str] = None
+    other_majors: Optional[List[str]] = None
+    minor: Optional[str] = None
+    other_minors: Optional[List[str]] = None
+    concentration: Optional[str] = None
+    faculty: Optional[str] = None
+    year: Optional[int] = None
+    interests: Optional[str] = None
+    current_gpa: Optional[float] = None
+    advanced_standing: Optional[List[dict]] = None
+    created_at: Optional[str] = None
 
 
 @router.post("/", response_model=dict, status_code=status.HTTP_201_CREATED)
@@ -116,7 +122,7 @@ async def create_new_user(user: UserCreate):
         logger.info(f"User ID: {user.id}")
         logger.info(f"Email: {user.email}")
         logger.info(f"Username: {user.username}")
-        
+
         # Check if profile exists by ID (not email!)
         try:
             existing = get_user_by_id(user.id)
@@ -131,17 +137,17 @@ async def create_new_user(user: UserCreate):
         except UserNotFoundException:
             logger.info(f"User profile doesn't exist yet, creating...")
             pass
-        
+
         # Create user
-        user_data = user.dict(exclude_none=True)
+        user_data = user.model_dump(exclude_none=True)
         created_user = create_user_db(user_data)
-        
+
         logger.info(f"✓ User profile created successfully: {created_user['id']}")
         return {
             "user": created_user,
             "message": "User profile created successfully"
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -159,7 +165,7 @@ async def create_new_user(user: UserCreate):
 async def get_user(user_id: str):
     """
     Get user profile by ID
-    
+
     - **user_id**: The user's unique identifier
     """
     try:
@@ -171,101 +177,56 @@ async def get_user(user_id: str):
             status_code=status.HTTP_404_NOT_FOUND,
             detail={
                 "code": "user_not_found",
-                "message": "User profile not found"
+                "message": "User not found"
             }
         )
-    except DatabaseException:
-        raise
     except Exception as e:
-        logger.exception(f"Unexpected error getting user: {e}")
+        logger.exception(f"Unexpected error getting user {user_id}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An unexpected error occurred while retrieving user profile"
+            detail="An unexpected error occurred"
         )
 
 
 @router.patch("/{user_id}", response_model=dict)
 async def update_user(user_id: str, updates: UserUpdate):
     """
-    Update user profile - FIXED to properly handle null values
-    
+    Update user profile
+
     - **user_id**: The user's unique identifier
-    - Updates can include: username, major, other_majors, minor, other_minors, 
-      concentration, faculty, year, interests, current_gpa, advanced_standing
-    - Sending null explicitly clears optional fields
+    - **updates**: Fields to update (only provided fields are changed)
     """
     try:
-        logger.info(f"=== UPDATE USER REQUEST ===")
-        logger.info(f"User ID: {user_id}")
-        logger.info(f"Updates received: {updates.dict()}")
-        
-        # Verify user exists first
         get_user_by_id(user_id)
-        
-        # FIXED: Use dict() instead of dict(exclude_none=True) to include null values
-        # This allows us to explicitly clear fields by sending null
-        update_data = {}
-        raw_data = updates.dict()
-        
-        for field, value in raw_data.items():
-            # Skip unset fields (not in the request)
-            if field not in updates.__fields_set__:
-                continue
-            
-            # For string fields: trim whitespace
-            if isinstance(value, str):
-                value = value.strip()
-                # Empty string after trim -> convert to None
-                if not value:
-                    value = None
-            
-            # For numeric fields: 0 or empty string -> None
-            if field in ['year', 'current_gpa'] and value == 0:
-                value = None
-            
-            # Add to update data (including None values to clear fields)
-            update_data[field] = value
-        
-        logger.info(f"Processed update data: {update_data}")
-        
+
+        # Use model_dump (Pydantic v2) — include fields explicitly set to None
+        # so callers can clear optional fields
+        update_data = updates.model_dump(exclude_unset=True)
+
         if not update_data:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="No valid fields provided for update"
+                detail="No fields to update"
             )
-        
+
         updated_user = update_user_db(user_id, update_data)
-        
-        logger.info(f"✓ User updated successfully: {user_id}")
+        logger.info(f"User profile updated: {user_id}")
+
         return {
             "user": updated_user,
             "message": "User profile updated successfully"
         }
-        
+
     except UserNotFoundException:
-        raise
-    except DatabaseException:
-        raise
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"code": "user_not_found", "message": "User not found"}
+        )
     except HTTPException:
         raise
     except Exception as e:
-        logger.exception(f"✗ Unexpected error updating user: {e}")
+        logger.exception(f"Unexpected error updating user {user_id}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An unexpected error occurred while updating user profile"
+            detail="An unexpected error occurred"
         )
-
-
-@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_user(user_id: str):
-    """
-    Delete user profile (soft delete recommended in production)
-    
-    - **user_id**: The user's unique identifier
-    """
-    # TODO: Implement soft delete or actual deletion
-    # For now, return not implemented
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="User deletion not yet implemented"
-    )

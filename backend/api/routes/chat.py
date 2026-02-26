@@ -2,7 +2,7 @@
 Chat endpoints with AI integration and session management
 """
 from fastapi import APIRouter, HTTPException, status, Query
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from typing import List, Optional
 import anthropic
 import logging
@@ -22,6 +22,21 @@ from api.exceptions import UserNotFoundException, DatabaseException
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
+# FIX #8: Module-level singleton — created once at import time, not per request.
+# The Anthropic client is thread-safe and designed to be reused.
+_anthropic_client: anthropic.Anthropic | None = None
+
+
+def get_anthropic_client() -> anthropic.Anthropic:
+    """Return the shared Anthropic client, initialising it on first use."""
+    global _anthropic_client
+    if _anthropic_client is None:
+        api_key = settings.ANTHROPIC_API_KEY
+        if not api_key:
+            raise ValueError("ANTHROPIC_API_KEY not found in environment")
+        _anthropic_client = anthropic.Anthropic(api_key=api_key)
+    return _anthropic_client
+
 
 class ChatMessage(BaseModel):
     """Chat message schema"""
@@ -35,20 +50,23 @@ class ChatRequest(BaseModel):
     user_id: str
     session_id: Optional[str] = None
 
-    @validator('message')
+    # FIX: Use Pydantic v2 field_validator instead of deprecated @validator
+    @field_validator('message', mode='before')
+    @classmethod
     def validate_message(cls, v):
-        if not v.strip():
+        if not str(v).strip():
             raise ValueError('Message cannot be empty')
-        return v.strip()
+        return str(v).strip()
 
-    class Config:
-        json_schema_extra = {
+    model_config = {
+        "json_schema_extra": {
             "example": {
                 "message": "What are some good computer science courses for a beginner?",
                 "user_id": "123e4567-e89b-12d3-a456-426614174000",
                 "session_id": "optional-session-uuid"
             }
         }
+    }
 
 
 class ChatResponse(BaseModel):
@@ -163,17 +181,15 @@ async def send_message(request: ChatRequest):
 
         # Call Claude
         try:
-            api_key = settings.ANTHROPIC_API_KEY
-            if not api_key:
-                raise ValueError("ANTHROPIC_API_KEY not found in environment")
+            # FIX #8: Reuse the module-level singleton client
+            # FIX #9: Use settings.CLAUDE_MODEL instead of a hardcoded string
+            client = get_anthropic_client()
 
-            client = anthropic.Anthropic(api_key=api_key)
-
-            logger.info(f"Calling Claude with {len(formatted_history)} messages for session {session_id}")
+            logger.info(f"Calling Claude ({settings.CLAUDE_MODEL}) with {len(formatted_history)} messages for session {session_id}")
 
             message = client.messages.create(
-                model="claude-sonnet-4-20250514",
-                max_tokens=2048,
+                model=settings.CLAUDE_MODEL,  # FIX #9: was hardcoded "claude-sonnet-4-20250514"
+                max_tokens=settings.CLAUDE_MAX_TOKENS,
                 system=system_context,
                 messages=formatted_history
             )

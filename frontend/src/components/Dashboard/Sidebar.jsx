@@ -206,7 +206,6 @@ export default function Sidebar({
                 { key: 'calendar', icon: <FaCalendarAlt />, label: t('nav.calendar') },
                 { key: 'clubs', icon: <FaUsers />, label: 'Clubs' },
                 { key: 'forum', icon: <FaComments />, label: t('nav.forum') },
-                { key: 'clubs',     icon: <FaUsers />,        label: t('Clubs') },
                 { key: 'profile', icon: <FaUser />, label: t('nav.profile') },
               ].map(({ key, icon, label, badge }) => (
                 <button
