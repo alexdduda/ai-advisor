@@ -336,10 +336,10 @@ async def generate_cards(user_id: str, request: GenerateRequest):
         prompt = build_rich_context(ctx, saved_cards=saved)
 
         # FIX: Use module-level singleton instead of creating a new client per request.
-        # FIX: Use settings.CLAUDE_CARDS_MODEL so model is configurable without code changes.
+        # FIX: Use settings.CLAUDE_MODEL so model is configurable without code changes.
         client = get_anthropic_client()
         message = client.messages.create(
-            model=settings.CLAUDE_CARDS_MODEL,
+            model=settings.CLAUDE_MODEL,
             max_tokens=4096,
             messages=[{"role": "user", "content": prompt}],
         )
@@ -434,7 +434,7 @@ Return ONLY the JSON object — no markdown, no commentary."""
         # FIX: Use module-level singleton instead of creating a new client per request.
         client = get_anthropic_client()
         message = client.messages.create(
-            model=settings.CLAUDE_CARDS_MODEL,
+            model=settings.CLAUDE_MODEL,
             max_tokens=1024,
             messages=[{"role": "user", "content": prompt}],
         )
@@ -472,7 +472,7 @@ Provide a concise, helpful, and specific response (2–4 sentences). Be direct a
         # FIX: Use module-level singleton instead of creating a new client per request.
         client = get_anthropic_client()
         message = client.messages.create(
-            model=settings.CLAUDE_CARDS_MODEL,
+            model=settings.CLAUDE_MODEL,
             max_tokens=512,
             messages=[{"role": "user", "content": prompt}],
         )
