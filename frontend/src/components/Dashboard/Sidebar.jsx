@@ -167,7 +167,7 @@ export default function Sidebar({
             <>
               <div className="logo-container">
                 <div className="logo-icon">SY</div>
-                <span className="logo-name">Symboulos</span>
+                <span className="logo-name">Symbolos</span>
               </div>
               <button
                 className="sidebar-toggle-btn"

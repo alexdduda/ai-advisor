@@ -20,7 +20,7 @@ from .exceptions import (
     RateLimitException,
 )
 
-from .routes import chat, courses, users, favorites, completed, notifications, current, suggestions, cards, transcript, degree_requirements, electives
+from .routes import chat, courses, users, favorites, completed, notifications, current, suggestions, cards, transcript, degree_requirements, electives, clubs  # ← added clubs
 
 # Setup logging
 logger = setup_logging()
@@ -143,19 +143,19 @@ app.add_exception_handler(AppException, app_exception_handler)
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
 app.add_exception_handler(Exception, general_exception_handler)
 
-# FIX: Use settings.API_PREFIX consistently for ALL routes (was hardcoded for 3 routes)
-app.include_router(chat.router, prefix=f"{settings.API_PREFIX}/chat", tags=["Chat"])
-app.include_router(courses.router, prefix=f"{settings.API_PREFIX}/courses", tags=["Courses"])
-app.include_router(users.router, prefix=f"{settings.API_PREFIX}/users", tags=["Users"])
-app.include_router(favorites.router, prefix=f"{settings.API_PREFIX}/favorites", tags=["Favorites"])
-app.include_router(completed.router, prefix=f"{settings.API_PREFIX}/completed", tags=["Completed"])
-app.include_router(notifications.router, prefix=f"{settings.API_PREFIX}/notifications", tags=["Notifications"])
-app.include_router(current.router, prefix=f"{settings.API_PREFIX}/current", tags=["Current Courses"])
-app.include_router(suggestions.router, prefix=f"{settings.API_PREFIX}/suggestions", tags=["Suggestions"])
-app.include_router(cards.router, prefix=f"{settings.API_PREFIX}/cards", tags=["Cards"])
-app.include_router(transcript.router, prefix=f"{settings.API_PREFIX}/transcript", tags=["Transcript"])
+app.include_router(chat.router,                prefix=f"{settings.API_PREFIX}/chat",                tags=["Chat"])
+app.include_router(courses.router,             prefix=f"{settings.API_PREFIX}/courses",             tags=["Courses"])
+app.include_router(users.router,               prefix=f"{settings.API_PREFIX}/users",               tags=["Users"])
+app.include_router(favorites.router,           prefix=f"{settings.API_PREFIX}/favorites",           tags=["Favorites"])
+app.include_router(completed.router,           prefix=f"{settings.API_PREFIX}/completed",           tags=["Completed"])
+app.include_router(notifications.router,       prefix=f"{settings.API_PREFIX}/notifications",       tags=["Notifications"])
+app.include_router(current.router,             prefix=f"{settings.API_PREFIX}/current",             tags=["Current Courses"])
+app.include_router(suggestions.router,         prefix=f"{settings.API_PREFIX}/suggestions",         tags=["Suggestions"])
+app.include_router(cards.router,               prefix=f"{settings.API_PREFIX}/cards",               tags=["Cards"])
+app.include_router(transcript.router,          prefix=f"{settings.API_PREFIX}/transcript",          tags=["Transcript"])
 app.include_router(degree_requirements.router, prefix=f"{settings.API_PREFIX}/degree-requirements", tags=["Degree Requirements"])
-app.include_router(electives.router, prefix=f"{settings.API_PREFIX}/electives", tags=["Electives"])
+app.include_router(electives.router,           prefix=f"{settings.API_PREFIX}/electives",           tags=["Electives"])
+app.include_router(clubs.router,               prefix=f"{settings.API_PREFIX}/clubs",               tags=["Clubs"])  # ← added
 
 
 @app.get("/")
