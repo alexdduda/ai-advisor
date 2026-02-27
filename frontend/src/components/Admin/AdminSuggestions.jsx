@@ -3,9 +3,32 @@ import { FaCheck, FaTimes, FaFlag, FaClock } from 'react-icons/fa'
 import { BASE_URL } from '../../lib/apiConfig'
 import './AdminSuggestions.css'
 
-const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || 'changeme'
+// ── Guard: refuse to render if the env var is missing ──────────────────────
+// In production builds, VITE_ADMIN_PASSWORD must always be set.
+// We intentionally do NOT provide a fallback value — if this is undefined the
+// component will show a hard error rather than silently accepting any guess.
+const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD
+
+const EnvMissing = () => (
+  <div className="admin-login">
+    <h2 style={{ color: '#dc2626' }}>⚠ Configuration Error</h2>
+    <p style={{ color: '#6b7280', fontSize: '0.9rem', lineHeight: 1.5 }}>
+      <strong>VITE_ADMIN_PASSWORD</strong> is not set in the environment.
+      <br /><br />
+      Set it in your <code>.env</code> file (local) or in the Vercel environment
+      variables (production) then redeploy.
+    </p>
+  </div>
+)
 
 export default function AdminSuggestions() {
+  // Hard-stop: no password configured at all
+  if (!ADMIN_PASSWORD) return <EnvMissing />
+
+  return <AdminSuggestionsInner />
+}
+
+function AdminSuggestionsInner() {
   const [authed, setAuthed] = useState(false)
   const [password, setPassword] = useState('')
   const [adminSecret, setAdminSecret] = useState('')
@@ -13,20 +36,39 @@ export default function AdminSuggestions() {
   const [filter, setFilter] = useState('pending') // pending | all
   const [actionLoading, setActionLoading] = useState(null)
   const [error, setError] = useState(null)
+  // Track consecutive failures to lock out brute-force attempts
+  const [attempts, setAttempts] = useState(0)
+  const LOCK_AFTER = 5
 
   const login = (e) => {
     e.preventDefault()
+
+    if (attempts >= LOCK_AFTER) {
+      setError(`Too many failed attempts. Refresh the page to try again.`)
+      return
+    }
+
     if (password === ADMIN_PASSWORD) {
       setAuthed(true)
-      setAdminSecret(password) // Use the password as the cron secret for API calls
+      setAdminSecret(password)
+      setAttempts(0)
     } else {
-      setError('Incorrect password')
+      const next = attempts + 1
+      setAttempts(next)
+      setError(
+        next >= LOCK_AFTER
+          ? 'Too many failed attempts. Refresh the page to try again.'
+          : `Incorrect password. ${LOCK_AFTER - next} attempt${LOCK_AFTER - next === 1 ? '' : 's'} remaining.`
+      )
     }
   }
 
   const fetchSuggestions = async () => {
     try {
-      const endpoint = filter === 'pending' ? '/api/suggestions/admin/pending' : '/api/suggestions/admin/all'
+      const endpoint =
+        filter === 'pending'
+          ? '/api/suggestions/admin/pending'
+          : '/api/suggestions/admin/all'
       const res = await fetch(`${BASE_URL}${endpoint}`, {
         headers: { 'X-Cron-Secret': adminSecret },
       })
@@ -60,11 +102,12 @@ export default function AdminSuggestions() {
         body: JSON.stringify({ status }),
       })
       if (!res.ok) throw new Error()
-      // Remove from list if filtering by pending
       if (filter === 'pending') {
         setSuggestions((prev) => prev.filter((s) => s.id !== id))
       } else {
-        setSuggestions((prev) => prev.map((s) => s.id === id ? { ...s, status } : s))
+        setSuggestions((prev) =>
+          prev.map((s) => (s.id === id ? { ...s, status } : s))
+        )
       }
     } catch {
       setError('Failed to update suggestion')
@@ -74,9 +117,12 @@ export default function AdminSuggestions() {
   }
 
   if (!authed) {
+    const locked = attempts >= LOCK_AFTER
     return (
       <div className="admin-login">
-        <h2><FaFlag /> Admin — Prof Suggestions</h2>
+        <h2>
+          <FaFlag /> Admin — Prof Suggestions
+        </h2>
         <form onSubmit={login}>
           <input
             type="password"
@@ -84,24 +130,44 @@ export default function AdminSuggestions() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="admin-input"
+            disabled={locked}
+            autoComplete="current-password"
           />
           {error && <p className="admin-error">{error}</p>}
-          <button type="submit" className="admin-btn-primary">Enter</button>
+          <button type="submit" className="admin-btn-primary" disabled={locked}>
+            Enter
+          </button>
         </form>
       </div>
     )
   }
 
   const statusBadge = (s) => {
-    if (s === 'pending') return <span className="badge badge-pending"><FaClock /> Pending</span>
-    if (s === 'approved') return <span className="badge badge-approved"><FaCheck /> Approved</span>
-    return <span className="badge badge-rejected"><FaTimes /> Rejected</span>
+    if (s === 'pending')
+      return (
+        <span className="badge badge-pending">
+          <FaClock /> Pending
+        </span>
+      )
+    if (s === 'approved')
+      return (
+        <span className="badge badge-approved">
+          <FaCheck /> Approved
+        </span>
+      )
+    return (
+      <span className="badge badge-rejected">
+        <FaTimes /> Rejected
+      </span>
+    )
   }
 
   return (
     <div className="admin-page">
       <div className="admin-header">
-        <h2><FaFlag /> Professor Suggestions</h2>
+        <h2>
+          <FaFlag /> Professor Suggestions
+        </h2>
         <div className="admin-filter">
           <button
             className={`filter-btn ${filter === 'pending' ? 'active' : ''}`}
@@ -121,42 +187,45 @@ export default function AdminSuggestions() {
       {error && <div className="admin-error-banner">{error}</div>}
 
       {suggestions.length === 0 ? (
-        <div className="admin-empty">No {filter === 'pending' ? 'pending' : ''} suggestions.</div>
+        <div className="admin-empty">
+          No {filter === 'pending' ? 'pending' : ''} suggestions found.
+        </div>
       ) : (
         <div className="suggestions-list">
           {suggestions.map((s) => (
             <div key={s.id} className={`suggestion-card ${s.status}`}>
-              <div className="suggestion-info">
+              <div>
                 <div className="suggestion-course">{s.course_code}</div>
                 <div className="suggestion-names">
-                  <span className="name-label">Current:</span>
-                  <span className="name-value current">{s.current_name || '—'}</span>
-                  <span className="name-arrow">→</span>
-                  <span className="name-label">Suggested:</span>
-                  <span className="name-value suggested">{s.suggested_name}</span>
+                  <span className="name-chip suggested">
+                    Suggested: {s.suggested_professor}
+                  </span>
+                  {s.current_professor && (
+                    <span className="name-chip current">
+                      Current: {s.current_professor}
+                    </span>
+                  )}
                 </div>
                 <div className="suggestion-meta">
-                  {statusBadge(s.status)} &nbsp;·&nbsp;
-                  {new Date(s.created_at).toLocaleDateString()} &nbsp;·&nbsp;
-                  <span className="user-id">User: {s.user_id?.slice(0, 8)}…</span>
+                  {statusBadge(s.status)} &middot;{' '}
+                  {new Date(s.created_at).toLocaleDateString()}
                 </div>
               </div>
-
               {s.status === 'pending' && (
                 <div className="suggestion-actions">
                   <button
                     className="action-btn approve"
-                    disabled={actionLoading === s.id}
                     onClick={() => handleReview(s.id, 'approved')}
+                    disabled={actionLoading === s.id}
                   >
-                    <FaCheck /> Approve
+                    <FaCheck />
                   </button>
                   <button
                     className="action-btn reject"
-                    disabled={actionLoading === s.id}
                     onClick={() => handleReview(s.id, 'rejected')}
+                    disabled={actionLoading === s.id}
                   >
-                    <FaTimes /> Reject
+                    <FaTimes />
                   </button>
                 </div>
               )}
