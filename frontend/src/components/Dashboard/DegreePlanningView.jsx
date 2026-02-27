@@ -23,10 +23,35 @@ function toProgramKey(name, type = 'major', faculty = '') {
   const isEng  = fl.includes('engineering')
   const isEnv  = fl.includes('environment') || fl.includes('bieler')
   const isLaw  = fl.includes('faculty of law') || fl === 'law'
+  const isAes  = fl.includes('agricultural and environmental') || fl.includes('agri-env') || fl === 'aes'
+  const isDentistry = fl.includes('dental medicine') || fl.includes('dentistry')
 
   // Faculty of Law – BCL/JD (single program regardless of major name stored)
   if (isLaw) {
     return 'law_bcl_jd'
+  }
+
+  // Faculty of Dental Medicine and Oral Health Sciences
+  if (isDentistry) {
+    const dentMap = {
+      'Doctor of Dental Medicine (D.M.D.) – Four-Year Program': 'dmd_dentistry',
+      'Dental Preparatory Year (Dent-P)': 'dentp_bsc',
+    }
+    if (dentMap[name]) return dentMap[name]
+    return 'dmd_dentistry'
+  }
+
+  // Faculty of Agricultural and Environmental Sciences
+  if (isAes) {
+    const aesMap = {
+      'Environmental Biology':                   'envbio_bsc_agenvsc',
+      'Environmental Biology (Honours)':         'envbio_honours_bsc_agenvsc',
+      'Agricultural Economics':                  'agec_bsc_agenvsc',
+      'Life Sciences (Biological and Agricultural)': 'lifesci_bsc_agenvsc',
+      'Bioresource Engineering':                 'bree_beng',
+    }
+    if (aesMap[name]) return aesMap[name]
+    if (type === 'honours') return 'envbio_honours_bsc_agenvsc'
   }
 
   // Bieler School of Environment B.A. programs
@@ -232,6 +257,7 @@ function CourseRow({ course, onClick, actions }) {
 
 // ── Electives Panel ────────────────────────────────────────────────────────────
 function ElectivesPanel({ profile, completedCourses, currentCourses, programData, minorData }) {
+  const { t } = useLanguage()
   const [recs, setRecs]       = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError]     = useState(null)
@@ -339,14 +365,14 @@ function ElectivesPanel({ profile, completedCourses, currentCourses, programData
       {loading && (
         <div className="dp-electives-loading">
           <div className="dp-req-spinner" />
-          <span>Generating personalized recommendations…</span>
+          <span>{t('dp.generatingRecs')}</span>
         </div>
       )}
 
       {error && !loading && (
         <div className="dp-electives-error">
           {error}
-          <button onClick={generateRecs}>Retry</button>
+          <button onClick={generateRecs}>{t('dp.retry')}</button>
         </div>
       )}
 
@@ -368,7 +394,7 @@ function ElectivesPanel({ profile, completedCourses, currentCourses, programData
                     <span className="dp-elective-cat" style={{ background: catStyle.bg, color: catStyle.color }}>
                       {c.category}
                     </span>
-                    {alreadyTaken && <span className="dp-elective-taken">✓ Taking</span>}
+                    {alreadyTaken && <span className="dp-elective-taken">✓ {t('dp.statusTaking')}</span>}
                   </div>
                   <p className="dp-elective-title">{c.title}</p>
                   <p className="dp-elective-why">{c.why}</p>
@@ -385,6 +411,7 @@ function ElectivesPanel({ profile, completedCourses, currentCourses, programData
 
 // ── My Program Requirements card ──────────────────────────────────────────────
 function ProgramSection({ prog, completedCourses, currentCourses, advStanding, openBlocks, setOpenBlocks }) {
+  const { t } = useLanguage()
   if (!prog) return null
 
   // Progress: count all matched non-transfer courses toward total_credits
@@ -412,7 +439,7 @@ function ProgramSection({ prog, completedCourses, currentCourses, advStanding, o
         <div className="dp-prog-bar-track">
           <div className="dp-prog-bar-fill" style={{ width: `${pct}%` }} />
         </div>
-        <span className="dp-prog-bar-label">{earnedCredits} / {totalCredits} credits</span>
+        <span className="dp-prog-bar-label">{t('dp.creditsOf').replace('{earned}', earnedCredits).replace('{total}', totalCredits)}</span>
       </div>
 
       {/* Blocks */}
@@ -466,9 +493,9 @@ function ProgramSection({ prog, completedCourses, currentCourses, advStanding, o
                       }
                       <span className="dp-req-course-code">{c.subject} {c.catalog || '•••'}</span>
                       <span className="dp-req-course-title">{c.title}</span>
-                      {done && isTransfer  && <span className="dp-req-transfer-tag">Transfer</span>}
-                      {done && !isTransfer && <span className="dp-req-done-tag">Done</span>}
-                      {taking             && <span className="dp-req-taking-tag">Taking</span>}
+                      {done && isTransfer  && <span className="dp-req-transfer-tag">{t('dp.statusTransfer')}</span>}
+                      {done && !isTransfer && <span className="dp-req-done-tag">{t('dp.statusDone')}</span>}
+                      {taking             && <span className="dp-req-taking-tag">{t('dp.statusTaking')}</span>}
                     </div>
                   )
                 })}
@@ -482,6 +509,7 @@ function ProgramSection({ prog, completedCourses, currentCourses, advStanding, o
 }
 
 function MyProgramCard({ profile, completedCourses, currentCourses }) {
+  const { t } = useLanguage()
   const [programData, setProgramData]         = useState(null)
   const [minorData, setMinorData]             = useState(null)
   const [sciData, setSciData]                 = useState(null)
@@ -669,7 +697,7 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
       <div className="dp-req-card-header">
         <span className="dp-req-card-icon"><FaListAlt /></span>
         <div>
-          <h2 className="dp-req-card-title">My Program Requirements</h2>
+          <h2 className="dp-req-card-title">{t('dp.myProgramRequirements')}</h2>
           <p className="dp-req-card-sub">
             {isMgmt
               ? ['BCom Core', profile?.major, profile?.concentration].filter(Boolean).join(' · ')
@@ -680,14 +708,14 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
       </div>
 
       {loading && (
-        <div className="dp-req-loading"><div className="dp-req-spinner" /> Loading requirements…</div>
+        <div className="dp-req-loading"><div className="dp-req-spinner" /> {t('dp.loadingRequirements')}</div>
       )}
 
       {!loading && !hasAny && !unavailable.major && !unavailable.minor && (
         <div className="dp-req-empty">
-          <p>Requirements not loaded yet.</p>
+          <p>{t('dp.requirementsNotLoaded')}</p>
           <button className="dp-req-seed-btn" onClick={handleSeed} disabled={seeding}>
-            <FaBolt /> {seeding ? 'Loading…' : 'Load Requirements'}
+            <FaBolt /> {seeding ? t('dp.loading') : t('dp.loadRequirements')}
           </button>
         </div>
       )}
@@ -703,7 +731,7 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
             are not yet available. We're working on adding more programs!
           </p>
           <p style={{ color: 'var(--text-tertiary, #9ca3af)', fontSize: '0.8rem', marginTop: '0.25rem' }}>
-            You can still browse available programs in the Degree Requirements tab.
+            {t('dp.browseDegreeReqs')}
           </p>
         </div>
       )}
@@ -729,8 +757,8 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
                       <span className="dp-req-ring-label">{coreRing.pct}%</span>
                     </div>
                     <div className="dp-req-prog-text">
-                      <span className="dp-req-prog-name">Core</span>
-                      <span className="dp-req-prog-detail">{coreRing.earned}/{coreRing.total} credits</span>
+                      <span className="dp-req-prog-name">{t('dp.ringCore')}</span>
+                      <span className="dp-req-prog-detail">{coreRing.earned}/{coreRing.total} {t('dp.credits')}</span>
                     </div>
                   </div>
                 )}
@@ -748,8 +776,8 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
                       <span className="dp-req-ring-label">{majorRing.pct}%</span>
                     </div>
                     <div className="dp-req-prog-text">
-                      <span className="dp-req-prog-name">Major</span>
-                      <span className="dp-req-prog-detail">{majorRing.earned}/{majorRing.total} credits</span>
+                      <span className="dp-req-prog-name">{t('dp.ringMajor')}</span>
+                      <span className="dp-req-prog-detail">{majorRing.earned}/{majorRing.total} {t('dp.credits')}</span>
                     </div>
                   </div>
                 )}
@@ -767,8 +795,8 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
                       <span className="dp-req-ring-label">{concentrationRing.pct}%</span>
                     </div>
                     <div className="dp-req-prog-text">
-                      <span className="dp-req-prog-name">Concentration</span>
-                      <span className="dp-req-prog-detail">{concentrationRing.earned}/{concentrationRing.total} credits</span>
+                      <span className="dp-req-prog-name">{t('dp.ringConcentration')}</span>
+                      <span className="dp-req-prog-detail">{concentrationRing.earned}/{concentrationRing.total} {t('dp.credits')}</span>
                     </div>
                   </div>
                 )}
@@ -789,8 +817,8 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
                       <span className="dp-req-ring-label">{majorRing.pct}%</span>
                     </div>
                     <div className="dp-req-prog-text">
-                      <span className="dp-req-prog-name">Major</span>
-                      <span className="dp-req-prog-detail">{majorRing.earned}/{majorRing.total} credits</span>
+                      <span className="dp-req-prog-name">{t('dp.ringMajor')}</span>
+                      <span className="dp-req-prog-detail">{majorRing.earned}/{majorRing.total} {t('dp.credits')}</span>
                     </div>
                   </div>
                 )}
@@ -808,8 +836,8 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
                       <span className="dp-req-ring-label">{minorRing.pct}%</span>
                     </div>
                     <div className="dp-req-prog-text">
-                      <span className="dp-req-prog-name">Minor</span>
-                      <span className="dp-req-prog-detail">{minorRing.earned}/{minorRing.total} credits</span>
+                      <span className="dp-req-prog-name">{t('dp.ringMinor')}</span>
+                      <span className="dp-req-prog-detail">{minorRing.earned}/{minorRing.total} {t('dp.credits')}</span>
                     </div>
                   </div>
                 )}
@@ -825,14 +853,14 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
                 className={`dp-prog-tab ${activeTab === tab.id ? 'dp-prog-tab--active' : ''}`}
                 onClick={() => setActiveTab(tab.id)}
               >
-                {tab.id === 'core'          ? `Core: ${tab.label}`
-                  : tab.id === 'concentration' ? `Concentration: ${tab.label}`
-                  : tab.id === 'sci'           ? `Science: ${tab.label}`
-                  : tab.id === 'minor'         ? `Minor: ${tab.label}`
-                  : `Major: ${tab.label}`
+                {tab.id === 'core'          ? t('dp.tabCore').replace('{label}', tab.label)
+                  : tab.id === 'concentration' ? t('dp.tabConcentration').replace('{label}', tab.label)
+                  : tab.id === 'sci'           ? t('dp.tabScience').replace('{label}', tab.label)
+                  : tab.id === 'minor'         ? t('dp.tabMinor').replace('{label}', tab.label)
+                  : t('dp.tabMajor').replace('{label}', tab.label)
                 }
                 {tab.unavailable && !tab.data && (
-                  <span style={{ fontSize: '0.7rem', opacity: 0.6, marginLeft: '0.25rem' }}>(N/A)</span>
+                  <span style={{ fontSize: '0.7rem', opacity: 0.6, marginLeft: '0.25rem' }}>{t('dp.na')}</span>
                 )}
               </button>
             ))}
@@ -853,9 +881,8 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
             }}>
               <span>✓</span>
               <span>
-                <strong>Foundation Year Waived</strong> — Your {transferCredits} transfer credits
-                exempt you from U0 Foundation requirements
-                {transferCredits < 30 ? ' (note: 30 cr for full exemption)' : ''}.
+                <strong>{t('dp.foundationWaived')}</strong> — {t('dp.foundationWaivedDesc').replace('{count}', transferCredits)}
+                {transferCredits < 30 ? t('dp.foundationWaivedNote') : ''}.
               </span>
             </div>
           )}
@@ -876,10 +903,10 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
           {activeTab !== 'electives' && !currentTabData && currentTabUnavailable && (
             <div className="dp-req-empty" style={{ padding: '1.5rem', textAlign: 'center' }}>
               <p style={{ color: 'var(--text-secondary, #6b7280)', fontSize: '0.9rem', margin: 0 }}>
-                Detailed requirements for <strong>{currentTab?.label}</strong> are not yet available.
+                {t('dp.notAvailableShort').replace('{program}', '')} <strong>{currentTab?.label}</strong>
               </p>
               <p style={{ color: 'var(--text-tertiary, #9ca3af)', fontSize: '0.8rem', marginTop: '0.5rem' }}>
-                Check the Degree Requirements tab to browse all available programs.
+                {t('dp.checkDegreeReqs')}
               </p>
             </div>
           )}
@@ -933,7 +960,7 @@ export default function DegreePlanningView({
           onClick={() => setSubTab('my_courses')}
         >
           <FaGraduationCap className="dp-subtab-icon" />
-          <span>My Courses</span>
+          <span>{t('dp.myCourses')}</span>
           {(favorites.length + completedCourses.length + currentCourses.length) > 0 && (
             <span className="dp-subtab-count">
               {favorites.length + completedCourses.length + currentCourses.length}
@@ -945,7 +972,7 @@ export default function DegreePlanningView({
           onClick={() => setSubTab('requirements')}
         >
           <FaListAlt className="dp-subtab-icon" />
-          <span>Degree Requirements</span>
+          <span>{t('dp.degreeRequirements')}</span>
         </button>
       </div>
 
@@ -971,12 +998,12 @@ export default function DegreePlanningView({
               <div className="dp-import-btns">
                 {onImportTranscript && (
                   <button className="dp-import-btn" onClick={onImportTranscript}>
-                    <FaFileUpload /> Transcript
+                    <FaFileUpload /> {t('dp.transcript')}
                   </button>
                 )}
                 {onImportSyllabus && (
                   <button className="dp-import-btn dp-import-btn--secondary" onClick={onImportSyllabus}>
-                    <FaBook /> Syllabuses
+                    <FaBook /> {t('dp.syllabuses')}
                   </button>
                 )}
               </div>

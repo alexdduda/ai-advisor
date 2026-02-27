@@ -171,9 +171,9 @@ export default function Sidebar({
           <>
             <nav className="sidebar-nav">
               {[
-                { key: 'chat',      icon: <FaComments />,     label: 'Academic Brief' },
-                { key: 'favorites', icon: <FaGraduationCap />, label: 'Degree Planning' },
-                { key: 'courses',   icon: <FaBook />,          label: 'Courses' },
+                { key: 'chat',      icon: <FaComments />,     label: t('nav.chat') },
+                { key: 'favorites', icon: <FaGraduationCap />, label: t('nav.degreePlanning') },
+                { key: 'courses',   icon: <FaBook />,          label: t('nav.courses') },
                 { key: 'calendar',  icon: <FaCalendarAlt />,   label: t('nav.calendar') },
                 { key: 'clubs',     icon: <FaUsers />,         label: 'Clubs' },
                 { key: 'forum',     icon: <FaComments />,      label: t('nav.forum') },
