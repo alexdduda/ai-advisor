@@ -314,6 +314,8 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
                 ? ['all', 'core', 'major', 'concentration', 'honours']
                 : facultyFilter === 'School of Environment'
                   ? ['all', 'major', 'minor', 'diploma']
+                  : facultyFilter === 'Faculty of Law'
+                  ? ['all', 'major']
                   : ['all', 'major', 'minor', 'honours']
           ).map(t => {
             const isActive = typeFilter === t
