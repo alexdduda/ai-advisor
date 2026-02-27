@@ -22,6 +22,12 @@ function toProgramKey(name, type = 'major', faculty = '') {
   const isBasc = fl.includes('arts & science') || fl.includes('arts and science')
   const isEng  = fl.includes('engineering')
   const isEnv  = fl.includes('environment') || fl.includes('bieler')
+  const isLaw  = fl.includes('faculty of law') || fl === 'law'
+
+  // Faculty of Law – BCL/JD (single program regardless of major name stored)
+  if (isLaw) {
+    return 'law_bcl_jd'
+  }
 
   // Bieler School of Environment B.A. programs
   if (isEnv) {

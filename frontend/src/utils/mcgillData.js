@@ -126,6 +126,10 @@ export const ENVIRONMENT_MAJORS = [
   'Environment and Development',
 ];
 
+export const LAW_MAJORS = [
+  'BCL/JD (Bachelor of Civil Law / Juris Doctor)',
+];
+
 export const MINORS = [
   'Anthropology', 'Art History', 'Biology', 'Chemistry', 'Classics',
   'Computer Science', 'Economics', 'English', 'Environmental Studies',
