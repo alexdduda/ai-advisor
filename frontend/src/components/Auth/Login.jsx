@@ -134,7 +134,7 @@ function Login() {
                 <circle cx="14" cy="14" r="7" stroke="white" strokeWidth="1" opacity="0.6"/>
               </svg>
             </div>
-            <span className="auth-logo-name">Symboulos</span>
+            <span className="auth-logo-name">Symbolos</span>
           </div>
 
           <div className="auth-branding-copy">
