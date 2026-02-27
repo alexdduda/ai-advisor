@@ -189,7 +189,7 @@ def seed_requirements(
         None,
         description=(
             "arts | science | engineering | arts_science | "
-            "management | education | environment | law | all (default: all)"
+            "management | education | environment | law | aes | dentistry | all (default: all)"
         ),
     ),
 ):
@@ -210,6 +210,8 @@ def seed_requirements(
         run_education   = faculty in (None, "all", "education")
         run_environment = faculty in (None, "all", "environment")
         run_law         = faculty in (None, "all", "law")
+        run_aes         = faculty in (None, "all", "aes", "agricultural_environmental_sciences")
+        run_dentistry   = faculty in (None, "all", "dentistry", "dental_medicine")
 
         if run_arts:
             from ..seeds.arts_degree_requirements import seed_degree_requirements as seed_arts
@@ -242,6 +244,14 @@ def seed_requirements(
         if run_law:
             from ..seeds.law_degree_requirements import seed_degree_requirements as seed_law
             results["law"] = seed_law(supabase)
+
+        if run_aes:
+            from ..seeds.aes_degree_requirements import seed_degree_requirements as seed_aes
+            results["aes"] = seed_aes(supabase)
+
+        if run_dentistry:
+            from ..seeds.dentistry_degree_requirements import seed_degree_requirements as seed_dentistry
+            results["dentistry"] = seed_dentistry(supabase)
 
         # Surface any per-faculty errors collected by seeds that support it
         # (e.g. education seed returns {"programs": N, "blocks": N, "errors": [...]})
