@@ -583,6 +583,14 @@
   line-height: 1.5;
 }
 
+.cal-event-popup-location {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .cal-event-popup-notif {
   display: flex;
   align-items: center;
@@ -1183,6 +1191,15 @@
   font-size: 0.75rem;
   color: var(--text-tertiary);
   padding-top: 8px;
+}
+
+.cal-day-drawer__item-location {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-top: 6px;
 }
 
 .cal-day-drawer__item-desc {

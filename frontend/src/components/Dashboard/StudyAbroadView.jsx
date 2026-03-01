@@ -38,16 +38,16 @@ const PROGRAMS = [
   {
     id: 'exchange_main', type: 'exchange',
     title: 'McGill Student Exchange Program',
-    institution: '150+ Partner Universities',
+    institution: '160+ Partner Universities',
     regions: ['europe', 'americas', 'asia_pacific', 'africa_middle'],
     country: 'Worldwide · 39 countries',
     duration: '1–2 semesters', credits: 'Up to 30 credits',
     faculties: null,
     description: "Complete a semester or full year at one of McGill's bilateral partner universities. You pay McGill tuition, earn credit toward your degree, and your transcript records the exchange with transfer credits. Spaces are limited and competitive.",
-    eligibility: ['Full-time, degree-seeking McGill student', 'At least 24 McGill credits completed', 'Faculty GPA requirements vary'],
-    deadlines: [{ label: 'Fall / Full-Year', date: 'December – mid-January' }, { label: 'Winter', date: 'Confirmed each fall — check McGill Abroad' }],
-    notes: 'Host institution grades do NOT appear on your McGill transcript or affect CGPA.',
-    links: [{ label: 'McGill Abroad – Exchange', url: 'https://www.mcgill.ca/mcgillabroad/go-abroad' }, { label: 'Partner Universities', url: 'https://www.mcgill.ca/studentexchanges/outgoing/destinations' }],
+    eligibility: ['Full-time, degree-seeking McGill student', 'Minimum CGPA 3.0', 'At least 24 McGill credits completed by start of exchange'],
+    deadlines: [{ label: 'Fall / Full-Year 2026', date: 'December 1, 2025 – January 15, 2026' }, { label: 'Winter 2027', date: 'April – June 2026 (dates TBC)' }],
+    notes: 'Host institution grades do NOT appear on your McGill transcript or affect CGPA. A non-refundable application fee applies.',
+    links: [{ label: 'McGill Abroad – Exchange', url: 'https://www.mcgill.ca/mcgillabroad/go-abroad/steps/apply' }, { label: 'Partner Universities', url: 'https://www.mcgill.ca/mcgillabroad/go-abroad/steps/destinations' }],
   },
   {
     id: 'exchange_management', type: 'exchange',
@@ -60,7 +60,7 @@ const PROGRAMS = [
     eligibility: ['Enrolled in a BCom program at Desautels', 'Strong academic standing'],
     deadlines: [{ label: 'Application', date: 'Check Desautels International Programs website' }],
     notes: null,
-    links: [{ label: 'Desautels International Exchange', url: 'https://www.mcgill.ca/desautels/student-life/international/exchange' }],
+    links: [{ label: 'Desautels International Exchange', url: 'https://www.mcgill.ca/desautels/programs/bcom/academics/exchange/student-going-abroad' }],
   },
   {
     id: 'exchange_law', type: 'exchange',
@@ -97,7 +97,7 @@ const PROGRAMS = [
     eligibility: ['Arts and related students', 'Completed first year at McGill'],
     deadlines: [{ label: 'Application', date: 'Check Arts OASIS – Study Away portal' }],
     notes: null,
-    links: [{ label: 'Arts OASIS – Field Studies', url: 'https://www.mcgill.ca/oasis/away' }],
+    links: [{ label: 'Arts OASIS – Study Away', url: 'https://www.mcgill.ca/oasis/away' }],
   },
   {
     id: 'field_panama', type: 'field',
@@ -109,7 +109,7 @@ const PROGRAMS = [
     eligibility: ['Arts and related students', 'Completed first year at McGill'],
     deadlines: [{ label: 'Application', date: 'Check Arts OASIS – Study Away portal' }],
     notes: null,
-    links: [{ label: 'Arts OASIS – Field Studies', url: 'https://www.mcgill.ca/oasis/away' }],
+    links: [{ label: 'Arts OASIS – Study Away', url: 'https://www.mcgill.ca/oasis/away' }],
   },
   {
     id: 'field_science_minor', type: 'field',
@@ -135,7 +135,7 @@ const PROGRAMS = [
     eligibility: ['Open to all McGill undergraduates', 'Prerequisites vary by course'],
     deadlines: [{ label: 'Listings & Application', date: 'Check McGill Abroad each semester' }],
     notes: 'Courses count toward your degree like any on-campus course.',
-    links: [{ label: 'McGill Courses Abroad', url: 'https://www.mcgill.ca/mcgillabroad/go-abroad' }],
+    links: [{ label: 'McGill Courses Abroad', url: 'https://www.mcgill.ca/mcgillabroad/' }],
   },
   {
     id: 'internship_arts', type: 'internship',
@@ -147,7 +147,7 @@ const PROGRAMS = [
     eligibility: ['Faculty of Arts students in good standing'],
     deadlines: [{ label: 'Application', date: 'Ongoing – check Arts OASIS' }],
     notes: null,
-    links: [{ label: 'Arts Internships', url: 'https://www.mcgill.ca/oasis/away' }],
+    links: [{ label: 'Arts Internships & Study Away', url: 'https://www.mcgill.ca/oasis/away' }],
   },
   {
     id: 'internship_engineering', type: 'internship',
@@ -195,7 +195,7 @@ const PROGRAMS = [
     eligibility: ['Registered at McGill', 'Course not available at McGill', 'Pre-approval required'],
     deadlines: [{ label: 'Pre-approval', date: 'Before registering at host institution' }, { label: 'Transfer credit', date: 'After completion — submit transcript to Enrolment Services' }],
     notes: 'IUT grades do NOT count toward your McGill CGPA.',
-    links: [{ label: 'IUT Information', url: 'https://www.mcgill.ca/studentexchanges/outgoing/iut' }],
+    links: [{ label: 'IUT Information', url: 'https://www.mcgill.ca/oasis/away/iut' }],
   },
   {
     id: 'isa_canada', type: 'iut',
@@ -207,7 +207,7 @@ const PROGRAMS = [
     eligibility: ['Currently registered McGill student', 'Courses must be pre-approved', 'Language-centre/practicum courses not eligible'],
     deadlines: [{ label: 'Pre-approval', date: 'Before registering — contact Faculty Advising' }],
     notes: 'Host institution tuition may be higher than McGill rates.',
-    links: [{ label: 'Study Away – McGill', url: 'https://www.mcgill.ca/studentexchanges/outgoing/study-away' }],
+    links: [{ label: 'Study Away – Arts OASIS', url: 'https://www.mcgill.ca/oasis/away/application-process/independent-study-away' }],
   },
   {
     id: 'jexplore', type: 'iut',

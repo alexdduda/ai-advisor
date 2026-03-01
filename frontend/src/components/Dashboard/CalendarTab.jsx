@@ -12,7 +12,7 @@ import { scheduleNotification, deleteEvent as deleteEventAPI } from '../../servi
 import { lookupExam, formatExamTime } from '../../utils/examSchedule2026'
 import currentCoursesAPI from '../../lib/currentCoursesAPI'
 // FIX #16: Import Supabase calendar API instead of reading/writing localStorage
-import { getEvents, saveEvent, deleteEvent as deleteEventDB, migrateLocalStorageEvents } from '../../lib/calendarAPI'
+import { getEvents, saveEvent, deleteEvent as deleteEventDB, migrateLocalStorageEvents, expandRecurringEvents } from '../../lib/calendarAPI'
 import './CalendarTab.css'
 
 // ── McGill Academic Dates 2025–26 ────────────────────────────────
@@ -243,11 +243,14 @@ function EventPopup({ event, onClose, onEdit, canEdit, t, language, formatDate, 
         <div className="cal-event-popup-date">
           <FaCalendarAlt />
           {formatDate(event.date)}
-          {event.time && ` ${language === 'fr' ? 'à' : 'at'} ${event.time}`}
+          {event.time && ` ${language === 'fr' ? 'à' : 'at'} ${event.time}${event.end_time ? `–${event.end_time}` : ''}`}
           <span className="cal-event-popup-countdown" style={{ color: days < 0 ? '#9ca3af' : days <= 7 ? '#f59e0b' : style.color }}>
             {countdownText}
           </span>
         </div>
+        {event.location && (
+          <div className="cal-event-popup-location">📍 {event.location}</div>
+        )}
         {event.description && <p className="cal-event-popup-desc">{event.description}</p>}
         {event.notifyEnabled && (
           <div className="cal-event-popup-notif">
@@ -303,8 +306,12 @@ function DayDrawer({ date, events, onClose, onAddEvent, onEditEvent, onSelectEve
                     <span className="cal-day-drawer__item-title">{event.title}</span>
                   </div>
                   <div className="cal-day-drawer__item-right">
-                    {event.time && <span className="cal-day-drawer__item-time">{event.time}</span>}
-                    {isEditable && (
+                    {event.time && (
+                      <span className="cal-day-drawer__item-time">
+                        {event.time}{event.end_time ? `–${event.end_time}` : ''}
+                      </span>
+                    )}
+                    {isEditable && !event._isRecurringOccurrence && (
                       <button className="cal-day-drawer__edit-btn" onClick={e => { e.stopPropagation(); onEditEvent(event) }}>
                         <FaEdit size={11} />
                       </button>
@@ -314,6 +321,11 @@ function DayDrawer({ date, events, onClose, onAddEvent, onEditEvent, onSelectEve
                 </div>
                 {isExpanded && (
                   <div className="cal-day-drawer__item-body">
+                    {event.location && (
+                      <div className="cal-day-drawer__item-location">
+                        📍 {event.location}
+                      </div>
+                    )}
                     {event.category && <div className="cal-day-drawer__item-cat">{event.category}</div>}
                     {event.description && <p className="cal-day-drawer__item-desc">{event.description}</p>}
                     {event.notifyEnabled && (
@@ -413,8 +425,8 @@ export default function CalendarTab({ user, clubEvents = [] }) {
         await migrateLocalStorageEvents(user.id)
 
         if (cancelled) return
-        const events = await getEvents(user.id)
-        if (!cancelled) setUserEvents(events)
+        const rawEvents = await getEvents(user.id)
+        if (!cancelled) setUserEvents(expandRecurringEvents(rawEvents))
       } catch (err) {
         console.error('Failed to load calendar events from Supabase:', err)
         // Fallback: try reading from localStorage so the user sees their data

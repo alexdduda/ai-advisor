@@ -357,11 +357,74 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-wrap: wrap;
 }
 
 .instructor-name svg {
   color: var(--text-tertiary);
   font-size: 14px;
+}
+
+.instructor-badge-syllabus {
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: #dbeafe;
+  color: #1d4ed8;
+  border: 1px solid #93c5fd;
+  border-radius: 10px;
+  padding: 1px 7px;
+  white-space: nowrap;
+}
+
+[data-theme="dark"] .instructor-badge-syllabus {
+  background: #1e3a5f;
+  color: #93c5fd;
+  border-color: #2563eb55;
+}
+
+.rmp-find-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.8rem;
+  color: #ED1B2F;
+  font-weight: 600;
+  text-decoration: none;
+  padding: 4px 10px;
+  border: 1px solid #ED1B2F44;
+  border-radius: 6px;
+  background: #fef2f2;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.rmp-find-link:hover {
+  background: #fee2e2;
+  border-color: #ED1B2F;
+}
+
+[data-theme="dark"] .rmp-find-link {
+  background: #1a0505;
+  border-color: #ED1B2F66;
+  color: #f87171;
+}
+
+.rmp-looking {
+  font-size: 0.78rem;
+  color: var(--text-tertiary);
+  font-style: italic;
+}
+
+.rmp-link-inline {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.rmp-link-inline:hover {
+  color: #ED1B2F;
 }
 
 .rmp-compact {
@@ -923,4 +986,88 @@
 .current-btn[data-tooltip]:hover::after,
 .prof-flag-btn[data-tooltip]:hover::after {
   opacity: 1;
+}
+
+/* ── Per-professor RMP cards in detail view ────────── */
+.ct-prof-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.ct-prof-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+}
+[data-theme="dark"] .ct-prof-card { background: rgba(255,255,255,0.03); }
+
+.ct-prof-name {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+.ct-prof-icon { color: var(--text-tertiary); font-size: 0.8rem; }
+
+.ct-prof-rmp { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; }
+
+.ct-rmp-stats { display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
+
+.ct-rmp-score {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+.ct-rmp-star { font-size: 0.75rem; }
+
+.ct-rmp-score--excellent { background: #dcfce7; color: #15803d; }
+.ct-rmp-score--good      { background: #dbeafe; color: #1d4ed8; }
+.ct-rmp-score--average   { background: #fef9c3; color: #a16207; }
+.ct-rmp-score--poor      { background: #fee2e2; color: #b91c1c; }
+.ct-rmp-score--unknown   { background: var(--bg-tertiary); color: var(--text-secondary); }
+[data-theme="dark"] .ct-rmp-score--excellent { background: rgba(22,163,74,.18); color: #4ade80; }
+[data-theme="dark"] .ct-rmp-score--good      { background: rgba(37,99,235,.18); color: #93c5fd; }
+[data-theme="dark"] .ct-rmp-score--average   { background: rgba(234,179,8,.18); color: #fde047; }
+[data-theme="dark"] .ct-rmp-score--poor      { background: rgba(220,38,38,.18); color: #f87171; }
+
+.ct-rmp-stat { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+.ct-rmp-label { font-size: 0.68rem; color: var(--text-tertiary); }
+.ct-rmp-val   { font-weight: 600; font-size: 0.82rem; color: var(--text-primary); }
+.ct-rmp-stat--count .ct-rmp-label { font-size: 0.73rem; }
+
+.ct-rmp-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent-primary);
+  text-decoration: none;
+  flex-shrink: 0;
+}
+.ct-rmp-link:hover { text-decoration: underline; }
+
+.ct-rmp-search-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  text-decoration: none;
+}
+.ct-rmp-search-link:hover { color: var(--accent-primary); text-decoration: underline; }
+
+.rmp-loading-indicator {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--text-tertiary);
+  margin-left: 4px;
 }

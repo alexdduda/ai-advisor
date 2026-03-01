@@ -35,7 +35,7 @@ _LEGACY_MAX_ROWS_TO_SCAN = 12000
 
 # Columns selected in every course query — avoid SELECT *
 _COURSE_COLS = (
-    'Course, course_name, "Class Ave.1", instructor, '
+    'Course, course_name, "Class Ave.1", "Term Name", instructor, '
     'rmp_rating, rmp_difficulty, rmp_num_ratings, rmp_would_take_again'
 )
 
@@ -122,7 +122,12 @@ def _fetch_fts(supabase, clean_query: str, limit: int):
 
 
 def _group_sections(sections):
-    """Collapse flat section rows into unique course dicts."""
+    """Collapse flat section rows into unique course dicts.
+    
+    The `average` field uses only the most recent year's sections so the
+    search card GPA badge matches what students actually experienced lately,
+    not an all-time historical mean that could be years out of date.
+    """
     courses_dict = {}
     for section in sections:
         course_code = section.get('Course')
@@ -130,23 +135,34 @@ def _group_sections(sections):
         if not subj or not cat:
             continue
         avg = section.get('Class Ave.1')
+        term = section.get('Term Name') or ''
+        # Extract a 4-digit year from the term string (e.g. "Fall 2024")
+        m = re.search(r'\d{4}', str(term))
+        year = int(m.group()) if m else 0
+
         if course_code not in courses_dict:
             courses_dict[course_code] = {
                 'subject':      subj,
                 'catalog':      cat,
                 'title':        section.get('course_name', ''),
                 'instructor':   section.get('instructor'),
-                'averages':     [avg] if avg else [],
+                'year_avgs':    {},   # year → [avg, ...] for recent-year computation
                 'num_sections': 1,
                 'rating_data':  None,
             }
         else:
             entry = courses_dict[course_code]
             entry['num_sections'] += 1
-            if avg:
-                entry['averages'].append(avg)
             if not entry['instructor'] and section.get('instructor'):
                 entry['instructor'] = section['instructor']
+
+        if avg:
+            try:
+                fval = float(avg)
+                courses_dict[course_code]['year_avgs'].setdefault(year, []).append(fval)
+            except (ValueError, TypeError):
+                pass
+
         if courses_dict[course_code]['rating_data'] is None:
             rmp = section.get('rmp_rating')
             if rmp and rmp > 0:
@@ -211,15 +227,21 @@ async def search(
         result_courses = []
 
         for course_data in courses_dict.values():
-            avgs = course_data['averages']
-            avg_val = round(sum(avgs) / len(avgs), 2) if avgs else None
+            year_avgs = course_data['year_avgs']
+            avg_val = None
+            if year_avgs:
+                # Most recent year with recorded grades
+                recent_year = max(year_avgs.keys())
+                recent_vals = year_avgs[recent_year]
+                avg_val = round(sum(recent_vals) / len(recent_vals), 2)
             course_obj = {
-                'subject':      course_data['subject'],
-                'catalog':      course_data['catalog'],
-                'title':        course_data['title'],
-                'average':      avg_val,
-                'instructor':   course_data['instructor'],
-                'num_sections': course_data['num_sections'],
+                'subject':       course_data['subject'],
+                'catalog':       course_data['catalog'],
+                'title':         course_data['title'],
+                'average':       avg_val,
+                'average_year':  recent_year if year_avgs else None,
+                'instructor':    course_data['instructor'],
+                'num_sections':  course_data['num_sections'],
             }
             if course_data['rating_data']:
                 course_obj.update(course_data['rating_data'])

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
-import coursesAPI from '../../lib/professorsAPI'
+import { coursesAPI } from '../../lib/api'
 import favoritesAPI from '../../lib/favoritesAPI'
 import completedCoursesAPI from '../../lib/completedCoursesAPI'
 import currentCoursesAPI from '../../lib/currentCoursesAPI'
@@ -289,8 +289,38 @@ export default function Dashboard() {
     setSelectedCourse(null)
     try {
       const data = await coursesAPI.search(searchQuery, null, 50)
-      const courses = data.courses || data || []
-      setSearchResults(Array.isArray(courses) ? courses : [])
+      let courses = data.courses || data || []
+      if (!Array.isArray(courses)) courses = []
+
+      // Overlay syllabus-uploaded professor name + RMP onto matching results.
+      // current_courses rows written by the syllabus parser carry a `professor`
+      // field that is more accurate than the historical instructor in the courses table.
+      if (currentCourses.length > 0) {
+        const currentMap = {}
+        currentCourses.forEach(c => {
+          if (c.professor) {
+            // key can be "MATH 323" or "MATH323" — normalise
+            const key = (c.course_code || '').replace(/\s+/g, '').toUpperCase()
+            currentMap[key] = c
+          }
+        })
+
+        courses = courses.map(course => {
+          const key = `${course.subject}${course.catalog}`.toUpperCase()
+          const current = currentMap[key]
+          if (!current) return course
+          // Merge: prefer syllabus-sourced professor name; keep existing RMP data
+          return {
+            ...course,
+            instructor: current.professor || course.instructor,
+            // If the historical row has no RMP but we have a name, flag it so
+            // CoursesTab can show a "Find on RMP" link
+            _syllabusProf: current.professor || null,
+          }
+        })
+      }
+
+      setSearchResults(courses)
       if (courses.length === 0) setSearchError('No courses found matching your search.')
     } catch (error) {
       console.error('Error searching courses:', error)
@@ -306,7 +336,30 @@ export default function Dashboard() {
     setSelectedCourse(null)
     try {
       const data = await coursesAPI.getDetails(course.subject, course.catalog)
-      setSelectedCourse(data.course || data)
+      let detail = data.course || data
+
+      // If the student has this course in their current_courses with a professor
+      // from a syllabus upload, inject that name at the front of instructors[]
+      // so the detail panel prioritises their actual prof over historical data.
+      const courseKey = `${course.subject} ${course.catalog}`
+      const currentMatch = currentCourses.find(
+        c => (c.course_code || '').replace(/\s+/g, ' ').toUpperCase() === courseKey.toUpperCase()
+      )
+      if (currentMatch?.professor) {
+        const sylProf = currentMatch.professor
+        const existing = detail.instructors || []
+        // Deduplicate: put sylProf first, keep others that aren't the same name
+        const others = existing.filter(
+          n => n.toLowerCase() !== sylProf.toLowerCase()
+        )
+        detail = {
+          ...detail,
+          instructors: [sylProf, ...others],
+          _syllabusProf: sylProf,
+        }
+      }
+
+      setSelectedCourse(detail)
     } catch (error) {
       console.error('Error loading course details:', error)
       setSearchError('Failed to load course details.')

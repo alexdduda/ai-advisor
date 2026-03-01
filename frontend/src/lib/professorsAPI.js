@@ -1,43 +1,77 @@
 import api from './api'
 
 /**
- * Updated courses API with professor ratings support
+ * professorsAPI — Rate My Professors lookup helpers
  */
-export const coursesAPI = {
-  search: async (query = '', subject = null, limit = 50) => {
+
+const professorsAPI = {
+  /** Look up RMP data for a professor by name (from syllabus). */
+  getRmpByName: async (name, subject = null) => {
     try {
-      const params = {}
-      if (query) params.query = query
+      const params = { name }
       if (subject) params.subject = subject
-      params.limit = limit
-      
-      const response = await api.get('/courses/search', { params })
+      const response = await api.get('/professors/rmp', { params })
       return response.data
     } catch (error) {
-      console.error('Course search error:', error)
-      throw error
+      console.error('RMP by-name lookup error:', error)
+      return { found: false, professor: null, match_score: 0 }
     }
   },
-  
-  getDetails: async (subject, catalog) => {
+
+  /** Return instructors with RMP data who have taught a specific course. */
+  getRmpByCourse: async (subject, catalog) => {
     try {
-      const response = await api.get(`/courses/${subject}/${catalog}`)
+      const response = await api.get('/professors/rmp-by-course', {
+        params: { subject, catalog },
+      })
       return response.data
     } catch (error) {
-      console.error('Course details error:', error)
-      throw error
+      console.error('RMP by-course lookup error:', error)
+      return { professors: [], count: 0 }
     }
   },
-  
-  getSubjects: async () => {
+
+  /**
+   * Bulk RMP lookup for an array of course codes.
+   * Returns { ratings: { "ECON 208": rmpData, ... } }
+   * Used by DegreeRequirementsView to load an entire block at once.
+   * @param {string[]} codes — e.g. ["ECON208", "COMP251"]
+   */
+  getRmpBulk: async (codes) => {
+    if (!codes || !codes.length) return { ratings: {} }
     try {
-      const response = await api.get('/courses/subjects')
+      const response = await api.post('/professors/rmp-bulk', { codes })
       return response.data
     } catch (error) {
-      console.error('Subjects error:', error)
-      throw error
+      console.error('RMP bulk lookup error:', error)
+      return { ratings: {} }
+    }
+  },
+
+  /** Search professors by name (autocomplete). */
+  searchProfessors: async (q, subject = null, limit = 10) => {
+    try {
+      const params = { q, limit }
+      if (subject) params.subject = subject
+      const response = await api.get('/professors/search', { params })
+      return response.data
+    } catch (error) {
+      console.error('Professor search error:', error)
+      return { professors: [], count: 0 }
     }
   },
 }
 
-export default coursesAPI
+export default professorsAPI
+
+export function rmpRatingClass(rating) {
+  if (!rating) return 'unknown'
+  if (rating >= 4.0) return 'excellent'
+  if (rating >= 3.5) return 'good'
+  if (rating >= 3.0) return 'average'
+  return 'poor'
+}
+
+export function rmpSearchUrl(name) {
+  return `https://www.ratemyprofessors.com/search/professors/1439?q=${encodeURIComponent(name)}`
+}
