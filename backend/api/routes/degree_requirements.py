@@ -189,7 +189,7 @@ def seed_requirements(
         None,
         description=(
             "arts | science | engineering | arts_science | "
-            "management | education | environment | law | aes | dentistry | all (default: all)"
+            "management | education | environment | law | aes | dentistry | music | all (default: all)"
         ),
     ),
 ):
@@ -213,6 +213,9 @@ def seed_requirements(
         run_aes         = faculty in (None, "all", "aes", "agricultural_environmental_sciences")
         run_dentistry   = faculty in (None, "all", "dentistry", "dental_medicine")
         run_medicine    = faculty in (None, "all", "medicine", "medicine_health_sciences")
+        run_music       = faculty in (None, "all", "music", "schulich", "schulich_music")
+        run_nursing     = faculty in (None, "all", "nursing", "ingram_nursing")
+        run_spot        = faculty in (None, "all", "spot", "physical_occupational_therapy", "rehabilitation_science")
 
         if run_arts:
             from ..seeds.arts_degree_requirements import seed_degree_requirements as seed_arts
@@ -257,6 +260,18 @@ def seed_requirements(
         if run_medicine:
             from ..seeds.medicine_degree_requirements import seed_degree_requirements as seed_medicine
             results["medicine"] = seed_medicine(supabase)
+
+        if run_music:
+            from ..seeds.music_degree_requirements import seed_degree_requirements as seed_music
+            results["music"] = seed_music(supabase)
+
+        if run_nursing:
+            from ..seeds.nursing_degree_requirements import seed_degree_requirements as seed_nursing
+            results["nursing"] = seed_nursing(supabase)
+
+        if run_spot:
+            from ..seeds.spot_degree_requirements import seed_degree_requirements as seed_spot
+            results["spot"] = seed_spot(supabase)
 
         # Surface any per-faculty errors collected by seeds that support it
         # (e.g. education seed returns {"programs": N, "blocks": N, "errors": [...]})

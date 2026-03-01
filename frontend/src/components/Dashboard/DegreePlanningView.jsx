@@ -3,11 +3,12 @@ import {
   FaHeart, FaRegHeart, FaCheckCircle, FaStar, FaBook,
   FaBullseye, FaFileUpload, FaChevronDown, FaChevronUp,
   FaGraduationCap, FaListAlt, FaLightbulb, FaExternalLinkAlt,
-  FaChevronRight, FaCircle, FaBolt
+  FaChevronRight, FaCircle, FaBolt, FaPlane
 } from 'react-icons/fa'
 import { useLanguage } from '../../contexts/LanguageContext'
 import DegreeProgressTracker from './DegreeProgressTracker'
 import DegreeRequirementsView from './DegreeRequirementsView'
+import StudyAbroadView from './StudyAbroadView'
 import './DegreePlanningView.css'
 
 // Fix double /api/api bug
@@ -960,7 +961,7 @@ export default function DegreePlanningView({
           onClick={() => setSubTab('my_courses')}
         >
           <FaGraduationCap className="dp-subtab-icon" />
-          <span>{t('dp.myCourses')}</span>
+          <span>{t('dp.myDegree')}</span>
           {(favorites.length + completedCourses.length + currentCourses.length) > 0 && (
             <span className="dp-subtab-count">
               {favorites.length + completedCourses.length + currentCourses.length}
@@ -973,6 +974,13 @@ export default function DegreePlanningView({
         >
           <FaListAlt className="dp-subtab-icon" />
           <span>{t('dp.degreeRequirements')}</span>
+        </button>
+        <button
+          className={`dp-subtab-btn ${subTab === 'study_abroad' ? 'dp-subtab-btn--active' : ''}`}
+          onClick={() => setSubTab('study_abroad')}
+        >
+          <FaPlane className="dp-subtab-icon" />
+          <span>{t('dp.studyAbroad')}</span>
         </button>
       </div>
 
@@ -987,7 +995,14 @@ export default function DegreePlanningView({
         </div>
       )}
 
-      {/* ── My Courses tab ────────────────────────────────── */}
+      {/* ── Study Abroad tab ──────────────────────────────── */}
+      {subTab === 'study_abroad' && (
+        <div className="dp-sa-tab-wrap">
+          <StudyAbroadView profile={profile} />
+        </div>
+      )}
+
+      {/* ── My Degree tab ─────────────────────────────────── */}
       {subTab === 'my_courses' && (
         <>
           {/* Degree Progress */}
