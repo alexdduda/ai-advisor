@@ -19,6 +19,7 @@ Fixes applied:
 """
 
 import logging
+import traceback
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Query
@@ -58,8 +59,8 @@ def list_programs(
     try:
         return with_retry("list_programs", _run)
     except Exception as e:
-        logger.error(f"list_programs error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"list_programs error:\n{traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"{type(e).__name__}: {e}")
 
 
 @router.get("/programs/{program_key}")
@@ -129,8 +130,8 @@ def get_program(program_key: str):
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"get_program({program_key}) error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"get_program({program_key}) error:\n{traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"{type(e).__name__}: {e}")
 
 
 @router.get("/programs/{program_key}/recommended")
@@ -152,7 +153,7 @@ def get_recommended_courses(program_key: str):
 
         blocks_result = (
             supabase.table("requirement_blocks")
-            .select("id, name")
+            .select("id, title")          # column is "title", not "name"
             .eq("program_id", prog_id)
             .execute()
         )
@@ -167,7 +168,7 @@ def get_recommended_courses(program_key: str):
             .eq("recommended", True)
             .execute()
         )
-        block_names = {b["id"]: b["name"] for b in blocks_result.data}
+        block_names = {b["id"]: b["title"] for b in blocks_result.data}  # was b["name"]
         return [
             {**c, "block_name": block_names.get(c["block_id"], "")}
             for c in courses_result.data
@@ -176,11 +177,10 @@ def get_recommended_courses(program_key: str):
     try:
         return with_retry("get_recommended_courses", _run)
     except HTTPException:
-        # Fix #4: re-raise 404 instead of swallowing it into a 500
         raise
     except Exception as e:
-        logger.error(f"get_recommended_courses({program_key}) error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"get_recommended_courses({program_key}) error:\n{traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"{type(e).__name__}: {e}")
 
 
 @router.post("/seed")
@@ -189,7 +189,7 @@ def seed_requirements(
         None,
         description=(
             "arts | science | engineering | arts_science | "
-            "management | education | environment | all (default: all)"
+            "management | education | environment | law | aes | dentistry | music | all (default: all)"
         ),
     ),
 ):
@@ -209,6 +209,13 @@ def seed_requirements(
         run_management  = faculty in (None, "all", "management")
         run_education   = faculty in (None, "all", "education")
         run_environment = faculty in (None, "all", "environment")
+        run_law         = faculty in (None, "all", "law")
+        run_aes         = faculty in (None, "all", "aes", "agricultural_environmental_sciences")
+        run_dentistry   = faculty in (None, "all", "dentistry", "dental_medicine")
+        run_medicine    = faculty in (None, "all", "medicine", "medicine_health_sciences")
+        run_music       = faculty in (None, "all", "music", "schulich", "schulich_music")
+        run_nursing     = faculty in (None, "all", "nursing", "ingram_nursing")
+        run_spot        = faculty in (None, "all", "spot", "physical_occupational_therapy", "rehabilitation_science")
 
         if run_arts:
             from ..seeds.arts_degree_requirements import seed_degree_requirements as seed_arts
@@ -238,6 +245,34 @@ def seed_requirements(
             from ..seeds.environment_degree_requirements import seed_degree_requirements as seed_env
             results["environment"] = seed_env(supabase)
 
+        if run_law:
+            from ..seeds.law_degree_requirements import seed_degree_requirements as seed_law
+            results["law"] = seed_law(supabase)
+
+        if run_aes:
+            from ..seeds.aes_degree_requirements import seed_degree_requirements as seed_aes
+            results["aes"] = seed_aes(supabase)
+
+        if run_dentistry:
+            from ..seeds.dentistry_degree_requirements import seed_degree_requirements as seed_dentistry
+            results["dentistry"] = seed_dentistry(supabase)
+
+        if run_medicine:
+            from ..seeds.medicine_degree_requirements import seed_degree_requirements as seed_medicine
+            results["medicine"] = seed_medicine(supabase)
+
+        if run_music:
+            from ..seeds.music_degree_requirements import seed_degree_requirements as seed_music
+            results["music"] = seed_music(supabase)
+
+        if run_nursing:
+            from ..seeds.nursing_degree_requirements import seed_degree_requirements as seed_nursing
+            results["nursing"] = seed_nursing(supabase)
+
+        if run_spot:
+            from ..seeds.spot_degree_requirements import seed_degree_requirements as seed_spot
+            results["spot"] = seed_spot(supabase)
+
         # Surface any per-faculty errors collected by seeds that support it
         # (e.g. education seed returns {"programs": N, "blocks": N, "errors": [...]})
         errors = {
@@ -255,5 +290,5 @@ def seed_requirements(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"seed_requirements error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"seed_requirements error:\n{traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"{type(e).__name__}: {e}")

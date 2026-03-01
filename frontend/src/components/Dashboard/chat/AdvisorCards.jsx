@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { useLanguage } from '../../../contexts/LanguageContext'
 import historyIconSrc from '../../../assets/history-icon.png'
 import {
   FaRobot, FaSync, FaChevronDown, FaChevronUp,
@@ -56,6 +57,7 @@ function ThreadMessages({ thread, isThinking }) {
 
 // ── Auto-growing textarea chat bar ────────────────────────────
 function CardChatBar({ onSend, isThinking, onFocus }) {
+  const { t } = useLanguage()
   const [value, setValue] = useState('')
   const taRef = useRef(null)
 
@@ -90,7 +92,7 @@ function CardChatBar({ onSend, isThinking, onFocus }) {
       <textarea
         ref={taRef}
         className="card-chat-bar__input"
-        placeholder="Ask a follow-up…"
+  {...{ placeholder: t('brief.followUpPlaceholder') }}
         value={value}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
@@ -112,6 +114,21 @@ function CardChatBar({ onSend, isThinking, onFocus }) {
   )
 }
 
+
+// Helper: translated category label
+function catLabel(cat, t) {
+  const map = {
+    deadlines:     'brief.catDeadlines',
+    degree:        'brief.catDegree',
+    courses:       'brief.catCourses',
+    grades:        'brief.catGrades',
+    planning:      'brief.catPlanning',
+    opportunities: 'brief.catOpportunities',
+    other:         'brief.catOther',
+  }
+  return t(map[cat] || 'brief.catOther')
+}
+
 // ── Individual card ───────────────────────────────────────────
 function AdvisorCard({
   card,
@@ -128,6 +145,7 @@ function AdvisorCard({
   dragHandleProps,
   isDragging,
 }) {
+  const { t } = useLanguage()
   const [saving, setSaving]       = useState(false)
   const [panelOpen, setPanelOpen] = useState(false)
   const cardRef = useRef(null)
@@ -208,7 +226,7 @@ function AdvisorCard({
       ref={cardRef}
     >
       {/* Drag handle */}
-      <span className="advisor-card__drag-handle" {...dragHandleProps} title="Drag to reorder">
+      <span className="advisor-card__drag-handle" {...dragHandleProps} {...{ title: t('brief.dragReorder') }}>
         <FaGripVertical />
       </span>
 
@@ -219,15 +237,15 @@ function AdvisorCard({
         <div className="advisor-card__meta">
           <div className="advisor-card__meta-top">
             <span className="advisor-card__label">{card.label}</span>
-            {isUser && <span className="advisor-card__user-badge">Asked by you</span>}
+            {isUser && <span className="advisor-card__user-badge">{t('brief.askedByYou')}</span>}
             {isSaved && (
               <span className="advisor-card__saved-badge">
-                <FaThumbtack className="saved-badge__icon" /> Saved
+                <FaThumbtack className="saved-badge__icon" /> {t('brief.savedBadge')}
               </span>
             )}
             {isPinned && (
               <span className="advisor-card__pinned-badge">
-                <FaMapPin className="pinned-badge__icon" /> Pinned
+                <FaMapPin className="pinned-badge__icon" /> {t('brief.pinnedBadge')}
               </span>
             )}
           </div>
@@ -239,7 +257,7 @@ function AdvisorCard({
           <button
             className="advisor-card__delete"
             onClick={() => onDelete(card.id)}
-            title="Delete card"
+{...{ title: t('brief.deleteCard') }}
           >
             <FaTrash />
           </button>
@@ -248,7 +266,7 @@ function AdvisorCard({
             className={`advisor-card__save ${isSaved ? 'advisor-card__save--active' : ''}`}
             onClick={handleSave}
             disabled={saving}
-            title={isSaved ? 'Remove bookmark' : 'Bookmark'}
+{...{ title: isSaved ? t('brief.removeBookmark') : t('brief.bookmark') }}
           >
             {isSaved ? <FaBookmark /> : <FaRegBookmark />}
           </button>
@@ -256,7 +274,7 @@ function AdvisorCard({
           <button
             className={`advisor-card__pin ${isPinned ? 'advisor-card__pin--active' : ''}`}
             onClick={handlePin}
-            title={isPinned ? 'Unpin from sidebar' : 'Pin to sidebar'}
+{...{ title: isPinned ? t('brief.unpin') : t('brief.pin') }}
           >
             <FaMapPin style={isPinned ? {} : { opacity: 0.45 }} />
           </button>
@@ -347,7 +365,7 @@ function AdvisorCard({
       {!panelOpen && thread.length > 0 && (
         <button className="advisor-card__thread-peek" onClick={togglePanel}>
           <span className={`thread-peek__role thread-peek__role--${thread[thread.length - 1].role}`}>
-            {thread[thread.length - 1].role === 'user' ? 'You' : 'AI'}:
+{thread[thread.length - 1].role === 'user' ? t('brief.you') : t('brief.ai')}:
           </span>{' '}
           <span className="thread-peek__text">
             {thread[thread.length - 1].content.slice(0, 90)}
@@ -489,6 +507,7 @@ function DraggableFeed({
 
 // ── Main export ───────────────────────────────────────────────
 function HistoryPreviewCard({ card, thread, onClick }) {
+  const { t } = useLanguage()
   const CardIcon = CATEGORY_ICON_COMPONENTS[card.category || 'other'] || FaComments
   const last = thread[thread.length - 1]
   return (
@@ -497,16 +516,16 @@ function HistoryPreviewCard({ card, thread, onClick }) {
         <span className="history-preview-card__icon"><CardIcon /></span>
         <div className="history-preview-card__meta">
           <span className="history-preview-card__category">
-            {CATEGORY_LABELS[card.category || 'other']}
+{catLabel(card.category || 'other', t)}
           </span>
           <h4 className="history-preview-card__title">{card.title}</h4>
         </div>
-        <span className="history-preview-card__count">{thread.length} msg{thread.length !== 1 ? 's' : ''}</span>
+        <span className="history-preview-card__count">{thread.length !== 1 ? t('brief.msgsPlural').replace('{n}', thread.length) : t('brief.msgs').replace('{n}', thread.length)}</span>
       </div>
       {last && (
         <p className="history-preview-card__last">
           <span className={`history-preview-card__role history-preview-card__role--${last.role}`}>
-            {last.role === 'user' ? 'You' : 'AI'}:
+{last.role === 'user' ? t('brief.you') : t('brief.ai')}:
           </span>{' '}
           {last.content.slice(0, 90)}{last.content.length > 90 ? '…' : ''}
         </p>
@@ -534,6 +553,7 @@ export default function AdvisorCards({
   setFreeformInput,
   onFreeformSubmit,
 }) {
+  const { t } = useLanguage()
   const [activeCategory, setActiveCategory] = useState('all')
   const [timeAgo, setTimeAgo] = useState('')
 
@@ -570,15 +590,15 @@ export default function AdvisorCards({
     if (!generatedAt) return
     const update = () => {
       const diff = Math.floor((Date.now() - new Date(generatedAt).getTime()) / 60000)
-      if (diff < 1)        setTimeAgo('just now')
-      else if (diff === 1) setTimeAgo('1 min ago')
-      else if (diff < 60)  setTimeAgo(`${diff} mins ago`)
-      else                 setTimeAgo(`${Math.floor(diff / 60)}h ago`)
+      if (diff < 1)        setTimeAgo(t('brief.timeJustNow'))
+      else if (diff === 1) setTimeAgo(t('brief.time1Min'))
+      else if (diff < 60)  setTimeAgo(t('brief.timeMins').replace('{n}', diff))
+      else                 setTimeAgo(t('brief.timeHours').replace('{n}', Math.floor(diff / 60)))
     }
     update()
     const interval = setInterval(update, 60000)
     return () => clearInterval(interval)
-  }, [generatedAt])
+  }, [generatedAt, t])
 
   const handleSend = useCallback(async (cardId, message, cardTitle, cardBody) => {
     setExpanded(prev => new Set([...prev, cardId]))
@@ -597,7 +617,7 @@ export default function AdvisorCards({
     } catch {
       setThreadMap(prev => ({
         ...prev,
-        [cardId]: [...(prev[cardId] || []), { role: 'assistant', content: 'Something went wrong. Please try again.' }],
+        [cardId]: [...(prev[cardId] || []), { role: 'assistant', content: t('brief.errorSend') }],
       }))
     } finally {
       setThinking(prev => { const n = new Set(prev); n.delete(cardId); return n })
@@ -660,16 +680,16 @@ export default function AdvisorCards({
       <header className="advisor-cards-header">
         <div className="advisor-cards-header__left">
           <FaRobot className="header-robot-icon" />
-          <h2 className="advisor-cards-header__title">Academic Brief</h2>
+          <h2 className="advisor-cards-header__title">{t('brief.title')}</h2>
           {generatedAt && !showSkeletons && (
-            <span className="advisor-cards-header__timestamp">Updated {timeAgo}</span>
+            <span className="advisor-cards-header__timestamp">{t('brief.updated').replace('{time}', timeAgo)}</span>
           )}
         </div>
         <button
           className={`advisor-cards-refresh ${isGenerating ? 'spinning' : ''}`}
           onClick={onRefresh}
           disabled={isGenerating}
-          title="Refresh cards"
+{...{ title: t('brief.refresh') }}
         >
           <FaSync />
         </button>
@@ -682,7 +702,7 @@ export default function AdvisorCards({
             className={`category-tab ${activeCategory === 'all' ? 'active' : ''}`}
             onClick={() => setActiveCategory('all')}
           >
-            All
+            {t('brief.all')}
             <span className="category-tab__count">{cards.length}</span>
           </button>
 
@@ -692,7 +712,7 @@ export default function AdvisorCards({
               className={`category-tab ${activeCategory === cat ? 'active' : ''}`}
               onClick={() => setActiveCategory(cat)}
             >
-              {CATEGORY_LABELS[cat]}
+              {catLabel(cat, t)}
               {categoryCounts[cat] > 0 && <span className="category-tab__count">{categoryCounts[cat]}</span>}
             </button>
           ))}
@@ -701,14 +721,14 @@ export default function AdvisorCards({
             className={`category-tab ${activeCategory === 'saved' ? 'active' : ''}`}
             onClick={() => setActiveCategory('saved')}
           >
-            Saved
+            {t('brief.saved')}
             {savedCards.length > 0 && <span className="category-tab__count">{savedCards.length}</span>}
           </button>
 
           <button
             className={`category-tab category-tab--history-icon ${activeCategory === 'history' ? 'active' : ''}`}
             onClick={() => setActiveCategory('history')}
-            title="History"
+{...{ title: t('brief.history') }}
           >
             <img src={historyIconSrc} className="history-icon-img" alt="History" />
           </button>
@@ -722,14 +742,14 @@ export default function AdvisorCards({
         ) : filteredCards.length === 0 && visibleCards.length === 0 ? (
           <div className="advisor-cards-empty">
             <FaGraduationCap className="empty-icon" />
-            <p>Your academic brief is being prepared.</p>
-            <button className="btn-primary" onClick={onRefresh}>Generate Now</button>
+            <p>{t('brief.preparing')}</p>
+            <button className="btn-primary" onClick={onRefresh}>{t('brief.generateNow')}</button>
           </div>
         ) : activeCategory === 'history' ? (
           historyCards.length === 0 ? (
             <div className="advisor-cards-empty">
               <FaHistory className="empty-icon" />
-              <p>No chat history yet. Start a conversation on any card.</p>
+              <p>{t('brief.noHistory')}</p>
             </div>
           ) : (
             <div className="history-list">
@@ -746,12 +766,12 @@ export default function AdvisorCards({
         ) : filteredCards.length === 0 && activeCategory === 'saved' ? (
           <div className="advisor-cards-empty">
             <FaBookmark className="empty-icon" />
-            <p>No saved cards yet. Bookmark cards to keep them here.</p>
+            <p>{t('brief.noSaved')}</p>
           </div>
         ) : filteredCards.length === 0 ? (
           <div className="advisor-cards-empty">
             {(() => { const I = CATEGORY_ICON_COMPONENTS[activeCategory] || FaComments; return <I className="empty-icon" /> })()}
-            <p>No {CATEGORY_LABELS[activeCategory]} cards right now.</p>
+<p>{t('brief.noCards').replace('{category}', catLabel(activeCategory, t))}</p>
           </div>
         ) : (
           <DraggableFeed
@@ -776,7 +796,7 @@ export default function AdvisorCards({
         <input
           type="text"
           className="freeform-input"
-          placeholder="Ask anything about your academics — creates a new chat card"
+{...{ placeholder: t('brief.placeholder') }}
           value={freeformInput}
           onChange={e => setFreeformInput(e.target.value)}
           disabled={isAsking}
