@@ -1,13 +1,12 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useLanguage } from '../../../contexts/LanguageContext'
-import historyIconSrc from '../../../assets/history-icon.png'
 import {
   FaRobot, FaSync, FaChevronDown, FaChevronUp,
   FaBolt, FaArrowRight, FaGraduationCap,
   FaClipboardList, FaComments, FaCalendarAlt,
   FaChartBar, FaMapMarkedAlt, FaLightbulb,
   FaBookmark, FaRegBookmark, FaThumbtack,
-  FaGripVertical, FaTrash, FaMapPin, FaHistory,
+  FaGripVertical, FaTrash, FaMapPin,
 } from 'react-icons/fa'
 import { CARD_CATEGORIES, CATEGORY_LABELS } from '../../../lib/cardsAPI'
 import './AdvisorCards.css'
@@ -92,7 +91,7 @@ function CardChatBar({ onSend, isThinking, onFocus }) {
       <textarea
         ref={taRef}
         className="card-chat-bar__input"
-  {...{ placeholder: t('brief.followUpPlaceholder') }}
+        {...{ placeholder: t('brief.followUpPlaceholder') }}
         value={value}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
@@ -113,7 +112,6 @@ function CardChatBar({ onSend, isThinking, onFocus }) {
     </div>
   )
 }
-
 
 // Helper: translated category label
 function catLabel(cat, t) {
@@ -257,7 +255,7 @@ function AdvisorCard({
           <button
             className="advisor-card__delete"
             onClick={() => onDelete(card.id)}
-{...{ title: t('brief.deleteCard') }}
+            {...{ title: t('brief.deleteCard') }}
           >
             <FaTrash />
           </button>
@@ -266,7 +264,7 @@ function AdvisorCard({
             className={`advisor-card__save ${isSaved ? 'advisor-card__save--active' : ''}`}
             onClick={handleSave}
             disabled={saving}
-{...{ title: isSaved ? t('brief.removeBookmark') : t('brief.bookmark') }}
+            {...{ title: isSaved ? t('brief.removeBookmark') : t('brief.bookmark') }}
           >
             {isSaved ? <FaBookmark /> : <FaRegBookmark />}
           </button>
@@ -274,7 +272,7 @@ function AdvisorCard({
           <button
             className={`advisor-card__pin ${isPinned ? 'advisor-card__pin--active' : ''}`}
             onClick={handlePin}
-{...{ title: isPinned ? t('brief.unpin') : t('brief.pin') }}
+            {...{ title: isPinned ? t('brief.unpin') : t('brief.pin') }}
           >
             <FaMapPin style={isPinned ? {} : { opacity: 0.45 }} />
           </button>
@@ -365,7 +363,7 @@ function AdvisorCard({
       {!panelOpen && thread.length > 0 && (
         <button className="advisor-card__thread-peek" onClick={togglePanel}>
           <span className={`thread-peek__role thread-peek__role--${thread[thread.length - 1].role}`}>
-{thread[thread.length - 1].role === 'user' ? t('brief.you') : t('brief.ai')}:
+            {thread[thread.length - 1].role === 'user' ? t('brief.you') : t('brief.ai')}:
           </span>{' '}
           <span className="thread-peek__text">
             {thread[thread.length - 1].content.slice(0, 90)}
@@ -506,35 +504,6 @@ function DraggableFeed({
 }
 
 // ── Main export ───────────────────────────────────────────────
-function HistoryPreviewCard({ card, thread, onClick }) {
-  const { t } = useLanguage()
-  const CardIcon = CATEGORY_ICON_COMPONENTS[card.category || 'other'] || FaComments
-  const last = thread[thread.length - 1]
-  return (
-    <button className="history-preview-card" onClick={onClick} type="button">
-      <div className="history-preview-card__header">
-        <span className="history-preview-card__icon"><CardIcon /></span>
-        <div className="history-preview-card__meta">
-          <span className="history-preview-card__category">
-{catLabel(card.category || 'other', t)}
-          </span>
-          <h4 className="history-preview-card__title">{card.title}</h4>
-        </div>
-        <span className="history-preview-card__count">{thread.length !== 1 ? t('brief.msgsPlural').replace('{n}', thread.length) : t('brief.msgs').replace('{n}', thread.length)}</span>
-      </div>
-      {last && (
-        <p className="history-preview-card__last">
-          <span className={`history-preview-card__role history-preview-card__role--${last.role}`}>
-{last.role === 'user' ? t('brief.you') : t('brief.ai')}:
-          </span>{' '}
-          {last.content.slice(0, 90)}{last.content.length > 90 ? '…' : ''}
-        </p>
-      )}
-    </button>
-  )
-}
-
-
 export default function AdvisorCards({
   userId = null,
   cards = [],
@@ -560,10 +529,12 @@ export default function AdvisorCards({
   const storageKey = userId ? `advisor_threads_${userId}` : 'advisor_threads'
   const deletedKey = userId ? `advisor_deleted_${userId}` : 'advisor_deleted'
 
+  // ── Track locally-deleted card IDs so the count and feed stay in sync ──
   const [deletedIds, setDeletedIds] = useState(() => {
     try { return new Set(JSON.parse(localStorage.getItem(deletedKey) || '[]')) } catch { return new Set() }
   })
 
+  // visibleCards is the source-of-truth for counts and the feed
   const visibleCards = cards.filter(c => !deletedIds.has(c.id))
 
   const [threadMap, setThreadMap] = useState(() => {
@@ -577,7 +548,7 @@ export default function AdvisorCards({
   }, [threadMap, storageKey])
 
   const feedRef = useRef(null)
-  const prevLen = useRef(cards.length)
+  const prevLen = useRef(visibleCards.length)
 
   useEffect(() => {
     if (visibleCards.length > prevLen.current && feedRef.current) {
@@ -622,18 +593,9 @@ export default function AdvisorCards({
     } finally {
       setThinking(prev => { const n = new Set(prev); n.delete(cardId); return n })
     }
-  }, [onChipClick])
+  }, [onChipClick, t])
 
   const handleExpand   = useCallback((id) => setExpanded(prev => new Set([...prev, id])), [])
-
-  const handleHistoryCardClick = (card) => {
-    setActiveCategory(card.category || 'other')
-    setExpanded(prev => new Set([...prev, card.id]))
-    setTimeout(() => {
-      document.querySelector(`[data-card-id="${card.id}"]`)
-        ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    }, 150)
-  }
   const handleCollapse = useCallback((id) => setExpanded(prev => { const n = new Set(prev); n.delete(id); return n }), [])
 
   const handleDelete = useCallback((cardId) => {
@@ -656,19 +618,18 @@ export default function AdvisorCards({
 
   const showSkeletons = isLoading || isGenerating
 
+  // Counts are all based on visibleCards (deleted cards excluded)
   const categoryCounts = visibleCards.reduce((acc, card) => {
     const cat = card.category || 'other'
     acc[cat] = (acc[cat] || 0) + 1
     return acc
   }, {})
 
-  const savedCards   = visibleCards.filter(c => c.is_saved)
-  const historyCards = cards.filter(c => (threadMap[c.id] || []).length > 0)
+  const savedCards = visibleCards.filter(c => c.is_saved)
 
   const filteredCards =
-    activeCategory === 'all'     ? visibleCards :
-    activeCategory === 'saved'   ? savedCards :
-    activeCategory === 'history' ? historyCards :
+    activeCategory === 'all'   ? visibleCards :
+    activeCategory === 'saved' ? savedCards :
     visibleCards.filter(c => (c.category || 'other') === activeCategory)
 
   const activeCats = CARD_CATEGORIES.filter(cat => categoryCounts[cat])
@@ -689,7 +650,7 @@ export default function AdvisorCards({
           className={`advisor-cards-refresh ${isGenerating ? 'spinning' : ''}`}
           onClick={onRefresh}
           disabled={isGenerating}
-{...{ title: t('brief.refresh') }}
+          {...{ title: t('brief.refresh') }}
         >
           <FaSync />
         </button>
@@ -698,42 +659,49 @@ export default function AdvisorCards({
       {/* ── Category bar ── */}
       {!showSkeletons && (
         <nav className="category-bar">
+          {/* All tab */}
           <button
             className={`category-tab ${activeCategory === 'all' ? 'active' : ''}`}
             onClick={() => setActiveCategory('all')}
           >
+            <FaClipboardList className="category-tab__icon" />
             {t('brief.all')}
-            <span className="category-tab__count">{cards.length}</span>
+            <span className="category-tab__count">{visibleCards.length}</span>
           </button>
 
-          {activeCats.map(cat => (
-            <button
-              key={cat}
-              className={`category-tab ${activeCategory === cat ? 'active' : ''}`}
-              onClick={() => setActiveCategory(cat)}
-            >
-              {catLabel(cat, t)}
-              {categoryCounts[cat] > 0 && <span className="category-tab__count">{categoryCounts[cat]}</span>}
-            </button>
-          ))}
+          {/* Per-category tabs — only shown if that category has cards */}
+          {activeCats.map(cat => {
+            const CatIcon = CATEGORY_ICON_COMPONENTS[cat] || FaComments
+            return (
+              <button
+                key={cat}
+                className={`category-tab ${activeCategory === cat ? 'active' : ''}`}
+                onClick={() => setActiveCategory(cat)}
+              >
+                <CatIcon className="category-tab__icon" />
+                {catLabel(cat, t)}
+                {categoryCounts[cat] > 0 && (
+                  <span className="category-tab__count">{categoryCounts[cat]}</span>
+                )}
+              </button>
+            )
+          })}
 
+          {/* Saved tab */}
           <button
-            className={`category-tab ${activeCategory === 'saved' ? 'active' : ''}`}
+            className={`category-tab category-tab--saved ${activeCategory === 'saved' ? 'active' : ''}`}
             onClick={() => setActiveCategory('saved')}
           >
+            <FaBookmark className="category-tab__icon" />
             {t('brief.saved')}
-            {savedCards.length > 0 && <span className="category-tab__count">{savedCards.length}</span>}
-          </button>
-
-          <button
-            className={`category-tab category-tab--history-icon ${activeCategory === 'history' ? 'active' : ''}`}
-            onClick={() => setActiveCategory('history')}
-{...{ title: t('brief.history') }}
-          >
-            <img src={historyIconSrc} className="history-icon-img" alt="History" />
+            {savedCards.length > 0 && (
+              <span className="category-tab__count">{savedCards.length}</span>
+            )}
           </button>
         </nav>
       )}
+
+
 
       {/* ── Card feed ── */}
       <div className="advisor-cards-feed" ref={feedRef}>
@@ -745,24 +713,6 @@ export default function AdvisorCards({
             <p>{t('brief.preparing')}</p>
             <button className="btn-primary" onClick={onRefresh}>{t('brief.generateNow')}</button>
           </div>
-        ) : activeCategory === 'history' ? (
-          historyCards.length === 0 ? (
-            <div className="advisor-cards-empty">
-              <FaHistory className="empty-icon" />
-              <p>{t('brief.noHistory')}</p>
-            </div>
-          ) : (
-            <div className="history-list">
-              {historyCards.map(card => (
-                <HistoryPreviewCard
-                  key={card.id}
-                  card={card}
-                  thread={threadMap[card.id] || []}
-                  onClick={() => handleHistoryCardClick(card)}
-                />
-              ))}
-            </div>
-          )
         ) : filteredCards.length === 0 && activeCategory === 'saved' ? (
           <div className="advisor-cards-empty">
             <FaBookmark className="empty-icon" />
@@ -771,7 +721,7 @@ export default function AdvisorCards({
         ) : filteredCards.length === 0 ? (
           <div className="advisor-cards-empty">
             {(() => { const I = CATEGORY_ICON_COMPONENTS[activeCategory] || FaComments; return <I className="empty-icon" /> })()}
-<p>{t('brief.noCards').replace('{category}', catLabel(activeCategory, t))}</p>
+            <p>{t('brief.noCards').replace('{category}', catLabel(activeCategory, t))}</p>
           </div>
         ) : (
           <DraggableFeed
@@ -796,7 +746,7 @@ export default function AdvisorCards({
         <input
           type="text"
           className="freeform-input"
-{...{ placeholder: t('brief.placeholder') }}
+          {...{ placeholder: t('brief.placeholder') }}
           value={freeformInput}
           onChange={e => setFreeformInput(e.target.value)}
           disabled={isAsking}

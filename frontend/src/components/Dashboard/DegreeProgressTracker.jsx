@@ -81,7 +81,6 @@ export default function DegreeProgressTracker({ completedCourses = [], profile =
             <div className="credit-label">{t('degree.completedCourses')}</div>
             <div className="credit-value">
               {stats.completedCredits} {t('courses.credits').toLowerCase()}
-              <span className="credit-count">({stats.completedCourseCount} {t('nav.courses').toLowerCase()})</span>
             </div>
           </div>
         </div>
@@ -93,7 +92,7 @@ export default function DegreeProgressTracker({ completedCourses = [], profile =
               <div className="credit-label">{t('degree.advancedStanding')}</div>
               <div className="credit-value">
                 {stats.advancedStandingCredits} {t('courses.credits').toLowerCase()}
-                <span className="credit-count">({stats.advancedStandingCourseCount} {t('nav.courses').toLowerCase()})</span>
+
               </div>
             </div>
           </div>
