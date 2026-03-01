@@ -223,6 +223,26 @@
   background: var(--bg-primary);
 }
 
+/* Study Abroad tab — scrollable, not fixed height */
+.dp-sa-tab-wrap {
+  border: 1px solid var(--border-primary);
+  border-radius: 14px;
+  height: 620px;
+  min-height: 500px;
+  overflow-y: auto;
+  background: var(--bg-primary);
+  padding: 1.25rem 1.25rem 1rem;
+  box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-primary) transparent;
+}
+.dp-sa-tab-wrap::-webkit-scrollbar { width: 5px; }
+.dp-sa-tab-wrap::-webkit-scrollbar-thumb {
+  background: var(--border-primary);
+  border-radius: 4px;
+}
+.dp-sa-tab-wrap::-webkit-scrollbar-track { background: transparent; }
+
 /* ══════════════════════════════════════════════════════
    MY PROGRAM REQUIREMENTS CARD
    ══════════════════════════════════════════════════════ */
