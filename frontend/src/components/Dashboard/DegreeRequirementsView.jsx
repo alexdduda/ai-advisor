@@ -322,6 +322,8 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
                   ? ['all', 'major', 'honours', 'beng', 'minor', 'diploma']
                   : facultyFilter === 'Faculty of Dental Medicine and Oral Health Sciences'
                   ? ['all', 'major', 'diploma']
+                  : facultyFilter === 'Faculty of Medicine and Health Sciences'
+                  ? ['all', 'major', 'diploma']
                   : ['all', 'major', 'minor', 'honours']
           ).map(t => {
             const isActive = typeFilter === t
