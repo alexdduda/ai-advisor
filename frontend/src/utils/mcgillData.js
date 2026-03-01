@@ -126,6 +126,35 @@ export const ENVIRONMENT_MAJORS = [
   'Environment and Development',
 ];
 
+export const LAW_MAJORS = [
+  'BCL/JD (Bachelor of Civil Law / Juris Doctor)',
+];
+
+export const AES_MAJORS = [
+  // B.Sc.(Ag.Env.Sc.) majors
+  'Environmental Biology',
+  'Agricultural Economics',
+  'Life Sciences (Biological and Agricultural)',
+  'Agro-Environmental Sciences',
+  'Global Food Security',
+  // B.Eng.(Bioresource)
+  'Bioresource Engineering',
+  // B.Sc.(F.Sc.)
+  'Food Science (Food Science Option)',
+  'Food Science (Food Chemistry Option)',
+  // B.Sc.(Nutr.Sc.)
+  'Dietetics',
+  'Nutrition (Food Function and Safety)',
+  'Nutrition (Global Nutrition)',
+  'Nutrition (Metabolism, Health and Disease)',
+  'Nutrition (Sports Nutrition)',
+];
+
+export const DENTISTRY_PROGRAMS = [
+  'Doctor of Dental Medicine (D.M.D.) – Four-Year Program',
+  'Dental Preparatory Year (Dent-P)',
+];
+
 export const MINORS = [
   'Anthropology', 'Art History', 'Biology', 'Chemistry', 'Classics',
   'Computer Science', 'Economics', 'English', 'Environmental Studies',

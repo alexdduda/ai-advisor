@@ -204,6 +204,12 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
         'Faculty of Arts & Science':        'arts_science',
         'Faculty of Engineering':           'engineering',
         'Desautels Faculty of Management':  'management',
+        'Faculty of Agricultural and Environmental Sciences': 'aes',
+        'Faculty of Dental Medicine and Oral Health Sciences': 'dentistry',
+        'Faculty of Medicine and Health Sciences': 'medicine',
+        'Schulich School of Music': 'music',
+        'Ingram School of Nursing': 'nursing',
+        'School of Physical and Occupational Therapy': 'spot',
       }
       const seedParam = seedFacultyMap[facultyFilter] || null
 
@@ -314,6 +320,20 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
                 ? ['all', 'core', 'major', 'concentration', 'honours']
                 : facultyFilter === 'School of Environment'
                   ? ['all', 'major', 'minor', 'diploma']
+                  : facultyFilter === 'Faculty of Law'
+                  ? ['all', 'major']
+                  : facultyFilter === 'Faculty of Agricultural and Environmental Sciences'
+                  ? ['all', 'major', 'honours', 'beng', 'minor', 'diploma']
+                  : facultyFilter === 'Faculty of Dental Medicine and Oral Health Sciences'
+                  ? ['all', 'major', 'diploma']
+                  : facultyFilter === 'Faculty of Medicine and Health Sciences'
+                  ? ['all', 'major', 'diploma']
+                  : facultyFilter === 'Schulich School of Music'
+                  ? ['all', 'major', 'minor']
+                  : facultyFilter === 'Ingram School of Nursing'
+                  ? ['all', 'major']
+                  : facultyFilter === 'School of Physical and Occupational Therapy'
+                  ? ['all', 'major']
                   : ['all', 'major', 'minor', 'honours']
           ).map(t => {
             const isActive = typeFilter === t
