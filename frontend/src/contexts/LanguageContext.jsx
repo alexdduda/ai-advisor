@@ -518,7 +518,7 @@ const translations = {
     'dp.degreeRequirements': 'Degree Requirements',
     'dp.studyAbroad': 'Study Abroad',
     'dp.transcript': 'Transcript',
-    'dp.syllabuses': 'Syllabuses',
+    'dp.syllabuses': 'Syllabi',
     'dp.na': '(N/A)',
     'dp.statusTransfer': 'Transfer',
     'dp.statusDone': 'Done',
