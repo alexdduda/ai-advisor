@@ -6,6 +6,7 @@ then bulk-import completed + current courses and update the user profile.
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from typing import Optional
 import anthropic
+import asyncio
 import base64
 import logging
 import re
@@ -17,6 +18,17 @@ from ..config import settings
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
+
+# ── Singleton async client (created once, reused across all requests) ─────────
+_async_anthropic_client: Optional[anthropic.AsyncAnthropic] = None
+
+
+def _get_async_client() -> anthropic.AsyncAnthropic:
+    global _async_anthropic_client
+    if _async_anthropic_client is None:
+        _async_anthropic_client = anthropic.AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
+    return _async_anthropic_client
+
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -32,6 +44,10 @@ COURSE_CODE_PATTERN = re.compile(
     r"^[A-Z]{3,4}\s\d{3}([A-Z]\d?)?$",
     re.IGNORECASE,
 )
+
+# Retries for transient Anthropic API errors (e.g. 500 Internal Server Error)
+_ANTHROPIC_MAX_RETRIES = 2
+_ANTHROPIC_RETRY_BACKOFF = 1.5  # seconds; doubles each attempt
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -113,32 +129,56 @@ Additional rules:
   - If a field is unknown, use null"""
 
 
-# ── Claude extraction ─────────────────────────────────────────────────────────
+# ── Claude extraction (with retry on transient 500s) ─────────────────────────
 
 async def extract_transcript_data(pdf_bytes: bytes) -> dict:
-    client = anthropic.AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
+    client = _get_async_client()
     pdf_b64 = base64.standard_b64encode(pdf_bytes).decode("utf-8")
 
-    message = await client.messages.create(
-        model="claude-opus-4-6",
-        max_tokens=4000,
-        messages=[
-            {
-                "role": "user",
-                "content": [
+    last_exc: Exception = RuntimeError("unreachable")
+    for attempt in range(_ANTHROPIC_MAX_RETRIES + 1):
+        try:
+            message = await client.messages.create(
+                model=settings.CLAUDE_MODEL,
+                max_tokens=4000,
+                messages=[
                     {
-                        "type": "document",
-                        "source": {
-                            "type": "base64",
-                            "media_type": "application/pdf",
-                            "data": pdf_b64,
-                        },
-                    },
-                    {"type": "text", "text": EXTRACTION_PROMPT},
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "document",
+                                "source": {
+                                    "type": "base64",
+                                    "media_type": "application/pdf",
+                                    "data": pdf_b64,
+                                },
+                            },
+                            {"type": "text", "text": EXTRACTION_PROMPT},
+                        ],
+                    }
                 ],
-            }
-        ],
-    )
+            )
+            break  # success — exit retry loop
+        except anthropic.InternalServerError as e:
+            last_exc = e
+            if attempt < _ANTHROPIC_MAX_RETRIES:
+                wait = _ANTHROPIC_RETRY_BACKOFF * (2 ** attempt)
+                logger.warning(
+                    f"Anthropic 500 on attempt {attempt + 1}, retrying in {wait:.1f}s … "
+                    f"(request_id={getattr(e, 'request_id', 'unknown')})"
+                )
+                await asyncio.sleep(wait)
+            else:
+                logger.error(f"Anthropic 500 after {_ANTHROPIC_MAX_RETRIES + 1} attempts: {e}")
+                raise
+        except (anthropic.APIConnectionError, anthropic.APITimeoutError) as e:
+            last_exc = e
+            if attempt < _ANTHROPIC_MAX_RETRIES:
+                wait = _ANTHROPIC_RETRY_BACKOFF * (2 ** attempt)
+                logger.warning(f"Anthropic connection error on attempt {attempt + 1}, retrying in {wait:.1f}s … ({e})")
+                await asyncio.sleep(wait)
+            else:
+                raise
 
     raw = message.content[0].text.strip()
     raw = re.sub(r"^```(?:json)?\s*", "", raw, flags=re.MULTILINE)
@@ -201,25 +241,83 @@ async def parse_transcript(
         "profile_updated": False,
     }
 
-    # 1. Update profile
+    # 1. Completed courses
+    for course in extracted.get("completed_courses", []) or []:
+        try:
+            term = (course.get("term") or "").strip()
+            if term.lower() not in VALID_TERMS:
+                results["completed_skipped"] += 1
+                continue
+
+            grade = (course.get("grade") or "").strip().upper()
+            if grade and grade not in VALID_GRADES:
+                grade = None
+
+            existing = supabase.table("completed_courses") \
+                .select("id") \
+                .eq("user_id", user_id) \
+                .eq("course_code", course["course_code"]) \
+                .execute()
+            if existing.data:
+                results["completed_skipped"] += 1
+                continue
+
+            row = {
+                "user_id": user_id,
+                "course_code": course["course_code"],
+                "course_title": course.get("course_title"),
+                "subject": course.get("subject", course["course_code"].split()[0]),
+                "catalog": course.get("catalog", course["course_code"].split()[-1]),
+                "term": term.capitalize(),
+                "year": course.get("year"),
+                "grade": grade or None,
+                "credits": course.get("credits", 3),
+            }
+            supabase.table("completed_courses").insert(row).execute()
+            results["completed_added"] += 1
+        except Exception as e:
+            logger.warning(f"Skipping completed course {course.get('course_code')}: {e}")
+            results["completed_skipped"] += 1
+
+    # 2. Current courses
+    for course in extracted.get("current_courses", []) or []:
+        try:
+            existing = supabase.table("current_courses") \
+                .select("id") \
+                .eq("user_id", user_id) \
+                .eq("course_code", course["course_code"]) \
+                .execute()
+            if existing.data:
+                results["current_skipped"] += 1
+                continue
+
+            row = {
+                "user_id": user_id,
+                "course_code": course["course_code"],
+                "course_title": course.get("course_title"),
+                "subject": course.get("subject", course["course_code"].split()[0]),
+                "catalog": course.get("catalog", course["course_code"].split()[-1]),
+                "credits": course.get("credits", 3),
+            }
+            supabase.table("current_courses").insert(row).execute()
+            results["current_added"] += 1
+        except Exception as e:
+            logger.warning(f"Skipping current course {course.get('course_code')}: {e}")
+            results["current_skipped"] += 1
+
+    # 3. Update user profile from student_info
     student_info = extracted.get("student_info") or {}
     profile_updates = {}
     if student_info.get("major"):
-        profile_updates["major"] = str(student_info["major"]).strip()
+        profile_updates["major"] = student_info["major"]
     if student_info.get("minor"):
-        profile_updates["minor"] = str(student_info["minor"]).strip()
+        profile_updates["minor"] = student_info["minor"]
     if student_info.get("faculty"):
-        profile_updates["faculty"] = str(student_info["faculty"]).strip()
-    if student_info.get("year") is not None:
-        try:
-            profile_updates["year"] = int(student_info["year"])
-        except (ValueError, TypeError):
-            pass
+        profile_updates["faculty"] = student_info["faculty"]
+    if student_info.get("year"):
+        profile_updates["year"] = student_info["year"]
     if student_info.get("cum_gpa") is not None:
-        try:
-            profile_updates["current_gpa"] = round(float(student_info["cum_gpa"]), 2)
-        except (ValueError, TypeError):
-            pass
+        profile_updates["current_gpa"] = student_info["cum_gpa"]
     if student_info.get("advanced_standing"):
         profile_updates["advanced_standing"] = student_info["advanced_standing"]
 
@@ -230,122 +328,10 @@ async def parse_transcript(
         except Exception as e:
             logger.warning(f"Profile update failed for {user_id}: {e}")
 
-    # 2. Wipe existing completed courses — transcript is the source of truth
-    try:
-        supabase.table("completed_courses").delete().eq("user_id", user_id).execute()
-        logger.info(f"Cleared existing completed courses for {user_id}")
-    except Exception as e:
-        logger.warning(f"Could not clear existing completed courses: {e}")
-
-    # 3. Insert completed courses from transcript
-    # FIX: Validate all rows first, then bulk-insert in a single DB round-trip
-    # instead of one INSERT per course (was O(n) calls, now O(1)).
-    inserted_completed: set[str] = set()
-    completed_rows = []
-
-    for course in extracted.get("completed_courses", []):
-        code = (course.get("course_code") or "").strip()
-        if not code or not COURSE_CODE_PATTERN.match(code):
-            results["completed_skipped"] += 1
-            continue
-
-        term = str(course.get("term") or "Fall").strip().capitalize()
-        if term.lower() not in VALID_TERMS:
-            term = "Fall"
-
-        raw_grade = course.get("grade")
-        grade = raw_grade.strip().upper() if raw_grade else None
-        if grade and grade not in VALID_GRADES:
-            grade = None
-
-        parts = code.split()
-        completed_rows.append({
-            "user_id": user_id,
-            "course_code": code,
-            "course_title": course.get("course_title") or code,
-            "subject": (course.get("subject") or parts[0]).upper(),
-            "catalog": str(course.get("catalog") or (parts[1] if len(parts) > 1 else "")),
-            "term": term,
-            "year": int(course.get("year") or 2024),
-            "grade": grade,
-            "credits": int(course.get("credits") or 3),
-        })
-        inserted_completed.add(code)
-
-    if completed_rows:
-        try:
-            supabase.table("completed_courses").insert(completed_rows).execute()
-            results["completed_added"] = len(completed_rows)
-        except Exception as e:
-            logger.warning(f"Bulk insert of completed courses failed: {e}")
-            # Fall back to row-by-row so partial success is still possible
-            for row in completed_rows:
-                try:
-                    supabase.table("completed_courses").insert(row).execute()
-                    results["completed_added"] += 1
-                except Exception as row_err:
-                    logger.warning(f"Failed to insert completed course {row['course_code']}: {row_err}")
-                    results["completed_skipped"] += 1
-                    inserted_completed.discard(row["course_code"])
-
-    # 4. Wipe existing current courses — transcript is the source of truth
-    try:
-        supabase.table("current_courses").delete().eq("user_id", user_id).execute()
-        logger.info(f"Cleared existing current courses for {user_id}")
-    except Exception as e:
-        logger.warning(f"Could not clear existing current courses: {e}")
-
-    # 5. Insert current courses from transcript (skip if already in completed)
-    # FIX: Same bulk-insert pattern — validate all rows, then one INSERT call.
-    current_rows = []
-
-    for course in extracted.get("current_courses", []):
-        code = (course.get("course_code") or "").strip()
-        if not code or not COURSE_CODE_PATTERN.match(code):
-            results["current_skipped"] += 1
-            continue
-        # Don't add as current if it was already inserted as completed
-        if code in inserted_completed:
-            results["current_skipped"] += 1
-            continue
-
-        parts = code.split()
-        current_rows.append({
-            "user_id": user_id,
-            "course_code": code,
-            "course_title": course.get("course_title") or code,
-            "subject": (course.get("subject") or parts[0]).upper(),
-            "catalog": str(course.get("catalog") or (parts[1] if len(parts) > 1 else "")),
-            "credits": int(course.get("credits") or 3),
-        })
-
-    if current_rows:
-        try:
-            supabase.table("current_courses").insert(current_rows).execute()
-            results["current_added"] = len(current_rows)
-        except Exception as e:
-            logger.warning(f"Bulk insert of current courses failed: {e}")
-            # Fall back to row-by-row so partial success is still possible
-            for row in current_rows:
-                try:
-                    supabase.table("current_courses").insert(row).execute()
-                    results["current_added"] += 1
-                except Exception as row_err:
-                    logger.warning(f"Failed to insert current course {row['course_code']}: {row_err}")
-                    results["current_skipped"] += 1
-
     logger.info(
-        f"Transcript import for {user_id}: "
-        f"{results['completed_added']} completed, "
-        f"{results['current_added']} current, "
+        f"Transcript import complete for {user_id}: "
+        f"+{results['completed_added']} completed, "
+        f"+{results['current_added']} current, "
         f"profile_updated={results['profile_updated']}"
     )
-
-    return {
-        "parsed": extracted,
-        "saved": True,
-        "results": results,
-        "message": (
-            f"Replaced all courses with transcript data: {results['completed_added']} completed, {results['current_added']} current. Profile {'updated' if results['profile_updated'] else 'unchanged'}."
-        ),
-    }
+    return {"results": results, "saved": True}

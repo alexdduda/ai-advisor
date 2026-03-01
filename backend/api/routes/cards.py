@@ -216,10 +216,17 @@ def build_rich_context(ctx: dict, saved_cards: list = None) -> str:
     completed, current, favorites, calendar = (
         ctx["completed"], ctx["current"], ctx["favorites"], ctx["calendar"])
 
+    # 1. Protection for completed course credits
     total_credits = sum(c.get("credits") or 3 for c in completed)
+    
+    # 2. FIX: The advanced standing credit calculation
     adv = user.get("advanced_standing") or []
-    adv_credits = sum(a.get("credits", 0) for a in adv)
-    adv_summary = ", ".join(f"{a['course_code']} ({a['credits']} cr)" for a in adv) or "None"
+    # Using 'or 0' handles cases where the key "credits" exists but the value is None
+    adv_credits = sum((a.get("credits") or 0) for a in adv)
+    
+    adv_summary = ", ".join(
+        f"{a['course_code']} ({a.get('credits') or 0} cr)" for a in adv
+    ) or "None"
 
     def fmt_completed():
         return "\n".join(
@@ -507,17 +514,20 @@ async def save_card(card_id: str, request: SaveRequest):
 
 @router.patch("/{user_id}/reorder", response_model=dict)
 async def reorder_cards(user_id: str, request: ReorderRequest):
-    # FIX: Use upsert instead of N individual UPDATE calls (one DB round-trip vs N).
-    # Each item already has the card's id and new sort_order; upsert merges on id.
     try:
+        # 1. Validation check
         get_user_by_id(user_id)
+        
+        # 2. Get client
         supabase = get_supabase()
-        rows = [
-            {"id": item["id"], "user_id": user_id, "sort_order": item["sort_order"]}
-            for item in request.order
-        ]
-        supabase.table("advisor_cards").upsert(rows, on_conflict="id").execute()
+        
+        # 3. Call the RPC function
+        # We pass the 'order' list directly from the request
+        supabase.rpc("reorder_advisor_cards", {"payload": request.order}).execute()
+        
+        logger.info(f"Successfully reordered {len(request.order)} cards for user {user_id}")
         return {"reordered": len(request.order)}
+        
     except UserNotFoundException:
         raise HTTPException(status_code=404, detail="User not found")
     except Exception as e:

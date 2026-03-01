@@ -129,7 +129,7 @@ export default function TranscriptUpload({ userId, onImportComplete, onClose, de
             className={`tu-tab-btn ${activeTab === 'syllabus' ? 'tu-tab-btn--active' : ''}`}
             onClick={() => setActiveTab('syllabus')}
           >
-            <FaBook /> Syllabuses
+            <FaBook /> Syllabi
           </button>
         </div>
 
@@ -149,28 +149,28 @@ export default function TranscriptUpload({ userId, onImportComplete, onClose, de
                 >
                   <input ref={fileInputRef} type="file" accept=".pdf" hidden onChange={e => handleFile(e.target.files[0])} />
                   {file ? (
-                    <div className="tu-dropzone-selected">
+                    <div className="tu-dropzone-file">
                       <FaCheckCircle className="tu-dropzone-check" />
                       <div>
                         <p className="tu-dropzone-filename">{file.name}</p>
-                        <p className="tu-dropzone-size">{(file.size / 1024 / 1024).toFixed(1)} MB</p>
+                        <p className="tu-dropzone-filesize">{(file.size / 1024).toFixed(0)} KB</p>
                       </div>
-                      <button className="tu-dropzone-clear" onClick={e => { e.stopPropagation(); setFile(null) }}>
+                      <button className="tu-dropzone-remove" onClick={e => { e.stopPropagation(); setFile(null) }}>
                         <FaTimes />
                       </button>
                     </div>
                   ) : (
-                    <>
+                    <div className="tu-dropzone-empty">
                       <FaCloudUploadAlt className="tu-dropzone-icon" />
-                      <p className="tu-dropzone-main">Drop your transcript PDF here</p>
+                      <p className="tu-dropzone-main">Drop your transcript here</p>
                       <p className="tu-dropzone-sub">or click to browse · PDF only · max 10 MB</p>
-                    </>
+                    </div>
                   )}
                 </div>
                 {errorMsg && <div className="tu-error-msg"><FaExclamationTriangle /> {errorMsg}</div>}
                 <div className="tu-actions">
                   <button className="tu-btn tu-btn--primary" onClick={handleParse} disabled={!file}>
-                    Parse Transcript
+                    Preview Import
                   </button>
                 </div>
               </div>
@@ -179,64 +179,60 @@ export default function TranscriptUpload({ userId, onImportComplete, onClose, de
             {step === 'parsing' && (
               <div className="tu-step tu-step--center">
                 <FaSpinner className="tu-spinner" />
-                <p className="tu-state-title">Parsing transcript…</p>
-                <p className="tu-state-sub">Claude is reading your academic history. This may take 10–20 seconds.</p>
+                <p className="tu-state-title">Reading transcript…</p>
+                <p className="tu-state-sub">Extracting courses, grades, and GPA.</p>
               </div>
             )}
 
             {step === 'preview' && parsed && (
               <div className="tu-step">
-                <div className="tu-success-bar">
-                  <FaCheckCircle /> Parsed successfully — review before importing
+                <div className="tu-preview-header">
+                  <FaCheckCircle className="tu-preview-check" />
+                  <p className="tu-preview-title">Ready to import</p>
                 </div>
-
-                {parsed.student_info && (
-                  <div className="tu-section">
-                    <h3 className="tu-section-title">Student Info</h3>
-                    <div className="tu-info-grid">
-                      {parsed.student_info.major   && <div className="tu-info-cell"><span className="tu-info-label">Major</span><span className="tu-info-val">{parsed.student_info.major}</span></div>}
-                      {parsed.student_info.minor   && <div className="tu-info-cell"><span className="tu-info-label">Minor</span><span className="tu-info-val">{parsed.student_info.minor}</span></div>}
-                      {parsed.student_info.faculty && <div className="tu-info-cell"><span className="tu-info-label">Faculty</span><span className="tu-info-val">{parsed.student_info.faculty}</span></div>}
-                      {parsed.student_info.year    && <div className="tu-info-cell"><span className="tu-info-label">Year</span><span className="tu-info-val">U{parsed.student_info.year}</span></div>}
-                      {parsed.student_info.cum_gpa && <div className="tu-info-cell"><span className="tu-info-label">GPA</span><span className="tu-info-val tu-info-val--accent">{parsed.student_info.cum_gpa}</span></div>}
-                    </div>
-                  </div>
-                )}
-
                 <div className="tu-section">
-                  <h3 className="tu-section-title">Completed Courses ({parsed.completed_courses?.length || 0})</h3>
-                  <div className="tu-course-list">
-                    {(parsed.completed_courses || []).slice(0, 10).map((c, i) => (
-                      <div key={i} className="tu-course-row">
-                        <span className="tu-course-code">{c.course_code}</span>
-                        <span className="tu-course-name">{c.course_title}</span>
-                        {c.grade && <span className="tu-course-grade">{c.grade}</span>}
-                      </div>
-                    ))}
-                    {(parsed.completed_courses?.length || 0) > 10 && (
-                      <p className="tu-course-more">+{parsed.completed_courses.length - 10} more courses</p>
-                    )}
-                  </div>
+                  {parsed.program && (
+                    <div className="tu-info-grid">
+                      {parsed.program && <div className="tu-info-cell"><span className="tu-info-label">Program</span><span className="tu-info-val">{parsed.program}</span></div>}
+                      {parsed.cgpa && <div className="tu-info-cell"><span className="tu-info-label">CGPA</span><span className="tu-info-val tu-info-val--accent">{parsed.cgpa}</span></div>}
+                      {parsed.credits_earned && <div className="tu-info-cell"><span className="tu-info-label">Credits</span><span className="tu-info-val">{parsed.credits_earned}</span></div>}
+                    </div>
+                  )}
                 </div>
-
-                {(parsed.current_courses?.length || 0) > 0 && (
+                {parsed.current_courses?.length > 0 && (
                   <div className="tu-section">
-                    <h3 className="tu-section-title">Current Courses ({parsed.current_courses.length})</h3>
+                    <p className="tu-section-title">Current Courses ({parsed.current_courses.length})</p>
                     <div className="tu-course-list">
-                      {parsed.current_courses.map((c, i) => (
+                      {parsed.current_courses.slice(0, 5).map((c, i) => (
                         <div key={i} className="tu-course-row tu-course-row--current">
-                          <span className="tu-course-code">{c.course_code}</span>
-                          <span className="tu-course-name">{c.course_title}</span>
-                          <span className="tu-course-tag">current</span>
+                          <span className="tu-course-code">{c.code}</span>
+                          <span className="tu-course-name">{c.title}</span>
+                          <span className="tu-course-tag">Current</span>
                         </div>
                       ))}
                     </div>
                   </div>
                 )}
-
-                <div className="tu-actions">
-                  <button className="tu-btn tu-btn--secondary" onClick={handleReset}>Re-upload</button>
-                  <button className="tu-btn tu-btn--primary" onClick={handleImport}>Import All</button>
+                {parsed.completed_courses?.length > 0 && (
+                  <div className="tu-section">
+                    <p className="tu-section-title">Completed Courses ({parsed.completed_courses.length})</p>
+                    <div className="tu-course-list">
+                      {parsed.completed_courses.slice(0, 5).map((c, i) => (
+                        <div key={i} className="tu-course-row">
+                          <span className="tu-course-code">{c.code}</span>
+                          <span className="tu-course-name">{c.title}</span>
+                          {c.grade && <span className="tu-course-grade">{c.grade}</span>}
+                        </div>
+                      ))}
+                      {parsed.completed_courses.length > 5 && (
+                        <p className="tu-course-more">+{parsed.completed_courses.length - 5} more</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+                <div className="tu-actions tu-actions--center">
+                  <button className="tu-btn tu-btn--secondary" onClick={handleReset}>Cancel</button>
+                  <button className="tu-btn tu-btn--primary" onClick={handleImport}>Confirm Import</button>
                 </div>
               </div>
             )}
@@ -296,14 +292,14 @@ export default function TranscriptUpload({ userId, onImportComplete, onClose, de
           </div>
         )}
 
-        {/* ══════════════ SYLLABUS TAB ══════════════ */}
+        {/* ══════════════ SYLLABI TAB ══════════════ */}
         {activeTab === 'syllabus' && (
           <div className="tu-body">
 
             {sylStep === 'uploading' && (
               <div className="tu-step tu-step--center">
                 <FaSpinner className="tu-spinner" />
-                <p className="tu-state-title">Importing syllabuses…</p>
+                <p className="tu-state-title">Importing syllabi…</p>
                 <p className="tu-state-sub">Claude is extracting schedules, assessments, and deadlines.</p>
               </div>
             )}
@@ -311,7 +307,7 @@ export default function TranscriptUpload({ userId, onImportComplete, onClose, de
             {sylStep === 'done' && (
               <div className="tu-step tu-step--center">
                 <FaCheckCircle className="tu-done-icon" />
-                <h3 className="tu-state-title">Syllabuses Imported!</h3>
+                <h3 className="tu-state-title">Syllabi Imported!</h3>
                 <div className="tu-syl-results">
                   {(sylResults?.results || []).map((r, i) => (
                     <div key={i} className={`tu-syl-result ${r.success ? 'tu-syl-result--ok' : 'tu-syl-result--err'}`}>
@@ -331,7 +327,7 @@ export default function TranscriptUpload({ userId, onImportComplete, onClose, de
             {(sylStep === 'idle' || sylStep === 'error') && (
               <div className="tu-step">
                 <p className="tu-desc">
-                  Upload your course syllabuses to automatically add lecture schedules, exams, and assignment deadlines to your calendar.
+                  Upload your course syllabi to automatically add lecture schedules, exams, and assignment deadlines to your calendar.
                 </p>
                 <div
                   className={`tu-dropzone ${sylDragOver ? 'tu-dropzone--over' : ''}`}
@@ -369,7 +365,7 @@ export default function TranscriptUpload({ userId, onImportComplete, onClose, de
 
                 <div className="tu-actions">
                   <button className="tu-btn tu-btn--primary" onClick={handleSylUpload} disabled={!sylFiles.length}>
-                    Import {sylFiles.length > 0 ? `${sylFiles.length} Syllabus${sylFiles.length !== 1 ? 'es' : ''}` : 'Syllabuses'}
+                    Import {sylFiles.length > 0 ? `${sylFiles.length} Syllab${sylFiles.length !== 1 ? 'i' : 'us'}` : 'Syllabi'}
                   </button>
                 </div>
               </div>
