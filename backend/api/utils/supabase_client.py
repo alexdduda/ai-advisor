@@ -159,16 +159,17 @@ def create_user(user_data: Dict[str, Any]) -> Dict[str, Any]:
         if "duplicate key" in error_str.lower() or "23505" in error_str:
             user_id = user_data.get("id")
             logger.warning(f"Duplicate detected for user ID: {user_id}")
-            if "users_pkey" in error_str or f"({user_id})" in error_str:
-                try:
-                    return get_user_by_id(user_id)
-                except Exception:
-                    pass
+            # Any uniqueness conflict (primary key, email, OR username) means
+            # the auth user already has a profile row — just return it.
+            try:
+                return get_user_by_id(user_id)
+            except UserNotFoundException:
+                pass
+            # Can't find the row by ID either — surface a clear error
             if "email" in error_str:
-                try:
-                    return get_user_by_id(user_id)
-                except UserNotFoundException:
-                    raise DatabaseException("create_user", "Email already in use by another account")
+                raise DatabaseException("create_user", "Email already in use by another account")
+            if "username" in error_str:
+                raise DatabaseException("create_user", "Username already taken")
         raise DatabaseException("create_user", error_str)
 
 
