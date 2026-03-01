@@ -15,9 +15,80 @@ import json
 import re
 from datetime import date, datetime, timedelta  # FIX #2: import timedelta directly
 
+from difflib import SequenceMatcher
+
 from ..utils.supabase_client import get_supabase, get_user_by_id
 from ..exceptions import UserNotFoundException
 from ..config import settings
+
+
+# ── RMP helper ────────────────────────────────────────────────────────────────
+
+def _lookup_rmp(supabase, instructor_name: str, course_code: str | None) -> dict | None:
+    """
+    Look up Rate My Professors data for `instructor_name` from the courses table.
+    Returns a dict with rmp_* fields, or None if no match found.
+    """
+    if not instructor_name:
+        return None
+
+    try:
+        parts     = instructor_name.strip().split()
+        last_name = parts[-1] if parts else instructor_name
+
+        # Build query — filter by subject prefix if course_code provided
+        qb = (
+            supabase.from_("courses")
+            .select("instructor, rmp_rating, rmp_difficulty, rmp_num_ratings, rmp_would_take_again, rmp_url, Course")
+            .ilike("instructor", f"%{last_name}%")
+            .not_.is_("rmp_rating", "null")
+        )
+        if course_code:
+            subject = course_code.split()[0].upper() if " " in course_code else course_code[:4].upper()
+            qb = qb.like("Course", f"{subject}%")
+
+        rows = qb.limit(100).execute().data or []
+
+        if not rows and len(parts) > 1:
+            # Fallback: search by first name
+            qb2 = (
+                supabase.from_("courses")
+                .select("instructor, rmp_rating, rmp_difficulty, rmp_num_ratings, rmp_would_take_again, rmp_url, Course")
+                .ilike("instructor", f"%{parts[0]}%")
+                .not_.is_("rmp_rating", "null")
+            )
+            rows = qb2.limit(100).execute().data or []
+
+        if not rows:
+            return None
+
+        # Fuzzy match
+        target = instructor_name.lower()
+        best_row  = None
+        best_score = 0.0
+        for row in rows:
+            instr = (row.get("instructor") or "").lower()
+            score = SequenceMatcher(None, target, instr).ratio()
+            if score > best_score:
+                best_score = score
+                best_row   = row
+
+        if best_score < 0.55 or best_row is None:
+            return None
+
+        return {
+            "name":                    best_row.get("instructor"),
+            "rmp_rating":              best_row.get("rmp_rating"),
+            "rmp_difficulty":          best_row.get("rmp_difficulty"),
+            "rmp_num_ratings":         best_row.get("rmp_num_ratings"),
+            "rmp_would_take_again":    best_row.get("rmp_would_take_again"),
+            "rmp_url":                 best_row.get("rmp_url"),
+            "match_score":             round(best_score, 3),
+        }
+
+    except Exception as e:
+        logger.warning(f"RMP lookup failed for '{instructor_name}': {e}")
+        return None
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -340,8 +411,16 @@ async def parse_syllabuses(
             "success": True,
             "saved": True,
             "course_code": extracted.get("course_code"),
+            "course_title": extracted.get("course_title"),
+            "section": extracted.get("section"),
+            "term": extracted.get("term"),
+            "year": extracted.get("year"),
+            "instructor_name": extracted.get("instructor", {}).get("name"),
+            "instructor_email": extracted.get("instructor", {}).get("email"),
+            "schedule": extracted.get("schedule") or [],
             "calendar_events_added": 0,
             "current_course_updated": False,
+            "rmp_data": None,  # populated below after DB interaction
         }
 
         # FIX #6: Normalize the course code so "COMP251" → "COMP 251" before
@@ -357,6 +436,51 @@ async def parse_syllabuses(
         instructor = extracted.get("instructor") or {}
         schedule_slots = extracted.get("schedule") or []
         assessments = extracted.get("assessments") or []
+
+        # ── RMP lookup by professor name ──────────────────────────────────────
+        instr_name = instructor.get("name")
+        if instr_name:
+            try:
+                from difflib import SequenceMatcher
+                import re as _re
+
+                def _norm_name(n):
+                    n = _re.sub(r'\b(dr|prof|professor|mr|mrs|ms)\b\.?', '', n or '', flags=_re.IGNORECASE)
+                    return _re.sub(r'\s+', ' ', n).strip().lower()
+
+                parts = instr_name.split()
+                last_name = parts[-1] if parts else instr_name
+                subject_hint = course_code.split()[0] if course_code and " " in course_code else None
+
+                rmp_qb = supabase.from_("courses").select(
+                    'instructor, rmp_rating, rmp_difficulty, rmp_num_ratings, rmp_would_take_again, rmp_url'
+                ).ilike("instructor", f"%{last_name}%").not_.is_("rmp_rating", "null")
+                if subject_hint:
+                    rmp_qb = rmp_qb.like("Course", f"{subject_hint}%")
+                rmp_rows = (rmp_qb.limit(100).execute().data) or []
+
+                best_row, best_score = None, 0.0
+                for rrow in rmp_rows:
+                    if not rrow.get("rmp_rating"):
+                        continue
+                    score = SequenceMatcher(None, _norm_name(instr_name), _norm_name(rrow.get("instructor") or "")).ratio()
+                    if score > best_score:
+                        best_score, best_row = score, rrow
+
+                if best_row and best_score >= 0.60:
+                    result["rmp_data"] = {
+                        "avg_rating":               best_row.get("rmp_rating"),
+                        "avg_difficulty":           best_row.get("rmp_difficulty"),
+                        "num_ratings":              int(best_row.get("rmp_num_ratings") or 0),
+                        "would_take_again_percent": (
+                            round(float(best_row["rmp_would_take_again"]))
+                            if best_row.get("rmp_would_take_again") is not None else None
+                        ),
+                        "rmp_url": best_row.get("rmp_url"),
+                        "match_score": round(best_score, 3),
+                    }
+            except Exception as rmp_err:
+                logger.warning(f"RMP lookup failed for '{instr_name}': {rmp_err}")
 
         # ── 1. Enrich current_courses row ─────────────────────────────────────
         if course_code:
@@ -564,6 +688,61 @@ async def parse_syllabuses(
             f"{result['calendar_events_added']} events added, "
             f"current_course_updated={result['current_course_updated']}"
         )
+
+        # ── 5. Lookup RMP data for extracted professor ─────────────────────────
+        if instructor.get("name") and course_code:
+            try:
+                # Extract subject from course_code (e.g. "COMP 251" → "COMP")
+                subj_match = re.match(r'^([A-Z]{2,6})', course_code.replace(' ', ''))
+                subject_code = subj_match.group(1) if subj_match else None
+
+                # Query courses table for this instructor
+                last_name = instructor["name"].split()[-1] if instructor["name"].split() else instructor["name"]
+                rmp_query = (
+                    supabase.from_("courses")
+                    .select("instructor, rmp_rating, rmp_difficulty, rmp_num_ratings, rmp_would_take_again, rmp_url")
+                    .ilike("instructor", f"%{last_name}%")
+                    .not_.is_("rmp_rating", "null")
+                )
+                if subject_code:
+                    rmp_query = rmp_query.like("Course", f"{subject_code}%")
+                rmp_query = rmp_query.limit(20)
+                rmp_rows = rmp_query.execute().data or []
+
+                # Find best match
+                if rmp_rows:
+                    instr_norm = instructor["name"].lower()
+                    best_row = None
+                    best_score = 0.0
+                    for row in rmp_rows:
+                        row_instr = (row.get("instructor") or "").lower()
+                        # Compute rough similarity: check if all parts of last_name appear
+                        if last_name.lower() in row_instr:
+                            # Simple token overlap score
+                            parts_match = sum(
+                                1 for p in instr_norm.split()
+                                if p in row_instr
+                            )
+                            score = parts_match / max(len(instr_norm.split()), 1)
+                            if score > best_score and row.get("rmp_rating", 0):
+                                best_score = score
+                                best_row = row
+
+                    if best_row and best_score >= 0.4:
+                        rmp_would_take = best_row.get("rmp_would_take_again")
+                        result["rmp_data"] = {
+                            "instructor_name": best_row.get("instructor"),
+                            "avg_rating": best_row.get("rmp_rating"),
+                            "avg_difficulty": best_row.get("rmp_difficulty"),
+                            "num_ratings": int(best_row.get("rmp_num_ratings") or 0),
+                            "would_take_again_percent": (
+                                round(float(rmp_would_take)) if rmp_would_take is not None else None
+                            ),
+                            "rmp_url": best_row.get("rmp_url"),
+                            "match_score": round(best_score, 2),
+                        }
+            except Exception as rmp_err:
+                logger.warning(f"RMP lookup failed for {instructor.get('name')}: {rmp_err}")
 
         all_results.append(result)
 
