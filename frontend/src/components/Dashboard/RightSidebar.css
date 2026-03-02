@@ -4,9 +4,8 @@
    ============================================ */
 
 .right-sidebar {
-  position: fixed;
-  right: 0;
-  top: 0;
+  /* Flex member of .dashboard row — pushes .main-content rather than overlaying it */
+  flex-shrink: 0;
   height: 100vh;
   background: var(--bg-primary, #fff);
   border-left: 1px solid var(--border-primary, #E0E0E0);
@@ -15,6 +14,8 @@
   overflow: hidden;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 100;
+  /* Keep it to the right of everything in the flex row */
+  order: 999;
 }
 
 .rsb--open {
@@ -30,8 +31,8 @@
 /* ── Collapsed toggle button ── */
 .rsb-toggle {
   position: fixed;
-  right: 10px;
-  transform: translateY(-50%);
+  right: 0;
+  transform: translateX(-100%) translateY(-50%);
   background: var(--accent-primary, #ED1B2F);
   border: none;
   color: white;
@@ -40,8 +41,8 @@
   width: auto;
   min-width: 44px;
   height: 36px;
-  border-radius: 6px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  border-radius: 6px 0 0 6px;
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.2);
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
@@ -53,13 +54,12 @@
 
 .rsb-toggle:hover {
   background: #c0152a;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-  transform: translateY(-50%) scale(1.05);
+  box-shadow: -3px 0 12px rgba(0, 0, 0, 0.25);
 }
 
 .rsb-toggle--dragging {
   cursor: grabbing;
-  transform: translateY(-50%) scale(0.95);
+  opacity: 0.85;
 }
 
 /* ── Header — mirrors .sidebar-header ── */
@@ -338,4 +338,57 @@
 .dark .rsb-chat-bar {
   background: var(--bg-secondary);
   border-color: var(--border-primary);
+}
+
+/* ── Nav assistant mode ── */
+.rsb-toggle--nav {
+  background: var(--accent-primary, #ED1B2F);
+}
+
+.rsb-header--nav {
+  align-items: center;
+}
+
+.rsb-logo-icon--nav {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+}
+
+/* ── Suggestion chips ── */
+.rsb-suggestions {
+  padding: 0 0.75rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  flex-shrink: 0;
+}
+
+.rsb-suggestion-chip {
+  background: var(--bg-secondary, #f3f4f6);
+  border: 1px solid var(--border-primary, #e5e7eb);
+  border-radius: 8px;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.76rem;
+  color: var(--text-secondary, #374151);
+  cursor: pointer;
+  text-align: left;
+  line-height: 1.35;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.rsb-suggestion-chip:hover {
+  background: rgba(237, 27, 47, 0.06);
+  border-color: rgba(237, 27, 47, 0.3);
+  color: var(--accent-primary, #ED1B2F);
+}
+
+[data-theme="dark"] .rsb-suggestion-chip {
+  background: rgba(255,255,255,0.05);
+  border-color: rgba(255,255,255,0.1);
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .rsb-suggestion-chip:hover {
+  background: rgba(237, 27, 47, 0.12);
+  border-color: rgba(237, 27, 47, 0.4);
+  color: #f87171;
 }

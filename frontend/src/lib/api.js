@@ -98,12 +98,13 @@ api.interceptors.response.use(
 
 // Chat API with session support
 export const chatAPI = {
-  async sendMessage(userId, message, sessionId = null) {
+  async sendMessage(userId, message, sessionId = null, currentTab = null) {
     try {
       const response = await api.post('/chat/send', {
         user_id: userId,
         message: message,
-        session_id: sessionId
+        session_id: sessionId,
+        current_tab: currentTab,
       })
       return response.data
     } catch (error) {

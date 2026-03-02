@@ -199,11 +199,12 @@ export default function Dashboard() {
   }
 
   // ── Sync right sidebar width as CSS var on body ──────────
+  // (kept for FeedbackModal's right offset — feedback button uses --rsb-width)
   useEffect(() => {
-    const visible = rightSidebarOpen && pinnedCard && activeTab !== 'chat'
+    const visible = rightSidebarOpen && activeTab !== 'chat'
     document.body.style.setProperty('--rsb-width', visible ? '320px' : '0px')
     return () => document.body.style.setProperty('--rsb-width', '0px')
-  }, [rightSidebarOpen, pinnedCard, activeTab])
+  }, [rightSidebarOpen, activeTab])
 
   // ── Pinned card handler ───────────────────────────────────
   const handlePinToggle = (card, thread) => {
