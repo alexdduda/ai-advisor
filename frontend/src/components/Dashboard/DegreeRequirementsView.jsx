@@ -298,7 +298,6 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
             <option value="Ingram School of Nursing">Nursing</option>
             <option value="School of Physical and Occupational Therapy">Physical &amp; Occupational Therapy</option>
             <option value="Faculty of Science">Faculty of Science</option>
-            <option value="Study Abroad and Field Studies">Study Abroad &amp; Field Studies</option>
           </select>
         </div>
 
