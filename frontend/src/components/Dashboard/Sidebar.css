@@ -220,7 +220,8 @@
 
 .nav-item:not(.active) .nav-icon { color: var(--accent-primary, #ED1B2F); }
 .nav-item.active .nav-icon { color: white; }
-.nav-item.active:hover .nav-icon { transform: scale(1.12); }
+/* Prevent icon color changing on hover when item is active */
+.nav-item.active:hover .nav-icon { color: white; transform: scale(1.12); }
 
 .nav-label { font-weight: 500; font-size: 1rem; }
 
@@ -523,44 +524,115 @@
 [data-theme="dark"] .sidebar-footer {
   border-color: rgba(255,255,255,0.08);
 }
+
+/* Collapse button — keep hover animation, fix dark active state */
 [data-theme="dark"] .sidebar-collapse-btn {
   background: rgba(255,255,255,0.06);
   border-color: rgba(255,255,255,0.1);
   color: #9ca3af;
 }
+[data-theme="dark"] .sidebar-collapse-btn:active {
+  background: rgba(237,27,47,0.8);
+}
+
 [data-theme="dark"] .logo-name { color: #f9fafb; }
+
+/* Nav items — hover translate animation still applies, just fix colors */
 [data-theme="dark"] .nav-item { color: rgba(255,255,255,0.55); }
-[data-theme="dark"] .nav-item:hover { background: rgba(255,255,255,0.06); color: #f9fafb; }
+[data-theme="dark"] .nav-item:hover {
+  background: rgba(255,255,255,0.06);
+  color: #f9fafb;
+  /* inherit translateX(3px) from base hover — no override needed */
+}
 [data-theme="dark"] .nav-item:not(.active) .nav-icon { color: #f87171; }
+
+/* Active nav — slightly stronger glow on dark */
+[data-theme="dark"] .nav-item.active {
+  box-shadow: 0 2px 12px rgba(237, 27, 47, 0.35);
+}
+
+/* Lock active nav icon to white — prevent red hover color bleeding through */
+[data-theme="dark"] .nav-item.active .nav-icon,
+[data-theme="dark"] .nav-item.active:hover .nav-icon {
+  color: white;
+}
+
+/* Lock active mini pill icon to white on hover */
+[data-theme="dark"] .mini-pill--active,
+[data-theme="dark"] .mini-pill--active:hover {
+  color: white;
+}
+
+/* User info — richer hover shadow on dark */
 [data-theme="dark"] .user-info { background: rgba(255,255,255,0.05); }
-[data-theme="dark"] .user-info:hover { background: rgba(237,27,47,0.15); }
+[data-theme="dark"] .user-info:hover {
+  background: rgba(237,27,47,0.15);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.35);
+}
 [data-theme="dark"] .user-name { color: #f9fafb; }
 [data-theme="dark"] .user-email { color: rgba(255,255,255,0.45); }
+
+/* Mini capsule */
 [data-theme="dark"] .mini-capsule {
   background: transparent;
   border: none;
   box-shadow: none;
 }
 [data-theme="dark"] .mini-capsule-divider { background: rgba(255,255,255,0.15); }
+
+/* Mini pills — hover and active animations inherit from base, fix colors */
 [data-theme="dark"] .mini-pill { color: rgba(255,255,255,0.45); }
 [data-theme="dark"] .mini-pill:hover {
   background: rgba(237,27,47,0.15);
   color: #f87171;
+  /* scale(1.18) from base still applies */
 }
+[data-theme="dark"] .mini-pill:active {
+  /* scale(0.88) from base still applies */
+  background: rgba(237,27,47,0.2);
+}
+
+/* Active pill — deeper shadow for dark backgrounds */
+[data-theme="dark"] .mini-pill--active:hover {
+  background: linear-gradient(135deg, var(--accent-primary, #ED1B2F) 0%, #B01B2E 100%);
+  color: #f87171;
+}
+
 [data-theme="dark"] .mini-pill--expand { color: rgba(255,255,255,0.25); }
+[data-theme="dark"] .mini-pill--expand:hover {
+  color: #f87171;
+  background: rgba(237,27,47,0.15);
+  /* rotate(45deg) from base still applies */
+}
+
+/* Popup — animation (popup-in) is color-agnostic, just fix surface colors */
 [data-theme="dark"] .sidebar-popup {
   background: #1f2937;
   border-color: rgba(255,255,255,0.1);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.3);
 }
 [data-theme="dark"] .sidebar-popup-arrow {
   background: #1f2937;
   border-color: rgba(255,255,255,0.1);
 }
 [data-theme="dark"] .sidebar-popup-item { color: #e5e7eb; }
-[data-theme="dark"] .sidebar-popup-item:hover { background: rgba(255,255,255,0.07); }
+[data-theme="dark"] .sidebar-popup-item:hover {
+  background: rgba(255,255,255,0.07);
+  /* translateX(2px) from base still applies */
+}
+[data-theme="dark"] .sidebar-popup-item:active {
+  background: rgba(255,255,255,0.04);
+}
 [data-theme="dark"] .sidebar-popup-item--danger { color: #f87171; }
+[data-theme="dark"] .sidebar-popup-item--danger:hover {
+  background: rgba(248, 113, 113, 0.1);
+}
 [data-theme="dark"] .sidebar-popup-divider { background: rgba(255,255,255,0.08); }
+
+/* Overlay — slightly darker on dark mode for better contrast */
+[data-theme="dark"] .sidebar-overlay {
+  background: rgba(0, 0, 0, 0.6);
+}
 
 /* ── Mobile ── */
 @media (max-width: 768px) {

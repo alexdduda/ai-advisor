@@ -51,6 +51,7 @@ export default function Dashboard() {
   const [cardsGeneratedAt, setCardsGeneratedAt] = useState(null)
   const [freeformInput, setFreeformInput] = useState('')
   const [isAsking, setIsAsking] = useState(false)
+  const isLoadingCardsRef = useRef(false)  
 
   // ── Club calendar events (fed up from ClubsTab) ────────
   const [clubCalendarEvents, setClubCalendarEvents] = useState([])
@@ -111,20 +112,22 @@ export default function Dashboard() {
   // ── Advisor card handlers ──────────────────────────────
   const loadAdvisorCards = useCallback(async () => {
     if (!user?.id) return
+    if (isLoadingCardsRef.current) return
+    isLoadingCardsRef.current = true
     try {
       setCardsLoading(true)
       const data = await cardsAPI.getCards(user.id)
       const cards = data.cards || []
       setAdvisorCards(cards)
       setCardsGeneratedAt(data.generated_at || null)
-      if (!cards.length) {
-        setCardsLoading(false)
+      if (cards.length === 0) {
         await refreshAdvisorCards(false)
       }
     } catch (error) {
       console.error('Error loading advisor cards:', error)
     } finally {
       setCardsLoading(false)
+      isLoadingCardsRef.current = false
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id])
