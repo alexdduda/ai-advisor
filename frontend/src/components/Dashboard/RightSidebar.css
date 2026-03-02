@@ -32,34 +32,36 @@
 .rsb-toggle {
   position: fixed;
   right: 0;
-  transform: translateX(-100%) translateY(-50%);
-  background: var(--accent-primary, #ED1B2F);
-  border: none;
-  color: white;
+  /* top is set inline via JS */
+  transform: translateY(-50%);
+  background: var(--bg-primary, #fff);
+  border: 1px solid var(--border-primary, #e5e7eb);
+  border-right: none;
+  color: var(--text-secondary);
   cursor: grab;
-  padding: 8px 10px;
-  width: auto;
-  min-width: 44px;
-  height: 36px;
+  width: 18px;
+  height: 44px;
   border-radius: 6px 0 0 6px;
-  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.2);
-  transition: all 0.2s ease;
+  box-shadow: -1px 0 6px rgba(0,0,0,0.07);
+  transition: background 0.15s, color 0.15s, width 0.15s;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
   z-index: 99;
   user-select: none;
 }
 
 .rsb-toggle:hover {
-  background: #c0152a;
-  box-shadow: -3px 0 12px rgba(0, 0, 0, 0.25);
+  background: var(--accent-primary, #ED1B2F);
+  border-color: var(--accent-primary, #ED1B2F);
+  color: white;
+  width: 22px;
 }
 
 .rsb-toggle--dragging {
   cursor: grabbing;
-  opacity: 0.85;
+  background: var(--accent-primary, #ED1B2F);
+  color: white;
 }
 
 /* ── Header — mirrors .sidebar-header ── */
@@ -391,4 +393,17 @@
   background: rgba(237, 27, 47, 0.12);
   border-color: rgba(237, 27, 47, 0.4);
   color: #f87171;
+}
+
+/* ── Dark mode: draggable toggle tab ── */
+[data-theme="dark"] .rsb-toggle {
+  background: #1f2937;
+  border-color: rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.4);
+}
+[data-theme="dark"] .rsb-toggle:hover,
+[data-theme="dark"] .rsb-toggle--dragging {
+  background: var(--accent-primary, #ED1B2F);
+  border-color: var(--accent-primary, #ED1B2F);
+  color: white;
 }
