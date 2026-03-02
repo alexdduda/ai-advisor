@@ -10,7 +10,9 @@
   border-right: 1px solid var(--border-primary, #E0E0E0);
   display: flex;
   flex-direction: column;
-  transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              background 0.25s ease,
+              border-color 0.25s ease;
   z-index: 100;
   overflow: visible;
 }
@@ -21,7 +23,41 @@
   border-right: none;
   background: transparent;
   overflow: visible;
-  pointer-events: none; /* let content below receive clicks */
+  pointer-events: none;
+}
+
+/* ── Animated sidebar content (replaces {sidebarOpen && ...}) ── */
+.sidebar-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  will-change: opacity, transform;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.sidebar-content--visible {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+  /* Stagger children in on mount */
+  animation: sidebar-enter 0.22s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.sidebar-content--hidden {
+  opacity: 0;
+  transform: translateX(-12px);
+  pointer-events: none;
+}
+
+@keyframes sidebar-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 /* ── Header (open only) ── */
@@ -53,6 +89,13 @@
   font-weight: 700;
   font-size: 0.85rem;
   flex-shrink: 0;
+  /* Subtle pulse on load */
+  animation: logo-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s both;
+}
+
+@keyframes logo-pop {
+  from { transform: scale(0.8); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
 }
 
 .logo-name {
@@ -60,6 +103,12 @@
   font-weight: 700;
   color: var(--text-primary);
   white-space: nowrap;
+  animation: fade-slide-right 0.2s ease 0.12s both;
+}
+
+@keyframes fade-slide-right {
+  from { opacity: 0; transform: translateX(-6px); }
+  to   { opacity: 1; transform: translateX(0); }
 }
 
 .sidebar-collapse-btn {
@@ -74,13 +123,19 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  transition: all 0.15s ease;
+  transition: background 0.15s ease, border-color 0.15s ease,
+              color 0.15s ease, transform 0.15s ease;
 }
 
 .sidebar-collapse-btn:hover {
   background: var(--accent-primary, #ED1B2F);
   border-color: var(--accent-primary, #ED1B2F);
   color: white;
+  transform: scale(1.08);
+}
+
+.sidebar-collapse-btn:active {
+  transform: scale(0.93);
 }
 
 /* ── Nav (open) ── */
@@ -104,19 +159,49 @@
   background: none;
   border-radius: 10px;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
   font-size: 1rem;
   color: var(--text-secondary);
   text-align: left;
   white-space: nowrap;
   flex-shrink: 0;
+  /* Staggered entrance driven by --nav-index CSS var */
+  animation: nav-item-enter 0.22s cubic-bezier(0.4, 0, 0.2, 1) both;
+  animation-delay: calc(0.05s + var(--nav-index, 0) * 0.04s);
+  transition: background 0.15s ease, color 0.15s ease, transform 0.12s ease;
 }
 
-.nav-item:hover { background: var(--bg-secondary); color: var(--text-primary); }
+@keyframes nav-item-enter {
+  from { opacity: 0; transform: translateX(-10px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.nav-item:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  transform: translateX(3px);
+}
+
+.nav-item:active {
+  transform: translateX(1px) scale(0.98);
+}
 
 .nav-item.active {
   background: linear-gradient(135deg, var(--accent-primary, #ED1B2F) 0%, #B01B2E 100%);
   color: white;
+  animation: nav-item-enter 0.22s cubic-bezier(0.4, 0, 0.2, 1) both,
+             nav-activate 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation-delay: calc(0.05s + var(--nav-index, 0) * 0.04s), 0s;
+}
+
+@keyframes nav-activate {
+  0%   { transform: translateX(-4px) scale(0.97); }
+  60%  { transform: translateX(2px)  scale(1.01); }
+  100% { transform: translateX(0)    scale(1); }
+}
+
+/* Override hover translate on active items */
+.nav-item.active:hover {
+  transform: translateX(2px);
 }
 
 .nav-icon {
@@ -126,10 +211,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: transform 0.15s ease;
+}
+
+.nav-item:hover .nav-icon {
+  transform: scale(1.15);
 }
 
 .nav-item:not(.active) .nav-icon { color: var(--accent-primary, #ED1B2F); }
 .nav-item.active .nav-icon { color: white; }
+.nav-item.active:hover .nav-icon { transform: scale(1.12); }
+
 .nav-label { font-weight: 500; font-size: 1rem; }
 
 /* ── Footer (open) ── */
@@ -138,6 +230,12 @@
   border-top: 1px solid var(--border-primary, #E0E0E0);
   position: relative;
   flex-shrink: 0;
+  animation: fade-up 0.25s ease 0.18s both;
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .user-info {
@@ -150,11 +248,20 @@
   width: 100%;
   border: none;
   cursor: pointer;
-  transition: all 0.15s ease;
   text-align: left;
+  transition: background 0.15s ease, transform 0.12s ease, box-shadow 0.15s ease;
 }
 
-.user-info:hover { background: rgba(237, 27, 47, 0.08); }
+.user-info:hover {
+  background: rgba(237, 27, 47, 0.08);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+}
+
+.user-info:active {
+  transform: translateY(0) scale(0.99);
+  box-shadow: none;
+}
 
 .user-avatar {
   width: 32px;
@@ -170,6 +277,11 @@
   flex-shrink: 0;
   overflow: hidden;
   position: relative;
+  transition: transform 0.15s ease;
+}
+
+.user-info:hover .user-avatar {
+  transform: scale(1.08);
 }
 
 .user-avatar-image {
@@ -197,7 +309,7 @@
   text-overflow: ellipsis;
 }
 
-/* ── Mini Rail — single capsule containing all icons ── */
+/* ── Mini Rail ── */
 .mini-rail {
   position: fixed;
   left: 10px;
@@ -206,8 +318,14 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  pointer-events: all; /* re-enable clicks on the capsule */
+  pointer-events: all;
   z-index: 101;
+  animation: mini-rail-enter 0.25s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes mini-rail-enter {
+  from { opacity: 0; transform: translateY(-50%) translateX(-8px); }
+  to   { opacity: 1; transform: translateY(-50%) translateX(0); }
 }
 
 .mini-capsule {
@@ -215,7 +333,6 @@
   flex-direction: column;
   align-items: center;
   gap: 0;
-  /* No background, no border — just the pills */
   border: none;
   border-radius: 22px;
   padding: 2px;
@@ -244,26 +361,54 @@
   align-items: center;
   justify-content: center;
   font-size: 0.9rem;
-  transition: all 0.15s ease;
   flex-shrink: 0;
+  transition: background 0.15s ease, color 0.15s ease,
+              transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.15s ease;
+  /* Staggered entrance */
+  animation: pill-enter 0.22s cubic-bezier(0.4, 0, 0.2, 1) both;
+  animation-delay: calc(0.04s + var(--pill-index, 0) * 0.03s);
+}
+
+@keyframes pill-enter {
+  from { opacity: 0; transform: scale(0.7); }
+  to   { opacity: 1; transform: scale(1); }
 }
 
 .mini-pill:hover {
   background: rgba(237, 27, 47, 0.1);
   color: var(--accent-primary, #ED1B2F);
-  transform: scale(1.1);
+  transform: scale(1.18);
+}
+
+.mini-pill:active {
+  transform: scale(0.88);
+  transition-duration: 0.08s;
 }
 
 .mini-pill--active {
   background: linear-gradient(135deg, var(--accent-primary, #ED1B2F) 0%, #B01B2E 100%);
   color: white;
-  box-shadow: 0 2px 8px rgba(237, 27, 47, 0.35);
+  box-shadow: 0 2px 8px rgba(237, 27, 47, 0.4);
+  animation: pill-enter 0.22s cubic-bezier(0.4, 0, 0.2, 1) both,
+             pill-activate 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation-delay: calc(0.04s + var(--pill-index, 0) * 0.03s), 0s;
+}
+
+@keyframes pill-activate {
+  0%   { transform: scale(0.85); }
+  60%  { transform: scale(1.12); }
+  100% { transform: scale(1); }
 }
 
 .mini-pill--active:hover {
   background: linear-gradient(135deg, var(--accent-primary, #ED1B2F) 0%, #B01B2E 100%);
   color: white;
-  transform: scale(1.1);
+  transform: scale(1.12);
+}
+
+.mini-pill--active:active {
+  transform: scale(0.92);
 }
 
 .mini-pill--expand {
@@ -274,7 +419,7 @@
 .mini-pill--expand:hover {
   color: var(--accent-primary, #ED1B2F);
   background: rgba(237, 27, 47, 0.1);
-  transform: scale(1.1);
+  transform: scale(1.18) rotate(45deg);
 }
 
 /* ── Popup menu ── */
@@ -289,12 +434,13 @@
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
   padding: 6px;
   z-index: 200;
-  animation: popup-in 0.15s ease-out;
+  animation: popup-in 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-origin: bottom left;
 }
 
 @keyframes popup-in {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(8px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0)  scale(1); }
 }
 
 .sidebar-popup-arrow {
@@ -319,16 +465,31 @@
   background: none;
   border-radius: 8px;
   cursor: pointer;
-  transition: background 0.12s;
   font-size: 0.875rem;
   color: var(--text-primary);
   text-align: left;
+  transition: background 0.12s ease, transform 0.1s ease, color 0.1s ease;
 }
 
-.sidebar-popup-item:hover { background: var(--bg-secondary); }
+.sidebar-popup-item:hover {
+  background: var(--bg-secondary);
+  transform: translateX(2px);
+}
+
+.sidebar-popup-item:active {
+  transform: translateX(1px) scale(0.98);
+}
+
 .sidebar-popup-item--danger { color: #DC2626; }
-.sidebar-popup-item--danger:hover { background: rgba(220, 38, 38, 0.08); }
-.sidebar-popup-icon { font-size: 0.95rem; flex-shrink: 0; width: 18px; text-align: center; }
+.sidebar-popup-item--danger:hover { background: rgba(220, 38, 38, 0.08); transform: translateX(2px); }
+.sidebar-popup-icon {
+  font-size: 0.95rem;
+  flex-shrink: 0;
+  width: 18px;
+  text-align: center;
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.sidebar-popup-item:hover .sidebar-popup-icon { transform: scale(1.2); }
 .sidebar-popup-label { font-weight: 500; }
 
 .sidebar-popup-divider {
@@ -337,15 +498,21 @@
   margin: 4px 6px;
 }
 
-/* ── Overlay ── */
+/* ── Overlay — animated fade ── */
 .sidebar-overlay {
-  display: none;
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.4);
   z-index: 99;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s ease;
 }
-.sidebar-overlay.active { display: block; }
+
+.sidebar-overlay--visible {
+  opacity: 1;
+  pointer-events: auto;
+}
 
 /* ── Dark mode ── */
 [data-theme="dark"] .sidebar {
