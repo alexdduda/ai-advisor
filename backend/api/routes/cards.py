@@ -25,6 +25,16 @@ from api.exceptions import UserNotFoundException
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
+
+def _lang_instruction(language: str) -> str:
+    if language == "fr":
+        return (
+            "\n\nCRITICAL: You MUST respond entirely in French. "
+            "Every text field — title, body, actions, label — must be in French. "
+            "Do not use any English words."
+        )
+    return ""
+
 # ── Anthropic client singleton ───────────────────────────────────
 # FIX: Create once at module level instead of per-request to avoid
 # repeated object allocation and connection overhead.
@@ -57,13 +67,19 @@ class ThreadRequest(BaseModel):
     user_id: str
     message: str
     card_context: str
+    language: str = "en"
 
 class GenerateRequest(BaseModel):
     force: bool = False
+    language: str = "en"
 
 class AskRequest(BaseModel):
     user_id: str
     question: str
+    language: str = "en"
+
+class RetranslateRequest(BaseModel):
+    language: str = "en"
 
 class SaveRequest(BaseModel):
     is_saved: bool
@@ -201,6 +217,7 @@ def insert_user_card(user_id: str, card: dict, question: str) -> dict:
         "source": "user",
         "is_saved": False,
         "generated_at": datetime.now(timezone.utc).isoformat(),
+        "user_question": question,   # store for retranslation
     }
     result = supabase.table("advisor_cards").insert(row).execute()
     inserted = result.data[0] if result.data else row
@@ -340,7 +357,7 @@ async def generate_cards(user_id: str, request: GenerateRequest):
 
         ctx = fetch_student_context(user_id)
         saved = fetch_saved_cards(user_id)
-        prompt = build_rich_context(ctx, saved_cards=saved)
+        prompt = build_rich_context(ctx, saved_cards=saved) + _lang_instruction(request.language)
 
         # FIX: Use module-level singleton instead of creating a new client per request.
         # FIX: Use settings.CLAUDE_MODEL so model is configurable without code changes.
@@ -377,6 +394,89 @@ async def generate_cards(user_id: str, request: GenerateRequest):
     except Exception as e:
         logger.exception(f"Card generation failed for {user_id}: {e}")
         raise HTTPException(status_code=500, detail="Failed to generate advisor cards")
+
+
+@router.post("/retranslate/{user_id}", response_model=dict)
+async def retranslate_cards(user_id: str, request: RetranslateRequest):
+    """Re-generate all non-saved user-asked cards in the new language."""
+    try:
+        get_user_by_id(user_id)
+        supabase = get_supabase()
+
+        # Fetch all non-saved user-asked cards that have a stored question
+        resp = (supabase.table("advisor_cards")
+            .select("id, user_question")
+            .eq("user_id", user_id)
+            .eq("source", "user")
+            .eq("is_saved", False)
+            .execute())
+        user_cards = [c for c in (resp.data or []) if c.get("user_question")]
+
+        if not user_cards:
+            return {"retranslated": 0}
+
+        ctx = fetch_student_context(user_id)
+        client = get_anthropic_client()
+        retranslated = 0
+
+        for card_row in user_cards:
+            card_id = card_row["id"]
+            question = card_row["user_question"]
+
+            prompt = f"""You are a proactive AI academic advisor for McGill University.
+A student has asked: "{question}"
+
+Based on their profile below, generate a single helpful advisor card that directly answers their question.
+
+{build_rich_context(ctx)}
+
+Return a single JSON object (not an array) with these fields:
+  "type"     : one of "urgent" | "warning" | "insight" | "progress"
+  "icon"     : single emoji relevant to the answer
+  "label"    : short ALL-CAPS label (≤ 4 words)
+  "title"    : concise headline answering the question (≤ 12 words)
+  "body"     : 2–4 sentence answer with specific, actionable detail
+  "actions"  : array of 2–3 follow-up question strings
+  "category" : one of: {", ".join(f'"{c}"' for c in CARD_CATEGORIES)}
+
+Return ONLY the JSON object — no markdown, no commentary.{_lang_instruction(request.language)}"""
+
+            try:
+                message = client.messages.create(
+                    model=settings.CLAUDE_MODEL,
+                    max_tokens=1024,
+                    messages=[{"role": "user", "content": prompt}],
+                )
+                raw = message.content[0].text.strip()
+                if raw.startswith("```"):
+                    raw = raw.split("\n", 1)[1].rsplit("```", 1)[0].strip()
+                card_data = json.loads(raw)
+
+                # Update the existing card in-place
+                supabase.table("advisor_cards").update({
+                    "card_type": card_data.get("type", "insight"),
+                    "icon": card_data.get("icon", "💬"),
+                    "label": card_data.get("label", ""),
+                    "title": card_data.get("title", ""),
+                    "body": card_data.get("body", ""),
+                    "actions": json.dumps(card_data.get("actions", [])),
+                    "category": _sanitise_category(card_data),
+                    "generated_at": datetime.now(timezone.utc).isoformat(),
+                }).eq("id", card_id).execute()
+                retranslated += 1
+
+            except Exception as e:
+                logger.warning(f"Failed to retranslate card {card_id}: {e}")
+                continue
+
+        logger.info(f"Retranslated {retranslated} user cards for {user_id} to '{request.language}'")
+        return {"retranslated": retranslated}
+
+    except UserNotFoundException:
+        raise HTTPException(status_code=404, detail="User not found")
+    except Exception as e:
+        logger.exception(f"Retranslate failed for {user_id}: {e}")
+        raise HTTPException(status_code=500, detail="Failed to retranslate cards")
 
 
 @router.delete("/{user_id}", status_code=204)
@@ -436,7 +536,7 @@ Return a single JSON object (not an array) with these fields:
   "actions"  : array of 2–3 follow-up question strings
   "category" : one of: {", ".join(f'"{c}"' for c in CARD_CATEGORIES)}
 
-Return ONLY the JSON object — no markdown, no commentary."""
+Return ONLY the JSON object — no markdown, no commentary.{_lang_instruction(request.language)}"""
 
         # FIX: Use module-level singleton instead of creating a new client per request.
         client = get_anthropic_client()
@@ -474,7 +574,7 @@ Card context: {request.card_context}
 
 Student's follow-up: {request.message}
 
-Provide a concise, helpful, and specific response (2–4 sentences). Be direct and actionable."""
+Provide a concise, helpful, and specific response (2–4 sentences). Be direct and actionable.{_lang_instruction(request.language)}"""
 
         # FIX: Use module-level singleton instead of creating a new client per request.
         client = get_anthropic_client()

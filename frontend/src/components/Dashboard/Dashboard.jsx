@@ -25,7 +25,7 @@ import './Dashboard.css'
 
 export default function Dashboard() {
   const { user, profile, signOut, updateProfile } = useAuth()
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
 
   // ── Layout ─────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState('chat')
@@ -205,6 +205,22 @@ export default function Dashboard() {
     document.body.style.setProperty('--rsb-width', visible ? '320px' : '0px')
     return () => document.body.style.setProperty('--rsb-width', '0px')
   }, [rightSidebarOpen, activeTab])
+
+  // ── Regenerate ALL cards when language switches ─────────────
+  const isFirstRender = useRef(true)
+  useEffect(() => {
+    if (isFirstRender.current) { isFirstRender.current = false; return }
+    if (!user?.id) return
+    // Run both in parallel: AI cards regenerate, user-asked cards retranslate
+    Promise.all([
+      refreshAdvisorCards(true),
+      cardsAPI.retranslateCards(user.id),
+    ]).then(() => {
+      // Reload cards so retranslated user cards appear
+      loadAdvisorCards()
+    }).catch(e => console.error('Language switch card update failed:', e))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [language])
 
   // ── Pinned card handler ───────────────────────────────────
   const handlePinToggle = (card, thread) => {

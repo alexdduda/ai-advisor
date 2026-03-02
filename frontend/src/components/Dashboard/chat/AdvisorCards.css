@@ -1134,3 +1134,13 @@
 .category-tab--history-icon:hover .history-icon-img {
   opacity: 1;
 }
+
+/* ─── DARK MODE: AI bubble fix ───────────────────────────────────────────────
+   App.css sets --bot-msg-bg: #f3f4f6 on :root and loads after theme.css,
+   so the CSS variable approach always loses the specificity war.
+   This direct selector override with !important wins regardless of load order. */
+[data-theme='dark'] .thread-message--assistant .thread-text,
+[data-theme='dark'] .advisor-card__thread--preview .thread-message--assistant .thread-text {
+  background: #000 !important;
+  color: var(--text-primary) !important;
+}

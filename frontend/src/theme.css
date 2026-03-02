@@ -184,6 +184,9 @@
   --bg-hover: #1e293b;
   --bg-active: #334155;
   
+  /* ─── Bot message bubble ─── */
+  --bot-msg-bg: #000000;
+  
   /* ─── Text Colors ─── */
   --text-primary: #f1f5f9;
   --text-secondary: #cbd5e1;
