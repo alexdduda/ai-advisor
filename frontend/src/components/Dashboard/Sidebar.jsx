@@ -25,13 +25,25 @@ export default function Sidebar({
   user, profile, profileImage, onSignOut,
 }) {
   const [popupOpen, setPopupOpen] = useState(false)
+  // isMounted controls whether the full sidebar content stays in DOM for exit animation
+  const [isMounted, setIsMounted] = useState(sidebarOpen)
   const popupRef   = useRef(null)
   const triggerRef = useRef(null)
 
   const { theme, setTheme } = useTheme()
   const { language, setLanguage, t } = useLanguage()
 
-  useEffect(() => { if (!sidebarOpen) setPopupOpen(false) }, [sidebarOpen])
+  // Handle delayed unmount for exit animation
+  useEffect(() => {
+    if (sidebarOpen) {
+      setIsMounted(true)
+    } else {
+      setPopupOpen(false)
+      // Keep mounted long enough for the exit animation (200ms)
+      const timer = setTimeout(() => setIsMounted(false), 220)
+      return () => clearTimeout(timer)
+    }
+  }, [sidebarOpen])
 
   useEffect(() => {
     if (!popupOpen) return
@@ -70,9 +82,9 @@ export default function Sidebar({
     <>
       <aside className={`sidebar ${sidebarOpen ? 'sidebar--open' : 'sidebar--mini'}`}>
 
-        {/* ── OPEN: full sidebar ── */}
-        {sidebarOpen && (
-          <>
+        {/* ── OPEN: full sidebar with animated content ── */}
+        {isMounted && (
+          <div className={`sidebar-content ${sidebarOpen ? 'sidebar-content--visible' : 'sidebar-content--hidden'}`}>
             <div className="sidebar-header">
               <div className="logo-container">
                 <div className="logo-icon">SY</div>
@@ -84,11 +96,12 @@ export default function Sidebar({
             </div>
 
             <nav className="sidebar-nav">
-              {navItems.map(({ key, icon, label }) => (
+              {navItems.map(({ key, icon, label }, index) => (
                 <button
                   key={key}
                   className={`nav-item ${activeTab === key ? 'active' : ''}`}
                   onClick={() => onTabChange(key)}
+                  style={{ '--nav-index': index }}
                 >
                   <span className="nav-icon">{icon}</span>
                   <span className="nav-label">{label}</span>
@@ -129,19 +142,20 @@ export default function Sidebar({
                 </div>
               </button>
             </div>
-          </>
+          </div>
         )}
 
         {/* ── MINI: icon pills inside ONE shared capsule outline ── */}
-        {!sidebarOpen && (
+        {!sidebarOpen && !isMounted && (
           <div className="mini-rail">
             <div className="mini-capsule">
-              {navItems.map(({ key, icon, label }) => (
+              {navItems.map(({ key, icon, label }, index) => (
                 <button
                   key={key}
                   className={`mini-pill ${activeTab === key ? 'mini-pill--active' : ''}`}
                   onClick={() => onTabChange(key)}
                   title={label}
+                  style={{ '--pill-index': index }}
                 >
                   {icon}
                 </button>
@@ -159,9 +173,11 @@ export default function Sidebar({
         )}
       </aside>
 
-      {sidebarOpen && (
-        <div className="sidebar-overlay active" onClick={() => setSidebarOpen(false)} />
-      )}
+      {/* Overlay with fade animation */}
+      <div
+        className={`sidebar-overlay ${sidebarOpen ? 'sidebar-overlay--visible' : ''}`}
+        onClick={() => setSidebarOpen(false)}
+      />
     </>
   )
 }

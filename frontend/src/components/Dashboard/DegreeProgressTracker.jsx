@@ -80,7 +80,7 @@ export default function DegreeProgressTracker({ completedCourses = [], profile =
           <div className="credit-details">
             <div className="credit-label">{t('degree.completedCourses')}</div>
             <div className="credit-value">
-              {stats.completedCredits} {t('courses.credits').toLowerCase()}
+              <span>{stats.completedCourseCount} {t('nav.courses')}</span>
             </div>
           </div>
         </div>
