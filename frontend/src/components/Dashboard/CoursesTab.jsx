@@ -228,7 +228,7 @@ export default function CoursesTab({
                           <FaUser /> {course.instructor}
                           {course._syllabusProf && (
                             <span className="instructor-badge-syllabus" title="Professor from your uploaded syllabus">
-                              📄 Your prof
+                              {t('courses.yourProf')}
                             </span>
                           )}
                         </div>
@@ -267,7 +267,7 @@ export default function CoursesTab({
                                 )}
                                 {rmpUrl && (
                                   <a href={rmpUrl} target="_blank" rel="noopener noreferrer" className="rmp-stat rmp-link-inline">
-                                    <FaExternalLinkAlt size={10} /> View on RMP
+                                    <FaExternalLinkAlt size={10} /> {t('courses.rmpViewLink')}
                                   </a>
                                 )}
                               </div>
@@ -278,7 +278,7 @@ export default function CoursesTab({
                           const profName = course._syllabusProf || course.instructor
                           const isLooking = course._syllabusProf && rmpCache[courseKey] === undefined
                           if (isLooking) {
-                            return <div className="rmp-looking">Looking up RateMyProfessors…</div>
+                            return <div className="rmp-looking">{t('courses.rmpLooking')}</div>
                           }
                           if (course._syllabusProf) {
                             return (
@@ -288,7 +288,7 @@ export default function CoursesTab({
                                 rel="noopener noreferrer"
                                 className="rmp-find-link"
                               >
-                                <FaStar size={11} /> Find {profName} on RateMyProfessors →
+                                <FaStar size={11} /> {t('courses.rmpFind').replace('{name}', profName)}
                               </a>
                             )
                           }
@@ -442,7 +442,7 @@ export default function CoursesTab({
                     <FaChartBar /> {t('courses.professorRating')}: {profName}
                     {sylProf && (
                       <span className="instructor-badge-syllabus" style={{ marginLeft: 8 }}>
-                        📄 Your prof
+                        {t('courses.yourProf')}
                       </span>
                     )}
                   </h3>
@@ -525,7 +525,7 @@ export default function CoursesTab({
                           rel="noopener noreferrer"
                           className="ct-rmp-search-link"
                         >
-                          <FaStar /> Search on RateMyProfessors →
+                          <FaStar /> {t('courses.rmpFind').replace('{name}', instructor)}
                         </a>
                       )}
                     </div>

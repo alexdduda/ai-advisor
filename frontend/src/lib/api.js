@@ -99,12 +99,14 @@ api.interceptors.response.use(
 // Chat API with session support
 export const chatAPI = {
   async sendMessage(userId, message, sessionId = null, currentTab = null) {
+    const language = localStorage.getItem('language') === 'fr' ? 'fr' : 'en'
     try {
       const response = await api.post('/chat/send', {
         user_id: userId,
         message: message,
         session_id: sessionId,
         current_tab: currentTab,
+        language,
       })
       return response.data
     } catch (error) {

@@ -30,45 +30,54 @@ export const CATEGORY_ICONS = {
   other:         '💬',
 }
 
+/** Always read language directly from localStorage so every request is current. */
+function getLang() {
+  return localStorage.getItem('language') === 'fr' ? 'fr' : 'en'
+}
+
 const cardsAPI = {
-  /** Fetch stored cards instantly — call on load */
   async getCards(userId) {
     const response = await fetch(`${BASE_URL}/api/cards/${userId}`)
     if (!response.ok) throw new Error('Failed to fetch advisor cards')
     return response.json()
   },
 
-  /** Trigger card generation (skips if fresh unless force=true) */
   async generateCards(userId, force = false) {
     const response = await fetch(`${BASE_URL}/api/cards/generate/${userId}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ force }),
+      body: JSON.stringify({ force, language: getLang() }),
     })
     if (!response.ok) throw new Error('Failed to generate advisor cards')
     return response.json()
   },
 
-  /**
-   * User asks a freeform question.
-   * Returns { card } — a single new card inserted at top of feed.
-   */
+  /** Re-generate all non-saved user-asked cards in the current language. */
+  async retranslateCards(userId) {
+    const response = await fetch(`${BASE_URL}/api/cards/retranslate/${userId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ language: getLang() }),
+    })
+    if (!response.ok) throw new Error('Failed to retranslate cards')
+    return response.json()
+  },
+
   async askCard(userId, question) {
     const response = await fetch(`${BASE_URL}/api/cards/ask/${userId}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user_id: userId, question }),
+      body: JSON.stringify({ user_id: userId, question, language: getLang() }),
     })
     if (!response.ok) throw new Error('Failed to generate card from question')
     return response.json()
   },
 
-  /** Follow-up message inside a card thread. Returns the AI's reply string. */
   async sendThreadMessage(cardId, userId, message, cardContext) {
     const response = await fetch(`${BASE_URL}/api/cards/${cardId}/thread`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user_id: userId, message, card_context: cardContext }),
+      body: JSON.stringify({ user_id: userId, message, card_context: cardContext, language: getLang() }),
     })
     if (!response.ok) throw new Error('Failed to send thread message')
     const data = await response.json()

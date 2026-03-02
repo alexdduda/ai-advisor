@@ -50,6 +50,7 @@ class ChatRequest(BaseModel):
     user_id: str
     session_id: Optional[str] = None
     current_tab: Optional[str] = None   # e.g. "courses", "calendar", "degree", "profile"
+    language: Optional[str] = "en"      # "en" | "fr"
 
     # FIX: Use Pydantic v2 field_validator instead of deprecated @validator
     @field_validator('message', mode='before')
@@ -80,7 +81,7 @@ class ChatResponse(BaseModel):
 
 # ── Context builder ───────────────────────────────────────────────────────────
 
-def build_system_context(user: dict, current_tab: str | None = None) -> str:
+def build_system_context(user: dict, current_tab: str | None = None, language: str = "en") -> str:
     """
     Build a rich system context for Claude using all available student data.
     Fetches favorites, completed courses, current courses, and calendar events
@@ -138,6 +139,10 @@ This is the main chat interface. Help them with any academic questions.
     }
 
     tab_context = TAB_GUIDANCE.get(current_tab or "", "")
+    lang_instruction = (
+        "\n\nCRITICAL: You MUST respond entirely in French. Do not use any English."
+        if language == "fr" else ""
+    )
 
     try:
         # Import here to avoid circular imports
@@ -155,7 +160,7 @@ You are now answering a direct question from the student.
 - Do not repeat back the student's profile to them — just answer their question
 - Be encouraging and honest about trade-offs
 - If the student seems confused about where to find something, give them specific UI navigation tips
-{tab_context}
+{tab_context}{lang_instruction}
 """
     except Exception as e:
         logger.warning(f"Extended context fetch failed, falling back to minimal context: {e}")
@@ -181,7 +186,7 @@ Guidelines:
 - Be honest about limitations in your knowledge
 - Suggest consulting official McGill resources when appropriate
 - Keep responses concise but informative (aim for 2-4 paragraphs)
-{tab_context}
+{tab_context}{lang_instruction}
 """
 
 
@@ -225,7 +230,7 @@ async def send_message(request: ChatRequest):
         history = get_chat_history(request.user_id, session_id=session_id, limit=10)
 
         # Build enriched system context
-        system_context = build_system_context(user, current_tab=request.current_tab)
+        system_context = build_system_context(user, current_tab=request.current_tab, language=request.language or "en")
 
         # Prepare messages for Claude
         CHAT_CONTEXT_MESSAGES = 8

@@ -318,6 +318,55 @@ const translations = {
     'calendar.notifOff': 'OFF',
     'calendar.enableNotifications': 'Enable reminders for this event',
 
+    // ── Right Sidebar / Website Assistant ─────────────────
+    'rsb.pinnedChat': 'Pinned Chat',
+    'rsb.unpinCard': 'Unpin card',
+    'rsb.closeSidebar': 'Close sidebar',
+    'rsb.noMessages': 'No messages yet. Ask a follow-up below to continue the conversation.',
+    'rsb.websiteAssistant': 'Website Assistant',
+    'rsb.askAnything': 'Ask me anything',
+    'rsb.close': 'Close',
+    'rsb.openPinned': 'Open pinned chat',
+    'rsb.openAssistant': 'Open Website Assistant',
+    'rsb.navPlaceholder': 'Ask me about courses, planning, or how to navigate…',
+    'rsb.errorMsg': '❌ Something went wrong. Please try again.',
+    'rsb.greeting': "Hi! I'm your academic advisor. You're on {tab} — ask me anything or tap a suggestion below.",
+    'rsb.followUpPlaceholder': 'Ask a follow-up…',
+
+    // Nav suggestion chips per tab
+    'rsb.nav.courses.1': 'How do I search for a course?',
+    'rsb.nav.courses.2': 'What do the GPA badges mean?',
+    'rsb.nav.courses.3': 'How do I mark a course complete?',
+    'rsb.nav.calendar.1': 'How do I add an event?',
+    'rsb.nav.calendar.2': 'How do I upload a syllabus?',
+    'rsb.nav.calendar.3': 'Where are my final exam dates?',
+    'rsb.nav.degree.1': 'How does degree progress work?',
+    'rsb.nav.degree.2': 'What is a complementary course?',
+    'rsb.nav.degree.3': 'How do I add a minor?',
+    'rsb.nav.profile.1': 'How do I upload my transcript?',
+    'rsb.nav.profile.2': 'How do I add transfer credits?',
+    'rsb.nav.profile.3': 'How do I change my major?',
+    'rsb.nav.abroad.1': 'How do exchanges work at McGill?',
+    'rsb.nav.abroad.2': 'Which programs are in Europe?',
+    'rsb.nav.abroad.3': 'How do credits transfer?',
+    'rsb.nav.default.1': 'What can you help me with?',
+    'rsb.nav.default.2': 'How do I plan my degree?',
+    'rsb.nav.default.3': 'Show me my course options',
+
+    // Tab labels used in greeting
+    'rsb.tab.courses': 'Courses',
+    'rsb.tab.calendar': 'Calendar',
+    'rsb.tab.degree': 'Degree Planning',
+    'rsb.tab.profile': 'Profile',
+    'rsb.tab.abroad': 'Study Abroad',
+    'rsb.tab.default': 'the dashboard',
+
+    // ── CoursesTab RMP labels ─────────────────────────────
+    'courses.yourProf': '📄 Your prof',
+    'courses.rmpLooking': 'Looking up RateMyProfessors…',
+    'courses.rmpFind': 'Find {name} on RateMyProfessors →',
+    'courses.rmpViewLink': 'View on RMP',
+
     // ── Calendar static event titles (EN) ─────────────────
     'cal.fallBegins': 'Fall Semester Begins',
     'cal.fallMidterms': 'Fall Midterm Season',
@@ -1125,6 +1174,61 @@ const translations = {
     'brief.time1Min': 'il y a 1 min',
     'brief.timeMins': 'il y a {n} min',
     'brief.timeHours': 'il y a {n}h',
+
+    // ── Calendar missing keys ──────────────────────────────
+    'calendar.remindSameDay': 'Même jour',
+    'calendar.notifOn': 'ACT.',
+    'calendar.notifOff': 'DÉS.',
+    'calendar.enableNotifications': 'Activer les rappels pour cet événement',
+
+    // ── Right Sidebar / Website Assistant ─────────────────
+    'rsb.pinnedChat': 'Chat épinglé',
+    'rsb.unpinCard': 'Désépingler la fiche',
+    'rsb.closeSidebar': 'Fermer la barre latérale',
+    'rsb.noMessages': "Aucun message pour l'instant. Posez une question de suivi ci-dessous.",
+    'rsb.websiteAssistant': 'Assistant du site',
+    'rsb.askAnything': 'Posez-moi une question',
+    'rsb.close': 'Fermer',
+    'rsb.openPinned': 'Ouvrir le chat épinglé',
+    'rsb.openAssistant': "Ouvrir l'assistant du site",
+    'rsb.navPlaceholder': 'Posez-moi une question sur les cours, la planification ou la navigation…',
+    'rsb.errorMsg': '❌ Une erreur est survenue. Veuillez réessayer.',
+    'rsb.greeting': "Bonjour ! Je suis votre conseiller académique. Vous êtes sur {tab} — posez-moi n'importe quelle question ou choisissez une suggestion ci-dessous.",
+    'rsb.followUpPlaceholder': 'Posez une question de suivi…',
+
+    // Nav suggestion chips per tab (FR)
+    'rsb.nav.courses.1': 'Comment rechercher un cours ?',
+    'rsb.nav.courses.2': 'Que signifient les badges MPC ?',
+    'rsb.nav.courses.3': 'Comment marquer un cours comme complété ?',
+    'rsb.nav.calendar.1': 'Comment ajouter un événement ?',
+    'rsb.nav.calendar.2': 'Comment téléverser un plan de cours ?',
+    'rsb.nav.calendar.3': "Où sont mes dates d'examens finaux ?",
+    'rsb.nav.degree.1': 'Comment fonctionne le suivi du diplôme ?',
+    'rsb.nav.degree.2': "Qu'est-ce qu'un cours complémentaire ?",
+    'rsb.nav.degree.3': 'Comment ajouter une mineure ?',
+    'rsb.nav.profile.1': 'Comment téléverser mon relevé de notes ?',
+    'rsb.nav.profile.2': 'Comment ajouter des crédits de transfert ?',
+    'rsb.nav.profile.3': 'Comment changer ma majeure ?',
+    'rsb.nav.abroad.1': 'Comment fonctionnent les échanges à McGill ?',
+    'rsb.nav.abroad.2': 'Quels programmes sont en Europe ?',
+    'rsb.nav.abroad.3': 'Comment les crédits sont-ils transférés ?',
+    'rsb.nav.default.1': 'Comment puis-je vous aider ?',
+    'rsb.nav.default.2': 'Comment planifier mon diplôme ?',
+    'rsb.nav.default.3': 'Montrez-moi mes options de cours',
+
+    // Tab labels used in greeting (FR)
+    'rsb.tab.courses': 'Cours',
+    'rsb.tab.calendar': 'Calendrier',
+    'rsb.tab.degree': 'Planification académique',
+    'rsb.tab.profile': 'Profil',
+    'rsb.tab.abroad': "Études à l'étranger",
+    'rsb.tab.default': 'le tableau de bord',
+
+    // ── CoursesTab RMP labels ─────────────────────────────
+    'courses.yourProf': '📄 Votre prof',
+    'courses.rmpLooking': 'Recherche sur RateMyProfessors…',
+    'courses.rmpFind': 'Trouver {name} sur RateMyProfessors →',
+    'courses.rmpViewLink': 'Voir sur RMP',
   },
 }
 
