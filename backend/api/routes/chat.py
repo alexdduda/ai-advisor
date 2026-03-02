@@ -49,6 +49,7 @@ class ChatRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=4000)
     user_id: str
     session_id: Optional[str] = None
+    current_tab: Optional[str] = None   # e.g. "courses", "calendar", "degree", "profile"
 
     # FIX: Use Pydantic v2 field_validator instead of deprecated @validator
     @field_validator('message', mode='before')
@@ -79,18 +80,71 @@ class ChatResponse(BaseModel):
 
 # ── Context builder ───────────────────────────────────────────────────────────
 
-def build_system_context(user: dict) -> str:
+def build_system_context(user: dict, current_tab: str | None = None) -> str:
     """
     Build a rich system context for Claude using all available student data.
     Fetches favorites, completed courses, current courses, and calendar events
     from Supabase to give Claude full context about the student.
     Falls back to minimal context if the extended fetch fails.
     """
+
+    TAB_GUIDANCE = {
+        "courses": """
+The student is currently on the **Courses tab** — they can search for courses, view RateMyProfessors ratings, add courses to their saved/current/completed lists, and see grade averages.
+Navigation tips you can share:
+- "Search for a course by name or code in the search bar at the top"
+- "Click any course card to see full details, grade history, and all instructor ratings"
+- "Use the ✓ button to mark a course completed, ❤ to save it, 🔵 to mark it current"
+- "Filter results by subject using the subject dropdown"
+- "Sort by Rating to find the highest-rated professors"
+""",
+        "calendar": """
+The student is currently on the **Calendar tab** — they can view McGill academic dates, final exam schedules, and personal events.
+Navigation tips you can share:
+- "Click any day to see events or add a new one"
+- "Upload a syllabus (top-right of the page) to auto-populate lecture times and assignment deadlines"
+- "Toggle the filter chips to show/hide different event types"
+- "Switch to Announcements view to see upcoming events with countdowns"
+- "Add personal reminders with email notifications using the + button"
+""",
+        "degree": """
+The student is currently on the **Degree Planning tab** — they can track progress toward their degree requirements.
+Navigation tips you can share:
+- "Expand any requirement block to see which courses count and which you've completed"
+- "Green checkmarks mean completed, blue means in-progress, grey means not yet taken"
+- "Use the faculty filter at the top to switch between different program requirements"
+- "Hover over a course code to see its RateMyProfessors rating"
+- "Your degree progress percentage updates automatically as you mark courses complete"
+""",
+        "profile": """
+The student is currently on the **Profile tab** — they can manage their academic profile, upload transcripts, and configure settings.
+Navigation tips you can share:
+- "Upload your unofficial transcript to auto-import all completed courses at once"
+- "Upload syllabus PDFs to populate your calendar with class times and deadlines"
+- "Update your major, year, and faculty to get better course recommendations"
+- "Transfer credits can be added and managed in the Transfer Credits section"
+""",
+        "study-abroad": """
+The student is currently on the **Study Abroad tab** — they can browse exchange programs and partner universities.
+Navigation tips you can share:
+- "Filter by region or language to narrow down programs"
+- "Click any program to see partner universities, credit transfer info, and application deadlines"
+- "Compare programs side by side using the bookmark feature"
+""",
+        "chat": """
+The student is currently on the **Chat tab** — a full-screen AI advisor chat.
+This is the main chat interface. Help them with any academic questions.
+""",
+    }
+
+    tab_context = TAB_GUIDANCE.get(current_tab or "", "")
+
     try:
         # Import here to avoid circular imports
         from api.routes.cards import fetch_student_context, build_rich_context
         ctx = fetch_student_context(user["id"])
-        return build_rich_context(ctx) + """
+        base = build_rich_context(ctx)
+        return base + f"""
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 CHAT MODE
@@ -100,6 +154,8 @@ You are now answering a direct question from the student.
 - Reference actual McGill course codes and data from the profile above where relevant
 - Do not repeat back the student's profile to them — just answer their question
 - Be encouraging and honest about trade-offs
+- If the student seems confused about where to find something, give them specific UI navigation tips
+{tab_context}
 """
     except Exception as e:
         logger.warning(f"Extended context fetch failed, falling back to minimal context: {e}")
@@ -116,7 +172,7 @@ Your responsibilities:
 2. Help with course selection and academic planning
 3. Answer questions about prerequisites and course requirements
 4. Offer study advice and academic guidance
-5. Predict potential performance based on historical grade data when available
+5. Help students navigate the AI Advisor dashboard
 
 Guidelines:
 - Be friendly, encouraging, and supportive
@@ -125,6 +181,7 @@ Guidelines:
 - Be honest about limitations in your knowledge
 - Suggest consulting official McGill resources when appropriate
 - Keep responses concise but informative (aim for 2-4 paragraphs)
+{tab_context}
 """
 
 
@@ -168,7 +225,7 @@ async def send_message(request: ChatRequest):
         history = get_chat_history(request.user_id, session_id=session_id, limit=10)
 
         # Build enriched system context
-        system_context = build_system_context(user)
+        system_context = build_system_context(user, current_tab=request.current_tab)
 
         # Prepare messages for Claude
         CHAT_CONTEXT_MESSAGES = 8
