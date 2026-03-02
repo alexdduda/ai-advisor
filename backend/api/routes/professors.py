@@ -6,7 +6,7 @@ Professor RMP (Rate My Professors) lookup endpoints.
 Given a professor name (from a syllabus upload or degree requirements),
 look up their RMP data from the courses table, which already has
 rmp_rating, rmp_difficulty, rmp_num_ratings, rmp_would_take_again,
-and rmp_url stored per course/instructor row.
+stored per course/instructor row.
 
 Endpoints:
   GET /professors/rmp?name=<name>            — lookup by instructor name
@@ -28,9 +28,10 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 # Columns we need from the courses table for RMP data
+# NOTE: rmp_url does NOT exist as a column in the courses table
 _RMP_COLS = (
     'instructor, Course, course_name, '
-    'rmp_rating, rmp_difficulty, rmp_num_ratings, rmp_would_take_again, rmp_url'
+    'rmp_rating, rmp_difficulty, rmp_num_ratings, rmp_would_take_again'
 )
 
 # Cache keys
@@ -78,6 +79,17 @@ def _best_rmp_row(rows: list, target_name: str) -> dict | None:
     return None
 
 
+def _build_rmp_url(instructor: str) -> str | None:
+    """
+    Build a RateMyProfessors search URL from an instructor name.
+    Since rmp_url is not stored in the DB, we construct a search link.
+    """
+    if not instructor:
+        return None
+    encoded = instructor.strip().replace(' ', '+')
+    return f"https://www.ratemyprofessors.com/search/professors/1439?q={encoded}"
+
+
 def _format_professor(row: dict) -> dict:
     """Convert a raw courses row into a clean professor RMP dict."""
     instr = row.get('instructor') or ''
@@ -96,7 +108,7 @@ def _format_professor(row: dict) -> dict:
             round(float(row['rmp_would_take_again']))
             if row.get('rmp_would_take_again') is not None else None
         ),
-        'rmp_url':              row.get('rmp_url'),
+        'rmp_url':              _build_rmp_url(instr),
         'course_code':          row.get('Course'),
         'course_name':          row.get('course_name'),
     }
@@ -387,7 +399,7 @@ class BulkRmpRequest(BaseModel):
 
 
 @router.post("/rmp-bulk", response_model=dict)
-async def get_rmp_bulk(body: BulkRmpRequest):
+async def get_rmp_bulk_post(body: BulkRmpRequest):
     """
     Bulk lookup: given a list of course codes, return the best RMP data
     for the most-recent instructor of each course.
@@ -446,8 +458,9 @@ async def get_rmp_bulk(body: BulkRmpRequest):
             spaced_code = spaced(compact_code)
             row = by_course.get(compact_code)
             if row and row.get("rmp_rating"):
+                instr = row.get("instructor")
                 ratings[spaced_code] = {
-                    "name":                     row.get("instructor"),
+                    "name":                     instr,
                     "avg_rating":               row.get("rmp_rating"),
                     "avg_difficulty":           row.get("rmp_difficulty"),
                     "num_ratings":              int(row.get("rmp_num_ratings") or 0),
@@ -455,7 +468,7 @@ async def get_rmp_bulk(body: BulkRmpRequest):
                         round(float(row["rmp_would_take_again"]))
                         if row.get("rmp_would_take_again") is not None else None
                     ),
-                    "rmp_url": row.get("rmp_url"),
+                    "rmp_url": _build_rmp_url(instr),
                 }
             else:
                 ratings[spaced_code] = None
