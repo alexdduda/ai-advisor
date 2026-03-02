@@ -1,13 +1,42 @@
-import { useState, useEffect, useRef } from 'react'
-import { FaHeart, FaRegHeart, FaCheckCircle, FaStar, FaBook, FaUser, FaChartBar, FaFlag, FaChevronLeft, FaChevronRight, FaExternalLinkAlt } from 'react-icons/fa'
+import { useState } from 'react'
+import {
+  FaHeart, FaRegHeart, FaCheckCircle, FaStar, FaBook,
+  FaUser, FaChartBar, FaFlag, FaChevronLeft, FaChevronRight,
+  FaArrowLeft, FaTrophy, FaLayerGroup
+} from 'react-icons/fa'
 import { GrPowerCycle } from 'react-icons/gr'
 import { MdOutlineRateReview } from 'react-icons/md'
 import { useLanguage } from '../../contexts/LanguageContext'
-import professorsAPI, { rmpRatingClass, rmpSearchUrl } from '../../lib/professorsAPI'
 import './CoursesTab.css'
 import ProfSuggestionPopover from '../ProfSuggestion/ProfSuggestionPopover'
 
 const PAGE_SIZE = 10
+
+// ── RMP colour helpers ─────────────────────────────────────
+const getRatingColor = (rating) => {
+  if (!rating) return undefined
+  if (rating >= 4.0) return '#22c55e'  // green  — excellent
+  if (rating >= 3.5) return '#84cc16'  // lime   — good
+  if (rating >= 3.0) return '#f59e0b'  // amber  — average
+  return '#ef4444'                      // red    — poor
+}
+
+// Lower difficulty = better/easier = greener
+const getDifficultyColor = (difficulty) => {
+  if (!difficulty) return undefined
+  if (difficulty <= 2.0) return '#22c55e'
+  if (difficulty <= 3.0) return '#84cc16'
+  if (difficulty <= 4.0) return '#f59e0b'
+  return '#ef4444'
+}
+
+const getWouldTakeAgainColor = (percent) => {
+  if (percent == null) return undefined
+  if (percent >= 70) return '#22c55e'
+  if (percent >= 50) return '#84cc16'
+  if (percent >= 30) return '#f59e0b'
+  return '#ef4444'
+}
 
 export default function CoursesTab({
   // Search
@@ -41,84 +70,6 @@ export default function CoursesTab({
   const [openFlagCard, setOpenFlagCard] = useState(null)
   const [openFlagDetail, setOpenFlagDetail] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
-
-  // Live RMP lookup cache: courseKey → { avg_rating, avg_difficulty, num_ratings, would_take_again_percent, rmp_url } | null
-  const [rmpCache, setRmpCache] = useState({})
-  const lookingUp = useRef(new Set())
-
-  // Whenever searchResults change, kick off RMP lookups for any course
-  // that has a _syllabusProf but no stored rmp_rating.
-  useEffect(() => {
-    const toFetch = searchResults.filter(c =>
-      c._syllabusProf && !c.rmp_rating
-    )
-    if (!toFetch.length) return
-
-    toFetch.forEach(async (course) => {
-      const key = `${course.subject}${course.catalog}`
-      if (rmpCache[key] !== undefined || lookingUp.current.has(key)) return
-      lookingUp.current.add(key)
-
-      try {
-        const result = await professorsAPI.getRmpByName(course._syllabusProf, course.subject)
-        setRmpCache(prev => ({
-          ...prev,
-          [key]: result?.found ? result.professor : null,
-        }))
-      } catch {
-        setRmpCache(prev => ({ ...prev, [key]: null }))
-      } finally {
-        lookingUp.current.delete(key)
-      }
-    })
-  }, [searchResults])
-
-  // RMP data for each instructor in the currently selected course
-  const [courseInstructorRmp, setCourseInstructorRmp] = useState({})
-  const [rmpLoading, setRmpLoading] = useState(false)
-
-  // When a course detail is selected, fetch RMP per-instructor data
-  useEffect(() => {
-    if (!selectedCourse?.instructors?.length) {
-      setCourseInstructorRmp({})
-      return
-    }
-    const { subject, catalog } = selectedCourse
-    if (!subject || !catalog) return
-    setRmpLoading(true)
-
-    professorsAPI.getRmpByCourse(subject, catalog)
-      .then(async data => {
-        const byName = {}
-        ;(data.professors || []).forEach(p => {
-          if (p.name) byName[p.name] = p
-        })
-
-        // If the detail panel has a syllabus-sourced prof who isn't in the
-        // by-course results (she may teach a new section not yet in DB),
-        // do a name-based RMP lookup specifically for her.
-        const sylProf = selectedCourse._syllabusProf
-        if (sylProf && !byName[sylProf]) {
-          try {
-            const r = await professorsAPI.getRmpByName(sylProf, subject)
-            if (r?.found && r.professor) {
-              byName[sylProf] = {
-                name:                     sylProf,
-                avg_rating:               r.professor.avg_rating,
-                avg_difficulty:           r.professor.avg_difficulty,
-                num_ratings:              r.professor.num_ratings,
-                would_take_again_percent: r.professor.would_take_again_percent,
-                rmp_url:                  r.professor.rmp_url,
-              }
-            }
-          } catch { /* silently skip */ }
-        }
-
-        setCourseInstructorRmp(byName)
-      })
-      .catch(() => setCourseInstructorRmp({}))
-      .finally(() => setRmpLoading(false))
-  }, [selectedCourse?.subject, selectedCourse?.catalog, selectedCourse?._syllabusProf])
 
   const toggleFlagCard = (e, key) => {
     e.stopPropagation()
@@ -167,7 +118,7 @@ export default function CoursesTab({
 
       {searchError && <div className="error-banner">{searchError}</div>}
 
-      {/* Search Results List */}
+      {/* ── Search Results List ─────────────────────────────── */}
       {searchResults.length > 0 && !selectedCourse && (
         <div className="search-results">
           <div className="results-header-bar">
@@ -206,16 +157,16 @@ export default function CoursesTab({
               const cardKey    = `${course.subject}-${course.catalog}`
               const isFlagOpen = openFlagCard === cardKey
 
+              const ratingColor      = getRatingColor(course.rmp_rating)
+              const difficultyColor  = getDifficultyColor(course.rmp_difficulty)
+
               return (
                 <div key={cardKey} className="course-card">
                   <div className="course-card-content" onClick={() => handleCourseClick(course)}>
                     <div className="course-header">
                       <div className="course-code">{course.subject} {course.catalog}</div>
                       {course.average && (
-                        <div
-                          className="course-average"
-                          title={course.average_year ? `${course.average_year} class average` : 'Historical class average'}
-                        >
+                        <div className="course-average">
                           {course.average.toFixed(1)} GPA ({gpaToLetterGrade(course.average)})
                         </div>
                       )}
@@ -224,113 +175,60 @@ export default function CoursesTab({
 
                     {course.instructor && (
                       <div className="course-instructor-section">
-                        <div className="instructor-name">
-                          <FaUser /> {course.instructor}
-                          {course._syllabusProf && (
-                            <span className="instructor-badge-syllabus" title="Professor from your uploaded syllabus">
-                              {t('courses.yourProf')}
-                            </span>
-                          )}
-                        </div>
-                        {(() => {
-                          // Prefer stored rmp_rating; fall back to live-fetched from _syllabusProf
-                          const courseKey = `${course.subject}${course.catalog}`
-                          const liveRmp = rmpCache[courseKey]
-                          const rating    = course.rmp_rating    ?? liveRmp?.avg_rating
-                          const diff      = course.rmp_difficulty ?? liveRmp?.avg_difficulty
-                          const numR      = course.rmp_num_ratings ?? liveRmp?.num_ratings
-                          const wta       = course.rmp_would_take_again ?? liveRmp?.would_take_again_percent
-                          const rmpUrl    = liveRmp?.rmp_url
-
-                          if (rating) {
-                            return (
-                              <div className="rmp-compact">
-                                <div className="rmp-stat">
-                                  <span className="rmp-label"><FaStar /> {t('courses.rating')}:</span>
-                                  <span className="rmp-value">{parseFloat(rating).toFixed(1)}/5.0</span>
-                                </div>
-                                <div className="rmp-stat">
-                                  <span className="rmp-label"><FaChartBar /> {t('courses.difficulty')}:</span>
-                                  <span className="rmp-value">{diff ? parseFloat(diff).toFixed(1) : t('common.na')}/5.0</span>
-                                </div>
-                                {numR > 0 && (
-                                  <div className="rmp-stat">
-                                    <span className="rmp-label"><MdOutlineRateReview /> {t('courses.reviews')}:</span>
-                                    <span className="rmp-value">{Math.round(numR)}</span>
-                                  </div>
-                                )}
-                                {wta != null && (
-                                  <div className="rmp-stat">
-                                    <span className="rmp-label"><GrPowerCycle /> {t('courses.wouldRetake')}:</span>
-                                    <span className="rmp-value">{Math.round(wta)}%</span>
-                                  </div>
-                                )}
-                                {rmpUrl && (
-                                  <a href={rmpUrl} target="_blank" rel="noopener noreferrer" className="rmp-stat rmp-link-inline">
-                                    <FaExternalLinkAlt size={10} /> {t('courses.rmpViewLink')}
-                                  </a>
-                                )}
+                        <div className="instructor-name"><FaUser /> {course.instructor}</div>
+                        {course.rmp_rating && (
+                          <div className="rmp-compact">
+                            <div className="rmp-stat">
+                              <span className="rmp-label" style={{ color: ratingColor }}>
+                                <FaStar style={{ color: ratingColor }} />
+                                {' '}{t('courses.rating')}:
+                              </span>
+                              <span className="rmp-value" style={{ color: ratingColor }}>
+                                {course.rmp_rating.toFixed(1)}/5.0
+                              </span>
+                            </div>
+                            {course.rmp_difficulty && (
+                              <div className="rmp-stat">
+                                <span className="rmp-label" style={{ color: difficultyColor }}>
+                                  <MdOutlineRateReview style={{ color: difficultyColor }} />
+                                  {' '}{t('courses.difficulty')}:
+                                </span>
+                                <span className="rmp-value" style={{ color: difficultyColor }}>
+                                  {course.rmp_difficulty.toFixed(1)}/5.0
+                                </span>
                               </div>
-                            )
-                          }
-
-                          // No rating found — show a search link if we have the prof name
-                          const profName = course._syllabusProf || course.instructor
-                          const isLooking = course._syllabusProf && rmpCache[courseKey] === undefined
-                          if (isLooking) {
-                            return <div className="rmp-looking">{t('courses.rmpLooking')}</div>
-                          }
-                          if (course._syllabusProf) {
-                            return (
-                              <a
-                                href={rmpSearchUrl(profName)}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="rmp-find-link"
-                              >
-                                <FaStar size={11} /> {t('courses.rmpFind').replace('{name}', profName)}
-                              </a>
-                            )
-                          }
-                          return null
-                        })()}
-                      </div>
-                    )}
-
-                    {course.num_sections && (
-                      <div className="course-meta">
-                        <FaChartBar className="meta-icon" /> {course.num_sections === 1
-                          ? t('courses.sectionsAvailable').replace('{count}', course.num_sections)
-                          : t('courses.sectionsAvailablePlural').replace('{count}', course.num_sections)
-                        }
+                            )}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
 
-                  {course.instructor && (
-                    <div className="prof-flag-wrapper">
-                      <button
-                        className={`prof-flag-btn ${isFlagOpen ? 'active' : ''}`}
-                        onClick={(e) => toggleFlagCard(e, cardKey)}
-                        data-tooltip="Wrong Professor? Flag it"
-                      >
-                        <FaFlag />
-                      </button>
-                      {isFlagOpen && (
-                        <ProfSuggestionPopover
-                          courseCode={`${course.subject} ${course.catalog}`}
-                          currentInstructor={course.instructor}
-                          onClose={() => setOpenFlagCard(null)}
-                        />
-                      )}
-                    </div>
-                  )}
+                  {/* Prof flag popover */}
+                  <div className="prof-flag-wrapper">
+                    <button
+                      className={`prof-flag-btn ${isFlagOpen ? 'active' : ''}`}
+                      onClick={(e) => toggleFlagCard(e, cardKey)}
+                      data-tooltip="Report wrong professor"
+                    >
+                      <FaFlag />
+                    </button>
+                    {isFlagOpen && (
+                      <ProfSuggestionPopover
+                        courseSubject={course.subject}
+                        courseCatalog={course.catalog}
+                        currentInstructor={course.instructor}
+                        onClose={() => setOpenFlagCard(null)}
+                      />
+                    )}
+                  </div>
 
+                  {/* Action buttons */}
                   <div className="course-card-actions">
                     <button
                       className={`favorite-btn ${isFavorited(course.subject, course.catalog) ? 'favorited' : ''}`}
                       onClick={(e) => { e.stopPropagation(); handleToggleFavorite(course) }}
-                      data-tooltip={isFavorited(course.subject, course.catalog) ? "Remove saved" : "Save course"}
+                      data-tooltip={isFavorited(course.subject, course.catalog) ? 'Remove saved' : 'Save course'}
                     >
                       {isFavorited(course.subject, course.catalog)
                         ? <FaHeart className="favorite-icon" />
@@ -339,16 +237,16 @@ export default function CoursesTab({
                     <button
                       className={`completed-btn ${isCompleted(course.subject, course.catalog) ? 'completed' : ''}`}
                       onClick={(e) => { e.stopPropagation(); handleToggleCompleted(course) }}
-                      data-tooltip={isCompleted(course.subject, course.catalog) ? "Mark incomplete" : "Mark complete"}
+                      data-tooltip={isCompleted(course.subject, course.catalog) ? 'Mark incomplete' : 'Mark complete'}
                     >
                       <FaCheckCircle className="completed-icon" />
                     </button>
                     <button
                       className={`current-btn ${isCurrent(course.subject, course.catalog) ? 'current' : ''}`}
                       onClick={(e) => { e.stopPropagation(); handleToggleCurrent(course) }}
-                      data-tooltip={isCurrent(course.subject, course.catalog) ? "Remove from current" : "Add to current"}
+                      data-tooltip={isCurrent(course.subject, course.catalog) ? 'Remove from current' : 'Add to current'}
                     >
-                      <FaCheckCircle className="current-icon" />
+                      <FaBook className="current-icon" />
                     </button>
                   </div>
                 </div>
@@ -405,129 +303,202 @@ export default function CoursesTab({
         </div>
       )}
 
-      {/* Course Detail */}
+      {/* ── Course Detail View ──────────────────────────────── */}
       {selectedCourse && (
         <div className="course-details">
-          <button className="btn-back" onClick={() => { setSelectedCourse(null); setOpenFlagDetail(false) }}>
-            ← {t('courses.backToResults')}
+
+          {/* Back button */}
+          <button
+            className="btn-back"
+            onClick={() => { setSelectedCourse(null); setOpenFlagDetail(false) }}
+          >
+            <FaArrowLeft /> {t('courses.backToResults')}
           </button>
 
-          <div className="course-details-header">
-            <h2 className="course-details-title">
-              {selectedCourse.subject} {selectedCourse.catalog}: {selectedCourse.title}
-            </h2>
-
-            {/* GPA badge — API returns `average` (most recent year) */}
-            {selectedCourse.average && (
-              <div className="course-stat-badge">
-                {selectedCourse.average} GPA ({gpaToLetterGrade(selectedCourse.average)})
+          {/* Hero Card */}
+          <div className="course-detail-hero">
+            <div className="course-detail-hero-top">
+              <div className="course-detail-code-block">
+                <span className="course-detail-code">
+                  {selectedCourse.subject} {selectedCourse.catalog}
+                </span>
+                <h2 className="course-detail-title">{selectedCourse.title}</h2>
               </div>
-            )}
 
-            {/* RMP — prefer syllabus prof's data if available, else flat rmp_* fields */}
-          {(() => {
-            const sylProf = selectedCourse._syllabusProf
-            const sylRmp  = sylProf ? courseInstructorRmp[sylProf] : null
-            // Use syllabus-prof's live data if we have it, else fall back to stored flat fields
-            const rating   = sylRmp?.avg_rating   ?? selectedCourse.rmp_rating
-            const diff     = sylRmp?.avg_difficulty ?? selectedCourse.rmp_difficulty
-            const numR     = sylRmp?.num_ratings   ?? selectedCourse.rmp_num_ratings
-            const wta      = sylRmp?.would_take_again_percent ?? selectedCourse.rmp_would_take_again
-            const profName = sylProf || selectedCourse.instructors?.[0]
-            if (!rating) return null
-            return (
-              <div className="course-professor-rating">
-                {profName && (
-                  <h3>
-                    <FaChartBar /> {t('courses.professorRating')}: {profName}
-                    {sylProf && (
-                      <span className="instructor-badge-syllabus" style={{ marginLeft: 8 }}>
-                        {t('courses.yourProf')}
-                      </span>
-                    )}
-                  </h3>
-                )}
-                <div className="rmp-stats-grid">
-                  <div className="rmp-stat-card">
-                    <div className="rmp-stat-value">{parseFloat(rating).toFixed(1)}</div>
-                    <div className="rmp-stat-label">{t('courses.rating')}</div>
-                  </div>
-                  <div className="rmp-stat-card">
-                    <div className="rmp-stat-value">{diff ? parseFloat(diff).toFixed(1) : t('common.na')}</div>
-                    <div className="rmp-stat-label">{t('courses.difficulty')}</div>
-                  </div>
-                  <div className="rmp-stat-card">
-                    <div className="rmp-stat-value">{numR ? Math.round(numR) : t('common.na')}</div>
-                    <div className="rmp-stat-label">{t('courses.reviews')}</div>
-                  </div>
-                  <div className="rmp-stat-card">
-                    <div className="rmp-stat-value">{wta != null ? Math.round(wta) + '%' : t('common.na')}</div>
-                    <div className="rmp-stat-label">{t('courses.wouldRetake')}</div>
-                  </div>
+              {/* Action buttons */}
+              <div className="course-detail-actions">
+                <button
+                  className={`course-detail-action-btn btn-save ${isFavorited(selectedCourse.subject, selectedCourse.catalog) ? 'active' : ''}`}
+                  onClick={() => handleToggleFavorite(selectedCourse)}
+                >
+                  {isFavorited(selectedCourse.subject, selectedCourse.catalog)
+                    ? <FaHeart /> : <FaRegHeart />}
+                  {isFavorited(selectedCourse.subject, selectedCourse.catalog) ? 'Saved' : 'Save'}
+                </button>
+                <button
+                  className={`course-detail-action-btn btn-done ${isCompleted(selectedCourse.subject, selectedCourse.catalog) ? 'active' : ''}`}
+                  onClick={() => handleToggleCompleted(selectedCourse)}
+                >
+                  <FaCheckCircle />
+                  {isCompleted(selectedCourse.subject, selectedCourse.catalog) ? 'Completed' : 'Done'}
+                </button>
+                <button
+                  className={`course-detail-action-btn btn-current ${isCurrent(selectedCourse.subject, selectedCourse.catalog) ? 'active' : ''}`}
+                  onClick={() => handleToggleCurrent(selectedCourse)}
+                >
+                  <FaBook />
+                  {isCurrent(selectedCourse.subject, selectedCourse.catalog) ? 'Enrolled' : 'Enroll'}
+                </button>
+              </div>
+            </div>
+
+            {/* Stats row */}
+            <div className="course-detail-stats">
+              {selectedCourse.average && (
+                <div className="course-detail-stat">
+                  <FaTrophy className="course-detail-stat-icon" />
+                  <span className="course-detail-stat-label">Recent GPA</span>
+                  <span className="course-detail-stat-value gpa-value">
+                    {parseFloat(selectedCourse.average).toFixed(2)}
+                  </span>
+                  <span className="course-detail-stat-sub">
+                    ({gpaToLetterGrade(selectedCourse.average)})
+                  </span>
                 </div>
-              </div>
-            )
-          })()}
+              )}
+              {selectedCourse.overall_average && (
+                <div className="course-detail-stat">
+                  <FaChartBar className="course-detail-stat-icon" />
+                  <span className="course-detail-stat-label">All-time Avg</span>
+                  <span className="course-detail-stat-value">
+                    {parseFloat(selectedCourse.overall_average).toFixed(2)}
+                  </span>
+                  <span className="course-detail-stat-sub">
+                    ({gpaToLetterGrade(selectedCourse.overall_average)})
+                  </span>
+                </div>
+              )}
+              {selectedCourse.num_sections > 0 && (
+                <div className="course-detail-stat">
+                  <FaLayerGroup className="course-detail-stat-icon" />
+                  <span className="course-detail-stat-label">Sections</span>
+                  <span className="course-detail-stat-value">{selectedCourse.num_sections}</span>
+                </div>
+              )}
+              {selectedCourse.rmp_rating && (
+                <div className="course-detail-stat">
+                  <FaStar
+                    className="course-detail-stat-icon"
+                    style={{ color: getRatingColor(selectedCourse.rmp_rating) }}
+                  />
+                  <span className="course-detail-stat-label">RMP Rating</span>
+                  <span
+                    className="course-detail-stat-value"
+                    style={{ color: getRatingColor(selectedCourse.rmp_rating) }}
+                  >
+                    {selectedCourse.rmp_rating.toFixed(1)}
+                  </span>
+                  <span className="course-detail-stat-sub">/5.0</span>
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Instructors with individual RMP data */}
-          {selectedCourse.instructors?.length > 0 && (
-            <div className="course-sections">
-              <h3 className="sections-header">
-                <FaUser style={{ marginRight: 8 }} />
-                Instructors ({selectedCourse.instructors.length})
-                {rmpLoading && <span className="rmp-loading-indicator"> · Loading ratings…</span>}
-              </h3>
-              <div className="ct-prof-list">
-                {selectedCourse.instructors.map((instructor, idx) => {
-                  const rmp = courseInstructorRmp[instructor]
-                  const cls = rmpRatingClass(rmp?.avg_rating)
+          {/* RMP Card */}
+          {selectedCourse.rmp_rating && (
+            <div className="course-detail-section">
+              <div className="course-detail-section-header">
+                <FaStar />
+                <h3 className="course-detail-section-title">
+                  {t('courses.professorRating')}
+                </h3>
+              </div>
+
+              {selectedCourse.instructors?.[0] && (
+                <div className="rmp-instructor-label">
+                  <FaUser />
+                  {selectedCourse.instructors[0]}
+                </div>
+              )}
+
+              <div className="rmp-grid">
+                <div className="rmp-grid-card">
+                  <div className={`rmp-grid-value ${
+                    selectedCourse.rmp_rating >= 4 ? 'good'
+                    : selectedCourse.rmp_rating >= 3 ? 'ok'
+                    : 'bad'
+                  }`}>
+                    {selectedCourse.rmp_rating.toFixed(1)}
+                  </div>
+                  <div className="rmp-grid-label">{t('courses.rating')}</div>
+                </div>
+
+                <div className="rmp-grid-card">
+                  <div className={`rmp-grid-value ${
+                    selectedCourse.rmp_difficulty <= 2.5 ? 'good'
+                    : selectedCourse.rmp_difficulty <= 3.5 ? 'ok'
+                    : 'bad'
+                  }`}>
+                    {selectedCourse.rmp_difficulty?.toFixed(1) ?? t('common.na')}
+                  </div>
+                  <div className="rmp-grid-label">{t('courses.difficulty')}</div>
+                </div>
+
+                <div className="rmp-grid-card">
+                  <div className="rmp-grid-value">
+                    {selectedCourse.rmp_num_ratings
+                      ? Math.round(selectedCourse.rmp_num_ratings)
+                      : t('common.na')}
+                  </div>
+                  <div className="rmp-grid-label">{t('courses.reviews')}</div>
+                </div>
+
+                <div className="rmp-grid-card">
+                  <div className={`rmp-grid-value ${
+                    selectedCourse.rmp_would_take_again >= 70 ? 'good'
+                    : selectedCourse.rmp_would_take_again >= 50 ? 'ok'
+                    : 'bad'
+                  }`}>
+                    {selectedCourse.rmp_would_take_again != null
+                      ? `${Math.round(selectedCourse.rmp_would_take_again)}%`
+                      : t('common.na')}
+                  </div>
+                  <div className="rmp-grid-label">{t('courses.wouldRetake')}</div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Grade Trend Card */}
+          {selectedCourse.grade_trend?.length > 0 && (
+            <div className="course-detail-section">
+              <div className="course-detail-section-header">
+                <FaChartBar />
+                <h3 className="course-detail-section-title">Grade History</h3>
+                <span className="course-detail-section-count">
+                  {selectedCourse.grade_trend.length} year{selectedCourse.grade_trend.length !== 1 ? 's' : ''}
+                </span>
+              </div>
+              <div className="grade-trend-list">
+                {selectedCourse.grade_trend.map((entry, idx) => {
+                  const gpa    = parseFloat(entry.average)
+                  const barPct = Math.min(100, (gpa / 4.0) * 100)
                   return (
-                    <div key={idx} className="ct-prof-card">
-                      <div className="ct-prof-name">
-                        <FaUser className="ct-prof-icon" />
-                        {instructor}
+                    <div key={idx} className="grade-trend-row">
+                      <span className="grade-trend-year">{entry.year}</span>
+                      <div className="grade-trend-bar-wrap">
+                        <div
+                          className="grade-trend-bar"
+                          style={{ width: `${barPct}%` }}
+                        />
                       </div>
-                      {rmp ? (
-                        <div className="ct-prof-rmp">
-                          <div className="ct-rmp-stats">
-                            <div className={`ct-rmp-score ct-rmp-score--${cls}`}>
-                              <FaStar className="ct-rmp-star" />
-                              {rmp.avg_rating?.toFixed(1)}/5.0
-                            </div>
-                            <div className="ct-rmp-stat">
-                              <span className="ct-rmp-label">Difficulty</span>
-                              <span className="ct-rmp-val">{rmp.avg_difficulty?.toFixed(1) ?? 'N/A'}/5.0</span>
-                            </div>
-                            {rmp.would_take_again_percent != null && (
-                              <div className="ct-rmp-stat">
-                                <span className="ct-rmp-label">Would Retake</span>
-                                <span className="ct-rmp-val">{rmp.would_take_again_percent}%</span>
-                              </div>
-                            )}
-                            <div className="ct-rmp-stat ct-rmp-stat--count">
-                              <span className="ct-rmp-label">{rmp.num_ratings} rating{rmp.num_ratings !== 1 ? 's' : ''}</span>
-                            </div>
-                          </div>
-                          <a
-                            href={rmp.rmp_url || rmpSearchUrl(instructor)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="ct-rmp-link"
-                          >
-                            RateMyProfessors <FaExternalLinkAlt />
-                          </a>
-                        </div>
-                      ) : (
-                        <a
-                          href={rmpSearchUrl(instructor)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="ct-rmp-search-link"
-                        >
-                          <FaStar /> {t('courses.rmpFind').replace('{name}', instructor)}
-                        </a>
-                      )}
+                      <span className="grade-trend-gpa">{gpa.toFixed(2)}</span>
+                      <span className="grade-trend-letter">
+                        {gpaToLetterGrade(gpa)}
+                      </span>
+                      <span className="grade-trend-sections">
+                        {entry.sections} section{entry.sections !== 1 ? 's' : ''}
+                      </span>
                     </div>
                   )
                 })}
@@ -535,29 +506,6 @@ export default function CoursesTab({
             </div>
           )}
 
-          {/* Grade trend — API returns grade_trend: [{year, average, sections}] */}
-          {selectedCourse.grade_trend?.length > 0 && (
-            <div className="course-sections">
-              <h3 className="sections-header">
-                {t('courses.sections')} ({selectedCourse.num_sections})
-              </h3>
-              <div className="sections-grid">
-                {selectedCourse.grade_trend.map((entry, idx) => (
-                  <div key={idx} className="section-card-compact">
-                    <div className="section-compact-header">
-                      <span className="section-term">{entry.year}</span>
-                      {entry.average && (
-                        <span className="section-average">
-                          {parseFloat(entry.average).toFixed(2)} ({gpaToLetterGrade(entry.average)})
-                          <span className="average-note"></span>
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       )}
 
