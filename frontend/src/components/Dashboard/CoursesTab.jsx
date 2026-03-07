@@ -376,11 +376,6 @@ export default function CoursesTab({
                       <FaStar />
                       <h3 className="course-detail-section-title">{t('courses.professorRating')}</h3>
                     </div>
-                    {selectedCourse.instructors?.[0] && (
-                      <div className="rmp-instructor-label">
-                        <FaUser /> {selectedCourse.instructors[0]}
-                      </div>
-                    )}
                     <div className="rmp-grid">
                       <div className="rmp-grid-card">
                         <div className={`rmp-grid-value ${rating >= 4 ? 'good' : rating >= 3 ? 'ok' : 'bad'}`}>{rating.toFixed(1)}</div>
