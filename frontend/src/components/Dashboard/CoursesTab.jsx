@@ -282,21 +282,6 @@ export default function CoursesTab({
                     <span className="course-detail-stat-sub">({gpaToLetterGrade(selectedCourse.overall_average)})</span>
                   </div>
                 )}
-                {selectedCourse.num_sections > 0 && (
-                  <div className="course-detail-stat">
-                    <FaLayerGroup className="course-detail-stat-icon" />
-                    <span className="course-detail-stat-label">Sections</span>
-                    <span className="course-detail-stat-value">{selectedCourse.num_sections}</span>
-                  </div>
-                )}
-                {rating && (
-                  <div className="course-detail-stat">
-                    <FaStar className="course-detail-stat-icon" style={{ color: ratingColor }} />
-                    <span className="course-detail-stat-label">Prof Rating</span>
-                    <span className="course-detail-stat-value" style={{ color: ratingColor }}>{rating.toFixed(1)}</span>
-                    <span className="course-detail-stat-sub">/5.0</span>
-                  </div>
-                )}
               </div>
             </div>
 
