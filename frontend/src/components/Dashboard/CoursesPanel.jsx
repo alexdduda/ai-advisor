@@ -23,7 +23,10 @@ export default function CoursesPanel() {
     setSelectedCourse(null)
     try {
       const normalized = normalizeQuery(rawQuery)
-      const data = await coursesAPI.search(normalized, null, 100)
+      const codeMatch = normalized.match(/^([A-Z]{2,6})\s+(\d{3}[A-Z]?)$/)
+      const srchSubject = codeMatch ? codeMatch[1] : null
+      const srchQuery   = codeMatch ? codeMatch[2] : normalized
+      const data = await coursesAPI.search(srchQuery, srchSubject, 100)
       const courses = data.courses || data || []
 
       if (Array.isArray(courses) && courses.length > 0) {
@@ -34,7 +37,10 @@ export default function CoursesPanel() {
       // Zero results — try fuzzy correction
       const candidates = buildCorrectionCandidates(rawQuery)
       for (const candidate of candidates) {
-        const retry = await coursesAPI.search(candidate.query, null, 100)
+        const corrCode = candidate.query.match(/^([A-Z]{2,6})\s+(\d{3}[A-Z]?)$/)
+        const retrySub = corrCode ? corrCode[1] : null
+        const retryQ   = corrCode ? corrCode[2] : candidate.query
+        const retry = await coursesAPI.search(retryQ, retrySub, 100)
         const list = retry.courses || retry || []
         if (Array.isArray(list) && list.length > 0) {
           setCorrection({ original: rawQuery, corrected: candidate.note })

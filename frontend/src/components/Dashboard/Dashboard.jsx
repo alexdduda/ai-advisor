@@ -333,7 +333,18 @@ export default function Dashboard() {
     setHasSearched(true)
     try {
       const normalized = normalizeQuery(rawQuery)
-      const data = await coursesAPI.search(normalized, null, 50)
+
+      // If normalized looks like "COMP 202", split into subject + catalog params
+      // so the RPC receives them separately instead of as a full-text query
+      const codeMatch = normalized.match(/^([A-Z]{2,6})\s+(\d{3}[A-Z]?)$/)
+      let searchSubject = null
+      let searchQuery   = normalized
+      if (codeMatch) {
+        searchSubject = codeMatch[1]
+        searchQuery   = codeMatch[2]
+      }
+
+      const data = await coursesAPI.search(searchQuery, searchSubject, 50)
       let courses = data.courses || data || []
       if (!Array.isArray(courses)) courses = []
 
@@ -341,7 +352,10 @@ export default function Dashboard() {
       if (courses.length === 0) {
         const candidates = buildCorrectionCandidates(rawQuery)
         for (const candidate of candidates) {
-          const retry = await coursesAPI.search(candidate.query, null, 50)
+          const corrCode = candidate.query.match(/^([A-Z]{2,6})\s+(\d{3}[A-Z]?)$/)
+          const retrySub = corrCode ? corrCode[1] : null
+          const retryQ   = corrCode ? corrCode[2] : candidate.query
+          const retry = await coursesAPI.search(retryQ, retrySub, 50)
           const retryList = retry.courses || retry || []
           if (Array.isArray(retryList) && retryList.length > 0) {
             setSearchCorrection({ original: rawQuery, corrected: candidate.note })
