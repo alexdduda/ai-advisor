@@ -366,7 +366,7 @@ function DayDrawer({ date, events, onClose, onAddEvent, onEditEvent, onSelectEve
 
 
 // ── Bulk Delete Modal ─────────────────────────────────────────────
-function BulkDeleteModal({ userEvents, onDelete, onClose, language, busy }) {
+function BulkDeleteModal({ userEvents, onHide, hiddenAnchorIds, onUnhideAll, onClose, language }) {
   const [selected, setSelected] = React.useState(new Set())
 
   // Group anchor events by course_code then by recurrence day
@@ -403,6 +403,8 @@ function BulkDeleteModal({ userEvents, onDelete, onClose, language, busy }) {
 
   const hasAnything = Object.keys(groups).length > 0
 
+  const hiddenCount = [...(hiddenAnchorIds || [])].length
+
   return (
     <div className="modal-overlay cal-bulk-overlay" onClick={onClose}>
       <div className="cal-bulk-modal" onClick={e => e.stopPropagation()}>
@@ -432,11 +434,13 @@ function BulkDeleteModal({ userEvents, onDelete, onClose, language, busy }) {
                         const dayLabel = DAY_LABELS[rec] || rec.replace('weekly_','')
                         const timeLabel = ev.time ? ` ${ev.time}–${ev.end_time || ''}` : ''
                         const slotLabel = ev.title.replace(courseCode, '').trim() || 'Slot'
+                        const isHidden = hiddenAnchorIds?.has(ev.id)
                         return (
-                          <div key={ev.id} className="cal-bulk-slot" onClick={() => toggleId(ev.id)}>
+                          <div key={ev.id} className={`cal-bulk-slot${isHidden ? ' cal-bulk-slot--hidden' : ''}`} onClick={() => toggleId(ev.id)}>
                             <input type="checkbox" readOnly checked={selected.has(ev.id)} className="cal-bulk-check" />
                             <span className="cal-bulk-slot__day">{dayLabel}</span>
                             <span className="cal-bulk-slot__label">{slotLabel}{timeLabel}</span>
+                            {isHidden && <span className="cal-bulk-slot__badge">{language === 'fr' ? 'masqué' : 'hidden'}</span>}
                           </div>
                         )
                       })
@@ -450,17 +454,19 @@ function BulkDeleteModal({ userEvents, onDelete, onClose, language, busy }) {
 
         <div className="cal-bulk-modal__footer">
           <span className="cal-bulk-count">
-            {selected.size > 0
-              ? (language === 'fr' ? `${selected.size} série(s) sélectionnée(s)` : `${selected.size} series selected`)
-              : (language === 'fr' ? 'Rien sélectionné' : 'Nothing selected')}
+            {hiddenCount > 0 && (
+              <button className="cal-bulk-unhide-btn" onClick={onUnhideAll}>
+                {language === 'fr' ? `Afficher tout (${hiddenCount} masqué)` : `Show all (${hiddenCount} hidden)`}
+              </button>
+            )}
           </span>
           <button className="cal-bulk-cancel-btn" onClick={onClose} disabled={busy}>
             {language === 'fr' ? 'Annuler' : 'Cancel'}
           </button>
           <button
             className="cal-bulk-delete-confirm-btn"
-            disabled={selected.size === 0 || busy}
-            onClick={() => onDelete([...selected])}
+            disabled={selected.size === 0}
+            onClick={() => onHide([...selected])}
           >
             <FaTrash size={11} />
             {busy
@@ -681,7 +687,7 @@ export default function CalendarTab({ user, clubEvents = [] }) {
   const [showExportMenu, setShowExportMenu] = useState(false)
   const [showGCalGuide, setShowGCalGuide] = useState(false)
   const [showBulkDelete, setShowBulkDelete] = useState(false)
-  const [bulkDeleteBusy, setBulkDeleteBusy] = useState(false)
+  const [hiddenAnchorIds, setHiddenAnchorIds] = useState(new Set())
 
   // FIX #19: tEvent defined inside useMemo so it always captures the current
   // translation function. language is a real dependency — no eslint-disable needed.
@@ -705,8 +711,8 @@ export default function CalendarTab({ user, clubEvents = [] }) {
   }, [userEvents, examEvents, clubEvents, language, t])
 
   const filteredEvents = useMemo(() =>
-    allEvents.filter(e => filter[e.type] !== false),
-    [allEvents, filter]
+    allEvents.filter(e => filter[e.type] !== false && !hiddenAnchorIds.has(e._anchorId || e.id)),
+    [allEvents, filter, hiddenAnchorIds]
   )
 
   const eventsByDate = useMemo(() => {
@@ -795,21 +801,13 @@ export default function CalendarTab({ user, clubEvents = [] }) {
 
 
   // ── Bulk delete: remove all recurring slots for a given anchor event ──
-  const handleBulkDelete = async (anchorIds) => {
-    setBulkDeleteBusy(true)
-    // Optimistically remove from UI
-    setUserEvents(prev => prev.filter(e => !anchorIds.includes(e.id)))
+  const handleBulkHide = (anchorIds) => {
+    setHiddenAnchorIds(prev => new Set([...prev, ...anchorIds]))
     setShowBulkDelete(false)
-    // Delete each anchor from DB (cascade kills all occurrences since they share the anchor id)
-    for (const id of anchorIds) {
-      try {
-        await deleteEventDB(id, user.id)
-        if (user?.id && id && !id.startsWith('user-')) {
-          try { await deleteEventAPI(id, user.id) } catch {}
-        }
-      } catch (err) { console.error('Bulk delete error', id, err) }
-    }
-    setBulkDeleteBusy(false)
+  }
+
+  const handleBulkUnhideAll = () => {
+    setHiddenAnchorIds(new Set())
   }
 
   const handleDayClick = (day) => {
@@ -891,8 +889,8 @@ export default function CalendarTab({ user, clubEvents = [] }) {
               </div>
             )}
           </div>
-          <button className="cal-bulk-delete-btn" onClick={() => setShowBulkDelete(true)} title={language === 'fr' ? 'Supprimer des cours en masse' : 'Bulk delete classes'}>
-            <FaTrash size={12} /> {language === 'fr' ? 'Supprimer des cours' : 'Remove Classes'}
+          <button className="cal-bulk-toggle-btn" onClick={() => setShowBulkDelete(true)} title={language === 'fr' ? 'Supprimer des cours en masse' : 'Bulk delete classes'}>
+            <FaLayerGroup size={12} /> {language === 'fr' ? 'Afficher/masquer des cours' : 'Show/Hide Classes'}
           </button>
           <button className="cal-add-btn" onClick={() => { setPreselectedDate(null); setEditEvent(null); setShowModal(true) }}>
             <FaPlus /> {t('calendar.addEventBtn')}
@@ -1100,10 +1098,11 @@ export default function CalendarTab({ user, clubEvents = [] }) {
       {showBulkDelete && (
         <BulkDeleteModal
           userEvents={userEvents}
-          onDelete={handleBulkDelete}
+          onHide={handleBulkHide}
+          hiddenAnchorIds={hiddenAnchorIds}
+          onUnhideAll={handleBulkUnhideAll}
           onClose={() => setShowBulkDelete(false)}
           language={language}
-          busy={bulkDeleteBusy}
         />
       )}
     </div>

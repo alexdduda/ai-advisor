@@ -1459,31 +1459,24 @@
 [data-theme='dark'] .cal-gcal-step-num { background: rgba(26,115,232,0.2); }
 
 /* ── Bulk Delete Button (header) ─────────────────────────────────── */
-.cal-bulk-delete-btn {
+.cal-bulk-toggle-btn {
   display: flex;
   align-items: center;
   gap: 6px;
   padding: 7px 12px;
   border-radius: 8px;
-  border: 1.5px solid var(--error-primary, #ef4444);
+  border: 1.5px solid var(--border-primary);
   background: transparent;
-  color: var(--error-primary, #ef4444);
+  color: var(--text-secondary);
   font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
-.cal-bulk-delete-btn:hover {
-  background: var(--error-primary, #ef4444);
-  color: #fff;
-}
-[data-theme="dark"] .cal-bulk-delete-btn {
-  border-color: #f87171;
-  color: #f87171;
-}
-[data-theme="dark"] .cal-bulk-delete-btn:hover {
-  background: #ef4444;
-  color: #fff;
+.cal-bulk-toggle-btn:hover {
+  border-color: var(--accent-primary, #ED1B2F);
+  color: var(--accent-primary, #ED1B2F);
+  background: rgba(237,27,47,0.06);
 }
 
 /* ── Bulk Delete Modal ───────────────────────────────────────────── */
@@ -1637,7 +1630,7 @@
   padding: 7px 16px;
   border-radius: 8px;
   border: none;
-  background: var(--error-primary, #ef4444);
+  background: var(--accent-primary, #ED1B2F);
   color: #fff;
   font-size: 0.85rem;
   font-weight: 600;
@@ -1645,4 +1638,36 @@
   transition: opacity 0.15s;
 }
 .cal-bulk-delete-confirm-btn:disabled { opacity: 0.45; cursor: not-allowed; }
-.cal-bulk-delete-confirm-btn:not(:disabled):hover { opacity: 0.88; }
+.cal-bulk-delete-confirm-btn:not(:disabled):hover { opacity: 0.85; }
+
+/* ── Hidden slot badge ───────────────────────────────────────────── */
+.cal-bulk-slot--hidden {
+  opacity: 0.5;
+}
+.cal-bulk-slot__badge {
+  margin-left: auto;
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
+  padding: 2px 7px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* ── Unhide all button ───────────────────────────────────────────── */
+.cal-bulk-unhide-btn {
+  background: none;
+  border: 1px solid var(--border-primary);
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  padding: 4px 10px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: border-color 0.12s, color 0.12s;
+}
+.cal-bulk-unhide-btn:hover {
+  border-color: var(--accent-primary, #ED1B2F);
+  color: var(--accent-primary, #ED1B2F);
+}
