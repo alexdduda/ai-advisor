@@ -39,14 +39,36 @@ export default function CoursesPanel() {
     setIsSearching(true)
     setSearchError(null)
     setSelectedCourse(null)
-
-    const { subject, query } = parseQuery(searchQuery)
-
     try {
-      const data = await coursesAPI.search(query, subject, 100)
+      const normalized = normalizeQuery(rawQuery)
+      const codeMatch = normalized.match(/^([A-Z]{2,6})\s+(\d{3}[A-Z]?)$/)
+      const srchSubject = codeMatch ? codeMatch[1] : null
+      const srchQuery   = codeMatch ? codeMatch[2] : normalized
+      const data = await coursesAPI.search(srchQuery, srchSubject, 100)
+      const courses = data.courses || data || []
 
-      setSearchResults(data.courses || [])
-      if (!data.courses?.length) setSearchError('No courses found matching your search.')
+      if (Array.isArray(courses) && courses.length > 0) {
+        setSearchResults(courses)
+        return
+      }
+
+      // Zero results — try fuzzy correction
+      const candidates = buildCorrectionCandidates(rawQuery)
+      for (const candidate of candidates) {
+        const corrCode = candidate.query.match(/^([A-Z]{2,6})\s+(\d{3}[A-Z]?)$/)
+        const retrySub = corrCode ? corrCode[1] : null
+        const retryQ   = corrCode ? corrCode[2] : candidate.query
+        const retry = await coursesAPI.search(retryQ, retrySub, 100)
+        const list = retry.courses || retry || []
+        if (Array.isArray(list) && list.length > 0) {
+          setCorrection({ original: rawQuery, corrected: candidate.note })
+          setSearchResults(list)
+          return
+        }
+      }
+
+      setSearchResults([])
+      setSearchError('No courses found matching your search.')
     } catch (err) {
       console.error('Course search error:', err)
       setSearchError('Failed to search courses. Please try again.')
