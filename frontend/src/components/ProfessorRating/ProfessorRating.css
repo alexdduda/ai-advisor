@@ -1,4 +1,6 @@
-/* Professor Rating Component Styles */
+/* ============================================================
+   ProfessorRating.css — blended RMP + mcgill.courses ratings
+   ============================================================ */
 
 .professor-rating {
   background: var(--bg-primary);
@@ -15,44 +17,45 @@
   transform: translateY(-2px);
 }
 
-/* Rating quality color coding */
-.professor-rating.rating-excellent {
-  border-left-color: #4CAF50;
-}
+/* Rating quality colour coding */
+.professor-rating.rating-excellent { border-left-color: #4CAF50; }
+.professor-rating.rating-good      { border-left-color: #8BC34A; }
+.professor-rating.rating-average   { border-left-color: #FFC107; }
+.professor-rating.rating-poor      { border-left-color: #F44336; }
+.professor-rating.rating-unknown   { border-left-color: #9E9E9E; }
 
-.professor-rating.rating-good {
-  border-left-color: #8BC34A;
-}
+/* ── Header ──────────────────────────────────────────────── */
 
-.professor-rating.rating-average {
-  border-left-color: #FFC107;
-}
-
-.professor-rating.rating-poor {
-  border-left-color: #F44336;
-}
-
-/* Header */
 .professor-header {
   margin-bottom: 1rem;
   padding-bottom: 0.75rem;
-  border-bottom: 1px solid #E0E0E0;
+  border-bottom: 1px solid var(--border-color, #E0E0E0);
 }
 
 .professor-name {
-  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: var(--text-primary);
   margin-bottom: 0.25rem;
+}
+
+.professor-name-icon {
+  color: var(--accent-primary, #ED1B2F);
+  flex-shrink: 0;
 }
 
 .professor-department {
   font-size: 0.875rem;
   color: var(--text-secondary);
   font-weight: 500;
+  margin-left: 1.4rem;
 }
 
-/* Stats Grid */
+/* ── Stats grid ──────────────────────────────────────────── */
+
 .rating-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
@@ -60,17 +63,22 @@
   margin: 1rem 0;
 }
 
-.rating-stat {
-  text-align: center;
-}
+.rating-stat { text-align: center; }
 
 .stat-label {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: var(--text-muted);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.4rem;
   font-weight: 600;
+}
+
+.stat-sublabel {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  margin-top: 0.2rem;
+  font-style: italic;
 }
 
 .stat-value {
@@ -81,62 +89,125 @@
 }
 
 .stat-max {
-  font-size: 1rem;
+  font-size: 0.95rem;
   color: var(--text-muted);
   margin-left: 2px;
 }
 
-/* Quality rating colors */
-.stat-quality-excellent {
-  color: #4CAF50;
+.stat-quality-excellent { color: #4CAF50; }
+.stat-quality-good      { color: #8BC34A; }
+.stat-quality-average   { color: #FFC107; }
+.stat-quality-poor      { color: #F44336; }
+.stat-quality-unknown   { color: var(--text-muted); }
+.stat-percent           { color: var(--accent-primary, #ED1B2F); }
+
+/* ── Source breakdown ────────────────────────────────────── */
+
+.rating-sources {
+  margin: 0.75rem 0 0;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--border-color, #E0E0E0);
 }
 
-.stat-quality-good {
-  color: #8BC34A;
+.rating-sources-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+  font-weight: 600;
 }
 
-.stat-quality-average {
-  color: #FFC107;
+.rating-sources-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
-.stat-quality-poor {
-  color: #F44336;
+.source-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-decoration: none;
+  border: 1px solid transparent;
+  transition: opacity 0.15s;
+  white-space: nowrap;
 }
 
-.stat-percent {
-  color: var(--accent-primary);
-}
+.source-badge:hover { opacity: 0.82; }
+.source-icon { font-size: 0.75rem; flex-shrink: 0; }
 
-/* Footer */
+/* RMP source colours */
+.source-badge.source-rmp.rating-excellent { background: #E8F5E9; color: #2E7D32; border-color: #4CAF50; }
+.source-badge.source-rmp.rating-good      { background: #F1F8E9; color: #558B2F; border-color: #8BC34A; }
+.source-badge.source-rmp.rating-average   { background: #FFF9C4; color: #F57F17; border-color: #FFC107; }
+.source-badge.source-rmp.rating-poor      { background: #FFEBEE; color: #C62828; border-color: #F44336; }
+.source-badge.source-rmp.rating-unknown   { background: var(--bg-secondary); color: var(--text-muted); border-color: #ccc; }
+
+/* mcgill.courses source colours (blue tones to differentiate) */
+.source-badge.source-mc.rating-excellent  { background: #E3F2FD; color: #1565C0; border-color: #42A5F5; }
+.source-badge.source-mc.rating-good       { background: #E8EAF6; color: #283593; border-color: #7986CB; }
+.source-badge.source-mc.rating-average    { background: #FFF3E0; color: #E65100; border-color: #FFA726; }
+.source-badge.source-mc.rating-poor       { background: #FCE4EC; color: #880E4F; border-color: #F06292; }
+.source-badge.source-mc.rating-unknown    { background: var(--bg-secondary); color: var(--text-muted); border-color: #ccc; }
+
+.source-name  { font-weight: 700; }
+.source-score { font-size: 0.85rem; }
+.source-count { font-size: 0.7rem; opacity: 0.75; }
+
+/* ── Footer ──────────────────────────────────────────────── */
+
 .rating-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-top: 1rem;
   padding-top: 0.75rem;
-  border-top: 1px solid #E0E0E0;
+  border-top: 1px solid var(--border-color, #E0E0E0);
 }
 
 .rating-count {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
   font-size: 0.875rem;
   color: var(--text-secondary);
   font-style: italic;
 }
 
+.footer-icon {
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.rating-footer-links {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
 .rmp-link {
-  font-size: 0.875rem;
-  color: var(--accent-primary);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.82rem;
+  color: var(--accent-primary, #ED1B2F);
   text-decoration: none;
   font-weight: 600;
   transition: color 0.2s ease;
 }
 
-.rmp-link:hover {
-  color: #B01B2E;
-  text-decoration: underline;
-}
+.rmp-link:hover   { color: #B01B2E; text-decoration: underline; }
+.mc-link          { color: #1565C0; }
+.mc-link:hover    { color: #0D47A1; }
+.link-icon        { font-size: 0.65rem; }
 
-/* Unavailable State */
+/* ── Unavailable state ───────────────────────────────────── */
+
 .professor-rating-unavailable {
   background: var(--bg-secondary);
   border-left-color: #CCC;
@@ -150,7 +221,8 @@
   font-style: italic;
 }
 
-/* Compact Version */
+/* ── Compact version ─────────────────────────────────────── */
+
 .rating-compact {
   display: inline-flex;
   align-items: center;
@@ -162,30 +234,31 @@
   white-space: nowrap;
 }
 
-.rating-compact.rating-excellent {
-  background: #E8F5E9;
-  color: #2E7D32;
+.rating-compact.rating-excellent { background: #E8F5E9; color: #2E7D32; }
+.rating-compact.rating-good      { background: #F1F8E9; color: #558B2F; }
+.rating-compact.rating-average   { background: #FFF9C4; color: #F57F17; }
+.rating-compact.rating-poor      { background: #FFEBEE; color: #C62828; }
+.rating-compact.rating-unknown   { background: var(--bg-secondary); color: var(--text-muted); }
+
+.compact-star {
+  font-size: 0.75rem;
+  flex-shrink: 0;
 }
 
-.rating-compact.rating-good {
-  background: #F1F8E9;
-  color: #558B2F;
+.rating-blended-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 1px;
 }
 
-.rating-compact.rating-average {
-  background: #FFF9C4;
-  color: #F57F17;
-}
-
-.rating-compact.rating-poor {
-  background: #FFEBEE;
-  color: #C62828;
+.blended-icon {
+  font-size: 0.7rem;
+  color: #1565C0;
 }
 
 .rating-count-compact {
   font-size: 0.75rem;
   opacity: 0.8;
-  margin-left: 2px;
 }
 
 .rating-compact-unavailable {
@@ -194,34 +267,18 @@
   font-style: italic;
 }
 
-/* Responsive Design */
+/* ── Responsive ──────────────────────────────────────────── */
+
 @media (max-width: 768px) {
-  .professor-rating {
-    padding: 1rem;
-  }
-
-  .professor-name {
-    font-size: 1.1rem;
-  }
-
-  .rating-stats {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.75rem;
-  }
-
-  .stat-value {
-    font-size: 1.5rem;
-  }
-
-  .rating-footer {
-    flex-direction: column;
-    gap: 0.5rem;
-    align-items: flex-start;
-  }
+  .professor-rating     { padding: 1rem; }
+  .professor-name       { font-size: 1rem; }
+  .rating-stats         { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+  .stat-value           { font-size: 1.5rem; }
+  .rating-footer        { flex-direction: column; gap: 0.5rem; align-items: flex-start; }
+  .rating-footer-links  { flex-direction: row; }
+  .rating-sources-row   { flex-direction: column; }
 }
 
 @media (max-width: 480px) {
-  .rating-stats {
-    grid-template-columns: 1fr;
-  }
+  .rating-stats { grid-template-columns: 1fr; }
 }

@@ -43,7 +43,8 @@ logger = logging.getLogger(__name__)
 # Columns used when fetching full section detail for a single course
 _DETAIL_COLS = (
     '"Term Name", "Class Ave.1", instructor, Class, course_name, '
-    'rmp_rating, rmp_difficulty, rmp_num_ratings, rmp_would_take_again'
+    'rmp_rating, rmp_difficulty, rmp_num_ratings, rmp_would_take_again, '
+    'mc_rating, mc_num_ratings, blended_rating, description, credits'
 )
 
 _SUBJECTS_CACHE_KEY = "all_subjects"
@@ -100,7 +101,6 @@ async def search(
             return cached
 
         # ── Call the search_courses RPC ────────────────────────────────────────
-        # Postgres does the GROUP BY + AVG and returns exactly `limit` rows.
         response = supabase.rpc(
             "search_courses",
             {
@@ -124,13 +124,19 @@ async def search(
                 "instructor":   row.get("instructor"),
                 "num_sections": row.get("num_sections"),
             }
-            if include_ratings and row.get("rmp_rating"):
-                course_obj.update({
-                    "rmp_rating":           row.get("rmp_rating"),
-                    "rmp_difficulty":       row.get("rmp_difficulty"),
-                    "rmp_num_ratings":      row.get("rmp_num_ratings"),
-                    "rmp_would_take_again": row.get("rmp_would_take_again"),
-                })
+            if include_ratings:
+                if row.get("rmp_rating"):
+                    course_obj.update({
+                        "rmp_rating":           row.get("rmp_rating"),
+                        "rmp_difficulty":       row.get("rmp_difficulty"),
+                        "rmp_num_ratings":      row.get("rmp_num_ratings"),
+                        "rmp_would_take_again": row.get("rmp_would_take_again"),
+                    })
+                if row.get("mc_rating"):
+                    course_obj["mc_rating"]      = row.get("mc_rating")
+                    course_obj["mc_num_ratings"] = row.get("mc_num_ratings")
+                if row.get("blended_rating"):
+                    course_obj["blended_rating"] = row.get("blended_rating")
             result_courses.append(course_obj)
 
         logger.info(
@@ -162,13 +168,7 @@ async def search(
 async def get_subjects():
     """
     Return all unique subject codes via the `unique_subjects` Postgres VIEW.
-
-    Previously: SELECT Course FROM courses LIMIT 10000  (~10,000 rows)
-    Now:        SELECT subject FROM unique_subjects      (~150 rows)
-
-    Cached in memory for 1 hour.  Even on a cold start the payload is tiny,
-    so the cache miss is cheap.
-
+    Cached in memory for 1 hour.
     MUST be declared before /{subject}/{catalog} to avoid route shadowing.
     """
     cached = subjects_cache.get(_SUBJECTS_CACHE_KEY)
@@ -178,16 +178,11 @@ async def get_subjects():
 
     try:
         supabase = get_supabase()
-
-        # The view returns one row per distinct subject prefix — no Python
-        # regex loop needed.
         response = supabase.from_("unique_subjects").select("subject").execute()
-
         subjects = sorted(
             row["subject"] for row in (response.data or []) if row.get("subject")
         )
         result = {"subjects": subjects, "count": len(subjects)}
-
         subjects_cache.set(_SUBJECTS_CACHE_KEY, result)
         logger.info(f"Retrieved and cached {len(subjects)} unique subjects")
         return result
@@ -209,11 +204,7 @@ async def get_course_details(
     include_ratings: bool = Query(default=True),
 ):
     """
-    Detailed info for a specific course — all sections, grade history, RMP data.
-
-    This endpoint intentionally fetches all sections for a single course (a
-    small, bounded dataset per course) so it is not a source of bulk egress.
-
+    Detailed info for a specific course — all sections, grade history, RMP + MC data.
     MUST be declared after /search and /subjects.
     """
     try:
@@ -283,7 +274,7 @@ async def get_course_details(
                 instructors.append(instr)
 
         # RMP data (first section with data wins)
-        rmp_data = None
+        rmp_data = {}
         for section in sections:
             rmp = section.get("rmp_rating")
             if rmp and rmp > 0:
@@ -295,18 +286,48 @@ async def get_course_details(
                 }
                 break
 
+        # MC + blended rating (first section with data wins)
+        mc_data = {}
+        for section in sections:
+            mc = section.get("mc_rating")
+            if mc and mc > 0:
+                mc_data = {
+                    "mc_rating":      mc,
+                    "mc_num_ratings": section.get("mc_num_ratings"),
+                    "blended_rating": section.get("blended_rating"),
+                }
+                break
+
         course_obj = {
             "subject":         clean_subject,
             "catalog":         clean_catalog,
             "title":           sections[0].get("course_name", ""),
+            "description":     sections[0].get("description") or None,
+            "credits":         sections[0].get("credits") or None,
             "average":         recent_avg,
             "overall_average": overall_avg,
             "grade_trend":     grade_trend,
             "instructors":     instructors,
             "num_sections":    len(sections),
         }
-        if rmp_data:
+        if include_ratings:
             course_obj.update(rmp_data)
+            course_obj.update(mc_data)
+
+        # ── Fetch schedule from mcgill_sections ────────────────────────────
+        try:
+            sched_resp = (
+                supabase.from_("mcgill_sections")
+                .select("crn, term, section_type, instructor, days, times, location")
+                .eq("course_code", course_code)
+                .order("term", desc=True)
+                .execute()
+            )
+            schedule = sched_resp.data or []
+            if schedule:
+                course_obj["schedule"] = schedule
+        except Exception as e:
+            logger.warning(f"Failed to fetch schedule for {course_code}: {e}")
 
         return {"course": course_obj}
 

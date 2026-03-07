@@ -53,12 +53,10 @@ export default function Dashboard() {
   const [freeformInput, setFreeformInput] = useState('')
   const [isAsking, setIsAsking] = useState(false)
 
-  // Two refs to prevent concurrent load/generate calls.
-  // Using refs (not state) so checks are synchronous and don't cause re-renders.
-  const isLoadingCardsRef   = useRef(false)
+  const isLoadingCardsRef    = useRef(false)
   const isGeneratingCardsRef = useRef(false)
 
-  // ── Club calendar events (fed up from ClubsTab) ────────
+  // ── Club calendar events ───────────────────────────────
   const [clubCalendarEvents, setClubCalendarEvents] = useState([])
 
   // ── Course search ──────────────────────────────────────
@@ -102,12 +100,12 @@ export default function Dashboard() {
   const sortCourses = (courses, sortType) => {
     const sorted = [...courses]
     switch (sortType) {
-      case 'rating-high':    return sorted.sort((a, b) => (b.rmp_rating || 0) - (a.rmp_rating || 0))
-      case 'rating-low':     return sorted.sort((a, b) => (a.rmp_rating || 0) - (b.rmp_rating || 0))
-      case 'name-az':        return sorted.sort((a, b) => `${a.subject} ${a.catalog}`.localeCompare(`${b.subject} ${b.catalog}`))
-      case 'name-za':        return sorted.sort((a, b) => `${b.subject} ${b.catalog}`.localeCompare(`${a.subject} ${a.catalog}`))
-      case 'instructor-az':  return sorted.sort((a, b) => (a.instructor || 'ZZZ').localeCompare(b.instructor || 'ZZZ'))
-      case 'instructor-za':  return sorted.sort((a, b) => (b.instructor || '').localeCompare(a.instructor || ''))
+      case 'rating-high':   return sorted.sort((a, b) => (b.rmp_rating || 0) - (a.rmp_rating || 0))
+      case 'rating-low':    return sorted.sort((a, b) => (a.rmp_rating || 0) - (b.rmp_rating || 0))
+      case 'name-az':       return sorted.sort((a, b) => `${a.subject} ${a.catalog}`.localeCompare(`${b.subject} ${b.catalog}`))
+      case 'name-za':       return sorted.sort((a, b) => `${b.subject} ${b.catalog}`.localeCompare(`${a.subject} ${a.catalog}`))
+      case 'instructor-az': return sorted.sort((a, b) => (a.instructor || 'ZZZ').localeCompare(b.instructor || 'ZZZ'))
+      case 'instructor-za': return sorted.sort((a, b) => (b.instructor || '').localeCompare(a.instructor || ''))
       default: return sorted
     }
   }
@@ -118,13 +116,8 @@ export default function Dashboard() {
 
   // ── Advisor card handlers ──────────────────────────────
 
-  // FIX: Wrapped in useCallback so its reference is stable.
-  // Previously a plain async function, which meant loadAdvisorCards (which IS
-  // useCallback) captured a stale closure and could not safely call it.
   const refreshAdvisorCards = useCallback(async (force = true) => {
     if (!user?.id) return
-    // FIX: Guard with a ref so concurrent calls (e.g. language switch + auto-
-    // generate on load) don't both fire a generate request simultaneously.
     if (isGeneratingCardsRef.current) return
     isGeneratingCardsRef.current = true
     try {
@@ -140,10 +133,6 @@ export default function Dashboard() {
     }
   }, [user?.id])
 
-  // FIX: loadAdvisorCards now safely calls refreshAdvisorCards because both
-  // are useCallback. The isGeneratingCardsRef check inside refreshAdvisorCards
-  // prevents the language-switch path from double-generating when loadAdvisorCards
-  // is called right after a generation has just completed (cards briefly = []).
   const loadAdvisorCards = useCallback(async () => {
     if (!user?.id) return
     if (isLoadingCardsRef.current) return
@@ -154,8 +143,7 @@ export default function Dashboard() {
       const cards = data.cards || []
       setAdvisorCards(cards)
       setCardsGeneratedAt(data.generated_at || null)
-      // Only auto-generate if there are genuinely no cards AND nothing is
-      // already generating (e.g. triggered by the language-switch effect).
+      // Only auto-generate if there are genuinely no cards at all
       if (cards.length === 0 && !isGeneratingCardsRef.current) {
         await refreshAdvisorCards(false)
       }
@@ -222,22 +210,24 @@ export default function Dashboard() {
     }
   }
 
-  // ── Sync right sidebar width as CSS var on body ──────────
+  // ── Sync right sidebar width as CSS var ──────────────────
   useEffect(() => {
     const visible = rightSidebarOpen && activeTab !== 'chat'
     document.body.style.setProperty('--rsb-width', visible ? '320px' : '0px')
     return () => document.body.style.setProperty('--rsb-width', '0px')
   }, [rightSidebarOpen, activeTab])
 
-  // ── Regenerate ALL cards when language switches ─────────────
-  const isFirstRender = useRef(true)
+  // ── Language switch: regenerate + retranslate cards ──────
+  // FIX: prevLanguageRef guards against firing on initial mount.
+  // isFirstRender alone wasn't reliable because the ref resets on remount
+  // (e.g. during hot-reload), causing cards to regenerate on every restart.
+  const prevLanguageRef = useRef(language)
   useEffect(() => {
-    if (isFirstRender.current) { isFirstRender.current = false; return }
+    const languageActuallyChanged = prevLanguageRef.current !== language
+    prevLanguageRef.current = language
+    if (!languageActuallyChanged) return   // skip on mount / no real change
     if (!user?.id) return
-    // FIX: Do NOT call loadAdvisorCards() after this completes.
-    // loadAdvisorCards() would see cards.length === 0 mid-write and fire
-    // another refreshAdvisorCards(false), causing a double-generation loop.
-    // refreshAdvisorCards already sets state directly, so the UI updates fine.
+
     Promise.all([
       refreshAdvisorCards(true),
       cardsAPI.retranslateCards(user.id),
