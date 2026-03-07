@@ -1,8 +1,8 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import {
   FaChevronLeft, FaChevronRight, FaPlus, FaTimes, FaBell,
   FaCalendarAlt, FaBullhorn, FaGraduationCap, FaUser, FaExternalLinkAlt, FaDownload,
-  FaTrash, FaEdit, FaCheck, FaClipboardList, FaUsers,
+  FaTrash, FaEdit, FaCheck, FaClipboardList, FaUsers, FaBook, FaLayerGroup,
   FaChevronDown, FaChevronUp
 } from 'react-icons/fa'
 import { useLanguage } from '../../contexts/LanguageContext'
@@ -216,6 +216,7 @@ function EventModal({ event, onSave, onDelete, onClose, t, notifPrefs, user }) {
           </div>
         </form>
       </div>
+
     </div>
   )
 }
@@ -278,6 +279,7 @@ function EventPopup({ event, onClose, onEdit, canEdit, t, language, formatDate, 
           <FaEdit /> {t('calendar.editEvent')}
         </button>
       )}
+
     </div>
   )
 }
@@ -355,11 +357,122 @@ function DayDrawer({ date, events, onClose, onAddEvent, onEditEvent, onSelectEve
           })}
         </div>
       </div>
+
     </div>
   )
 }
 
 // ── Main ──────────────────────────────────────────────────────────
+
+
+// ── Bulk Delete Modal ─────────────────────────────────────────────
+function BulkDeleteModal({ userEvents, onDelete, onClose, language, busy }) {
+  const [selected, setSelected] = React.useState(new Set())
+
+  // Group anchor events by course_code then by recurrence day
+  const groups = React.useMemo(() => {
+    const anchors = userEvents.filter(e => e.recurrence && e.course_code && !e._isRecurringOccurrence)
+    // Group: { [course_code]: { [recurrence]: [events] } }
+    const map = {}
+    for (const ev of anchors) {
+      const cc = ev.course_code || ev.category || 'Other'
+      if (!map[cc]) map[cc] = {}
+      const rec = ev.recurrence || 'no-recurrence'
+      if (!map[cc][rec]) map[cc][rec] = []
+      map[cc][rec].push(ev)
+    }
+    return map
+  }, [userEvents])
+
+  const DAY_LABELS = { weekly_monday:'Mon', weekly_tuesday:'Tue', weekly_wednesday:'Wed',
+    weekly_thursday:'Thu', weekly_friday:'Fri', weekly_saturday:'Sat', weekly_sunday:'Sun' }
+
+  const toggleId = (id) => setSelected(prev => {
+    const s = new Set(prev)
+    s.has(id) ? s.delete(id) : s.add(id)
+    return s
+  })
+  const toggleGroup = (ids) => {
+    const allOn = ids.every(id => selected.has(id))
+    setSelected(prev => {
+      const s = new Set(prev)
+      allOn ? ids.forEach(id => s.delete(id)) : ids.forEach(id => s.add(id))
+      return s
+    })
+  }
+
+  const hasAnything = Object.keys(groups).length > 0
+
+  return (
+    <div className="modal-overlay cal-bulk-overlay" onClick={onClose}>
+      <div className="cal-bulk-modal" onClick={e => e.stopPropagation()}>
+        <div className="cal-bulk-modal__header">
+          <h3>{language === 'fr' ? 'Supprimer des cours du calendrier' : 'Remove Classes from Calendar'}</h3>
+          <button className="cal-bulk-modal__close" onClick={onClose}><FaTimes /></button>
+        </div>
+
+        {!hasAnything ? (
+          <p className="cal-bulk-empty">{language === 'fr' ? 'Aucun cours récurrent trouvé.' : 'No recurring class slots found.'}</p>
+        ) : (
+          <div className="cal-bulk-list">
+            {Object.entries(groups).sort(([a],[b]) => a.localeCompare(b)).map(([courseCode, days]) => {
+              const allIds = Object.values(days).flat().map(e => e.id)
+              const allSelected = allIds.every(id => selected.has(id))
+              return (
+                <div key={courseCode} className="cal-bulk-course">
+                  <div className="cal-bulk-course__header" onClick={() => toggleGroup(allIds)}>
+                    <input type="checkbox" readOnly checked={allSelected} className="cal-bulk-check" />
+                    <span className="cal-bulk-course__name">{courseCode}</span>
+                    <span className="cal-bulk-course__count">{allIds.length} slot{allIds.length !== 1 ? 's' : ''}</span>
+                  </div>
+                  <div className="cal-bulk-slots">
+                    {Object.entries(days).sort(([a],[b]) => a.localeCompare(b)).map(([rec, evs]) => {
+                      // For same-course same-day slots (e.g. two MATH 323 Tuesday entries), show time
+                      return evs.map(ev => {
+                        const dayLabel = DAY_LABELS[rec] || rec.replace('weekly_','')
+                        const timeLabel = ev.time ? ` ${ev.time}–${ev.end_time || ''}` : ''
+                        const slotLabel = ev.title.replace(courseCode, '').trim() || 'Slot'
+                        return (
+                          <div key={ev.id} className="cal-bulk-slot" onClick={() => toggleId(ev.id)}>
+                            <input type="checkbox" readOnly checked={selected.has(ev.id)} className="cal-bulk-check" />
+                            <span className="cal-bulk-slot__day">{dayLabel}</span>
+                            <span className="cal-bulk-slot__label">{slotLabel}{timeLabel}</span>
+                          </div>
+                        )
+                      })
+                    })}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        <div className="cal-bulk-modal__footer">
+          <span className="cal-bulk-count">
+            {selected.size > 0
+              ? (language === 'fr' ? `${selected.size} série(s) sélectionnée(s)` : `${selected.size} series selected`)
+              : (language === 'fr' ? 'Rien sélectionné' : 'Nothing selected')}
+          </span>
+          <button className="cal-bulk-cancel-btn" onClick={onClose} disabled={busy}>
+            {language === 'fr' ? 'Annuler' : 'Cancel'}
+          </button>
+          <button
+            className="cal-bulk-delete-confirm-btn"
+            disabled={selected.size === 0 || busy}
+            onClick={() => onDelete([...selected])}
+          >
+            <FaTrash size={11} />
+            {busy
+              ? (language === 'fr' ? 'Suppression…' : 'Deleting…')
+              : (language === 'fr' ? `Supprimer ${selected.size || ''}` : `Delete ${selected.size || ''}`)}
+          </button>
+        </div>
+      </div>
+
+    </div>
+  )
+}
 
 // ── Google Calendar / ICS utilities ──────────────────────────────
 
@@ -466,7 +579,8 @@ export default function CalendarTab({ user, clubEvents = [] }) {
   const DAYS   = language === 'fr' ? DAYS_FR   : DAYS_EN
 
   const typeConfig = {
-    academic: { color: '#ed1b2f', bg: '#fef2f2', icon: <FaGraduationCap />, label: t('calendar.academicDates') },
+    course:   { color: '#ed1b2f', bg: '#fef2f2', icon: <FaBook />,          label: t('calendar.classEvents') },
+    academic: { color: '#1d4ed8', bg: '#eff6ff', icon: <FaGraduationCap />, label: t('calendar.academicDates') },
     exam:     { color: '#7c3aed', bg: '#f5f3ff', icon: <FaClipboardList />, label: language === 'fr' ? 'Examens finaux' : 'Final Exams' },
     personal: { color: '#059669', bg: '#ecfdf5', icon: <FaUser />,          label: t('calendar.personalEvents') },
     club:     { color: '#d97706', bg: '#fef3c7', icon: <FaUsers />,         label: language === 'fr' ? 'Réunion de club' : 'Club Meeting' },
@@ -557,7 +671,7 @@ export default function CalendarTab({ user, clubEvents = [] }) {
   const [view, setView]               = useState('calendar')
   const [currentYear, setCurrentYear] = useState(today.getFullYear())
   const [currentMonth, setCurrentMonth] = useState(today.getMonth())
-  const [filter, setFilter]           = useState({ academic: true, exam: true, personal: true, club: true })
+  const [filter, setFilter]           = useState({ course: true, academic: true, exam: true, personal: true, club: true })
   const [showModal, setShowModal]     = useState(false)
   const [editEvent, setEditEvent]     = useState(null)
   const [preselectedDate, setPreselectedDate] = useState(null)
@@ -566,6 +680,8 @@ export default function CalendarTab({ user, clubEvents = [] }) {
   const [notifSaved, setNotifSaved]   = useState(false)
   const [showExportMenu, setShowExportMenu] = useState(false)
   const [showGCalGuide, setShowGCalGuide] = useState(false)
+  const [showBulkDelete, setShowBulkDelete] = useState(false)
+  const [bulkDeleteBusy, setBulkDeleteBusy] = useState(false)
 
   // FIX #19: tEvent defined inside useMemo so it always captures the current
   // translation function. language is a real dependency — no eslint-disable needed.
@@ -576,10 +692,14 @@ export default function CalendarTab({ user, clubEvents = [] }) {
       category:    ev.categoryKey ? t(ev.categoryKey) : ev.category || '',
       description: ev.descKey     ? t(ev.descKey)     : ev.description || '',
     })
+    // Events from syllabus have course_code set — give them type 'course' (red)
+    const retypedUser = userEvents.map(ev =>
+      ev.course_code && ev.recurrence ? { ...tEvent(ev), type: 'course' } : tEvent(ev)
+    )
     return [
       ...MCGILL_ACADEMIC_DATES.map(tEvent),
       ...examEvents,
-      ...userEvents,
+      ...retypedUser,
       ...clubEvents,
     ]
   }, [userEvents, examEvents, clubEvents, language, t])
@@ -673,6 +793,25 @@ export default function CalendarTab({ user, clubEvents = [] }) {
     }
   }
 
+
+  // ── Bulk delete: remove all recurring slots for a given anchor event ──
+  const handleBulkDelete = async (anchorIds) => {
+    setBulkDeleteBusy(true)
+    // Optimistically remove from UI
+    setUserEvents(prev => prev.filter(e => !anchorIds.includes(e.id)))
+    setShowBulkDelete(false)
+    // Delete each anchor from DB (cascade kills all occurrences since they share the anchor id)
+    for (const id of anchorIds) {
+      try {
+        await deleteEventDB(id, user.id)
+        if (user?.id && id && !id.startsWith('user-')) {
+          try { await deleteEventAPI(id, user.id) } catch {}
+        }
+      } catch (err) { console.error('Bulk delete error', id, err) }
+    }
+    setBulkDeleteBusy(false)
+  }
+
   const handleDayClick = (day) => {
     if (!day) return
     const dateStr = toDateStr(currentYear, currentMonth, day)
@@ -752,6 +891,9 @@ export default function CalendarTab({ user, clubEvents = [] }) {
               </div>
             )}
           </div>
+          <button className="cal-bulk-delete-btn" onClick={() => setShowBulkDelete(true)} title={language === 'fr' ? 'Supprimer des cours en masse' : 'Bulk delete classes'}>
+            <FaTrash size={12} /> {language === 'fr' ? 'Supprimer des cours' : 'Remove Classes'}
+          </button>
           <button className="cal-add-btn" onClick={() => { setPreselectedDate(null); setEditEvent(null); setShowModal(true) }}>
             <FaPlus /> {t('calendar.addEventBtn')}
           </button>
@@ -952,6 +1094,17 @@ export default function CalendarTab({ user, clubEvents = [] }) {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Bulk Delete Modal */}
+      {showBulkDelete && (
+        <BulkDeleteModal
+          userEvents={userEvents}
+          onDelete={handleBulkDelete}
+          onClose={() => setShowBulkDelete(false)}
+          language={language}
+          busy={bulkDeleteBusy}
+        />
       )}
     </div>
   )
