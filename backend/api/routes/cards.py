@@ -8,6 +8,11 @@ POST   /api/cards/ask/{user_id}        — User asks a question → single card
 POST   /api/cards/{card_id}/thread     — Follow-up thread on a card
 PATCH  /api/cards/{card_id}/save       — Toggle saved state on a card
 PATCH  /api/cards/{user_id}/reorder    — Persist drag-and-drop order
+
+FIX: Cards no longer regenerate on every server restart.
+     The frontend should call GET /api/cards/{user_id} first.
+     Only call POST /generate if the response has `fresh: false` AND `count: 0`.
+     The generate endpoint itself also guards with cards_are_fresh().
 """
 
 from fastapi import APIRouter, HTTPException
@@ -37,13 +42,10 @@ def _lang_instruction(language: str) -> str:
 
 
 # ── Anthropic client singleton ───────────────────────────────────
-# Create once at module level instead of per-request to avoid
-# repeated object allocation and connection overhead.
 _anthropic_client: anthropic.Anthropic | None = None
 
 
 def get_anthropic_client() -> anthropic.Anthropic:
-    """Return the shared Anthropic client, initialising it on first use."""
     global _anthropic_client
     if _anthropic_client is None:
         _anthropic_client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
@@ -86,7 +88,6 @@ class SaveRequest(BaseModel):
     is_saved: bool
 
 class ReorderRequest(BaseModel):
-    # List of {id, sort_order} pairs
     order: List[dict]
 
 
@@ -122,7 +123,6 @@ def fetch_student_context(user_id: str) -> dict:
 
 
 def fetch_saved_cards(user_id: str) -> list:
-    """Return all currently-saved cards for a user."""
     supabase = get_supabase()
     resp = (supabase.table("advisor_cards")
         .select("title, body, category")
@@ -133,6 +133,7 @@ def fetch_saved_cards(user_id: str) -> list:
 
 
 def cards_are_fresh(user_id: str, max_age_hours: int = 12) -> bool:
+    """Returns True if AI cards exist and were generated within max_age_hours."""
     try:
         supabase = get_supabase()
         resp = (supabase.table("advisor_cards")
@@ -148,6 +149,18 @@ def cards_are_fresh(user_id: str, max_age_hours: int = 12) -> bool:
         return False
 
 
+def cards_exist(user_id: str) -> bool:
+    """Returns True if any AI cards exist for this user, regardless of age."""
+    try:
+        supabase = get_supabase()
+        resp = (supabase.table("advisor_cards")
+            .select("id").eq("user_id", user_id).eq("source", "ai")
+            .limit(1).execute())
+        return bool(resp.data)
+    except Exception:
+        return False
+
+
 def _sanitise_category(card: dict) -> str:
     cat = card.get("category", "planning")
     return cat if cat in CARD_CATEGORIES else "planning"
@@ -157,12 +170,9 @@ def save_cards(user_id: str, cards: list) -> None:
     """
     Replace AI-generated, non-saved cards.
     Saved cards and user-asked cards are never touched.
-    New cards get sort_order starting after the highest existing sort_order
-    so saved cards (which keep their order) naturally stay at the top.
     """
     supabase = get_supabase()
 
-    # Delete only AI-generated cards that are NOT saved
     supabase.table("advisor_cards").delete() \
         .eq("user_id", user_id) \
         .eq("source", "ai") \
@@ -172,7 +182,6 @@ def save_cards(user_id: str, cards: list) -> None:
     if not cards:
         return
 
-    # Find the current max sort_order so new cards go below saved ones
     existing = (supabase.table("advisor_cards")
         .select("sort_order")
         .eq("user_id", user_id)
@@ -202,7 +211,6 @@ def save_cards(user_id: str, cards: list) -> None:
 
 
 def insert_user_card(user_id: str, card: dict, question: str) -> dict:
-    """Insert a single user-asked card at sort_order=0 (top of feed)."""
     supabase = get_supabase()
     row = {
         "user_id": user_id,
@@ -218,7 +226,7 @@ def insert_user_card(user_id: str, card: dict, question: str) -> dict:
         "source": "user",
         "is_saved": False,
         "generated_at": datetime.now(timezone.utc).isoformat(),
-        "user_question": question,   # store for retranslation
+        "user_question": question,
     }
     result = supabase.table("advisor_cards").insert(row).execute()
     inserted = result.data[0] if result.data else row
@@ -229,9 +237,6 @@ def insert_user_card(user_id: str, card: dict, question: str) -> dict:
 
 # ── Prompt helpers ───────────────────────────────────────────────
 
-# Shared description for the "actions" field used in all three card-generating prompts.
-# Written clearly so the model generates clickable student-perspective questions,
-# NOT Socratic questions directed at the student.
 _ACTIONS_PROMPT = (
     '"actions"  : array of 2–3 questions the STUDENT would want to click to ask '
     'the advisor to learn more about this card '
@@ -280,7 +285,6 @@ def build_rich_context(ctx: dict, saved_cards: list = None) -> str:
     for m in (user.get("other_minors") or []):
         minors_str += f", {m}"
 
-    # Build saved-cards context so the AI doesn't duplicate them
     saved_section = ""
     if saved_cards:
         saved_lines = "\n".join(
@@ -334,7 +338,6 @@ Return ONLY the JSON array — no markdown, no commentary."""
 
 
 def _build_single_card_prompt(question: str, ctx: dict, language: str) -> str:
-    """Shared prompt for /ask and /retranslate — generates one card from a student question."""
     return f"""You are a proactive AI academic advisor for McGill University.
 A student has asked: "{question}"
 
@@ -360,6 +363,10 @@ Return ONLY the JSON object — no markdown, no commentary.{_lang_instruction(la
 
 @router.get("/{user_id}", response_model=dict)
 async def get_cards(user_id: str):
+    """
+    Fetch stored cards — instant, no AI call.
+    Frontend should call this first. Only call /generate if fresh=False AND count=0.
+    """
     try:
         get_user_by_id(user_id)
         supabase = get_supabase()
@@ -374,8 +381,13 @@ async def get_cards(user_id: str):
                 card["actions"] = json.loads(card["actions"])
         ai_cards = [c for c in cards if c.get("source") == "ai"]
         generated_at = ai_cards[0].get("generated_at") if ai_cards else None
-        return {"cards": cards, "count": len(cards),
-                "generated_at": generated_at, "fresh": cards_are_fresh(user_id)}
+        fresh = cards_are_fresh(user_id)
+        return {
+            "cards": cards,
+            "count": len(cards),
+            "generated_at": generated_at,
+            "fresh": fresh,
+        }
     except UserNotFoundException:
         raise HTTPException(status_code=404, detail="User not found")
     except Exception as e:
@@ -385,9 +397,18 @@ async def get_cards(user_id: str):
 
 @router.post("/generate/{user_id}", response_model=dict)
 async def generate_cards(user_id: str, request: GenerateRequest):
+    """
+    Generate AI cards.
+    - If force=False and cards are fresh (< 12h old), returns existing cards immediately.
+    - If force=False and cards exist but are stale, regenerates them.
+    - If force=True, always regenerates.
+    """
     try:
         get_user_by_id(user_id)
+
+        # Guard: don't regenerate fresh cards unless forced
         if not request.force and cards_are_fresh(user_id):
+            logger.info(f"Cards already fresh for {user_id}, skipping generation")
             return await get_cards(user_id)
 
         ctx = fetch_student_context(user_id)
@@ -454,7 +475,6 @@ async def retranslate_cards(user_id: str, request: RetranslateRequest):
         for card_row in user_cards:
             card_id = card_row["id"]
             question = card_row["user_question"]
-
             prompt = _build_single_card_prompt(question, ctx, request.language)
 
             try:
@@ -513,7 +533,6 @@ async def clear_cards(user_id: str):
 
 @router.delete("/{user_id}/{card_id}", status_code=204)
 async def delete_card(user_id: str, card_id: str):
-    """Permanently delete a single advisor card for a user."""
     try:
         get_user_by_id(user_id)
         supabase = get_supabase()
@@ -533,7 +552,6 @@ async def ask_card(user_id: str, request: AskRequest):
     try:
         get_user_by_id(user_id)
         ctx = fetch_student_context(user_id)
-
         prompt = _build_single_card_prompt(request.question, ctx, request.language)
 
         client = get_anthropic_client()
@@ -580,7 +598,6 @@ Provide a concise, helpful, and specific response (2–4 sentences). Be direct a
             max_tokens=512,
             messages=[{"role": "user", "content": prompt}],
         )
-
         return {"response": message.content[0].text.strip()}
 
     except Exception as e:

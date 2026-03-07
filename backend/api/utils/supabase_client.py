@@ -8,6 +8,9 @@ Fixes applied:
   #13 – RECONNECT FIX: with_retry() resets the singleton on "Server disconnected"
         errors and retries up to MAX_RETRIES times with exponential backoff.
         Prevents cascading 500s after idle connection timeouts.
+  #14 – HTTP/2 FIX: Force HTTP/1.1 by replacing the postgrest httpx session
+        after client creation. Prevents LocalProtocolError pseudo-header trailer
+        bug triggered by .rpc() calls. Works across all supabase-py versions.
 """
 from supabase import create_client, Client
 from typing import Optional, List, Dict, Any, Callable, TypeVar
@@ -36,6 +39,7 @@ _DISCONNECT_SIGNALS = (
     "remotedisconnected",
     "connectionerror",
     "timeout",
+    "localprotocolerror",  # HTTP/2 pseudo-header trailer bug
 )
 
 MAX_RETRIES = 3
@@ -54,14 +58,45 @@ def _reset_client() -> None:
     logger.info("Supabase client reset — will reconnect on next request")
 
 
+def _force_http1(client: Client) -> None:
+    """
+    Replace the postgrest httpx session with one that has HTTP/2 disabled.
+    Copies base_url and headers from the old session so requests still work.
+    This is the version-agnostic fix for LocalProtocolError on .rpc() calls.
+    """
+    try:
+        pg = client.postgrest
+        old_session = getattr(pg, "_session", None) or getattr(pg, "session", None)
+        if old_session is None:
+            logger.warning("Could not find postgrest session to patch")
+            return
+
+        new_session = httpx.Client(
+            http2=False,
+            base_url=old_session.base_url,
+            headers=dict(old_session.headers),
+        )
+
+        if hasattr(pg, "_session"):
+            pg._session = new_session
+        else:
+            pg.session = new_session
+
+        logger.info("HTTP/1.1 forced on postgrest session")
+    except Exception as e:
+        logger.warning(f"Could not force HTTP/1.1 (non-fatal): {e}")
+
+
 def get_supabase() -> Client:
     global _supabase_client
     if _supabase_client is None:
         try:
             _supabase_client = create_client(
                 settings.SUPABASE_URL,
-                settings.SUPABASE_SERVICE_KEY
+                settings.SUPABASE_SERVICE_KEY,
             )
+            # Fix #14: force HTTP/1.1 to prevent LocalProtocolError on .rpc() calls
+            _force_http1(_supabase_client)
             logger.info("Supabase client initialized")
             try:
                 _supabase_client.table("users").select("id").limit(1).execute()
@@ -159,13 +194,10 @@ def create_user(user_data: Dict[str, Any]) -> Dict[str, Any]:
         if "duplicate key" in error_str.lower() or "23505" in error_str:
             user_id = user_data.get("id")
             logger.warning(f"Duplicate detected for user ID: {user_id}")
-            # Any uniqueness conflict (primary key, email, OR username) means
-            # the auth user already has a profile row — just return it.
             try:
                 return get_user_by_id(user_id)
             except UserNotFoundException:
                 pass
-            # Can't find the row by ID either — surface a clear error
             if "email" in error_str:
                 raise DatabaseException("create_user", "Email already in use by another account")
             if "username" in error_str:

@@ -1,17 +1,20 @@
 """
-backend/api/routes/professors.py
+backend/api/routes/professors.py  (updated — mcgill.courses blended ratings)
 
-Professor RMP (Rate My Professors) lookup endpoints.
+Professor rating endpoints. Now returns three rating fields:
+  - rmp_rating      : RateMyProfessors (existing)
+  - mc_rating       : mcgill.courses   (new, populated by scraper)
+  - blended_rating  : weighted average by num_ratings (new)
 
-Given a professor name (from a syllabus upload or degree requirements),
-look up their RMP data from the courses table, which already has
-rmp_rating, rmp_difficulty, rmp_num_ratings, rmp_would_take_again,
-stored per course/instructor row.
+The frontend ProfessorRating component shows all three when available,
+or falls back gracefully to whichever sources exist.
 
-Endpoints:
-  GET /professors/rmp?name=<name>            — lookup by instructor name
-  GET /professors/rmp-by-course?subject=ECON&catalog=208 — lookup by course
-  GET /professors/search?q=<name>            — search/suggest professors
+Endpoints (unchanged URLs for backwards compatibility):
+  GET /professors/rmp?name=<n>
+  GET /professors/rmp-by-course?subject=ECON&catalog=208
+  GET /professors/search?q=<n>
+  GET /professors/rmp-bulk?courses=ECON208,COMP202
+  POST /professors/rmp-bulk
 """
 
 from fastapi import APIRouter, HTTPException, Query, status
@@ -27,183 +30,155 @@ from ..utils.cache import search_cache
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-# Columns we need from the courses table for RMP data
-# NOTE: rmp_url does NOT exist as a column in the courses table
+# ── Column selection ──────────────────────────────────────────────────────────
+
+# Include new mc_* and blended_rating columns (graceful: NULL if not yet scraped)
 _RMP_COLS = (
     'instructor, Course, course_name, '
-    'rmp_rating, rmp_difficulty, rmp_num_ratings, rmp_would_take_again'
+    'rmp_rating, rmp_difficulty, rmp_num_ratings, rmp_would_take_again, '
+    'mc_rating, mc_num_ratings, blended_rating'
 )
 
-# Cache keys
-_RMP_PROF_PREFIX = "rmp_prof:"
+_RMP_PROF_PREFIX   = "rmp_prof:"
 _RMP_COURSE_PREFIX = "rmp_course:"
 
 
+# ── Helpers ───────────────────────────────────────────────────────────────────
+
 def _name_similarity(a: str, b: str) -> float:
-    """Return similarity ratio between two professor name strings (0-1)."""
     return SequenceMatcher(None, a.lower(), b.lower()).ratio()
 
 
 def _normalize_name(name: str) -> str:
-    """Strip titles, extra whitespace, normalise to lowercase for fuzzy matching."""
     name = re.sub(r'\b(dr|prof|professor|mr|mrs|ms)\b\.?', '', name, flags=re.IGNORECASE)
-    name = re.sub(r'\s+', ' ', name).strip()
-    return name.lower()
+    return re.sub(r'\s+', ' ', name).strip().lower()
 
 
 def _best_rmp_row(rows: list, target_name: str) -> dict | None:
-    """
-    Given raw DB rows, find the best RMP match for `target_name`.
-    Returns the row dict or None if nothing good enough is found.
-    Threshold: 0.65 similarity — catches last-name-only matches and
-    slight spelling differences while avoiding wrong professor matches.
-    """
-    best_row = None
-    best_score = 0.0
+    best_row, best_score = None, 0.0
     target_norm = _normalize_name(target_name)
-
     for row in rows:
         instr = row.get('instructor') or ''
         if not instr:
             continue
-        # Only rows that actually have RMP data are useful
-        if not row.get('rmp_rating'):
+        # Require at least one rating source to be present
+        if not row.get('rmp_rating') and not row.get('mc_rating') and not row.get('blended_rating'):
             continue
         score = _name_similarity(target_norm, _normalize_name(instr))
         if score > best_score:
             best_score = score
             best_row = row
+    return best_row if best_score >= 0.60 else None
 
-    if best_score >= 0.60:
-        return best_row
-    return None
+
+def _compute_blended(row: dict) -> Optional[float]:
+    """
+    Compute blended rating on-the-fly if the DB column isn't populated yet.
+    Uses weighted average by num_ratings.
+    """
+    # Prefer pre-computed blended from DB
+    if row.get('blended_rating'):
+        return float(row['blended_rating'])
+
+    rmp_r = row.get('rmp_rating')
+    rmp_n = int(row.get('rmp_num_ratings') or 0)
+    mc_r  = row.get('mc_rating')
+    mc_n  = int(row.get('mc_num_ratings') or 0)
+
+    # Normalize mc_rating if on 100-point scale
+    if mc_r and float(mc_r) > 5:
+        mc_r = float(mc_r) / 20.0
+
+    if rmp_r and mc_r:
+        total = rmp_n + mc_n
+        if total == 0:
+            return round((float(rmp_r) + float(mc_r)) / 2, 2)
+        return round((float(rmp_r) * rmp_n + float(mc_r) * mc_n) / total, 2)
+
+    return float(rmp_r) if rmp_r else (float(mc_r) if mc_r else None)
 
 
 def _build_rmp_url(instructor: str) -> str | None:
-    """
-    Build a RateMyProfessors search URL from an instructor name.
-    Since rmp_url is not stored in the DB, we construct a search link.
-    """
     if not instructor:
         return None
     encoded = instructor.strip().replace(' ', '+')
-    return f"https://www.ratemyprofessors.com/search/professors/1439?q={encoded}"
+    return f"https://www.ratemyprofessors.com/search/professors?q={encoded}&sid=U2Nob29sLTEyNDY="
 
 
-def _format_professor(row: dict) -> dict:
-    """Convert a raw courses row into a clean professor RMP dict."""
+def _format_professor(row: dict | None) -> dict | None:
+    """Serialize a courses-table row into the professor rating payload."""
+    if not row:
+        return None
+
     instr = row.get('instructor') or ''
-    parts = instr.split() if instr else []
-    first = parts[0] if len(parts) > 1 else ''
+    parts = instr.split()
+    first = ' '.join(parts[:-1]) if len(parts) > 1 else ''
     last  = parts[-1] if parts else instr
 
+    rmp_r  = float(row['rmp_rating'])  if row.get('rmp_rating')  else None
+    mc_r   = float(row['mc_rating'])   if row.get('mc_rating')   else None
+    # Normalize mc if on 100-pt scale
+    if mc_r and mc_r > 5:
+        mc_r = round(mc_r / 20.0, 2)
+
+    blended = _compute_blended(row)
+
+    # Determine primary display rating: blended > rmp > mc
+    display_rating = blended or rmp_r or mc_r
+
     return {
-        'name':                 instr,
-        'first_name':           first,
-        'last_name':            last,
-        'avg_rating':           row.get('rmp_rating'),
-        'avg_difficulty':       row.get('rmp_difficulty'),
-        'num_ratings':          int(row.get('rmp_num_ratings') or 0),
-        'would_take_again_percent': (
-            round(float(row['rmp_would_take_again']))
-            if row.get('rmp_would_take_again') is not None else None
+        # Identity
+        'name':       instr,
+        'first_name': first,
+        'last_name':  last,
+
+        # RMP data (original source)
+        'rmp_rating':              rmp_r,
+        'rmp_difficulty':          float(row['rmp_difficulty'])        if row.get('rmp_difficulty')        else None,
+        'rmp_num_ratings':         int(row['rmp_num_ratings'])         if row.get('rmp_num_ratings')       else 0,
+        'rmp_would_take_again':    float(row['rmp_would_take_again'])  if row.get('rmp_would_take_again')  else None,
+        'rmp_url':                 _build_rmp_url(instr),
+
+        # mcgill.courses data (new)
+        'mc_rating':               mc_r,
+        'mc_num_ratings':          int(row['mc_num_ratings'])          if row.get('mc_num_ratings')        else 0,
+        'mc_url':                  f"https://mcgill.courses/instructor/{instr.replace(' ', '-')}",
+
+        # Blended (best for display)
+        'blended_rating':          blended,
+        'avg_rating':              display_rating,  # kept for backwards compat
+
+        # Metadata
+        'rating_source': (
+            'both'     if rmp_r and mc_r else
+            'rmp_only' if rmp_r          else
+            'mc_only'  if mc_r           else
+            'none'
         ),
-        'rmp_url':              _build_rmp_url(instr),
-        'course_code':          row.get('Course'),
-        'course_name':          row.get('course_name'),
+        'course':   row.get('Course'),
+        'course_name': row.get('course_name'),
     }
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# ROUTES
-# ═══════════════════════════════════════════════════════════════════════════════
+# ── Routes ────────────────────────────────────────────────────────────────────
 
-@router.get("/rmp-bulk", response_model=dict)
-async def get_rmp_bulk(
-    courses: str = Query(..., description="Comma-separated list of course codes e.g. ECON208,ECON230D1"),
+@router.get("/rmp", response_model=dict)
+async def get_rmp_by_name(
+    name: str = Query(..., min_length=2, max_length=100),
+    subject: Optional[str] = Query(None, min_length=2, max_length=6),
 ):
     """
-    Batch RMP lookup for a list of course codes.
-    Returns { "ratings": { "ECON 208": { professor, rmp... } | null, ... } }
-    Used by DegreeRequirementsView to show RMP badges per block without N+1 requests.
+    Look up combined RMP + mcgill.courses rating for a professor by name.
+    Returns blended_rating in addition to the individual source ratings.
     """
-    codes = [c.strip().upper().replace(' ', '') for c in courses.split(',') if c.strip()]
-    if not codes:
-        raise HTTPException(status_code=422, detail="No course codes provided")
-    if len(codes) > 60:
-        codes = codes[:60]
-
-    cache_key = f"rmp_bulk:{'|'.join(sorted(codes))}"
+    clean_name = name.strip()
+    cache_key  = f"{_RMP_PROF_PREFIX}{subject or ''}:{clean_name.lower()}"
     cached = search_cache.get(cache_key)
     if cached is not None:
         return cached
 
     try:
         supabase = get_supabase()
-
-        # Build an OR filter on the Course column
-        or_filter = ','.join(f'Course.eq.{c}' for c in codes)
-        rows = (
-            supabase.from_('courses')
-            .select(_RMP_COLS + ', "Term Name"')
-            .or_(or_filter)
-            .execute()
-            .data or []
-        )
-
-        # Group by course code, pick the best-rated row
-        by_course: dict[str, list] = {}
-        for row in rows:
-            code = (row.get('Course') or '').upper()
-            by_course.setdefault(code, []).append(row)
-
-        ratings: dict = {}
-        for code in codes:
-            # Normalize key to "SUBJ NNN" format for consistency
-            normalized = re.sub(r'^([A-Z]{2,6})(\d)', r'\1 \2', code)
-            course_rows = by_course.get(code, [])
-            best = max(
-                (r for r in course_rows if r.get('rmp_rating')),
-                key=lambda r: float(r.get('rmp_rating') or 0),
-                default=None
-            )
-            ratings[normalized] = _format_professor(best) if best else None
-
-        result = {'ratings': ratings, 'courses_checked': len(codes)}
-        search_cache.set(cache_key, result, ttl=600)
-        return result
-
-    except Exception as e:
-        logger.exception(f"Bulk RMP lookup failed: {e}")
-        raise HTTPException(status_code=500, detail="Bulk RMP lookup failed")
-
-
-@router.get("/rmp", response_model=dict)
-async def get_rmp_by_name(
-    name: str = Query(..., min_length=2, max_length=100,
-                      description="Professor full name or last name"),
-    subject: Optional[str] = Query(None, min_length=2, max_length=6,
-                                   description="Optional subject filter (e.g. ECON)"),
-):
-    """
-    Look up RMP data for a professor by name.
-
-    First tries an exact `instructor ilike` match, then fuzzy-matches
-    among all rows with rmp_rating data if an exact hit isn't found.
-
-    Returns: { found: bool, professor: {...} | null, match_score: float }
-    """
-    clean_name = name.strip()
-    cache_key  = f"{_RMP_PROF_PREFIX}{subject or ''}:{clean_name.lower()}"
-    cached     = search_cache.get(cache_key)
-    if cached is not None:
-        return cached
-
-    try:
-        supabase = get_supabase()
-
-        # ── Try exact/fuzzy ilike on instructor column ─────────────────────────
-        # Grab last name for the initial query (most robust signal)
         parts     = clean_name.split()
         last_name = parts[-1] if parts else clean_name
 
@@ -211,55 +186,44 @@ async def get_rmp_by_name(
             supabase.from_('courses')
             .select(_RMP_COLS)
             .ilike('instructor', f'%{last_name}%')
-            .not_.is_('rmp_rating', 'null')
         )
         if subject:
             qb = qb.like('Course', f'{subject.upper()}%')
-        qb = qb.order('Course').limit(200)
-
-        rows = qb.execute().data or []
+        rows = qb.order('Course').limit(200).execute().data or []
 
         best = _best_rmp_row(rows, clean_name)
 
-        # ── Fallback: broaden search if nothing found ──────────────────────────
+        # Fallback by first name
         if best is None and len(parts) > 1:
-            first_name = parts[0]
             qb2 = (
                 supabase.from_('courses')
                 .select(_RMP_COLS)
-                .ilike('instructor', f'%{first_name}%')
-                .not_.is_('rmp_rating', 'null')
+                .ilike('instructor', f'%{parts[0]}%')
             )
             if subject:
                 qb2 = qb2.like('Course', f'{subject.upper()}%')
-            qb2 = qb2.order('Course').limit(200)
-            rows2 = qb2.execute().data or []
+            rows2 = qb2.limit(200).execute().data or []
             best = _best_rmp_row(rows2, clean_name)
 
         if best is None:
             result = {'found': False, 'professor': None, 'match_score': 0.0}
         else:
-            prof_data   = _format_professor(best)
             match_score = _name_similarity(
                 _normalize_name(clean_name),
                 _normalize_name(best.get('instructor') or '')
             )
             result = {
                 'found':       True,
-                'professor':   prof_data,
+                'professor':   _format_professor(best),
                 'match_score': round(match_score, 3),
             }
 
-        # Cache for 10 minutes
         search_cache.set(cache_key, result, ttl=600)
         return result
 
     except Exception as e:
         logger.exception(f"RMP lookup by name failed for '{name}': {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to look up professor rating",
-        )
+        raise HTTPException(status_code=500, detail="Failed to look up professor rating")
 
 
 @router.get("/rmp-by-course", response_model=dict)
@@ -268,18 +232,15 @@ async def get_rmp_by_course(
     catalog: str = Query(..., min_length=1, max_length=10),
 ):
     """
-    Return all instructors (with RMP data) who have taught this course,
-    most recent first.
-
-    Used by DegreeRequirementsView and CoursesTab to surface instructor
-    ratings for a specific course code.
+    Return all instructors (with blended RMP + mcgill.courses ratings)
+    who have taught this course, sorted by blended_rating desc.
     """
     clean_subject = subject.strip().upper()
     clean_catalog = catalog.strip()
     course_code   = f"{clean_subject}{clean_catalog}"
 
     cache_key = f"{_RMP_COURSE_PREFIX}{course_code}"
-    cached    = search_cache.get(cache_key)
+    cached = search_cache.get(cache_key)
     if cached is not None:
         return cached
 
@@ -292,10 +253,9 @@ async def get_rmp_by_course(
             .eq('Course', course_code)
             .execute()
         )
-
         rows = response.data or []
 
-        # Group by instructor, keeping the row with highest rmp_rating
+        # Deduplicate by instructor; keep best row (prefer highest blended, then rmp)
         seen: dict[str, dict] = {}
         for row in rows:
             instr = row.get('instructor') or ''
@@ -303,18 +263,20 @@ async def get_rmp_by_course(
                 continue
             if instr not in seen:
                 seen[instr] = row
-            elif row.get('rmp_rating') and (
-                not seen[instr].get('rmp_rating')
-                or float(row['rmp_rating']) > float(seen[instr]['rmp_rating'] or 0)
-            ):
-                seen[instr] = row
+            else:
+                # Prefer row with any rating data
+                existing_score = float(seen[instr].get('blended_rating') or seen[instr].get('rmp_rating') or 0)
+                new_score      = float(row.get('blended_rating')         or row.get('rmp_rating')         or 0)
+                if new_score > existing_score:
+                    seen[instr] = row
 
-        professors = []
-        for instr, row in seen.items():
-            if row.get('rmp_rating'):
-                professors.append(_format_professor(row))
+        professors = [
+            _format_professor(row)
+            for row in seen.values()
+            if row.get('rmp_rating') or row.get('mc_rating') or row.get('blended_rating')
+        ]
 
-        # Sort: highest rated first
+        # Sort: blended first, then rmp-only, then mc-only
         professors.sort(key=lambda p: p['avg_rating'] or 0, reverse=True)
 
         result = {
@@ -327,31 +289,24 @@ async def get_rmp_by_course(
 
     except Exception as e:
         logger.exception(f"RMP by-course failed for {course_code}: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to look up course professors",
-        )
+        raise HTTPException(status_code=500, detail="Failed to look up course professors")
 
 
 @router.get("/search", response_model=dict)
 async def search_professors(
-    q: str = Query(..., min_length=2, max_length=80, description="Professor name search query"),
+    q: str = Query(..., min_length=2, max_length=80),
     subject: Optional[str] = Query(None, min_length=2, max_length=6),
     limit: int = Query(default=10, ge=1, le=50),
 ):
-    """
-    Search for professors by name (for autocomplete / suggestions).
-    Returns distinct instructors with their RMP data.
-    """
-    clean_q    = q.strip()
-    cache_key  = f"prof_search:{subject or ''}:{clean_q.lower()}:{limit}"
-    cached     = search_cache.get(cache_key)
+    """Search for professors by name. Returns blended ratings."""
+    clean_q   = q.strip()
+    cache_key = f"prof_search:{subject or ''}:{clean_q.lower()}:{limit}"
+    cached    = search_cache.get(cache_key)
     if cached is not None:
         return cached
 
     try:
         supabase = get_supabase()
-
         qb = (
             supabase.from_('courses')
             .select(_RMP_COLS)
@@ -359,127 +314,89 @@ async def search_professors(
         )
         if subject:
             qb = qb.like('Course', f'{subject.upper()}%')
-        qb = qb.order('instructor').limit(500)
-        rows = qb.execute().data or []
+        rows = qb.order('instructor').limit(500).execute().data or []
 
-        # Deduplicate by instructor name, keep best-rated row
         seen: dict[str, dict] = {}
         for row in rows:
             instr = row.get('instructor') or ''
             if not instr:
                 continue
-            if instr not in seen or (
-                row.get('rmp_rating')
-                and float(row['rmp_rating']) > float((seen[instr].get('rmp_rating') or 0))
-            ):
+            existing  = float(seen[instr].get('blended_rating') or seen[instr].get('rmp_rating') or 0) if instr in seen else 0
+            this_score = float(row.get('blended_rating') or row.get('rmp_rating') or 0)
+            if instr not in seen or this_score > existing:
                 seen[instr] = row
 
         professors = [_format_professor(row) for row in seen.values()]
         professors.sort(key=lambda p: (p['avg_rating'] or 0), reverse=True)
         professors = professors[:limit]
 
-        result = {
-            'professors': professors,
-            'count':      len(professors),
-            'query':      clean_q,
-        }
+        result = {'professors': professors, 'count': len(professors), 'query': clean_q}
         search_cache.set(cache_key, result, ttl=300)
         return result
 
     except Exception as e:
         logger.exception(f"Professor search failed for '{q}': {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to search professors",
-        )
+        raise HTTPException(status_code=500, detail="Failed to search professors")
 
 
 class BulkRmpRequest(BaseModel):
-    codes: List[str]  # list of course codes like "ECON208" or "ECON 208"
+    codes: List[str]
+
+
+@router.get("/rmp-bulk", response_model=dict)
+async def get_rmp_bulk(courses: str = Query(...)):
+    """Bulk blended rating lookup by course codes (GET version)."""
+    return await _bulk_lookup(courses.split(','))
 
 
 @router.post("/rmp-bulk", response_model=dict)
 async def get_rmp_bulk_post(body: BulkRmpRequest):
-    """
-    Bulk lookup: given a list of course codes, return the best RMP data
-    for the most-recent instructor of each course.
+    """Bulk blended rating lookup by course codes (POST version)."""
+    return await _bulk_lookup(body.codes)
 
-    Returns { ratings: { "ECON 208": { avg_rating, avg_difficulty, ... } | null } }
 
-    Used by DegreeRequirementsView to fetch a whole block's worth of ratings
-    in a single request rather than one call per course row.
-    """
-    if not body.codes:
-        return {"ratings": {}}
+async def _bulk_lookup(raw_codes: list[str]) -> dict:
+    codes = [c.strip().upper().replace(' ', '') for c in raw_codes if c.strip()]
+    if not codes:
+        raise HTTPException(status_code=422, detail="No course codes provided")
+    codes = codes[:60]
 
-    # Normalise: "ECON208" → "ECON208", keep compact form for DB equality
-    def compact(code):
-        code = re.sub(r'\s+', '', code.strip().upper())
-        return code
-
-    compact_codes = [compact(c) for c in body.codes[:100]]  # cap at 100
-
-    cache_key = f"rmp_bulk:{'|'.join(sorted(compact_codes))}"
+    cache_key = f"rmp_bulk:{'|'.join(sorted(codes))}"
     cached = search_cache.get(cache_key)
     if cached is not None:
         return cached
 
     try:
         supabase = get_supabase()
-
-        # Single query: fetch all matching rows for all requested courses
-        response = (
-            supabase.from_("courses")
+        or_filter = ','.join(f'Course.eq.{c}' for c in codes)
+        rows = (
+            supabase.from_('courses')
             .select(_RMP_COLS + ', "Term Name"')
-            .in_("Course", compact_codes)
-            .not_.is_("rmp_rating", "null")
+            .or_(or_filter)
             .execute()
+            .data or []
         )
-        rows = response.data or []
 
-        # Group by course code, keep best-rated row per course
-        by_course: dict[str, dict] = {}
+        by_course: dict[str, list] = {}
         for row in rows:
-            code = row.get("Course") or ""
-            if not code:
-                continue
-            if code not in by_course:
-                by_course[code] = row
-            elif float(row.get("rmp_rating") or 0) > float(by_course[code].get("rmp_rating") or 0):
-                by_course[code] = row
-
-        # Build normalised key → rating map
-        # Key format: "ECON 208" (with space) for frontend consumption
-        def spaced(code):
-            return re.sub(r'^([A-Z]{2,6})(\d)', r'\1 \2', code)
+            code = (row.get('Course') or '').upper()
+            by_course.setdefault(code, []).append(row)
 
         ratings: dict = {}
-        for compact_code in compact_codes:
-            spaced_code = spaced(compact_code)
-            row = by_course.get(compact_code)
-            if row and row.get("rmp_rating"):
-                instr = row.get("instructor")
-                ratings[spaced_code] = {
-                    "name":                     instr,
-                    "avg_rating":               row.get("rmp_rating"),
-                    "avg_difficulty":           row.get("rmp_difficulty"),
-                    "num_ratings":              int(row.get("rmp_num_ratings") or 0),
-                    "would_take_again_percent": (
-                        round(float(row["rmp_would_take_again"]))
-                        if row.get("rmp_would_take_again") is not None else None
-                    ),
-                    "rmp_url": _build_rmp_url(instr),
-                }
-            else:
-                ratings[spaced_code] = None
+        for code in codes:
+            normalized = re.sub(r'^([A-Z]{2,6})(\d)', r'\1 \2', code)
+            course_rows = by_course.get(code, [])
+            best = max(
+                (r for r in course_rows if r.get('blended_rating') or r.get('rmp_rating') or r.get('mc_rating')),
+                key=lambda r: float(r.get('blended_rating') or r.get('rmp_rating') or r.get('mc_rating') or 0),
+                default=None,
+            )
+            ratings[normalized] = _format_professor(best) if best else None
 
-        result = {"ratings": ratings, "found": sum(1 for v in ratings.values() if v)}
+        result = {'ratings': ratings, 'courses_checked': len(codes)}
         search_cache.set(cache_key, result, ttl=600)
         return result
 
     except Exception as e:
         logger.exception(f"Bulk RMP lookup failed: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to bulk-lookup professor ratings",
-        )
+        raise HTTPException(status_code=500, detail="Bulk RMP lookup failed")

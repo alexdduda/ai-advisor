@@ -1,10 +1,27 @@
 import { useState } from 'react'
-import { normalizeQuery, buildCorrectionCandidates } from '../../utils/fuzzySearch'
 import coursesAPI           from '../../lib/professorsAPI'
 import ProfessorRating     from '../ProfessorRating/ProfessorRating'
 import { gpaToLetterGrade } from '../../utils/gpaUtils'
 import { FaChartBar, FaBook } from 'react-icons/fa'
 import './CoursesPanel.css'
+
+// Detect if a query looks like a subject code (e.g. "COMP", "MATH", "BIOL 200")
+const SUBJECT_RE = /^([A-Z]{2,6})\s*(\d.*)?$/i
+
+function parseQuery(raw) {
+  const trimmed = raw.trim().toUpperCase()
+  const m = trimmed.match(SUBJECT_RE)
+  if (m) {
+    const subject = m[1]
+    const rest    = (m[2] || '').trim()  // e.g. "202" or ""
+    // "COMP" alone → subject filter only
+    if (!rest) return { subject, query: null }
+    // "COMP 202" or "COMP202" → subject + catalog as query
+    return { subject, query: trimmed }
+  }
+  // Free-text (e.g. "algorithms", "Introduction to")
+  return { subject: null, query: raw.trim() }
+}
 
 export default function CoursesPanel() {
   const [searchQuery,    setSearchQuery]    = useState('')
@@ -13,38 +30,23 @@ export default function CoursesPanel() {
   const [searchError,    setSearchError]    = useState(null)
   const [selectedCourse, setSelectedCourse] = useState(null)
   const [isLoadingCourse,setIsLoadingCourse]= useState(false)
-  const [correction, setCorrection] = useState(null)
 
   // ── search ────────────────────────────────────────────────────────
-  const doSearch = async (rawQuery) => {
+  const handleSearch = async (e) => {
+    e.preventDefault()
+    if (!searchQuery.trim()) return
+
     setIsSearching(true)
     setSearchError(null)
-    setCorrection(null)
     setSelectedCourse(null)
+
+    const { subject, query } = parseQuery(searchQuery)
+
     try {
-      const normalized = normalizeQuery(rawQuery)
-      const data = await coursesAPI.search(normalized, null, 100)
-      const courses = data.courses || data || []
+      const data = await coursesAPI.search(query, subject, 100)
 
-      if (Array.isArray(courses) && courses.length > 0) {
-        setSearchResults(courses)
-        return
-      }
-
-      // Zero results — try fuzzy correction
-      const candidates = buildCorrectionCandidates(rawQuery)
-      for (const candidate of candidates) {
-        const retry = await coursesAPI.search(candidate.query, null, 100)
-        const list = retry.courses || retry || []
-        if (Array.isArray(list) && list.length > 0) {
-          setCorrection({ original: rawQuery, corrected: candidate.note })
-          setSearchResults(list)
-          return
-        }
-      }
-
-      setSearchResults([])
-      setSearchError('No courses found matching your search.')
+      setSearchResults(data.courses || [])
+      if (!data.courses?.length) setSearchError('No courses found matching your search.')
     } catch (err) {
       console.error('Course search error:', err)
       setSearchError('Failed to search courses. Please try again.')
@@ -52,12 +54,6 @@ export default function CoursesPanel() {
     } finally {
       setIsSearching(false)
     }
-  }
-
-  const handleSearch = async (e) => {
-    e.preventDefault()
-    if (!searchQuery.trim()) return
-    doSearch(searchQuery)
   }
 
   // ── detail ────────────────────────────────────────────────────────
@@ -92,15 +88,6 @@ export default function CoursesPanel() {
       </form>
 
       {searchError && <div className="error-banner">{searchError}</div>}
-      {correction && (
-        <div className="search-correction-banner">
-          Did you mean{' '}
-          <button className="search-correction-link" onClick={() => { setSearchQuery(correction.corrected); doSearch(correction.corrected) }}>
-            {correction.corrected}
-          </button>?
-          {' '}Showing results for "{correction.corrected}".
-        </div>
-      )}
 
       {/* Result list */}
       {searchResults.length > 0 && !selectedCourse && (
@@ -117,16 +104,16 @@ export default function CoursesPanel() {
               >
                 <div className="course-header">
                   <div className="course-code">{course.subject} {course.catalog}</div>
-                  {course.average && (
+                  {course.average != null && (
                     <div className="course-average">
-                      {course.average.toFixed(1)} GPA ({gpaToLetterGrade(course.average)})
+                      {Number(course.average).toFixed(1)} GPA ({gpaToLetterGrade(course.average)})
                     </div>
                   )}
                 </div>
                 <h4 className="course-title">{course.title}</h4>
-                {course.sections && (
+                {course.num_sections != null && (
                   <div className="course-meta">
-                    <FaChartBar className="meta-icon" /> {course.sections.length} section{course.sections.length !== 1 ? 's' : ''} available
+                    <FaChartBar className="meta-icon" /> {course.num_sections} section{course.num_sections !== 1 ? 's' : ''} available
                   </div>
                 )}
               </div>
@@ -156,7 +143,7 @@ export default function CoursesPanel() {
 
           <div className="course-sections">
             <h3 className="sections-header">Sections ({selectedCourse.num_sections})</h3>
-            {selectedCourse.sections.map((section, idx) => (
+            {selectedCourse.sections?.map((section, idx) => (
               <div key={idx} className="section-card">
                 <div className="section-info">
                   <div className="section-header">
