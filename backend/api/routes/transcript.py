@@ -327,20 +327,47 @@ async def parse_transcript(
             results["current_skipped"] += 1
 
     # 3. Update user profile from student_info
+    # SEC-022: Validate and bound Claude-extracted values before writing to DB.
+    # This path bypasses the UserUpdate Pydantic model, so we must manually
+    # enforce the same constraints here.
     student_info = extracted.get("student_info") or {}
     profile_updates = {}
+
+    _str_field = lambda v, maxlen=100: str(v).strip()[:maxlen] if v else None
     if student_info.get("major"):
-        profile_updates["major"] = student_info["major"]
+        profile_updates["major"] = _str_field(student_info["major"], 100)
     if student_info.get("minor"):
-        profile_updates["minor"] = student_info["minor"]
+        profile_updates["minor"] = _str_field(student_info["minor"], 100)
     if student_info.get("faculty"):
-        profile_updates["faculty"] = student_info["faculty"]
+        profile_updates["faculty"] = _str_field(student_info["faculty"], 100)
     if student_info.get("year"):
-        profile_updates["year"] = student_info["year"]
+        try:
+            year_val = int(student_info["year"])
+            if 0 <= year_val <= 10:
+                profile_updates["year"] = year_val
+        except (ValueError, TypeError):
+            pass  # skip invalid year from Claude
     if student_info.get("cum_gpa") is not None:
-        profile_updates["current_gpa"] = student_info["cum_gpa"]
+        try:
+            gpa_val = float(student_info["cum_gpa"])
+            if 0.0 <= gpa_val <= 4.0:
+                profile_updates["current_gpa"] = round(gpa_val, 2)
+        except (ValueError, TypeError):
+            pass  # skip invalid GPA from Claude
     if student_info.get("advanced_standing"):
-        profile_updates["advanced_standing"] = student_info["advanced_standing"]
+        # Validate each item has the expected shape and bounded values
+        raw_standing = student_info["advanced_standing"]
+        if isinstance(raw_standing, list):
+            validated = []
+            for item in raw_standing[:50]:  # cap at 50 items
+                if isinstance(item, dict) and item.get("course_code"):
+                    validated.append({
+                        "course_code": str(item["course_code"]).strip()[:20],
+                        "course_title": str(item.get("course_title", "")).strip()[:200],
+                        "credits": min(max(float(item.get("credits", 3)), 0), 20),
+                    })
+            if validated:
+                profile_updates["advanced_standing"] = validated
 
     if profile_updates:
         try:

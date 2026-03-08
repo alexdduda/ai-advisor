@@ -3,7 +3,7 @@ backend/api/config.py
 
 """
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import field_validator, Field
+from pydantic import field_validator, model_validator, Field
 from typing import List, Union
 from urllib.parse import urlparse
 import os
@@ -148,6 +148,17 @@ class Settings(BaseSettings):
         if not v.startswith("sk-ant-"):
             raise ValueError("Invalid ANTHROPIC_API_KEY format")
         return v
+
+    # SEC-024: Prevent DEBUG=True in production. Without this guard, setting
+    # ENVIRONMENT=production + DEBUG=true would expose Swagger docs and version info.
+    @model_validator(mode="after")
+    def enforce_no_debug_in_production(self):
+        if self.ENVIRONMENT == "production" and self.DEBUG:
+            logger.warning(
+                "SEC-024: DEBUG=true is not allowed in production — forcing DEBUG=false"
+            )
+            self.DEBUG = False
+        return self
 
     model_config = SettingsConfigDict(
         env_file=".env",

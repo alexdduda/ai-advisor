@@ -23,8 +23,7 @@ from .exceptions import (
     AppException,
     app_exception_handler,
     validation_exception_handler,
-    general_exception_handler,
-    RateLimitException,
+    general_exception_handler,  
 )
 
 from .routes import (

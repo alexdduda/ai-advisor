@@ -83,5 +83,6 @@ subjects_cache = SimpleCache(default_ttl=3600)
 # Search results are repeated often → 5-minute TTL
 search_cache = SimpleCache(default_ttl=300)
 
-# Individual course details → 10-minute TTL
-course_detail_cache = SimpleCache(default_ttl=600)
+# NOTE: course_detail_cache was removed — it was instantiated but never
+# imported or used by any route. Course details use the search_cache or
+# are fetched fresh via the courses route.
