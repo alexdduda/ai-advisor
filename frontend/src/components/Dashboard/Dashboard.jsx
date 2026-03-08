@@ -29,6 +29,12 @@ export default function Dashboard() {
   const { user, profile, signOut, updateProfile } = useAuth()
   const { t, language } = useLanguage()
 
+  // Stable ref for current language — used inside useCallbacks without
+  // adding `language` to their dependency arrays (which would cause
+  // unnecessary re-creation and effect re-fires on every switch).
+  const languageRef = useRef(language)
+  languageRef.current = language
+
   // ── Layout ─────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState('chat')
   const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -122,13 +128,14 @@ export default function Dashboard() {
 
   // ── Advisor card handlers ──────────────────────────────
 
-  const refreshAdvisorCards = useCallback(async (force = true) => {
+  const refreshAdvisorCards = useCallback(async (force = true, lang = null) => {
     if (!user?.id) return
     if (isGeneratingCardsRef.current) return
     isGeneratingCardsRef.current = true
     try {
       setCardsGenerating(true)
-      const data = await cardsAPI.generateCards(user.id, force)
+      // Pass language explicitly so it doesn't rely on localStorage timing
+      const data = await cardsAPI.generateCards(user.id, force, lang || languageRef.current)
       setAdvisorCards(data.cards || [])
       setCardsGeneratedAt(data.generated_at || null)
     } catch (error) {
@@ -224,19 +231,26 @@ export default function Dashboard() {
   }, [rightSidebarOpen, activeTab])
 
   // ── Language switch: regenerate + retranslate cards ──────
-  // FIX: prevLanguageRef guards against firing on initial mount.
-  // isFirstRender alone wasn't reliable because the ref resets on remount
-  // (e.g. during hot-reload), causing cards to regenerate on every restart.
-  const prevLanguageRef = useRef(language)
+  // FIX: prevLanguageRef starts as null to distinguish mount from switch.
+  // On mount: regenerate only if language is non-default (fr) — cards in DB
+  //           are likely English from a previous session.
+  // On switch: always regenerate in the new language.
+  // Language is passed explicitly to avoid racing with localStorage writes.
+  const prevLanguageRef = useRef(null)
   useEffect(() => {
-    const languageActuallyChanged = prevLanguageRef.current !== language
+    const isMount = prevLanguageRef.current === null
+    const switched = !isMount && prevLanguageRef.current !== language
     prevLanguageRef.current = language
-    if (!languageActuallyChanged) return   // skip on mount / no real change
+
+    // On mount with English (default) — cards from DB are fine, skip
+    if (isMount && language === 'en') return
+    // Not a mount and language didn't actually change — skip
+    if (!isMount && !switched) return
     if (!user?.id) return
 
     Promise.all([
-      refreshAdvisorCards(true),
-      cardsAPI.retranslateCards(user.id),
+      refreshAdvisorCards(true, language),
+      cardsAPI.retranslateCards(user.id, language),
     ]).catch(e => console.error('Language switch card update failed:', e))
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [language])

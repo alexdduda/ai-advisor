@@ -387,6 +387,34 @@ Return ONLY the JSON object — no markdown, no commentary.{_lang_instruction(la
 # ROUTES
 # ═══════════════════════════════════════════════════════════════════════════════
 
+def _fetch_cards_response(user_id: str) -> dict:
+    """
+    Shared helper: fetch stored cards for a user.
+    Extracted from the get_cards route so generate_cards and retranslate_cards
+    can call it without needing FastAPI's DI parameters (Request, Depends).
+    """
+    get_user_by_id(user_id)
+    supabase = get_supabase()
+    resp = (supabase.table("advisor_cards")
+        .select("*")
+        .eq("user_id", user_id)
+        .order("sort_order", desc=False)
+        .execute())
+    cards = resp.data or []
+    for card in cards:
+        if isinstance(card.get("actions"), str):
+            card["actions"] = json.loads(card["actions"])
+    ai_cards = [c for c in cards if c.get("source") == "ai"]
+    generated_at = ai_cards[0].get("generated_at") if ai_cards else None
+    fresh = cards_are_fresh(user_id)
+    return {
+        "cards": cards,
+        "count": len(cards),
+        "generated_at": generated_at,
+        "fresh": fresh,
+    }
+
+
 @router.get("/{user_id}", response_model=dict)
 async def get_cards(user_id: str, req: Request, current_user_id: str = Depends(get_current_user_id)):
     require_self(current_user_id, user_id)
@@ -395,26 +423,7 @@ async def get_cards(user_id: str, req: Request, current_user_id: str = Depends(g
     Frontend should call this first. Only call /generate if fresh=False AND count=0.
     """
     try:
-        get_user_by_id(user_id)
-        supabase = get_supabase()
-        resp = (supabase.table("advisor_cards")
-            .select("*")
-            .eq("user_id", user_id)
-            .order("sort_order", desc=False)
-            .execute())
-        cards = resp.data or []
-        for card in cards:
-            if isinstance(card.get("actions"), str):
-                card["actions"] = json.loads(card["actions"])
-        ai_cards = [c for c in cards if c.get("source") == "ai"]
-        generated_at = ai_cards[0].get("generated_at") if ai_cards else None
-        fresh = cards_are_fresh(user_id)
-        return {
-            "cards": cards,
-            "count": len(cards),
-            "generated_at": generated_at,
-            "fresh": fresh,
-        }
+        return _fetch_cards_response(user_id)
     except UserNotFoundException:
         raise HTTPException(status_code=404, detail="User not found")
     except Exception as e:
@@ -437,7 +446,7 @@ async def generate_cards(user_id: str, request: GenerateRequest, req: Request, c
         # Guard: don't regenerate fresh cards unless forced
         if not request.force and cards_are_fresh(user_id):
             logger.info(f"Cards already fresh for {user_id}, skipping generation")
-            return await get_cards(user_id)
+            return _fetch_cards_response(user_id)
 
         ctx = fetch_student_context(user_id)
         saved = fetch_saved_cards(user_id)
@@ -466,7 +475,7 @@ async def generate_cards(user_id: str, request: GenerateRequest, req: Request, c
 
         save_cards(user_id, cards)
         logger.info(f"Generated {len(cards)} cards for {user_id}")
-        return await get_cards(user_id)
+        return _fetch_cards_response(user_id)
 
     except UserNotFoundException:
         raise HTTPException(status_code=404, detail="User not found")

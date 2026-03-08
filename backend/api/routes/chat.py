@@ -56,9 +56,10 @@ class ChatRequest(BaseModel):
     """Chat request schema"""
     message: str = Field(..., min_length=1, max_length=4000)
     user_id: str
-    session_id: Optional[str] = None
-    current_tab: Optional[str] = None   # e.g. "courses", "calendar", "degree", "profile"
-    language: Optional[str] = "en"      # "en" | "fr"
+    # SEC-023: Constrain session_id to prevent storage abuse with huge arbitrary strings
+    session_id: Optional[str] = Field(None, max_length=100)
+    current_tab: Optional[str] = Field(None, max_length=30)
+    language: Optional[str] = Field("en", pattern="^(en|fr)$")
 
     # FIX: Use Pydantic v2 field_validator instead of deprecated @validator
     @field_validator('message', mode='before')

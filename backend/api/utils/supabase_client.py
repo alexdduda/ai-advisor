@@ -18,7 +18,6 @@ import logging
 import uuid
 import time
 import httpx
-from supabase.lib.client_options import ClientOptions
 from api.config import settings
 from api.exceptions import DatabaseException, UserNotFoundException
 

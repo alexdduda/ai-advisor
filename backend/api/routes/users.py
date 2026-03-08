@@ -52,9 +52,10 @@ class UserCreate(BaseModel):
     email: EmailStr
     username: Optional[str] = Field(None, min_length=3, max_length=20)
     major: Optional[str] = Field(None, max_length=100)
-    other_majors: Optional[List[str]] = Field(default_factory=list)
+    # SEC-021: Constrained list size and item length (was unbounded)
+    other_majors: Optional[List[str]] = Field(default_factory=list, max_length=10)
     minor: Optional[str] = Field(None, max_length=100)
-    other_minors: Optional[List[str]] = Field(default_factory=list)
+    other_minors: Optional[List[str]] = Field(default_factory=list, max_length=10)
     concentration: Optional[str] = Field(None, max_length=100)
     year: Optional[int] = Field(None, ge=1, le=10)
     interests: Optional[str] = Field(None, max_length=500)
@@ -68,6 +69,17 @@ class UserCreate(BaseModel):
     def validate_username(cls, v):
         if v and not str(v).replace('_', '').isalnum():
             raise ValueError('Username must contain only letters, numbers, and underscores')
+        return v
+
+    # SEC-021: Validate individual item length in other_majors / other_minors
+    @field_validator('other_majors', 'other_minors', mode='before')
+    @classmethod
+    def validate_string_list_items(cls, v):
+        if v is None:
+            return v
+        for item in v:
+            if not isinstance(item, str) or len(item) > 100:
+                raise ValueError('Each item must be a string of at most 100 characters')
         return v
 
     # FIX #26: Replace deprecated Pydantic v1 `class Config` / `schema_extra`
@@ -93,9 +105,9 @@ class UserUpdate(BaseModel):
     """User update schema — only provided fields are changed"""
     username: Optional[str] = Field(None, min_length=3, max_length=20)
     major: Optional[str] = Field(None, max_length=100)
-    other_majors: Optional[List[str]] = None
+    other_majors: Optional[List[str]] = Field(None, max_length=10)  # SEC-021
     minor: Optional[str] = Field(None, max_length=100)
-    other_minors: Optional[List[str]] = None
+    other_minors: Optional[List[str]] = Field(None, max_length=10)  # SEC-021
     concentration: Optional[str] = Field(None, max_length=100)
     faculty: Optional[str] = Field(None, max_length=100)
     year: Optional[int] = Field(None, ge=0, le=10)
@@ -126,6 +138,17 @@ class UserUpdate(BaseModel):
             return v
         if not str(v).replace('_', '').isalnum():
             raise ValueError('Username must contain only letters, numbers, and underscores')
+        return v
+
+    # SEC-021: Validate individual item length in other_majors / other_minors
+    @field_validator('other_majors', 'other_minors', mode='before')
+    @classmethod
+    def validate_string_list_items(cls, v):
+        if v is None:
+            return v
+        for item in v:
+            if not isinstance(item, str) or len(item) > 100:
+                raise ValueError('Each item must be a string of at most 100 characters')
         return v
 
     model_config = ConfigDict(

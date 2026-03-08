@@ -122,34 +122,11 @@ class DatabaseException(AppException):
         )
 
 
-class AIServiceException(AppException):
-    def __init__(self, details: Optional[str] = None):
-        super().__init__(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            code=ErrorCode.AI_SERVICE_ERROR,
-            message="AI service temporarily unavailable",
-            details=details
-        )
 
-
-class MessageTooLongException(AppException):
-    def __init__(self, length: int, max_length: int):
-        super().__init__(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            code=ErrorCode.MESSAGE_TOO_LONG,
-            message=f"Message too long. Maximum {max_length} characters allowed",
-            details={"length": length, "max_length": max_length}
-        )
-
-
-class RateLimitException(AppException):
-    def __init__(self, retry_after: int = 60):
-        super().__init__(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            code=ErrorCode.RATE_LIMIT_EXCEEDED,
-            message="Too many requests. Please try again later",
-            details={"retry_after": retry_after}
-        )
+# NOTE: AIServiceException, MessageTooLongException, and RateLimitException
+# were removed — they were defined but never raised anywhere in the codebase.
+# Chat uses inline HTTPException for message length; main.py returns JSONResponse
+# for rate limits; AI errors use anthropic.APIError → HTTPException in chat.py.
 
 
 # Error Handlers
