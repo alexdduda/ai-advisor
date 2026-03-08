@@ -322,12 +322,15 @@ app.include_router(professors.router,          prefix=f"{settings.API_PREFIX}/pr
 
 @app.get("/")
 async def root():
-    return {
+    # SEC-09: Mirror health endpoint — don't expose version in production.
+    response = {
         "service": settings.API_TITLE,
-        "version": settings.API_VERSION,
         "status": "operational",
         "docs": f"{settings.API_PREFIX}/docs" if settings.DEBUG else None,
     }
+    if settings.DEBUG:
+        response["version"] = settings.API_VERSION
+    return response
 
 
 @app.get(f"{settings.API_PREFIX}/health")
