@@ -530,8 +530,22 @@ export default function AdvisorCards({
   const deletedKey = userId ? `advisor_deleted_${userId}` : 'advisor_deleted'
 
   // ── Track locally-deleted card IDs so the count and feed stay in sync ──
+  // Stored as { id: timestampMs } so entries older than 30 days are pruned automatically.
+  const _DELETED_TTL_MS = 30 * 24 * 60 * 60 * 1000 // 30 days
+
   const [deletedIds, setDeletedIds] = useState(() => {
-    try { return new Set(JSON.parse(localStorage.getItem(deletedKey) || '[]')) } catch { return new Set() }
+    try {
+      const raw = JSON.parse(localStorage.getItem(deletedKey) || '{}')
+      // Support legacy format (plain array) and new format (object with timestamps)
+      if (Array.isArray(raw)) return new Set(raw)
+      const now = Date.now()
+      const pruned = Object.fromEntries(
+        Object.entries(raw).filter(([, ts]) => now - ts < _DELETED_TTL_MS)
+      )
+      // Persist pruned version back immediately
+      try { localStorage.setItem(deletedKey, JSON.stringify(pruned)) } catch {}
+      return new Set(Object.keys(pruned))
+    } catch { return new Set() }
   })
 
   // visibleCards is the source-of-truth for counts and the feed
@@ -605,7 +619,14 @@ export default function AdvisorCards({
     setDeletedIds(prev => {
       const n = new Set(prev)
       n.add(cardId)
-      try { localStorage.setItem(deletedKey, JSON.stringify([...n])) } catch {}
+      // Persist as { id: timestampMs } for TTL pruning on next load
+      try {
+        const raw = JSON.parse(localStorage.getItem(deletedKey) || '{}')
+        const existing = Array.isArray(raw)
+          ? Object.fromEntries([...raw].map(id => [id, 0]))
+          : raw
+        localStorage.setItem(deletedKey, JSON.stringify({ ...existing, [cardId]: Date.now() }))
+      } catch {}
       return n
     })
     if (onDeleteCard) onDeleteCard(cardId)

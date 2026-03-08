@@ -87,7 +87,12 @@ async def list_clubs(
     category: Optional[str] = None,
     limit: int = 50,
 ):
-    """Return all verified clubs, optionally filtered by search term or category."""
+    """
+    Return all verified clubs, optionally filtered by search term or category.
+
+    Intentionally public — the club catalogue is read-only public data.
+    IP-based rate limiting applies via the global middleware in main.py.
+    """
     try:
         supabase = get_supabase()
         query = (

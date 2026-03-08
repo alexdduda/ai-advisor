@@ -196,11 +196,6 @@ export default function EnhancedProfileForm({ profile, onSave, onCancel }) {
       cleanedData.advanced_standing = []
     }
     
-    console.log('🔵 EnhancedProfileForm: Submitting cleaned data:', cleanedData)
-    console.log('  - username:', JSON.stringify(cleanedData.username), '(type:', typeof cleanedData.username, ')')
-    console.log('  - minor:', JSON.stringify(cleanedData.minor), '(type:', typeof cleanedData.minor, ')')
-    console.log('  - concentration:', JSON.stringify(cleanedData.concentration), '(type:', typeof cleanedData.concentration, ')')
-    console.log('  - interests:', JSON.stringify(cleanedData.interests), '(type:', typeof cleanedData.interests, ')')
     onSave(cleanedData)
   }
 
