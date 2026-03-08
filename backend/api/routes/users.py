@@ -151,7 +151,7 @@ async def create_new_user(user: UserCreate, req: Request, current_user_id: str =
         if existing:
             if existing["id"] == user.id:
                 return {"user": existing, "message": "User profile already exists"}
-            raise UserAlreadyExistsException("email", user.email)
+            raise UserAlreadyExistsException(user.email)
 
         user_data = user.model_dump(exclude_none=True)
         # Handle advanced_standing serialization

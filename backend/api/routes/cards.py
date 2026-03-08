@@ -276,20 +276,23 @@ def build_rich_context(ctx: dict, saved_cards: list = None) -> str:
         f"{a['course_code']} ({a.get('credits') or 0} cr)" for a in adv
     ) or "None"
 
+    # SEC-016: Sanitise user-controlled titles and descriptions before they
+    # enter the Claude system prompt. Calendar event titles/descriptions and
+    # course titles are all user-editable and could contain injection payloads.
     def fmt_completed():
         return "\n".join(
-            f"  - {c['course_code']} ({c.get('course_title','')}) | "
+            f"  - {c['course_code']} ({sanitise_context_field(c.get('course_title',''))}) | "
             f"Grade: {c.get('grade') or 'N/A'} | Term: {c.get('term','?')} {c.get('year','')}"
             for c in completed) or "  None recorded"
 
     def fmt_list(items, code_key="course_code", title_key="course_title"):
         return "\n".join(
-            f"  - {i[code_key]} ({i.get(title_key,'')})" for i in items
+            f"  - {i[code_key]} ({sanitise_context_field(i.get(title_key,''))})" for i in items
         ) or "  None recorded"
 
     calendar_str = "\n".join(
-        f"  - {e['date']}: {e['title']} [{e.get('type','personal')}]"
-        + (f" — {e['description']}" if e.get('description') else "")
+        f"  - {e['date']}: {sanitise_context_field(e['title'])} [{e.get('type','personal')}]"
+        + (f" — {sanitise_context_field(e['description'])}" if e.get('description') else "")
         for e in calendar) or "  No upcoming events"
 
     majors_str = user.get("major", "Undeclared")
@@ -302,7 +305,7 @@ def build_rich_context(ctx: dict, saved_cards: list = None) -> str:
     saved_section = ""
     if saved_cards:
         saved_lines = "\n".join(
-            f"  - [{c.get('category','planning')}] {c['title']}: {c['body'][:120]}"
+            f"  - [{c.get('category','planning')}] {sanitise_context_field(c['title'])}: {sanitise_context_field(c['body'][:120])}"
             for c in saved_cards
         )
         saved_section = f"""
