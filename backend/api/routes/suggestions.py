@@ -4,6 +4,7 @@ Professor name suggestion/correction system.
 Users can flag incorrect professor names; submissions go to a pending queue
 for admin review before any data is updated.
 """
+import hmac
 from fastapi import APIRouter, HTTPException, Header, status, Depends, Request
 from pydantic import BaseModel, Field
 from typing import Optional, List
@@ -34,7 +35,7 @@ def _verify_admin_secret(x_cron_secret: Optional[str]) -> None:
     """Verify the admin secret header for protected endpoints."""
     if not settings.CRON_SECRET:
         raise HTTPException(status_code=500, detail="CRON_SECRET not configured")
-    if x_cron_secret != settings.CRON_SECRET:
+    if not hmac.compare_digest(x_cron_secret or "", settings.CRON_SECRET):
         raise HTTPException(status_code=401, detail="Invalid or missing X-Cron-Secret header")
 
 

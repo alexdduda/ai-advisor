@@ -22,6 +22,7 @@ import logging
 import traceback
 from typing import Optional
 
+import hmac
 from fastapi import APIRouter, HTTPException, Query, Request
 
 from ..utils.supabase_client import get_supabase, with_retry
@@ -204,7 +205,7 @@ def seed_requirements(
         raise HTTPException(status_code=500, detail="CRON_SECRET not configured")
     auth_header = request.headers.get("Authorization", "")
     token = auth_header.removeprefix("Bearer ").strip()
-    if not token or token != settings.CRON_SECRET:
+    if not hmac.compare_digest(token or "", settings.CRON_SECRET):
         raise HTTPException(status_code=401, detail="Unauthorized")
 
     def _run():

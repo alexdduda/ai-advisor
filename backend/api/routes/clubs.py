@@ -5,7 +5,7 @@ Clubs endpoints — browse verified McGill clubs, get starter suggestions
 based on user major/year, join/leave clubs, and submit new clubs for review.
 """
 from fastapi import APIRouter, HTTPException, status, Depends, Request
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field, AnyHttpUrl
 from typing import Optional, List
 import logging
 
@@ -54,12 +54,12 @@ DEFAULT_STARTERS = [
 # ── Pydantic models ───────────────────────────────────────────────────────────
 
 class ClubSubmission(BaseModel):
-    name: str
-    description: str
-    category: str
-    contact_email: str
-    website_url: Optional[str] = None
-    meeting_schedule: Optional[str] = None
+    name:             str            = Field(..., min_length=2, max_length=100)
+    description:      str            = Field(..., min_length=10, max_length=1000)
+    category:         str            = Field(..., min_length=2, max_length=60)
+    contact_email:    EmailStr
+    website_url:      Optional[AnyHttpUrl] = None
+    meeting_schedule: Optional[str]  = Field(None, max_length=300)
 
 
 class JoinClubRequest(BaseModel):
@@ -109,8 +109,9 @@ async def list_clubs(
 
 
 @router.get("/starter")
-async def get_starter_clubs(user_id: str, major: Optional[str] = None):
+async def get_starter_clubs(user_id: str, major: Optional[str] = None, current_user_id: str = Depends(get_current_user_id)):
     """Return personalised starter club suggestions based on major."""
+    require_self(current_user_id, user_id)
     try:
         supabase = get_supabase()
         names = _get_starter_names(major)
@@ -228,7 +229,7 @@ async def toggle_calendar_sync(user_id: str, club_id: str, synced: bool, req: Re
 
 
 @router.post("/submit")
-async def submit_club(submission: ClubSubmission):
+async def submit_club(submission: ClubSubmission, _: str = Depends(get_current_user_id)):
     """Submit a new club for admin review."""
     try:
         supabase = get_supabase()
