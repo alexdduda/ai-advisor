@@ -358,6 +358,13 @@ async def parse_syllabuses(
     if not files:
         raise HTTPException(status_code=422, detail="No files provided")
 
+    MAX_SYLLABUS_FILES = 5
+    if len(files) > MAX_SYLLABUS_FILES:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Too many files. Maximum {MAX_SYLLABUS_FILES} syllabuses per upload.",
+        )
+
     supabase = get_supabase()
     all_results = []
 

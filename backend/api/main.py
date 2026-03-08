@@ -32,7 +32,7 @@ from .exceptions import (
 from .routes import (
     chat, courses, users, favorites, completed, notifications,
     current, suggestions, cards, transcript, degree_requirements,
-    electives, clubs, syllabus, professors,
+    electives, clubs, syllabus, professors, admin,
 )
 
 logger = setup_logging()
@@ -213,9 +213,21 @@ app.add_middleware(
     allow_origins=settings.ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"],
+    allow_headers=["Authorization", "Content-Type", "X-Request-ID", "X-Cron-Secret"],
     expose_headers=["X-Process-Time", "X-Request-ID"],
 )
+
+
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    """Inject standard security headers on every response."""
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    return response
 
 
 # FIX #13: Use Supabase-backed limiter instead of in-memory
@@ -268,6 +280,7 @@ app.add_exception_handler(RequestValidationError, validation_exception_handler)
 app.add_exception_handler(Exception, general_exception_handler)
 
 # Routers
+app.include_router(admin.router,               prefix=f"{settings.API_PREFIX}/admin",               tags=["Admin"])
 app.include_router(chat.router,                prefix=f"{settings.API_PREFIX}/chat",                tags=["Chat"])
 app.include_router(courses.router,             prefix=f"{settings.API_PREFIX}/courses",             tags=["Courses"])
 app.include_router(users.router,               prefix=f"{settings.API_PREFIX}/users",               tags=["Users"])

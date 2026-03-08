@@ -12,6 +12,7 @@ from fastapi import APIRouter, HTTPException, Header, Depends, Request
 from pydantic import BaseModel, EmailStr
 from typing import Optional, List
 import logging
+from html import escape
 from datetime import date, timedelta
 import resend
 from ..config import settings
@@ -107,20 +108,24 @@ def _build_html_email(
     days_before: int,
 ) -> tuple[str, str]:
     """Returns (subject, html_body)."""
+    # Escape all user-controlled fields before interpolating into HTML
+    safe_title = escape(event_title)
+    safe_date = escape(event_date)
+
     meta = _type_meta(event_type)
     emoji = meta["emoji"]
     label = meta["label"]
     color = meta["color"]
     bg    = meta["bg"]
     countdown = _countdown_phrase(days_before)
-    nice_date = _format_date_nice(event_date)
+    nice_date = _format_date_nice(safe_date)
 
     if days_before == 0:
-        subject = f"{emoji} Today: {event_title}"
+        subject = f"{emoji} Today: {safe_title}"
     elif days_before == 1:
-        subject = f"{emoji} Tomorrow: {event_title}"
+        subject = f"{emoji} Tomorrow: {safe_title}"
     else:
-        subject = f"{emoji} In {days_before} days: {event_title}"
+        subject = f"{emoji} In {days_before} days: {safe_title}"
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -161,7 +166,7 @@ def _build_html_email(
               </div>
 
               <!-- Title -->
-              <h1 style="margin:0 0 10px;font-size:22px;font-weight:700;color:#111827;line-height:1.3;">{event_title}</h1>
+              <h1 style="margin:0 0 10px;font-size:22px;font-weight:700;color:#111827;line-height:1.3;">{safe_title}</h1>
 
               <!-- Countdown -->
               <p style="margin:0 0 20px;font-size:16px;color:#374151;line-height:1.5;">
@@ -418,7 +423,8 @@ async def delete_event(event_id: str, user_id: str, request: Request):
 
     try:
         supabase = get_supabase()
-        supabase.table("notification_queue").delete().eq("event_id", event_id).execute()
+        # Scope by user_id to prevent IDOR — a user cannot delete another user's notifications
+        supabase.table("notification_queue").delete().eq("event_id", event_id).eq("user_id", user_id).execute()
         supabase.table("calendar_events").delete() \
             .eq("id", event_id).eq("user_id", user_id).execute()
         return {"success": True}
