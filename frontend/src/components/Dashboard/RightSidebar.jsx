@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
+import { useLanguage } from '../../contexts/LanguageContext'
 import { chatAPI } from '../../lib/api'
 import { FaRobot, FaChevronRight, FaArrowRight, FaTimes, FaCommentDots } from 'react-icons/fa'
 import { MdPushPin, MdOutlinePushPin } from 'react-icons/md'
@@ -19,7 +20,9 @@ function renderText(text) {
 }
 
 // ── Shared chat input bar ─────────────────────────────────────────────────────
-function SidebarChatBar({ onSend, isThinking, placeholder = 'Ask a follow-up…' }) {
+function SidebarChatBar({ onSend, isThinking, placeholder }) {
+  const { t } = useLanguage()
+  const resolvedPlaceholder = placeholder ?? t('rsb.followUpPlaceholder')
   const [value, setValue] = useState('')
   const taRef = useRef(null)
 
@@ -48,7 +51,7 @@ function SidebarChatBar({ onSend, isThinking, placeholder = 'Ask a follow-up…'
       <textarea
         ref={taRef}
         className="rsb-chat-bar__input"
-        placeholder={placeholder}
+        placeholder={resolvedPlaceholder}
         value={value}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
@@ -69,18 +72,6 @@ function SidebarChatBar({ onSend, isThinking, placeholder = 'Ask a follow-up…'
   )
 }
 
-// ── Nav assistant quick-action chips ─────────────────────────────────────────
-const NAV_SUGGESTIONS = {
-  courses:       ['How do I search for a course?', 'What do the GPA badges mean?', 'How do I mark a course complete?'],
-  calendar:      ['How do I add an event?', 'How do I upload a syllabus?', 'Where are my final exam dates?'],
-  degree:        ['How does degree progress work?', 'What is a complementary course?', 'How do I add a minor?'],
-  profile:       ['How do I upload my transcript?', 'How do I add transfer credits?', 'How do I change my major?'],
-  'study-abroad':['How do exchanges work at McGill?', 'Which programs are in Europe?', 'How do credits transfer?'],
-  chat:          ['What can you help me with?', 'Tell me about my degree progress', 'Recommend courses for next semester'],
-}
-
-const DEFAULT_SUGGESTIONS = ['What can you help me with?', 'How do I plan my degree?', 'Show me my course options']
-
 // ── Main RightSidebar ─────────────────────────────────────────────────────────
 export default function RightSidebar({
   isOpen,
@@ -93,6 +84,7 @@ export default function RightSidebar({
   activeTab,
 }) {
   const { user } = useAuth()
+  const { t, language } = useLanguage()
   const scrollRef = useRef(null)
   const navScrollRef = useRef(null)
 
@@ -101,21 +93,20 @@ export default function RightSidebar({
   const [navThinking, setNavThinking] = useState(false)
   const [navSessionId, setNavSessionId] = useState(null)
 
-  // Greeting message when the sidebar opens without a pinned card
+  // Greeting message when the sidebar opens — reset on language change too
   useEffect(() => {
     if (!isOpen || pinnedCard) return
-    if (navMessages.length === 0) {
-      const tabLabel = {
-        courses: 'Courses', calendar: 'Calendar', degree: 'Degree Planning',
-        profile: 'Profile', 'study-abroad': 'Study Abroad', chat: 'Chat',
-      }[activeTab] || 'the dashboard'
-      setNavMessages([{
-        role: 'assistant',
-        content: `Hi! I'm your academic advisor. You're on ${tabLabel} — ask me anything or tap a suggestion below.`,
-      }])
-    }
+    const tabKey = {
+      courses: 'rsb.tab.courses', calendar: 'rsb.tab.calendar', degree: 'rsb.tab.degree',
+      profile: 'rsb.tab.profile', 'study-abroad': 'rsb.tab.abroad',
+    }[activeTab] || 'rsb.tab.default'
+    const tabLabel = t(tabKey)
+    setNavMessages([{
+      role: 'assistant',
+      content: t('rsb.greeting').replace('{tab}', tabLabel),
+    }])
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, pinnedCard, activeTab])
+  }, [isOpen, pinnedCard, activeTab, language])
 
   // Auto-scroll nav thread
   useEffect(() => {
@@ -141,7 +132,7 @@ export default function RightSidebar({
       if (!navSessionId && res.session_id) setNavSessionId(res.session_id)
       setNavMessages(prev => [...prev, { role: 'assistant', content: res.response }])
     } catch {
-      setNavMessages(prev => [...prev, { role: 'assistant', content: '❌ Something went wrong. Please try again.' }])
+      setNavMessages(prev => [...prev, { role: 'assistant', content: t('rsb.errorMsg') }])
     } finally {
       setNavThinking(false)
     }
@@ -179,9 +170,15 @@ export default function RightSidebar({
   }, [isDragging])
 
   const hasPinned = !!pinnedCard
-  // Show sidebar on all non-chat tabs (both pinned and nav-assistant modes)
   const showSidebar = activeTab !== 'chat'
-  const suggestions = NAV_SUGGESTIONS[activeTab] || DEFAULT_SUGGESTIONS
+  const suggestionKeys = {
+    courses:       ['rsb.nav.courses.1','rsb.nav.courses.2','rsb.nav.courses.3'],
+    calendar:      ['rsb.nav.calendar.1','rsb.nav.calendar.2','rsb.nav.calendar.3'],
+    degree:        ['rsb.nav.degree.1','rsb.nav.degree.2','rsb.nav.degree.3'],
+    profile:       ['rsb.nav.profile.1','rsb.nav.profile.2','rsb.nav.profile.3'],
+    'study-abroad':['rsb.nav.abroad.1','rsb.nav.abroad.2','rsb.nav.abroad.3'],
+  }
+  const suggestions = (suggestionKeys[activeTab] || ['rsb.nav.default.1','rsb.nav.default.2','rsb.nav.default.3']).map(k => t(k))
 
   return (
     <>
@@ -193,7 +190,7 @@ export default function RightSidebar({
           onMouseDown={(e) => { setIsDragging(true); e.preventDefault() }}
           onTouchStart={() => setIsDragging(true)}
           onClick={() => { if (!isDragging) setIsOpen(true) }}
-          title="Open assistant"
+          title={t('rsb.openAssistant')}
           aria-label="Open assistant"
         >
           <FaChevronRight size={13} />
@@ -213,15 +210,15 @@ export default function RightSidebar({
                       <MdPushPin size={18} />
                     </div>
                     <div className="rsb-header__text">
-                      <span className="rsb-header__label">Pinned Chat</span>
+                      <span className="rsb-header__label">{t('rsb.pinnedChat')}</span>
                       <span className="rsb-header__title">{pinnedCard.title}</span>
                     </div>
                   </div>
                   <div className="rsb-header__actions">
-                    <button className="rsb-unpin-btn" onClick={onUnpin} title="Unpin card">
+                    <button className="rsb-unpin-btn" onClick={onUnpin} title={t('rsb.unpinCard')}>
                       <MdOutlinePushPin size={16} />
                     </button>
-                    <button className="rsb-close-btn" onClick={() => setIsOpen(false)} title="Close sidebar">
+                    <button className="rsb-close-btn" onClick={() => setIsOpen(false)} title={t('rsb.closeSidebar')}>
                       <FaChevronRight size={14} />
                     </button>
                   </div>
@@ -231,7 +228,7 @@ export default function RightSidebar({
                   {(!pinnedThread || pinnedThread.length === 0) ? (
                     <div className="rsb-thread__empty">
                       <FaRobot className="rsb-thread__empty-icon" />
-                      <p>No messages yet. Ask a follow-up below to continue the conversation.</p>
+                      <p>{t('rsb.noMessages')}</p>
                     </div>
                   ) : (
                     pinnedThread.map((msg, i) => (
@@ -259,11 +256,11 @@ export default function RightSidebar({
                 <div className="rsb-header rsb-header--nav">
                   <div className="rsb-header__left">
                     <div className="rsb-header__text">
-                      <span className="rsb-header__label">Website Assistant</span>
-                      <span className="rsb-header__title">Ask me anything</span>
+                      <span className="rsb-header__label">{t('rsb.websiteAssistant')}</span>
+                      <span className="rsb-header__title">{t('rsb.askAnything')}</span>
                     </div>
                   </div>
-                  <button className="rsb-close-btn" onClick={() => setIsOpen(false)} title="Close">
+                  <button className="rsb-close-btn" onClick={() => setIsOpen(false)} title={t('rsb.close')}>
                     <FaTimes size={14} />
                   </button>
                 </div>
@@ -299,7 +296,7 @@ export default function RightSidebar({
                   <SidebarChatBar
                     onSend={handleNavSend}
                     isThinking={navThinking}
-                    placeholder="Ask me about courses, planning, or how to navigate…"
+                    placeholder={t('rsb.navPlaceholder')}
                   />
                 </div>
               </>
