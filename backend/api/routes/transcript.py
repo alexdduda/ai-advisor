@@ -213,8 +213,16 @@ async def parse_transcript(
     if not file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=422, detail="Only PDF files are accepted")
 
+    # SEC-07: Reject oversized uploads before reading the full file into memory.
+    # Content-Length is set by legitimate clients; large files without it are
+    # also blocked once we read them below.
+    MAX_BYTES = 10 * 1024 * 1024  # 10 MB
+    content_length = req.headers.get("content-length")
+    if content_length and int(content_length) > MAX_BYTES:
+        raise HTTPException(status_code=413, detail="File too large (max 10MB)")
+
     pdf_bytes = await file.read()
-    if len(pdf_bytes) > 10 * 1024 * 1024:
+    if len(pdf_bytes) > MAX_BYTES:
         raise HTTPException(status_code=422, detail="File too large (max 10MB)")
 
     # FIX F-07: Validate PDF magic bytes — reject any file disguised as a PDF
