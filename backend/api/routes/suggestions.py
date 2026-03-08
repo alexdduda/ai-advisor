@@ -4,16 +4,15 @@ Professor name suggestion/correction system.
 Users can flag incorrect professor names; submissions go to a pending queue
 for admin review before any data is updated.
 """
-import hmac
 from fastapi import APIRouter, HTTPException, Header, status, Depends, Request
 from pydantic import BaseModel, Field
 from typing import Optional, List
 import logging
 
-from ..config import settings
 from ..utils.supabase_client import get_supabase, get_user_by_id
 from ..exceptions import DatabaseException, UserNotFoundException
 from ..auth import get_current_user_id, require_self
+from .admin import verify_admin_token
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -30,13 +29,18 @@ class SuggestionReview(BaseModel):
     status: str = Field(..., pattern="^(approved|rejected)$")
 
 
-# ── Auth helper for admin endpoints ────────────────────────────
-def _verify_admin_secret(x_cron_secret: Optional[str]) -> None:
-    """Verify the admin secret header for protected endpoints."""
-    if not settings.CRON_SECRET:
-        raise HTTPException(status_code=500, detail="CRON_SECRET not configured")
-    if not hmac.compare_digest(x_cron_secret or "", settings.CRON_SECRET):
-        raise HTTPException(status_code=401, detail="Invalid or missing X-Cron-Secret header")
+# ── Auth helper for admin endpoints ──────────────────────────────────────────
+# Uses the signed admin session token issued by /api/admin/verify.
+# This is separate from CRON_SECRET so a leaked admin session cannot trigger
+# automated cron jobs (and vice versa).
+def _verify_admin_token_header(x_cron_secret: Optional[str]) -> None:
+    """
+    Verify the admin session token sent in the X-Cron-Secret header.
+    The header name is kept for frontend compatibility; the value is now a
+    short-lived signed token issued by /api/admin/verify, not the raw CRON_SECRET.
+    """
+    if not x_cron_secret or not verify_admin_token(x_cron_secret):
+        raise HTTPException(status_code=401, detail="Invalid or missing admin token")
 
 
 # ── Submit a suggestion ────────────────────────────────────────
@@ -103,7 +107,7 @@ async def submit_suggestion(
 @router.get("/admin/pending", response_model=dict)
 async def get_pending_suggestions(x_cron_secret: Optional[str] = Header(None)):
     """Admin endpoint — list all pending suggestions. Protected by CRON_SECRET."""
-    _verify_admin_secret(x_cron_secret)
+    _verify_admin_token_header(x_cron_secret)
 
     try:
         supabase = get_supabase()
@@ -134,7 +138,7 @@ async def review_suggestion(
     If approved, updates the instructor name in the courses table.
     Protected by CRON_SECRET.
     """
-    _verify_admin_secret(x_cron_secret)
+    _verify_admin_token_header(x_cron_secret)
 
     try:
         supabase = get_supabase()
@@ -181,7 +185,7 @@ async def review_suggestion(
 @router.get("/admin/all", response_model=dict)
 async def get_all_suggestions(x_cron_secret: Optional[str] = Header(None)):
     """Admin endpoint — list all suggestions regardless of status. Protected by CRON_SECRET."""
-    _verify_admin_secret(x_cron_secret)
+    _verify_admin_token_header(x_cron_secret)
 
     try:
         supabase = get_supabase()

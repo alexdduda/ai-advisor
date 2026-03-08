@@ -20,10 +20,6 @@ export default function PersonalInfoCard({ profile, user, onUpdateProfile }) {
     additional: false
   })
 
-  // Log profile changes
-  useEffect(() => {
-    console.log('PersonalInfoCard: Profile prop changed:', JSON.stringify(profile, null, 2))
-  }, [profile])
 
   const toggleSection = (section) => {
     setExpandedSections(prev => ({
@@ -317,14 +313,11 @@ export default function PersonalInfoCard({ profile, user, onUpdateProfile }) {
             profile={profile}
             onSave={async (formData) => {
               try {
-                console.log('PersonalInfoCard: Saving form data:', formData)
                 const result = await onUpdateProfile(formData)
-                console.log('PersonalInfoCard: Update result:', result)
-                console.log('PersonalInfoCard: Updated user data:', result?.data)
-                
+
                 // Force a small delay to ensure state updates
                 await new Promise(resolve => setTimeout(resolve, 100))
-                
+
                 setIsEditing(false)
                 // Success - alert removed to prevent loop
               } catch (error) {

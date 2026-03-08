@@ -154,10 +154,7 @@ async def create_new_user(user: UserCreate, req: Request, current_user_id: str =
     # FIX F-03: prevent creating a profile for a different user's ID
     require_self(current_user_id, user.id)
     try:
-        logger.info(f"=== CREATE USER REQUEST ===")
-        logger.info(f"User ID: {user.id}")
-        logger.info(f"Email: {user.email}")
-        logger.info(f"Username: {user.username}")
+        logger.info(f"Creating user profile: {user.id}")
 
         # Check if profile exists by ID (not email!)
         try:
@@ -171,14 +168,13 @@ async def create_new_user(user: UserCreate, req: Request, current_user_id: str =
                 }
             )
         except UserNotFoundException:
-            logger.info(f"User profile doesn't exist yet, creating...")
             pass
 
         # Create user
         user_data = user.model_dump(exclude_none=True)
         created_user = create_user_db(user_data)
 
-        logger.info(f"✓ User profile created successfully: {created_user['id']}")
+        logger.info(f"User profile created: {created_user['id']}")
         return {
             "user": created_user,
             "message": "User profile created successfully"

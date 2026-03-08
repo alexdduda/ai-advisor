@@ -31,17 +31,14 @@ export const AuthProvider = ({ children }) => {
     if (!mountedRef.current) return
 
     if (loadingProfile.current) {
-      console.log('Skipping loadProfile — already in progress')
       return
     }
 
     if (loadedForUserId.current === userId && profile !== null) {
-      console.log('Skipping loadProfile — profile already loaded for this user')
       return
     }
 
     loadingProfile.current = true
-    console.log('Loading profile for:', userId)
 
     try {
       const timeoutPromise = new Promise((_, reject) =>
@@ -80,7 +77,6 @@ export const AuthProvider = ({ children }) => {
       }
     } finally {
       loadingProfile.current = false
-      console.log('loadProfile finished')
     }
   }, [profile])
 
@@ -124,12 +120,10 @@ export const AuthProvider = ({ children }) => {
             api.defaults.headers.common['Authorization'] = `Bearer ${session.access_token}`
           }
           if (justSignedUp.current) {
-            console.log('Skipping profile load — just signed up')
             justSignedUp.current = false
             return
           }
           if (justUpdatedProfile.current) {
-            console.log('Skipping profile load — just updated profile')
             justUpdatedProfile.current = false
             return
           }
@@ -171,7 +165,6 @@ export const AuthProvider = ({ children }) => {
 
       try {
         await usersAPI.createUser({ id: data.user.id, email, username: username?.trim() || null })
-        console.log('Minimal profile record created')
       } catch (profileError) {
         const status = profileError.response?.status
         const code   = profileError.response?.data?.code
