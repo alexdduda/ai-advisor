@@ -88,6 +88,25 @@ export default function CoursesTab({
         </button>
       </form>
 
+      {/* ── VSB Banner ──────────────────────────────────────── */}
+      {!selectedCourse && (
+        <a
+          href={`https://vsb.mcgill.ca/criteria.jsp?access=0&lang=${language === 'fr' ? 'fr' : 'en'}&tip=2&page=criteria&scratch=0&advice=0&legend=1&term=202601&sort=none&filters=iiiiiiiiii&bbs=&ds=&cams=OFF-CAMPUS_DISTANCE_DOWNTOWN_MACDONALD&locs=any&isrts=any&ses=any&pl=&pac=1`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="vsb-banner"
+        >
+          <div className="vsb-banner__left">
+            <FaCalendarAlt className="vsb-banner__icon" />
+            <div>
+              <span className="vsb-banner__title">{t('courses.vsbLabel')}</span>
+              <span className="vsb-banner__desc">{t('courses.vsbDesc')}</span>
+            </div>
+          </div>
+          <FaExternalLinkAlt className="vsb-banner__arrow" />
+        </a>
+      )}
+
       {searchError && <div className="error-banner">{searchError}</div>}
 
       {/* ── Results list ────────────────────────────────────── */}
