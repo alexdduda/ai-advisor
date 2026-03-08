@@ -10,7 +10,7 @@ Handles:
 
 import hmac
 from fastapi import APIRouter, HTTPException, Header, Depends, Request
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing import Optional, List
 import logging
 from html import escape
@@ -31,22 +31,34 @@ NOTIFICATIONS_ENABLED = True
 
 class CalendarEventIn(BaseModel):
     id: Optional[str] = None
-    client_id: Optional[str] = None   # stable id for idempotency (e.g. "exam-COMP251-0")
+    client_id: Optional[str] = Field(None, max_length=200)  # stable id for idempotency (e.g. "exam-COMP251-0")
     user_id: str
-    title: str
-    date: str                          # ISO "YYYY-MM-DD"
-    time: Optional[str] = None
-    type: str = "personal"
-    category: Optional[str] = None
-    description: Optional[str] = None
+    title: str             = Field(..., min_length=1, max_length=200)
+    date: str              = Field(..., pattern=r"^\d{4}-\d{2}-\d{2}$")  # ISO "YYYY-MM-DD"
+    time: Optional[str]    = Field(None, pattern=r"^\d{2}:\d{2}$")
+    end_time: Optional[str] = Field(None, pattern=r"^\d{2}:\d{2}$")
+    type: str              = Field("personal", max_length=50)
+    category: Optional[str]    = Field(None, max_length=100)
+    description: Optional[str] = Field(None, max_length=1000)
     notify_enabled: bool = True
     notify_email: bool = True
     notify_sms: bool = False
-    notify_email_addr: Optional[str] = None
-    notify_phone: Optional[str] = None
+    notify_email_addr: Optional[EmailStr] = None   # was Optional[str] — now validated
+    notify_phone: Optional[str]  = Field(None, max_length=20)
     notify_same_day: bool = False
     notify_1day: bool = True
     notify_7days: bool = True
+
+    @field_validator("date", mode="before")
+    @classmethod
+    def validate_date(cls, v: str) -> str:
+        """Ensure date is a real calendar date, not just a pattern match."""
+        from datetime import date as _date
+        try:
+            _date.fromisoformat(str(v))
+        except ValueError:
+            raise ValueError("date must be a valid calendar date in YYYY-MM-DD format")
+        return str(v)
 
 
 # ── Email templates ──────────────────────────────────────────────────────────

@@ -54,10 +54,10 @@ class ElectivesRequest(BaseModel):
     major:           Optional[str]       = Field(None, max_length=100)
     minor:           Optional[str]       = Field(None, max_length=100)
     concentration:   Optional[str]       = Field(None, max_length=100)
-    year:            Optional[int]       = Field(None, ge=1, le=5)
+    year:            Optional[int]       = Field(None, ge=0, le=10)
     interests:       Optional[str]       = Field(None, max_length=500)
-    courses_taken:   Optional[List[str]] = Field(default_factory=list, max_items=50)
-    exclude_courses: Optional[List[str]] = Field(default_factory=list, max_items=50)
+    courses_taken:   Optional[List[str]] = Field(default_factory=list, max_length=200)
+    exclude_courses: Optional[List[str]] = Field(default_factory=list, max_length=200)
 
 
 @router.post("/recommend")
