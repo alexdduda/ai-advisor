@@ -396,13 +396,15 @@
 
 /* ── Dark mode: draggable toggle tab ── */
 [data-theme="dark"] .rsb-toggle {
-  background: #1f2937;
-  border-color: rgba(255,255,255,0.1);
-  color: rgba(255,255,255,0.4);
+  background: var(--accent-primary, #ED1B2F);
+  border-color: var(--accent-primary, #ED1B2F);
+  color: #fff;
+  box-shadow: -2px 0 12px rgba(237, 27, 47, 0.45);
 }
 [data-theme="dark"] .rsb-toggle:hover,
 [data-theme="dark"] .rsb-toggle--dragging {
-  background: var(--accent-primary, #ED1B2F);
-  border-color: var(--accent-primary, #ED1B2F);
+  background: #c0152a;
+  border-color: #c0152a;
   color: white;
+  box-shadow: -3px 0 16px rgba(237, 27, 47, 0.6);
 }

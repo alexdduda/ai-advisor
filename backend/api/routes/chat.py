@@ -200,7 +200,43 @@ def format_chat_history(messages: List[dict]) -> List[dict]:
     ]
 
 
-# ── Routes ────────────────────────────────────────────────────────────────────
+# ── Prompt injection filter ───────────────────────────────────────────────────
+
+_INJECTION_PATTERNS = [
+    "ignore previous instructions",
+    "ignore all instructions",
+    "disregard previous",
+    "disregard all previous",
+    "forget previous instructions",
+    "you are now",
+    "new instructions:",
+    "system prompt:",
+    "reveal your system prompt",
+    "print your instructions",
+    "what are your instructions",
+    "override instructions",
+    "jailbreak",
+    "do anything now",
+    "dan mode",
+]
+
+
+def _sanitize_message(message: str) -> str:
+    """
+    Light-touch prompt injection filter.
+    Flags obvious injection attempts and raises a 400 rather than
+    passing them to Claude. This is a best-effort layer — Claude's
+    own system prompt protections remain the primary defence.
+    """
+    lower = message.lower()
+    for pattern in _INJECTION_PATTERNS:
+        if pattern in lower:
+            logger.warning(f"Possible prompt injection attempt blocked: {pattern!r}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Message contains disallowed content.",
+            )
+    return message
 
 @router.post("/send", response_model=ChatResponse)
 async def send_message(request: ChatRequest, req: Request, current_user_id: str = Depends(get_current_user_id)):
@@ -220,6 +256,9 @@ async def send_message(request: ChatRequest, req: Request, current_user_id: str 
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Message too long. Maximum {MAX_MESSAGE_LENGTH} characters."
             )
+
+        # Filter obvious prompt injection attempts
+        _sanitize_message(request.message)
 
         session_id = request.session_id or str(uuid.uuid4())
         logger.info(f"Processing message for session: {session_id}")

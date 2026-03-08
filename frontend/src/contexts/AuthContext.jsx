@@ -1,7 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
 import { supabase } from '../lib/supabase'
-import { usersAPI } from '../lib/api'
+import api, { usersAPI } from '../lib/api'
 
 const AuthContext = createContext({})
 
@@ -95,6 +95,10 @@ export const AuthProvider = ({ children }) => {
 
         if (mountedRef.current) {
           setUser(session?.user ?? null)
+          // Pre-seed the token so the axios interceptor doesn't race on cold load
+          if (session?.access_token) {
+            api.defaults.headers.common['Authorization'] = `Bearer ${session.access_token}`
+          }
           // Non-blocking — don't await so loading state clears fast
           if (session?.user) loadProfile(session.user.id)
         }
@@ -115,6 +119,10 @@ export const AuthProvider = ({ children }) => {
         setUser(session?.user ?? null)
 
         if (event === 'SIGNED_IN' && session?.user) {
+          // Pre-seed the token immediately on sign-in
+          if (session?.access_token) {
+            api.defaults.headers.common['Authorization'] = `Bearer ${session.access_token}`
+          }
           if (justSignedUp.current) {
             console.log('Skipping profile load — just signed up')
             justSignedUp.current = false
@@ -130,6 +138,7 @@ export const AuthProvider = ({ children }) => {
         }
 
         if (event === 'SIGNED_OUT') {
+          delete api.defaults.headers.common['Authorization']
           setProfile(null)
           setError(null)
           setNeedsOnboarding(false)
@@ -205,12 +214,11 @@ export const AuthProvider = ({ children }) => {
   // ── deleteAccount ────────────────────────────────────────────────────────
   const deleteAccount = async () => {
     if (!user?.id) throw new Error('No user logged in')
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-    const BASE_URL = API_URL.replace(/\/api\/?$/, '').replace(/\/$/, '')
-    const res = await fetch(`${BASE_URL}/api/users/${user.id}`, { method: 'DELETE' })
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}))
-      throw new Error(data.detail?.message || 'Failed to delete account')
+    try {
+      await api.delete(`/users/${user.id}`)
+    } catch (err) {
+      const detail = err.response?.data?.detail
+      throw new Error(detail?.message || detail || 'Failed to delete account')
     }
     await supabase.auth.signOut()
     setUser(null)

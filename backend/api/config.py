@@ -34,6 +34,7 @@ class Settings(BaseSettings):
     TWILIO_AUTH_TOKEN: str = ""
     TWILIO_FROM_NUMBER: str = ""
     CRON_SECRET: str = ""
+    ADMIN_SECRET: str = ""  # Separate from CRON_SECRET — used only for admin panel login
 
     # ── AI ───────────────────────────────────────────────────────────────
     ANTHROPIC_API_KEY: str
