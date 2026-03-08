@@ -183,7 +183,14 @@ class SupabaseRateLimiter:
         except Exception as e:
             # F-04 FIX: Do NOT fail fully open. Apply conservative in-memory fallback
             # so a Supabase outage degrades gracefully without disabling rate limiting.
-            logger.warning(f"Rate limiter DB error, applying in-memory fallback: {e}")
+            # SEC-08: Elevated to ERROR so this surfaces in Vercel logs / alerting.
+            # In a multi-instance serverless environment each instance will have its
+            # own in-memory counter during the outage — treat this as a degraded state.
+            logger.error(
+                f"[SECURITY] Rate limiter DB unavailable — falling back to in-memory "
+                f"(limit={self._FALLBACK_RPM} rpm). Multi-instance protection is "
+                f"degraded until Supabase recovers. Error: {e}"
+            )
             return self._fallback_is_allowed(key)
 
     def _prune(self, supabase) -> None:
@@ -217,7 +224,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type", "X-Request-ID", "X-Cron-Secret"],
     expose_headers=["X-Process-Time", "X-Request-ID"],
 )
@@ -325,7 +332,8 @@ async def root():
 
 @app.get(f"{settings.API_PREFIX}/health")
 async def health_check():
-    return {
-        "status": "healthy",
-        "version": settings.API_VERSION,
-    }
+    # SEC-05: Don't expose version string in production — it aids targeted exploit research.
+    response = {"status": "healthy"}
+    if settings.DEBUG:
+        response["version"] = settings.API_VERSION
+    return response
