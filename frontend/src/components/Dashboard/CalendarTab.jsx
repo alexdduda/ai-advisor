@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
-import { createPortal } from 'react-dom'
 import {
   FaChevronLeft, FaChevronRight, FaPlus, FaTimes, FaBell,
   FaCalendarAlt, FaBullhorn, FaGraduationCap, FaUser, FaExternalLinkAlt, FaDownload,
@@ -510,8 +509,7 @@ function SlotRow({ ev, isHidden, onToggleHide, onSave, language }) {
           {isHidden ? <EyeOffIcon /> : <EyeIcon />}
         </button>
       </div>
-    </div>,
-    document.body
+    </div>
   )
 }
 
@@ -571,7 +569,7 @@ function BulkDeleteModal({ userEvents, onHide, hiddenSlotKeys, onUnhideAll, onCl
     }
   }
 
-  return createPortal(
+  return (
     <div className="cal-bulk-overlay" onClick={onClose}>
       <div className="mgr-modal" onClick={e => e.stopPropagation()}>
 
