@@ -23,6 +23,7 @@ from pydantic import BaseModel
 import logging
 import re
 from difflib import SequenceMatcher
+from urllib.parse import quote, quote_plus
 
 from ..utils.supabase_client import get_supabase
 from ..utils.cache import search_cache
@@ -45,6 +46,10 @@ _RMP_COURSE_PREFIX = "rmp_course:"
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
+
+def _escape_like(value: str) -> str:
+    """Escape LIKE/ILIKE wildcard characters to prevent pattern injection."""
+    return value.replace("\\", "\\\\").replace("%", r"\%").replace("_", r"\_")
 
 def _name_similarity(a: str, b: str) -> float:
     return SequenceMatcher(None, a.lower(), b.lower()).ratio()
@@ -102,7 +107,7 @@ def _compute_blended(row: dict) -> Optional[float]:
 def _build_rmp_url(instructor: str) -> str | None:
     if not instructor:
         return None
-    encoded = instructor.strip().replace(' ', '+')
+    encoded = quote_plus(instructor.strip())
     return f"https://www.ratemyprofessors.com/search/professors?q={encoded}&sid=U2Nob29sLTEyNDY="
 
 
@@ -143,7 +148,7 @@ def _format_professor(row: dict | None) -> dict | None:
         # mcgill.courses data (new)
         'mc_rating':               mc_r,
         'mc_num_ratings':          int(row['mc_num_ratings'])          if row.get('mc_num_ratings')        else 0,
-        'mc_url':                  f"https://mcgill.courses/instructor/{instr.replace(' ', '-')}",
+        'mc_url':                  f"https://mcgill.courses/instructor/{quote(instr.replace(' ', '-'), safe='')}",
 
         # Blended (best for display)
         'blended_rating':          blended,
@@ -187,7 +192,7 @@ async def get_rmp_by_name(
         qb = (
             supabase.from_('courses')
             .select(_RMP_COLS)
-            .ilike('instructor', f'%{last_name}%')
+            .ilike('instructor', f'%{_escape_like(last_name)}%')
         )
         if subject:
             qb = qb.like('Course', f'{subject.upper()}%')
@@ -200,7 +205,7 @@ async def get_rmp_by_name(
             qb2 = (
                 supabase.from_('courses')
                 .select(_RMP_COLS)
-                .ilike('instructor', f'%{parts[0]}%')
+                .ilike('instructor', f'%{_escape_like(parts[0])}%')
             )
             if subject:
                 qb2 = qb2.like('Course', f'{subject.upper()}%')
@@ -314,7 +319,7 @@ async def search_professors(
         qb = (
             supabase.from_('courses')
             .select(_RMP_COLS)
-            .ilike('instructor', f'%{clean_q}%')
+            .ilike('instructor', f'%{_escape_like(clean_q)}%')
         )
         if subject:
             qb = qb.like('Course', f'{subject.upper()}%')

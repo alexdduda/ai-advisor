@@ -20,14 +20,6 @@ import { useAuth } from '../../contexts/AuthContext'
 import { useLanguage } from '../../contexts/LanguageContext'
 import './FeedbackModal.css'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-const normalizeUrl = (url) => {
-  let n = url.replace(/\/$/, '')
-  if (n.endsWith('/api')) n = n.slice(0, -4)
-  return n
-}
-const BASE_URL = normalizeUrl(API_URL)
-
 export default function FeedbackModal() {
   const { user } = useAuth()
   const { t } = useLanguage()
@@ -69,46 +61,29 @@ export default function FeedbackModal() {
     setStatus('idle')
   }
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault()
-    const payload = mode === 'missing-course'
-      ? { type: 'missing_course', course_code: course.trim(), note: text.trim(), user_id: user?.id }
-      : { type: 'general', message: text.trim(), user_id: user?.id }
 
-    if (!payload.course_code && !payload.message) return
+    const missingCourse = mode === 'missing-course'
+    if (missingCourse && !course.trim()) return
+    if (!missingCourse && !text.trim()) return
 
     setStatus('submitting')
 
-    try {
-      // Try to POST to your feedback endpoint.
-      // If you don't have one yet, it falls through to the mailto fallback.
-      const res = await fetch(`${BASE_URL}/api/feedback`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
+    const subject = encodeURIComponent(
+      missingCourse
+        ? `[Symbolos] Missing Course: ${course.trim()}`
+        : '[Symbolos] Feedback'
+    )
+    const body = encodeURIComponent(
+      missingCourse
+        ? `Missing course: ${course.trim()}\nNote: ${text.trim()}\nUser: ${user?.email || 'anonymous'}`
+        : `${text.trim()}\n\nUser: ${user?.email || 'anonymous'}`
+    )
 
-      if (res.status === 409) { setStatus('duplicate'); return }
-      if (!res.ok) throw new Error('not ok')
-
-      setStatus('success')
-      setTimeout(() => close(), 2000)
-    } catch {
-      // Fallback: open mailto so feedback is never lost
-      const subject = encodeURIComponent(
-        mode === 'missing-course'
-          ? `[Symboulos] Missing Course: ${course.trim()}`
-          : '[Symboulos] Feedback'
-      )
-      const body = encodeURIComponent(
-        mode === 'missing-course'
-          ? `Missing course: ${course.trim()}\nNote: ${text.trim()}\nUser: ${user?.email || 'anonymous'}`
-          : `${text.trim()}\n\nUser: ${user?.email || 'anonymous'}`
-      )
-      window.open(`mailto:feedback@symboulos.ca?subject=${subject}&body=${body}`)
-      setStatus('success')
-      setTimeout(() => close(), 2000)
-    }
+    window.open(`mailto:feedback@symbolos.ca?subject=${subject}&body=${body}`)
+    setStatus('success')
+    setTimeout(() => close(), 2000)
   }
 
   return (

@@ -6,6 +6,7 @@ import {
   FaChevronRight, FaCircle, FaBolt, FaPlane
 } from 'react-icons/fa'
 import { useLanguage } from '../../contexts/LanguageContext'
+import { supabase } from '../../lib/supabase'
 import DegreeProgressTracker from './DegreeProgressTracker'
 import DegreeRequirementsView from './DegreeRequirementsView'
 import StudyAbroadView from './StudyAbroadView'
@@ -280,10 +281,15 @@ function ElectivesPanel({ profile, completedCourses, currentCourses, programData
     try {
       const advancedStanding = profile?.advanced_standing || []
       const allCourses = [...completedCourses, ...currentCourses]
+      // Send only subject+catalog (no title) to keep payload lean and avoid null items
       const coursesTaken = [
-        ...allCourses.map(c => `${c.subject} ${c.catalog} ${c.course_title || ''}`.trim()),
-        ...advancedStanding.map(t => `${t.course_code} ${t.course_title || '(transfer)'}`.trim()),
-      ]
+        ...allCourses
+          .filter(c => c.subject && c.catalog)
+          .map(c => `${c.subject} ${c.catalog}`.trim()),
+        ...advancedStanding
+          .filter(t => t.course_code)
+          .map(t => t.course_code.trim()),
+      ].filter(Boolean)
 
       // Build list of required major/minor courses to exclude from electives
       const requiredCodes = new Set()
@@ -294,14 +300,21 @@ function ElectivesPanel({ profile, completedCourses, currentCourses, programData
       })
       const excludeCourses = Array.from(requiredCodes)
 
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token
+      if (!token) throw new Error('Not authenticated')
+
       const res = await fetch(`${API_BASE}/api/electives/recommend`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
         body: JSON.stringify({
           major:          profile?.major        || null,
           minor:          profile?.minor        || null,
           concentration:  profile?.concentration|| null,
-          year:           profile?.year         || null,
+          year:           (profile?.year >= 0 && profile?.year <= 10) ? profile.year : null,
           interests:      profile?.interests    || null,
           courses_taken:  coursesTaken,
           exclude_courses: excludeCourses,

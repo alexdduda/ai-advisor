@@ -348,9 +348,11 @@ def search_courses(
             db_query = db_query.like("Course", f"{subject.upper()}%")
         if query:
             clean_query = query.strip()[:100]
+            # Escape LIKE wildcards to prevent pattern injection
+            safe_query = clean_query.replace("\\", "\\\\").replace("%", r"\%").replace("_", r"\_")
             db_query = db_query.or_(
-                f"course_name.ilike.%{clean_query}%,"
-                f"Course.ilike.%{clean_query}%"
+                f"course_name.ilike.%{safe_query}%,"
+                f"Course.ilike.%{safe_query}%"
             )
         return db_query.limit(limit).execute().data or []
     try:
