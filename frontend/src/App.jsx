@@ -22,8 +22,9 @@ function AppContent() {
     return () => clearTimeout(t)
   }, [])
 
-  if (window.location.pathname === '/admin') return <AdminSuggestions />
-
+  // Wait for both the minimum loading time AND auth state to resolve before
+  // rendering anything — including the admin route. This ensures the session
+  // is evaluated before the admin panel (or any other route) is displayed.
   if (loading || !minLoadDone) return <Loading />
 
   if (error?.type === 'AUTH_INIT_FAILED') {
@@ -36,6 +37,12 @@ function AppContent() {
     )
   }
 
+  // Admin panel — only rendered after auth has resolved and user is logged in.
+  // The server-side /api/admin/verify endpoint enforces the actual credential
+  // check; this guard simply prevents the login form from loading before the
+  // session is known.
+  if (user && window.location.pathname === '/admin') return <AdminSuggestions />
+
   // New signup — show onboarding flow
   if (user && needsOnboarding) return <ProfileSetup />
 
@@ -45,7 +52,7 @@ function AppContent() {
   // Profile is being fetched
   if (user && !profile && !error) return <Loading />
 
-  // Unauthenticated
+  // Unauthenticated (also catches unauthenticated /admin attempts)
   return <Login />
 }
 

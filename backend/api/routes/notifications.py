@@ -8,6 +8,7 @@ Handles:
   POST /api/notifications/cron      – daily cron: send due notifications (service key protected)
 """
 
+import hmac
 from fastapi import APIRouter, HTTPException, Header, Depends, Request
 from pydantic import BaseModel, EmailStr
 from typing import Optional, List
@@ -448,7 +449,7 @@ async def run_notification_cron(request: Request):
     # Vercel cron sends Authorization: Bearer <CRON_SECRET>
     auth_header = request.headers.get("Authorization", "")
     token = auth_header.removeprefix("Bearer ").strip()
-    if token != settings.CRON_SECRET:
+    if not hmac.compare_digest(token or "", settings.CRON_SECRET):
         raise HTTPException(status_code=401, detail="Invalid cron secret")
 
     today = date.today().isoformat()

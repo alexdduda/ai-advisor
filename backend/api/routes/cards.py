@@ -16,7 +16,7 @@ FIX: Cards no longer regenerate on every server restart.
 """
 
 from fastapi import APIRouter, HTTPException, Depends, Request
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 import anthropic
 import logging
 import json
@@ -69,8 +69,8 @@ CATEGORIES_PROMPT_LIST = "\n".join(f'  - "{c}"' for c in CARD_CATEGORIES)
 
 class ThreadRequest(BaseModel):
     user_id: str
-    message: str
-    card_context: str
+    message:      str = Field(..., min_length=1, max_length=2000)
+    card_context: str = Field(..., max_length=4000)
     language: str = "en"
 
 class GenerateRequest(BaseModel):
@@ -587,8 +587,23 @@ async def ask_card(user_id: str, request: AskRequest, req: Request, current_user
 
 
 @router.post("/{card_id}/thread", response_model=dict)
-async def thread_message(card_id: str, request: ThreadRequest):
+async def thread_message(
+    card_id: str,
+    request: ThreadRequest,
+    req: Request,
+    current_user_id: str = Depends(get_current_user_id),
+):
+    # Verify the requesting user owns this card
+    require_self(current_user_id, request.user_id)
     try:
+        # Double-check ownership via DB in case user_id in body was tampered with
+        supabase = get_supabase()
+        card_row = supabase.table("advisor_cards").select("user_id").eq("id", card_id).execute()
+        if not card_row.data:
+            raise HTTPException(status_code=404, detail="Card not found")
+        if card_row.data[0]["user_id"] != current_user_id:
+            raise HTTPException(status_code=403, detail="Access denied")
+
         prompt = f"""You are a helpful AI academic advisor for McGill University.
 
 The student is asking a follow-up question about this advisor card:
@@ -607,15 +622,29 @@ Provide a concise, helpful, and specific response (2–4 sentences). Be direct a
         )
         return {"response": message.content[0].text.strip()}
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.exception(f"Thread message failed for card {card_id}: {e}")
         raise HTTPException(status_code=500, detail="Failed to process thread message")
 
 
 @router.patch("/{card_id}/save", response_model=dict)
-async def save_card(card_id: str, request: SaveRequest):
+async def save_card(
+    card_id: str,
+    request: SaveRequest,
+    req: Request,
+    current_user_id: str = Depends(get_current_user_id),
+):
     try:
         supabase = get_supabase()
+        # Verify ownership before updating
+        ownership = supabase.table("advisor_cards").select("user_id").eq("id", card_id).execute()
+        if not ownership.data:
+            raise HTTPException(status_code=404, detail="Card not found")
+        if ownership.data[0]["user_id"] != current_user_id:
+            raise HTTPException(status_code=403, detail="Access denied")
+
         result = supabase.table("advisor_cards") \
             .update({"is_saved": request.is_saved}) \
             .eq("id", card_id) \

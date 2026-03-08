@@ -248,7 +248,7 @@ export default function ProfileSetup() {
               </div>
               <div className="ps-hint">
                 <FaLightbulb className="ps-hint-icon" />
-                <p dangerouslySetInnerHTML={{ __html: t('ps.hintTranscript') }} />
+                <p>{t('ps.hintTranscriptPre')}<strong>{t('ps.hintTranscriptBold1')}</strong>{t('ps.hintTranscriptMid')}<strong>{t('ps.hintTranscriptBold2')}</strong>{t('ps.hintTranscriptPost')}</p>
               </div>
             </>
           )}
@@ -397,7 +397,7 @@ export default function ProfileSetup() {
 
             <div className="ps-hint">
               <FaLightbulb className="ps-hint-icon" />
-              <p dangerouslySetInnerHTML={{ __html: t('ps.hintSyllabi') }} />
+              <p>{t('ps.hintSyllabiPre')}<strong>{t('ps.hintSyllabiCalendar')}</strong>{t('ps.hintSyllabiMid')}<strong>{t('ps.hintSyllabiProfile')}</strong>{t('ps.hintSyllabiPost')}</p>
             </div>
           </>
         )}
