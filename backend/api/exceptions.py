@@ -1,5 +1,10 @@
 """
 Custom exceptions and error handlers
+
+SEC-015: DatabaseException no longer returns raw Supabase/Postgres error strings
+         to the client. Internal details are logged server-side only.
+SEC-017: UserAlreadyExistsException no longer includes email in response details
+         (minor enumeration risk).
 """
 from fastapi import HTTPException, Request, status
 from fastapi.responses import JSONResponse
@@ -80,23 +85,40 @@ class UserNotFoundException(AppException):
         )
 
 
+# SEC-017: Removed email from response details to prevent enumeration.
+# The email is still logged server-side for debugging.
 class UserAlreadyExistsException(AppException):
-    def __init__(self, email: str):
+    def __init__(self, email: str = ""):
+        if email:
+            logger.info(f"Duplicate signup attempt for email: {email}")
         super().__init__(
             status_code=status.HTTP_409_CONFLICT,
             code=ErrorCode.USER_ALREADY_EXISTS,
             message="A user with this email already exists",
-            details={"email": email}
+            details=None  # SEC-017: Don't include email in response
         )
 
 
+# SEC-015: DatabaseException no longer sends raw Supabase/Postgres error strings
+# to the HTTP client. The raw error is logged server-side for debugging; the
+# client only sees the operation name.
+#
+# BEFORE (leaked internal details):
+#   {"details": {"operation": "create_user", "error": "duplicate key value violates
+#    unique constraint \"users_email_key\" DETAIL: Key (email)=(x@y.com) already exists."}}
+#
+# AFTER:
+#   {"details": {"operation": "create_user"}}
 class DatabaseException(AppException):
     def __init__(self, operation: str, details: Optional[str] = None):
+        # Log the full error server-side for debugging
+        if details:
+            logger.error(f"DatabaseException [{operation}]: {details}")
         super().__init__(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             code=ErrorCode.DATABASE_ERROR,
             message=f"Database operation failed: {operation}",
-            details={"operation": operation, "error": details}
+            details={"operation": operation}  # SEC-015: Scrubbed — no raw error string
         )
 
 

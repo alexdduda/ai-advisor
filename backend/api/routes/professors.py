@@ -195,7 +195,7 @@ async def get_rmp_by_name(
             .ilike('instructor', f'%{_escape_like(last_name)}%')
         )
         if subject:
-            qb = qb.like('Course', f'{subject.upper()}%')
+            qb = qb.like('Course', f'{_escape_like(subject.upper())}%')  # SEC-019: escape LIKE wildcards
         rows = qb.order('Course').limit(200).execute().data or []
 
         best = _best_rmp_row(rows, clean_name)
@@ -208,7 +208,7 @@ async def get_rmp_by_name(
                 .ilike('instructor', f'%{_escape_like(parts[0])}%')
             )
             if subject:
-                qb2 = qb2.like('Course', f'{subject.upper()}%')
+                qb2 = qb2.like('Course', f'{_escape_like(subject.upper())}%')  # SEC-019
             rows2 = qb2.limit(200).execute().data or []
             best = _best_rmp_row(rows2, clean_name)
 
@@ -322,7 +322,7 @@ async def search_professors(
             .ilike('instructor', f'%{_escape_like(clean_q)}%')
         )
         if subject:
-            qb = qb.like('Course', f'{subject.upper()}%')
+            qb = qb.like('Course', f'{_escape_like(subject.upper())}%')  # SEC-019: escape LIKE wildcards
         rows = qb.order('instructor').limit(500).execute().data or []
 
         seen: dict[str, dict] = {}
@@ -369,6 +369,14 @@ async def _bulk_lookup(raw_codes: list[str]) -> dict:
     if not codes:
         raise HTTPException(status_code=422, detail="No course codes provided")
     codes = codes[:60]
+
+    # SEC-018: Validate course codes against a strict regex before building
+    # the PostgREST filter. Raw user input should never be interpolated into
+    # filter strings without validation.
+    _COURSE_CODE_RE = re.compile(r'^[A-Z]{2,6}\d{3}[A-Z]?\d?$')
+    codes = [c for c in codes if _COURSE_CODE_RE.match(c)]
+    if not codes:
+        return {"ratings": {}, "count": 0}
 
     cache_key = f"rmp_bulk:{'|'.join(sorted(codes))}"
     cached = search_cache.get(cache_key)
