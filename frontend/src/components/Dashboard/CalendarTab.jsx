@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import {
   FaChevronLeft, FaChevronRight, FaPlus, FaTimes, FaBell,
   FaCalendarAlt, FaBullhorn, FaGraduationCap, FaUser, FaExternalLinkAlt, FaDownload,
@@ -87,7 +88,14 @@ function daysUntil(dateStr) {
 }
 
 // ── Event Modal ───────────────────────────────────────────────────
-function EventModal({ event, onSave, onDelete, onClose, t, notifPrefs, user }) {
+const EVENT_TYPE_OPTIONS = [
+  { key: 'personal', color: '#059669', bg: '#ecfdf5', darkBg: '#064e3b22', icon: '⭐', labelEn: 'Personal',  labelFr: 'Personnel' },
+  { key: 'academic', color: '#1d4ed8', bg: '#eff6ff', darkBg: '#1e3a8a22', icon: '🎓', labelEn: 'Academic',  labelFr: 'Académique' },
+  { key: 'club',     color: '#d97706', bg: '#fffbeb', darkBg: '#92400e22', icon: '🎯', labelEn: 'Club',      labelFr: 'Club' },
+  { key: 'exam',     color: '#7c3aed', bg: '#f5f3ff', darkBg: '#4c1d9522', icon: '📝', labelEn: 'Exam',      labelFr: 'Examen' },
+]
+
+function EventModal({ event, onSave, onDelete, onClose, t, notifPrefs, user, language }) {
   const today = new Date().toLocaleDateString('en-CA', {
     timeZone: localStorage.getItem('timezone') || Intl.DateTimeFormat().resolvedOptions().timeZone
   })
@@ -103,6 +111,8 @@ function EventModal({ event, onSave, onDelete, onClose, t, notifPrefs, user }) {
     title:       event?.title       || '',
     date:        event?.date        || today,
     time:        event?.time        || '',
+    end_time:    event?.end_time    || '',
+    location:    event?.location    || '',
     type:        event?.type        || 'personal',
     category:    event?.category    || '',
     description: event?.description || '',
@@ -118,9 +128,7 @@ function EventModal({ event, onSave, onDelete, onClose, t, notifPrefs, user }) {
   }))
 
   const isEdit = !!event?.id && !event?.titleKey
-  const typeConfig = {
-    personal: { color: '#059669', bg: '#ecfdf5', label: t('calendar.personalEvents') },
-  }
+  const selectedType = EVENT_TYPE_OPTIONS.find(t => t.key === form.type) || EVENT_TYPE_OPTIONS[0]
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -133,90 +141,137 @@ function EventModal({ event, onSave, onDelete, onClose, t, notifPrefs, user }) {
 
   return (
     <div className="cal-modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="cal-modal">
-        <div className="cal-modal-header">
-          <h3>{isEdit ? t('calendar.editEventTitle') : t('calendar.addEventTitle')}</h3>
+      <div className="cal-modal cal-modal-v2">
+        {/* Colored accent bar based on selected type */}
+        <div className="cal-modal-accent" style={{ background: selectedType.color }} />
+
+        <div className="cal-modal-header-v2">
+          <div className="cal-modal-header-left">
+            <span className="cal-modal-type-icon">{selectedType.icon}</span>
+            <h3>{isEdit ? (language === 'fr' ? 'Modifier l\'événement' : 'Edit Event') : (language === 'fr' ? 'Nouvel événement' : 'New Event')}</h3>
+          </div>
           <button className="cal-modal-close" onClick={onClose}><FaTimes /></button>
         </div>
-        <form className="cal-modal-body" onSubmit={handleSubmit}>
-          <div className="cal-field">
-            <label>{t('calendar.eventTitle')} *</label>
-            <input type="text" value={form.title} onChange={e => f('title')(e.target.value)} placeholder={t('calendar.eventTitlePlaceholder')} required />
+
+        <form className="cal-modal-body-v2" onSubmit={handleSubmit}>
+
+          {/* Type selector */}
+          <div className="cal-v2-type-row">
+            {EVENT_TYPE_OPTIONS.map(opt => (
+              <button key={opt.key} type="button"
+                className={`cal-v2-type-card ${form.type === opt.key ? 'selected' : ''}`}
+                style={form.type === opt.key ? { borderColor: opt.color, background: opt.bg, color: opt.color } : {}}
+                onClick={() => f('type')(opt.key)}>
+                <span className="cal-v2-type-emoji">{opt.icon}</span>
+                <span className="cal-v2-type-label">{language === 'fr' ? opt.labelFr : opt.labelEn}</span>
+                {form.type === opt.key && <span className="cal-v2-type-check" style={{ color: opt.color }}><FaCheck size={8} /></span>}
+              </button>
+            ))}
           </div>
-          <div className="cal-field-row">
-            <div className="cal-field">
-              <label>{t('calendar.date')} *</label>
-              <input type="date" value={form.date} onChange={e => f('date')(e.target.value)} required />
+
+          {/* Title */}
+          <div className="cal-v2-field">
+            <label className="cal-v2-label">{language === 'fr' ? 'Titre' : 'Title'} <span className="cal-v2-required">*</span></label>
+            <input
+              className="cal-v2-input"
+              type="text"
+              value={form.title}
+              onChange={e => f('title')(e.target.value)}
+              placeholder={language === 'fr' ? 'Nom de l\'événement…' : 'Event name…'}
+              required
+              autoFocus
+            />
+          </div>
+
+          {/* Date + Time row */}
+          <div className="cal-v2-row">
+            <div className="cal-v2-field cal-v2-field--date">
+              <label className="cal-v2-label">{language === 'fr' ? 'Date' : 'Date'} <span className="cal-v2-required">*</span></label>
+              <input className="cal-v2-input" type="date" value={form.date} onChange={e => f('date')(e.target.value)} required />
             </div>
-            <div className="cal-field">
-              <label>{t('calendar.time')}</label>
-              <input type="time" value={form.time} onChange={e => f('time')(e.target.value)} />
+            <div className="cal-v2-field cal-v2-field--time">
+              <label className="cal-v2-label">{language === 'fr' ? 'Début' : 'Start'}</label>
+              <input className="cal-v2-input" type="time" value={form.time} onChange={e => f('time')(e.target.value)} />
+            </div>
+            <div className="cal-v2-field cal-v2-field--time">
+              <label className="cal-v2-label">{language === 'fr' ? 'Fin' : 'End'}</label>
+              <input className="cal-v2-input" type="time" value={form.end_time} onChange={e => f('end_time')(e.target.value)} />
             </div>
           </div>
-          <div className="cal-field">
-            <label>{t('calendar.eventType')}</label>
-            <div className="cal-type-grid">
-              {Object.entries(typeConfig).map(([key, cfg]) => (
-                <button key={key} type="button"
-                  className={`cal-type-btn ${form.type === key ? 'selected' : ''}`}
-                  style={form.type === key ? { borderColor: cfg.color, background: cfg.bg, color: cfg.color } : {}}
-                  onClick={() => f('type')(key)}>
-                  {cfg.label}
-                </button>
-              ))}
+
+          {/* Location */}
+          <div className="cal-v2-field">
+            <label className="cal-v2-label">{language === 'fr' ? 'Lieu' : 'Location'}</label>
+            <input
+              className="cal-v2-input"
+              type="text"
+              value={form.location}
+              onChange={e => f('location')(e.target.value)}
+              placeholder={language === 'fr' ? 'Salle, bâtiment…' : 'Room, building…'}
+            />
+          </div>
+
+          {/* Description */}
+          <div className="cal-v2-field">
+            <label className="cal-v2-label">{language === 'fr' ? 'Notes' : 'Notes'}</label>
+            <textarea
+              className="cal-v2-input cal-v2-textarea"
+              value={form.description}
+              onChange={e => f('description')(e.target.value)}
+              rows={2}
+              placeholder={language === 'fr' ? 'Détails optionnels…' : 'Optional details…'}
+            />
+          </div>
+
+          {/* Notifications */}
+          <div className="cal-v2-notif-section">
+            <div className="cal-v2-notif-header">
+              <FaBell size={12} style={{ color: form.notifyEnabled ? '#ed1b2f' : 'var(--text-muted)' }} />
+              <span>{language === 'fr' ? 'Rappels' : 'Reminders'}</span>
+              <button
+                type="button"
+                className={`cal-v2-notif-toggle ${form.notifyEnabled ? 'on' : 'off'}`}
+                onClick={() => toggle('notifyEnabled')}
+              >
+                <span className="cal-v2-notif-toggle-knob" />
+              </button>
             </div>
-          </div>
-          <div className="cal-field">
-            <label>{t('calendar.groupCategory')}</label>
-            <input type="text" value={form.category} onChange={e => f('category')(e.target.value)} placeholder={t('calendar.groupPlaceholder')} />
-          </div>
-          <div className="cal-field">
-            <label>{t('calendar.description')}</label>
-            <textarea value={form.description} onChange={e => f('description')(e.target.value)} rows={2} placeholder={t('calendar.descPlaceholder')} />
-          </div>
-          <div className="cal-section-divider"><FaBell /> {t('calendar.reminders')}</div>
-          <div className="cal-field">
-            <label className="cal-checkbox-label cal-notif-master">
-              <input type="checkbox" checked={form.notifyEnabled} onChange={() => toggle('notifyEnabled')} />
-              <span className={`cal-notif-toggle ${form.notifyEnabled ? 'on' : 'off'}`}>
-                {form.notifyEnabled ? t('calendar.notifOn') : t('calendar.notifOff')}
-              </span>
-              {t('calendar.enableNotifications')}
-            </label>
-          </div>
-          {form.notifyEnabled && (
-            <div className="cal-field">
-              <label>{t('calendar.whenToRemind')}</label>
-              <div className="cal-notify-row cal-notify-wrap">
+            {form.notifyEnabled && (
+              <div className="cal-v2-timing-chips">
                 {[
-                  { key: 'notifySameDay', label: t('calendar.remindSameDay') },
-                  { key: 'notify1Day',    label: t('calendar.remind1Day') },
-                  { key: 'notify7Days',   label: t('calendar.remind7Days') },
-                ].map(({ key, label }) => (
-                  <label key={key} className={`cal-timing-chip ${form[key] ? 'active' : ''}`}>
+                  { key: 'notifySameDay', labelEn: 'Same day',  labelFr: 'Jour même' },
+                  { key: 'notify1Day',    labelEn: '1 day before', labelFr: '1 jour avant' },
+                  { key: 'notify7Days',   labelEn: '1 week before', labelFr: '1 semaine avant' },
+                ].map(({ key, labelEn, labelFr }) => (
+                  <label key={key} className={`cal-v2-chip ${form[key] ? 'active' : ''}`}
+                    style={form[key] ? { borderColor: selectedType.color, background: selectedType.bg, color: selectedType.color } : {}}>
                     <input type="checkbox" checked={form[key]} onChange={() => toggle(key)} />
-                    {form[key] && <FaCheck size={9} />} {label}
+                    {form[key] && <FaCheck size={8} />}
+                    {language === 'fr' ? labelFr : labelEn}
                   </label>
                 ))}
               </div>
-            </div>
-          )}
-          <div className="cal-modal-actions">
+            )}
+          </div>
+
+          {/* Actions */}
+          <div className="cal-v2-actions">
             {isEdit && (
-              <button type="button" className="cal-btn-danger" onClick={() => onDelete(event.id)}>
-                <FaTrash /> {t('calendar.delete')}
+              <button type="button" className="cal-v2-btn-danger" onClick={() => onDelete(event.id)}>
+                <FaTrash size={12} /> {language === 'fr' ? 'Supprimer' : 'Delete'}
               </button>
             )}
-            <div className="cal-modal-actions-right">
-              <button type="button" className="cal-btn-secondary" onClick={onClose}>{t('calendar.cancel')}</button>
-              <button type="submit" className="cal-btn-primary">
-                <FaCheck /> {isEdit ? t('calendar.saveChanges') : t('calendar.addEvent')}
+            <div className="cal-v2-actions-right">
+              <button type="button" className="cal-v2-btn-ghost" onClick={onClose}>
+                {language === 'fr' ? 'Annuler' : 'Cancel'}
+              </button>
+              <button type="submit" className="cal-v2-btn-primary" style={{ background: selectedType.color }}>
+                <FaCheck size={11} /> {isEdit ? (language === 'fr' ? 'Enregistrer' : 'Save') : (language === 'fr' ? 'Ajouter' : 'Add Event')}
               </button>
             </div>
           </div>
         </form>
       </div>
-
     </div>
   )
 }
@@ -378,7 +433,7 @@ const DAY_LABELS = {
   weekly_thursday:'Thu', weekly_friday:'Fri', weekly_saturday:'Sat', weekly_sunday:'Sun'
 }
 
-function SlotRow({ ev, isHidden, isSelected, onToggle, onSave, language }) {
+function SlotRow({ ev, isHidden, onToggleHide, onSave, language }) {
   const [editing, setEditing] = React.useState(false)
   const [day,      setDay]      = React.useState(ev.recurrence || '')
   const [timeStart,setTimeStart]= React.useState(ev.time || '')
@@ -400,63 +455,85 @@ function SlotRow({ ev, isHidden, isSelected, onToggle, onSave, language }) {
   const slotLabel = ev.title.replace(ev.course_code || '', '').trim() || 'Slot'
   const dayLabel  = DAY_LABELS[ev.recurrence] || ev.recurrence?.replace('weekly_','') || '?'
   const hasEnd = ev.end_time && String(ev.end_time).trim()
-  const timeLabel = ev.time ? (hasEnd ? ` ${ev.time}–${ev.end_time}` : ` ${ev.time}`) : ''
+  const timeLabel = ev.time ? (hasEnd ? `${ev.time}–${ev.end_time}` : ev.time) : null
 
   if (editing) {
     return (
-      <div className="cal-bulk-slot cal-bulk-slot--editing" onClick={e => e.stopPropagation()}>
-        <select className="cal-bulk-edit-select" value={day} onChange={e => setDay(e.target.value)}>
-          {DAY_OPTIONS.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
-        </select>
-        <input
-          className="cal-bulk-edit-time"
-          type="time"
-          value={timeStart}
-          onChange={e => setTimeStart(e.target.value)}
-          placeholder="HH:MM"
-        />
-        <span className="cal-bulk-edit-sep">–</span>
-        <input
-          className="cal-bulk-edit-time"
-          type="time"
-          value={timeEnd}
-          onChange={e => setTimeEnd(e.target.value)}
-          placeholder="HH:MM"
-        />
-        <button className="cal-bulk-edit-save" onClick={handleSave} disabled={saving}>
-          {saving ? '…' : <FaCheck size={11}/>}
-        </button>
-        <button className="cal-bulk-edit-cancel" onClick={() => setEditing(false)}>
-          <FaTimes size={11}/>
-        </button>
+      <div className="slot-row slot-row--editing" onClick={e => e.stopPropagation()}>
+        <div className="slot-row-edit-fields">
+          <select className="slot-edit-select" value={day} onChange={e => setDay(e.target.value)}>
+            {DAY_OPTIONS.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
+          </select>
+          <div className="slot-edit-time-pair">
+            <input className="slot-edit-time" type="time" value={timeStart} onChange={e => setTimeStart(e.target.value)} />
+            <span className="slot-edit-sep">→</span>
+            <input className="slot-edit-time" type="time" value={timeEnd} onChange={e => setTimeEnd(e.target.value)} />
+          </div>
+        </div>
+        <div className="slot-row-edit-actions">
+          <button className="slot-edit-save" onClick={handleSave} disabled={saving}>
+            {saving ? '…' : <><FaCheck size={10}/> {language === 'fr' ? 'OK' : 'Save'}</>}
+          </button>
+          <button className="slot-edit-cancel" onClick={() => setEditing(false)}>
+            <FaTimes size={10}/>
+          </button>
+        </div>
       </div>
     )
   }
 
   return (
-    <div
-      className={`cal-bulk-slot${isHidden ? ' cal-bulk-slot--hidden' : ''}${missingTime ? ' cal-bulk-slot--missing' : ''}`}
-      onClick={onToggle}
-    >
-      <input type="checkbox" readOnly checked={isSelected} className="cal-bulk-check" onClick={e => e.stopPropagation()} onChange={() => {}} />
-      <span className="cal-bulk-slot__day">{dayLabel}</span>
-      <span className="cal-bulk-slot__label">{slotLabel}{timeLabel}</span>
-      {missingTime && <span className="cal-bulk-slot__badge cal-bulk-slot__badge--warn"><FaClock size={9}/> {language === 'fr' ? 'heure manquante' : 'no time'}</span>}
-      {isHidden && !missingTime && <span className="cal-bulk-slot__badge">{language === 'fr' ? 'masqué' : 'hidden'}</span>}
-      <button
-        className="cal-bulk-slot__edit-btn"
-        title={language === 'fr' ? 'Modifier' : 'Edit'}
-        onClick={e => { e.stopPropagation(); setEditing(true) }}
-      >
-        <FaEdit size={10}/> {language === 'fr' ? 'Modifier' : 'Edit'}
-      </button>
-    </div>
+    <div className={`slot-row ${isHidden ? 'slot-row--hidden' : ''}`}>
+      <div className="slot-row-main">
+        <span className="slot-day-pill">{dayLabel}</span>
+        <div className="slot-info">
+          <span className="slot-label">{slotLabel}</span>
+          {timeLabel
+            ? <span className="slot-time">{timeLabel}</span>
+            : <span className="slot-time slot-time--missing"><FaClock size={9}/> {language === 'fr' ? 'heure manquante' : 'no time set'}</span>
+          }
+        </div>
+      </div>
+      <div className="slot-row-actions">
+        <button
+          className="slot-action-btn slot-edit-btn"
+          title={language === 'fr' ? 'Modifier' : 'Edit time'}
+          onClick={e => { e.stopPropagation(); setEditing(true) }}
+        >
+          <FaEdit size={11}/>
+        </button>
+        <button
+          className={`slot-action-btn slot-eye-btn ${isHidden ? 'slot-eye-btn--hidden' : ''}`}
+          title={isHidden ? (language === 'fr' ? 'Afficher' : 'Show on calendar') : (language === 'fr' ? 'Masquer' : 'Hide from calendar')}
+          onClick={e => { e.stopPropagation(); onToggleHide() }}
+        >
+          {isHidden ? <EyeOffIcon /> : <EyeIcon />}
+        </button>
+      </div>
+    </div>,
+    document.body
+  )
+}
+
+// Simple eye icons as SVG (no extra import needed)
+function EyeIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+      <circle cx="12" cy="12" r="3"/>
+    </svg>
+  )
+}
+function EyeOffIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+      <line x1="1" y1="1" x2="23" y2="23"/>
+    </svg>
   )
 }
 
 function BulkDeleteModal({ userEvents, onHide, hiddenSlotKeys, onUnhideAll, onClose, language, onEditSlot }) {
-  const [selected, setSelected] = React.useState(new Set())
-
   const groups = React.useMemo(() => {
     const anchors = userEvents.filter(e => e.recurrence && e.course_code && !e._isRecurringOccurrence)
     const map = {}
@@ -472,54 +549,110 @@ function BulkDeleteModal({ userEvents, onHide, hiddenSlotKeys, onUnhideAll, onCl
 
   const slotKey = (ev) => `${ev.course_code}::${ev.recurrence}`
 
-  const toggleKey = (key) => setSelected(prev => {
-    const s = new Set(prev); s.has(key) ? s.delete(key) : s.add(key); return s
-  })
-  const toggleGroup = (keys) => {
-    const allOn = keys.every(k => selected.has(k))
-    setSelected(prev => {
-      const s = new Set(prev)
-      allOn ? keys.forEach(k => s.delete(k)) : keys.forEach(k => s.add(k))
-      return s
-    })
+  const hasAnything = Object.keys(groups).length > 0
+  const hiddenCount = hiddenSlotKeys?.size || 0
+
+  // Count visible vs hidden per course
+  const getCourseStats = (evs) => {
+    const keys = evs.map(slotKey)
+    const hidden = keys.filter(k => hiddenSlotKeys?.has(k)).length
+    return { total: keys.length, hidden, visible: keys.length - hidden }
   }
 
-  const hasAnything = Object.keys(groups).length > 0
+  const hideAllForCourse = (evs) => {
+    const keys = evs.map(slotKey)
+    const allHidden = keys.every(k => hiddenSlotKeys?.has(k))
+    if (allHidden) {
+      // unhide all
+      onHide(keys, 'unhide')
+    } else {
+      // hide all visible ones
+      onHide(keys.filter(k => !hiddenSlotKeys?.has(k)), 'hide')
+    }
+  }
 
-  return (
-    <div className="modal-overlay cal-bulk-overlay" onClick={onClose}>
-      <div className="cal-bulk-modal" onClick={e => e.stopPropagation()}>
-        <div className="cal-bulk-modal__header">
-          <h3>{language === 'fr' ? 'Gérer les cours du calendrier' : 'Manage Calendar Classes'}</h3>
-          <button className="cal-bulk-modal__close" onClick={onClose}><FaTimes /></button>
+  return createPortal(
+    <div className="cal-bulk-overlay" onClick={onClose}>
+      <div className="mgr-modal" onClick={e => e.stopPropagation()}>
+
+        {/* Header */}
+        <div className="mgr-header">
+          <div className="mgr-header-left">
+            <FaLayerGroup size={15} style={{ color: '#ed1b2f' }} />
+            <div>
+              <h3 className="mgr-title">{language === 'fr' ? 'Gérer les cours' : 'Manage Classes'}</h3>
+              {hiddenCount > 0 && (
+                <p className="mgr-subtitle">
+                  {language === 'fr' ? `${hiddenCount} cours masqué${hiddenCount !== 1 ? 's' : ''}` : `${hiddenCount} slot${hiddenCount !== 1 ? 's' : ''} hidden`}
+                </p>
+              )}
+            </div>
+          </div>
+          <div className="mgr-header-right">
+            {hiddenCount > 0 && (
+              <button className="mgr-show-all-btn" onClick={onUnhideAll}>
+                <EyeIcon /> {language === 'fr' ? 'Tout afficher' : 'Show all'}
+              </button>
+            )}
+            <button className="mgr-close" onClick={onClose}><FaTimes /></button>
+          </div>
         </div>
 
+        {/* Legend */}
+        <div className="mgr-legend">
+          <span className="mgr-legend-item mgr-legend-visible"><EyeIcon /> {language === 'fr' ? 'Visible' : 'Visible'}</span>
+          <span className="mgr-legend-item mgr-legend-hidden"><EyeOffIcon /> {language === 'fr' ? 'Masqué' : 'Hidden'}</span>
+          <span className="mgr-legend-sep" />
+          <span className="mgr-legend-hint">{language === 'fr' ? 'Cliquez 👁 pour basculer' : 'Click 👁 to toggle visibility'}</span>
+        </div>
+
+        {/* Content */}
         {!hasAnything ? (
-          <p className="cal-bulk-empty">{language === 'fr' ? 'Aucun cours récurrent trouvé.' : 'No recurring class slots found.'}</p>
+          <div className="mgr-empty">
+            <span style={{ fontSize: '2rem' }}>📅</span>
+            <p>{language === 'fr' ? 'Aucun cours récurrent trouvé.' : 'No recurring class slots found.'}</p>
+            <p className="mgr-empty-hint">{language === 'fr' ? 'Ajoutez des cours depuis l\'onglet Cours.' : 'Add courses from the Courses tab.'}</p>
+          </div>
         ) : (
-          <div className="cal-bulk-list">
+          <div className="mgr-list">
             {Object.entries(groups).sort(([a],[b]) => a.localeCompare(b)).map(([courseCode, days]) => {
               const allEvs  = Object.values(days).flat()
-              const allKeys = allEvs.map(slotKey)
-              const allSelected = allKeys.every(k => selected.has(k))
-              const hasMissing = allEvs.some(e => !e.time)
+              const stats   = getCourseStats(allEvs)
+              const allHidden = stats.hidden === stats.total
+
               return (
-                <div key={courseCode} className="cal-bulk-course">
-                  <div className="cal-bulk-course__header" onClick={() => toggleGroup(allKeys)}>
-                    <input type="checkbox" readOnly checked={allSelected} className="cal-bulk-check" onChange={() => {}} />
-                    <span className="cal-bulk-course__name">{courseCode}</span>
-                    {hasMissing && <span className="cal-bulk-course__warn"><FaExclamationTriangle size={10}/></span>}
-                    <span className="cal-bulk-course__count">{allKeys.length} slot{allKeys.length !== 1 ? 's' : ''}</span>
+                <div key={courseCode} className="mgr-course">
+                  <div className="mgr-course-header">
+                    <div className="mgr-course-header-left">
+                      <span className="mgr-course-code">{courseCode}</span>
+                      <span className="mgr-course-stats">
+                        {stats.hidden > 0
+                          ? <span className="mgr-course-stats--partial">{stats.visible}/{stats.total} {language === 'fr' ? 'visible' : 'visible'}</span>
+                          : <span className="mgr-course-stats--all">{language === 'fr' ? 'Tout visible' : 'All visible'}</span>
+                        }
+                      </span>
+                    </div>
+                    <button
+                      className={`mgr-course-toggle ${allHidden ? 'mgr-course-toggle--hidden' : ''}`}
+                      onClick={() => hideAllForCourse(allEvs)}
+                      title={allHidden ? (language === 'fr' ? 'Afficher tous les cours' : 'Show all slots') : (language === 'fr' ? 'Masquer tous les cours' : 'Hide all slots')}
+                    >
+                      {allHidden ? <EyeOffIcon /> : <EyeIcon />}
+                      <span>{allHidden ? (language === 'fr' ? 'Afficher tout' : 'Show all') : (language === 'fr' ? 'Masquer tout' : 'Hide all')}</span>
+                    </button>
                   </div>
-                  <div className="cal-bulk-slots">
+
+                  <div className="mgr-slots">
                     {Object.entries(days).sort(([a],[b]) => a.localeCompare(b)).map(([rec, evs]) =>
                       evs.map(ev => (
                         <SlotRow
                           key={`${slotKey(ev)}-${ev.time}-${ev.recurrence}`}
                           ev={ev}
                           isHidden={hiddenSlotKeys?.has(slotKey(ev))}
-                          isSelected={selected.has(slotKey(ev))}
-                          onToggle={() => toggleKey(slotKey(ev))}
+                          onToggleHide={() => {
+                            const key = slotKey(ev)
+                            onHide([key], hiddenSlotKeys?.has(key) ? 'unhide' : 'hide')
+                          }}
                           onSave={onEditSlot}
                           language={language}
                         />
@@ -532,24 +665,10 @@ function BulkDeleteModal({ userEvents, onHide, hiddenSlotKeys, onUnhideAll, onCl
           </div>
         )}
 
-        <div className="cal-bulk-modal__footer">
-          <span className="cal-bulk-count">
-            {(hiddenSlotKeys?.size || 0) > 0 && (
-              <button className="cal-bulk-unhide-btn" onClick={onUnhideAll}>
-                {language === 'fr' ? `Afficher tout (${hiddenSlotKeys?.size || 0} masqué)` : `Show all (${hiddenSlotKeys?.size || 0} hidden)`}
-              </button>
-            )}
-          </span>
-          <button className="cal-bulk-cancel-btn" onClick={onClose}>
-            {language === 'fr' ? 'Fermer' : 'Close'}
-          </button>
-          <button
-            className="cal-bulk-delete-confirm-btn"
-            disabled={selected.size === 0}
-            onClick={() => onHide([...selected])}
-          >
-            <FaLayerGroup size={11} />
-            {language === 'fr' ? `Masquer (${selected.size || 0})` : `Hide (${selected.size || 0})`}
+        {/* Footer */}
+        <div className="mgr-footer">
+          <button className="mgr-done-btn" onClick={onClose}>
+            {language === 'fr' ? 'Terminé' : 'Done'}
           </button>
         </div>
       </div>
@@ -920,9 +1039,17 @@ export default function CalendarTab({ user, clubEvents = [] }) {
 
 
   // ── Bulk delete: remove all recurring slots for a given anchor event ──
-  const handleBulkHide = (slotKeys) => {
-    setHiddenSlotKeys(prev => new Set([...prev, ...slotKeys]))
-    setShowBulkDelete(false)
+  const handleBulkHide = (slotKeys, action) => {
+    if (action === 'unhide') {
+      setHiddenSlotKeys(prev => {
+        const next = new Set(prev)
+        slotKeys.forEach(k => next.delete(k))
+        return next
+      })
+    } else {
+      setHiddenSlotKeys(prev => new Set([...prev, ...slotKeys]))
+    }
+    // Don't close modal on individual toggle — only close on "Done"
   }
 
   const handleBulkUnhideAll = () => {
@@ -1235,7 +1362,7 @@ export default function CalendarTab({ user, clubEvents = [] }) {
           onSave={handleSaveEvent}
           onDelete={handleDeleteEvent}
           onClose={() => { setShowModal(false); setEditEvent(null); setPreselectedDate(null) }}
-          t={t} notifPrefs={notifPrefs} user={user}
+          t={t} notifPrefs={notifPrefs} user={user} language={language}
         />
       )}
 
