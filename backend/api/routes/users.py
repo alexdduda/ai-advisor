@@ -273,13 +273,17 @@ async def delete_user_account(user_id: str, req: Request, current_user_id: str =
         supabase = get_supabase()
 
         # Delete user data from all tables (cascade-order)
+        # SEC-10: Corrected table names to match actual Supabase schema.
+        # Previous names (user_current_courses, user_completed_courses, etc.)
+        # did not exist — deletions silently no-oped, leaving orphaned user data.
         tables_to_clear = [
             "user_clubs",
-            "user_current_courses",
-            "user_completed_courses",
-            "user_events",
-            "notifications",
+            "current_courses",
+            "completed_courses",
+            "calendar_events",
+            "notification_queue",
             "ai_cards",
+            "chat_history",
             "users",
         ]
         for table in tables_to_clear:
