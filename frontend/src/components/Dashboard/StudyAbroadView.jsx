@@ -537,9 +537,9 @@ export default function StudyAbroadView({ profile = {} }) {
         <>
           <div className="sa-stats">
             <span><b>150+</b> {t('sa.statPartners')}</span>
-            <span className="sa-stats-dot">\u00b7</span>
+            <span className="sa-stats-dot">·</span>
             <span><b>39</b> {t('sa.statCountries')}</span>
-            <span className="sa-stats-dot">\u00b7</span>
+            <span className="sa-stats-dot">·</span>
             <span><b>5</b> {t('sa.statTypes')}</span>
           </div>
 
