@@ -221,39 +221,39 @@
 .clubs-filter-row {
   margin-bottom: 16px;
 }
-.clubs-category-chips {
+.clubs-category-dropdown-wrap {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-.clubs-chip {
-  display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 5px 12px;
-  border: 1.5px solid;
-  border-radius: 20px;
-  font-size: 0.77rem;
-  cursor: pointer;
-  transition: filter 0.13s ease, box-shadow 0.13s ease;
-  font-family: inherit;
-}
-.clubs-chip--all {
+  gap: 7px;
+  padding: 8px 12px;
   background: var(--bg-primary, #fff);
+  border: 1.5px solid var(--border-secondary, #e5e7eb);
+  border-radius: 10px;
+  font-size: 0.82rem;
   color: var(--text-secondary, #6b7280);
-  border-color: var(--border-secondary, #e5e7eb);
-  font-weight: 600;
+  width: fit-content;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
-.clubs-chip--all:hover { color: var(--text-primary, #111827); border-color: var(--border-primary, #d1d5db); }
-.clubs-chip--all-active {
-  background: var(--bg-secondary, #f3f4f6);
+.clubs-category-dropdown-wrap:focus-within {
+  border-color: var(--accent-primary, #dc2626);
+  box-shadow: 0 0 0 3px var(--accent-lighter, #fee2e2);
+}
+.clubs-category-dropdown-icon {
+  flex-shrink: 0;
+  pointer-events: none;
+}
+.clubs-category-dropdown {
+  background: none;
+  border: none;
   color: var(--text-primary, #111827);
-  border-color: var(--border-primary, #d1d5db);
-  font-weight: 700;
+  font-size: 0.82rem;
+  font-family: inherit;
+  cursor: pointer;
+  outline: none;
+  font-weight: 600;
+  padding: 0;
+  min-width: 140px;
 }
-.clubs-chip--active { box-shadow: 0 0 0 2px currentColor; opacity: 1 !important; }
-.clubs-chip:not(.clubs-chip--all):not(.clubs-chip--all-active):hover { opacity: 1 !important; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-.clubs-chip__icon { display: inline-flex; align-items: center; font-size: 0.85em; }
 
 /* ── Results label ───────────────────────────────────────────── */
 .clubs-results-label {
@@ -695,6 +695,75 @@
 .clubs-modal__success h3 { font-size: 1.1rem; font-weight: 800; color: var(--text-primary, #111827); margin: 0; }
 .clubs-modal__success p { font-size: 0.85rem; color: var(--text-secondary, #6b7280); margin: 0 0 6px; max-width: 300px; }
 
+/* ── Visibility Badge ───────────────────────────────────────── */
+.club-card__badges,
+.club-drawer__badges { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.club-visibility-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  border: 1px solid;
+}
+.club-visibility-badge--private {
+  background: #fef3c7;
+  color: #92400e;
+  border-color: #fcd34d;
+}
+.club-visibility-badge--public {
+  background: #dcfce7;
+  color: #166534;
+  border-color: #86efac;
+}
+
+/* ── Visibility Toggle (Form) ───────────────────────────────── */
+.clubs-visibility-toggle {
+  display: flex;
+  gap: 0;
+  border: 1.5px solid var(--border-secondary, #e5e7eb);
+  border-radius: 9px;
+  overflow: hidden;
+  width: fit-content;
+}
+.clubs-visibility-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: var(--bg-primary, #fff);
+  border: none;
+  font-size: 0.83rem;
+  font-weight: 600;
+  color: var(--text-secondary, #6b7280);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s ease;
+}
+.clubs-visibility-option:first-child { border-right: 1.5px solid var(--border-secondary, #e5e7eb); }
+.clubs-visibility-option:hover { background: var(--bg-hover, #f9fafb); }
+.clubs-visibility-option.active {
+  background: var(--accent-lighter, #fee2e2);
+  color: var(--accent-primary, #dc2626);
+  font-weight: 700;
+}
+.clubs-field-hint {
+  font-size: 0.74rem;
+  color: var(--text-tertiary, #9ca3af);
+  font-style: italic;
+}
+
+/* ── Request to Join button variant ─────────────────────────── */
+.club-join-btn--request {
+  background: #92400e;
+  border-color: #92400e;
+}
+.club-join-btn--request:hover:not(:disabled) {
+  background: #78350f;
+}
+
 /* ── Load More ───────────────────────────────────────────────── */
 .clubs-load-more { display: flex; justify-content: center; padding: 24px 0 8px; }
 .clubs-load-more__btn {
@@ -717,6 +786,158 @@
 
 /* ── Spinner ─────────────────────────────────────────────────── */
 .btn-spinner { display: inline-block; width: 12px; height: 12px; border: 2px solid rgba(255,255,255,0.35); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; }
+
+/* ── My Clubs Sections ──────────────────────────────────────── */
+.clubs-mine__section {
+  margin-bottom: 24px;
+}
+.clubs-mine__section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-secondary, #6b7280);
+  margin: 0 0 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.clubs-mine__section-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  background: var(--bg-secondary, #f3f4f6);
+  color: var(--text-secondary, #6b7280);
+  font-size: 0.7rem;
+  font-weight: 700;
+  border-radius: 10px;
+}
+
+/* ── Created Club Row ───────────────────────────────────────── */
+.created-club-row {
+  border-left: 3px solid var(--accent-primary, #dc2626);
+}
+.club-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  background: var(--bg-secondary, #f3f4f6);
+  border: 1.5px solid var(--border-secondary, #e5e7eb);
+  border-radius: 7px;
+  font-size: 0.73rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--text-secondary, #6b7280);
+  font-family: inherit;
+  transition: all 0.13s;
+  white-space: nowrap;
+}
+.club-edit-btn:hover {
+  border-color: var(--accent-primary, #dc2626);
+  color: var(--accent-primary, #dc2626);
+  background: var(--accent-lighter, #fee2e2);
+}
+.club-manage-requests-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  background: #fef3c7;
+  border: 1.5px solid #fcd34d;
+  border-radius: 7px;
+  font-size: 0.73rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: #92400e;
+  font-family: inherit;
+  transition: all 0.13s;
+  white-space: nowrap;
+}
+.club-manage-requests-btn:hover {
+  background: #fde68a;
+  border-color: #f59e0b;
+}
+.club-request-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  background: #dc2626;
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 800;
+  border-radius: 8px;
+}
+
+/* ── Tab Notification Badge ─────────────────────────────────── */
+.clubs-tab-notification {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  background: #dc2626;
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 800;
+  border-radius: 9px;
+  margin-left: 4px;
+  animation: pulse-badge 2s ease infinite;
+}
+@keyframes pulse-badge {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+/* ── Join Requests List ─────────────────────────────────────── */
+.join-requests-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.join-request-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--bg-secondary, #f3f4f6);
+  border: 1.5px solid var(--border-secondary, #e5e7eb);
+  border-radius: 10px;
+}
+.join-request-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.join-request-name {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-primary, #111827);
+}
+.join-request-date {
+  font-size: 0.73rem;
+  color: var(--text-tertiary, #9ca3af);
+}
+.join-request-actions {
+  display: flex;
+  gap: 6px;
+}
+.join-request-approve {
+  padding: 5px 12px !important;
+  font-size: 0.75rem !important;
+}
+.join-request-deny {
+  padding: 5px 12px !important;
+  font-size: 0.75rem !important;
+}
 
 /* ── Responsive ──────────────────────────────────────────────── */
 @media (max-width: 640px) {

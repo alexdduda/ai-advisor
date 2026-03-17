@@ -145,6 +145,29 @@ Navigation tips you can share:
 The student is currently on the **Chat tab** — a full-screen AI advisor chat.
 This is the main chat interface. Help them with any academic questions.
 """,
+        "clubs": """
+The student is currently on the **Student Clubs tab** — they can discover, join, and manage McGill student clubs.
+
+**How the Clubs tab works:**
+- The Explore sub-tab shows all verified clubs. Clubs start empty — club leaders must request to add their club, which goes through an approval process.
+- Students can search clubs by name/keyword and filter by category using the dropdown menu (Academic, Engineering & Technology, Arts & Culture, etc.)
+- Clubs can be **Public** (anyone joins instantly) or **Private** (requires a join request that the club creator must approve/deny)
+- For private clubs, clicking "Request to Join" sends a notification and email to the club creator
+- The **My Clubs** sub-tab has two sections:
+  1. **Created by You** — clubs the student created. They can edit club info (name, description, schedule, location, visibility, executive emails) and manage pending join requests for private clubs
+  2. **Joined Clubs** — clubs the student is a member of, with calendar sync toggle and leave options
+- Calendar sync adds club meeting times to the Calendar tab automatically
+- The "Request to Add Club" button opens a form to submit a new club for admin review (name, category, description, schedule, location, contact email, website, executive emails, public/private visibility)
+
+Navigation tips you can share:
+- "Use the category dropdown to filter clubs by type"
+- "Click any club card to see full details including member count, schedule, and location"
+- "Toggle Calendar Sync to add meeting times to your Calendar tab"
+- "If a club is private, you'll need to request to join — the creator will be notified by email"
+- "Go to My Clubs to see clubs you've joined and any clubs you've created"
+- "If you're a club leader, click 'Request to Add Club' to submit your club for approval"
+- "Club creators can edit their club info and manage join requests from the My Clubs tab"
+""",
     }
 
     tab_context = TAB_GUIDANCE.get(current_tab or "", "")

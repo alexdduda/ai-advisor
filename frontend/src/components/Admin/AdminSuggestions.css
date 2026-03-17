@@ -227,3 +227,83 @@
   background: #e5e7eb;
   color: #374151;
 }
+
+/* ── Admin Tabs ──────────────────────────────── */
+.admin-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 2px solid #e5e7eb;
+  margin-bottom: 24px;
+}
+.admin-tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 11px 20px;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #9ca3af;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.admin-tab-btn:hover { color: #111827; }
+.admin-tab-btn.active { color: #ED1B2F; border-bottom-color: #ED1B2F; }
+.admin-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  background: #dc2626;
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 800;
+  border-radius: 9px;
+}
+
+/* ── Club Submission Details ──────────────────── */
+.club-sub-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+.club-sub-badge.private { background: #fef3c7; color: #92400e; }
+.club-sub-badge.public { background: #dcfce7; color: #166534; }
+.club-sub-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.club-sub-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  background: #ede9fe;
+  color: #7c3aed;
+  border-radius: 10px;
+  font-size: 0.73rem;
+  font-weight: 700;
+}
+.club-sub-meta {
+  font-size: 0.78rem;
+  color: #6b7280;
+}
+.club-sub-desc {
+  font-size: 0.85rem;
+  color: #374151;
+  line-height: 1.5;
+  margin: 4px 0 6px;
+}

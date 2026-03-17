@@ -155,8 +155,7 @@ async def app_exception_handler(request: Request, exc: AppException):
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     """Handler for Pydantic validation errors"""
     logger.warning(
-        f"Validation error on {request.url.path}",
-        extra={"errors": exc.errors()}
+        f"Validation error on {request.url.path}: {exc.errors()}"
     )
     
     return JSONResponse(

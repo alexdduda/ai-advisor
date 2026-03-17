@@ -4,7 +4,8 @@ import {
   FaPlus, FaTimes, FaExternalLinkAlt, FaChevronRight,
   FaEnvelope, FaCheck, FaBell,
   FaChevronDown, FaChevronLeft, FaStar,
-  FaBook, FaPalette, FaGraduationCap
+  FaBook, FaPalette, FaGraduationCap,
+  FaLock, FaGlobe, FaEdit, FaUserPlus, FaUserCheck, FaUserTimes
 } from 'react-icons/fa'
 import { useLanguage } from '../../contexts/LanguageContext'
 import clubsAPI from '../../lib/clubsAPI'
@@ -27,7 +28,6 @@ const CATEGORY_META = {
   'Default':                 { color: 'var(--text-secondary)', bg: 'var(--bg-tertiary)', border: 'var(--border-secondary)', icon: <FaGraduationCap /> },
 }
 
-// Map English category keys to translation keys
 const CATEGORY_I18N_KEY = {
   'Academic':                'clubs.catAcademic',
   'Engineering & Technology':'clubs.catEngineering',
@@ -74,6 +74,7 @@ function ClubDetailDrawer({ club, liveClub, joined, calSynced, onJoin, onLeave, 
   const display = liveClub ? { ...club, ...liveClub } : club
   const meta = getCat(display.category)
   const isLoading = clubLoading[club.id] ?? false
+  const isPrivate = display.is_private ?? false
 
   return (
     <div className="club-drawer-overlay" onClick={onClose}>
@@ -89,13 +90,28 @@ function ClubDetailDrawer({ club, liveClub, joined, calSynced, onJoin, onLeave, 
             <ClubAvatar name={display.name} category={display.category} size="lg" />
             <div className="club-drawer__strip-text">
               <h2 className="club-drawer__name">{display.name}</h2>
-              <CategoryBadge category={display.category} size="md" t={t} />
+              <div className="club-drawer__badges">
+                <CategoryBadge category={display.category} size="md" t={t} />
+                {isPrivate ? (
+                  <span className="club-visibility-badge club-visibility-badge--private">
+                    <FaLock size={9} /> {t('clubs.private')}
+                  </span>
+                ) : (
+                  <span className="club-visibility-badge club-visibility-badge--public">
+                    <FaGlobe size={9} /> {t('clubs.public')}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
           <div className="club-drawer__strip-actions">
             {joined ? (
               <button className="club-action-btn club-action-btn--leave" onClick={() => onLeave(club.id)} disabled={isLoading}>
                 <FaTimes size={12} /> {t('clubs.leaveClub')}
+              </button>
+            ) : isPrivate ? (
+              <button className="club-action-btn club-action-btn--join" onClick={() => onJoin(club.id)} disabled={isLoading}>
+                <FaLock size={12} /> {t('clubs.requestJoinBtn')}
               </button>
             ) : (
               <button className="club-action-btn club-action-btn--join" onClick={() => onJoin(club.id)} disabled={isLoading}>
@@ -187,6 +203,7 @@ function ClubCard({ club, joined, calSynced, onJoin, onLeave, onToggleCalendar, 
   const meta = getCat(club.category)
   const [justJoined, setJustJoined] = useState(false)
   const isLoading = clubLoading[club.id] ?? false
+  const isPrivate = club.is_private ?? false
 
   const handleJoin = async (e) => {
     e.stopPropagation()
@@ -208,7 +225,14 @@ function ClubCard({ club, joined, calSynced, onJoin, onLeave, onToggleCalendar, 
           <ClubAvatar name={club.name} category={club.category} size="md" />
           <div className="club-card__info">
             <h3 className="club-card__name">{club.name}</h3>
-            <CategoryBadge category={club.category} t={t} />
+            <div className="club-card__badges">
+              <CategoryBadge category={club.category} t={t} />
+              {isPrivate && (
+                <span className="club-visibility-badge club-visibility-badge--private">
+                  <FaLock size={9} /> {t('clubs.private')}
+                </span>
+              )}
+            </div>
           </div>
         </div>
         {club.description && (
@@ -245,14 +269,16 @@ function ClubCard({ club, joined, calSynced, onJoin, onLeave, onToggleCalendar, 
           </div>
         ) : (
           <button
-            className={`club-join-btn ${justJoined ? 'done' : ''}`}
+            className={`club-join-btn ${justJoined ? 'done' : ''} ${isPrivate ? 'club-join-btn--request' : ''}`}
             onClick={handleJoin}
             disabled={isLoading}
             style={justJoined ? { background: meta.color, borderColor: meta.color } : {}}
           >
             {justJoined
-              ? <><FaCheck size={10} /> {t('clubs.joinedBtn')}</>
-              : <><FaPlus size={10} /> {t('clubs.joinBtn')}</>}
+              ? <><FaCheck size={10} /> {isPrivate ? t('clubs.requestedBtn') : t('clubs.joinedBtn')}</>
+              : isPrivate
+                ? <><FaLock size={10} /> {t('clubs.requestJoinBtn')}</>
+                : <><FaPlus size={10} /> {t('clubs.joinBtn')}</>}
           </button>
         )}
         <button className="club-card__open-btn" onClick={() => onOpen(club)} title="View details">
@@ -296,8 +322,252 @@ function MyClubRow({ club, calSynced, onLeave, onToggleCalendar, onOpen, clubLoa
   )
 }
 
+function CreatedClubRow({ club, onEdit, onManageRequests, pendingCount, t }) {
+  const meta = getCat(club.category)
+  return (
+    <div className="my-club-row created-club-row">
+      <ClubAvatar name={club.name} category={club.category} size="sm" />
+      <div className="my-club-row__info">
+        <span className="my-club-row__name">{club.name}</span>
+        <CategoryBadge category={club.category} t={t} />
+        {club.is_private && (
+          <span className="club-visibility-badge club-visibility-badge--private">
+            <FaLock size={9} /> {t('clubs.private')}
+          </span>
+        )}
+      </div>
+      <div className="my-club-row__right" onClick={e => e.stopPropagation()}>
+        {club.member_count != null && (
+          <span className="my-club-row__schedule"><FaUsers size={10} /> {club.member_count} {t('clubs.members').toLowerCase()}</span>
+        )}
+        {club.is_private && (
+          <button className="club-manage-requests-btn" onClick={() => onManageRequests(club)}>
+            <FaUserPlus size={10} /> {t('clubs.requests')}
+            {pendingCount > 0 && <span className="club-request-badge">{pendingCount}</span>}
+          </button>
+        )}
+        <button className="club-edit-btn" onClick={() => onEdit(club)}>
+          <FaEdit size={10} /> {t('clubs.editBtn')}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function JoinRequestsModal({ club, onClose, onAction, t }) {
+  const [requests, setRequests] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [actionLoading, setActionLoading] = useState({})
+
+  useEffect(() => {
+    if (!club) return
+    setLoading(true)
+    clubsAPI.getJoinRequests(club.id)
+      .then(data => setRequests(data.requests || []))
+      .finally(() => setLoading(false))
+  }, [club])
+
+  const handleAction = async (reqId, action) => {
+    setActionLoading(prev => ({ ...prev, [reqId]: true }))
+    try {
+      await clubsAPI.handleJoinRequest(reqId, action)
+      setRequests(prev => prev.filter(r => r.id !== reqId))
+      if (onAction) onAction()
+    } catch { /* silent */ }
+    finally { setActionLoading(prev => ({ ...prev, [reqId]: false })) }
+  }
+
+  return (
+    <div className="clubs-modal-overlay" onClick={onClose}>
+      <div className="clubs-modal" onClick={e => e.stopPropagation()}>
+        <div className="clubs-modal__header">
+          <div className="clubs-modal__header-left">
+            <span className="clubs-modal__icon"><FaUserPlus size={22} /></span>
+            <div>
+              <h2>{t('clubs.joinRequestsTitle')}</h2>
+              <p>{club?.name}</p>
+            </div>
+          </div>
+          <button className="clubs-modal__close" onClick={onClose}><FaTimes /></button>
+        </div>
+        <div className="clubs-modal__body">
+          {loading ? (
+            <div className="clubs-loading" style={{ padding: '40px 20px' }}><div className="clubs-spinner" /></div>
+          ) : requests.length === 0 ? (
+            <div className="clubs-empty" style={{ padding: '40px 20px' }}>
+              <FaUserCheck size={36} style={{ opacity: 0.2 }} />
+              <h3>{t('clubs.noRequests')}</h3>
+              <p>{t('clubs.noRequestsDesc')}</p>
+            </div>
+          ) : (
+            <div className="join-requests-list">
+              {requests.map(req => (
+                <div key={req.id} className="join-request-row">
+                  <div className="join-request-info">
+                    <span className="join-request-name">{req.requester_name || 'Unknown'}</span>
+                    <span className="join-request-date">{new Date(req.created_at).toLocaleDateString()}</span>
+                  </div>
+                  <div className="join-request-actions">
+                    <button
+                      className="club-action-btn club-action-btn--join join-request-approve"
+                      onClick={() => handleAction(req.id, 'approve')}
+                      disabled={actionLoading[req.id]}
+                    >
+                      <FaUserCheck size={11} /> {t('clubs.approve')}
+                    </button>
+                    <button
+                      className="club-action-btn club-action-btn--leave join-request-deny"
+                      onClick={() => handleAction(req.id, 'deny')}
+                      disabled={actionLoading[req.id]}
+                    >
+                      <FaUserTimes size={11} /> {t('clubs.deny')}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function EditClubModal({ club, onClose, onSave, t }) {
+  const [form, setForm] = useState({
+    name: club?.name || '',
+    category: club?.category || '',
+    description: club?.description || '',
+    meeting_schedule: club?.meeting_schedule || '',
+    website_url: club?.website_url || '',
+    contact_email: club?.contact_email || '',
+    location: club?.location || '',
+    is_private: club?.is_private ?? false,
+    executive_emails: club?.executive_emails || '',
+  })
+  const [submitting, setSubmitting] = useState(false)
+  const [errors, setErrors] = useState({})
+  const set = key => val => setForm(f => ({ ...f, [key]: val }))
+
+  const validate = () => {
+    const e = {}
+    if (!form.name.trim()) e.name = t('clubs.required')
+    if (!form.description.trim()) e.description = t('clubs.required')
+    setErrors(e)
+    return Object.keys(e).length === 0
+  }
+
+  const handleSubmit = async (ev) => {
+    ev.preventDefault()
+    if (!validate()) return
+    setSubmitting(true)
+    try {
+      await onSave(club.id, form)
+      onClose()
+    } catch { /* silent */ }
+    finally { setSubmitting(false) }
+  }
+
+  return (
+    <div className="clubs-modal-overlay" onClick={onClose}>
+      <div className="clubs-modal" onClick={e => e.stopPropagation()}>
+        <div className="clubs-modal__header">
+          <div className="clubs-modal__header-left">
+            <span className="clubs-modal__icon"><FaEdit size={22} /></span>
+            <div>
+              <h2>{t('clubs.editModalTitle')}</h2>
+              <p>{t('clubs.editModalSub')}</p>
+            </div>
+          </div>
+          <button className="clubs-modal__close" onClick={onClose}><FaTimes /></button>
+        </div>
+        <form className="clubs-modal__body" onSubmit={handleSubmit} noValidate>
+          <div className={`clubs-field ${errors.name ? 'error' : ''}`}>
+            <label>{t('clubs.fieldName')} <span className="req">*</span></label>
+            <input value={form.name} onChange={e => set('name')(e.target.value)} placeholder={t('clubs.fieldNamePlaceholder')} />
+            {errors.name && <span className="clubs-field-error">{errors.name}</span>}
+          </div>
+          <div className="clubs-field-row">
+            <div className="clubs-field">
+              <label>{t('clubs.fieldCategory')}</label>
+              <select value={form.category} onChange={e => set('category')(e.target.value)}>
+                <option value="">{t('clubs.fieldCategoryDefault')}</option>
+                {Object.keys(CATEGORY_META).filter(k => k !== 'Default').map(c => (
+                  <option key={c} value={c}>{t(CATEGORY_I18N_KEY[c] || c) || c}</option>
+                ))}
+              </select>
+            </div>
+            <div className="clubs-field">
+              <label>{t('clubs.fieldLocation')}</label>
+              <input value={form.location} onChange={e => set('location')(e.target.value)} placeholder={t('clubs.fieldLocationPlaceholder')} />
+            </div>
+          </div>
+          <div className={`clubs-field ${errors.description ? 'error' : ''}`}>
+            <label>{t('clubs.fieldDesc')} <span className="req">*</span></label>
+            <textarea value={form.description} onChange={e => set('description')(e.target.value)} rows={3} placeholder={t('clubs.fieldDescPlaceholder')} />
+            {errors.description && <span className="clubs-field-error">{errors.description}</span>}
+          </div>
+          <div className="clubs-field-row">
+            <div className="clubs-field">
+              <label>{t('clubs.fieldSchedule')}</label>
+              <input value={form.meeting_schedule} onChange={e => set('meeting_schedule')(e.target.value)} placeholder={t('clubs.fieldSchedulePlaceholder')} />
+            </div>
+            <div className="clubs-field">
+              <label>{t('clubs.fieldEmail')}</label>
+              <input type="email" value={form.contact_email} onChange={e => set('contact_email')(e.target.value)} placeholder="club@mail.mcgill.ca" />
+            </div>
+          </div>
+          <div className="clubs-field">
+            <label>{t('clubs.fieldUrl')}</label>
+            <input type="url" value={form.website_url} onChange={e => set('website_url')(e.target.value)} placeholder="https://..." />
+          </div>
+          <div className="clubs-field">
+            <label>{t('clubs.fieldExecEmails')}</label>
+            <textarea value={form.executive_emails} onChange={e => set('executive_emails')(e.target.value)} rows={2} placeholder={t('clubs.fieldExecEmailsPlaceholder')} />
+            <span className="clubs-field-hint">{t('clubs.fieldExecEmailsHint')}</span>
+          </div>
+          <div className="clubs-field">
+            <label>{t('clubs.fieldVisibility')}</label>
+            <div className="clubs-visibility-toggle">
+              <button
+                type="button"
+                className={`clubs-visibility-option ${!form.is_private ? 'active' : ''}`}
+                onClick={() => set('is_private')(false)}
+              >
+                <FaGlobe size={12} /> {t('clubs.visibilityPublic')}
+              </button>
+              <button
+                type="button"
+                className={`clubs-visibility-option ${form.is_private ? 'active' : ''}`}
+                onClick={() => set('is_private')(true)}
+              >
+                <FaLock size={11} /> {t('clubs.visibilityPrivate')}
+              </button>
+            </div>
+            <span className="clubs-field-hint">
+              {form.is_private ? t('clubs.visibilityPrivateHint') : t('clubs.visibilityPublicHint')}
+            </span>
+          </div>
+          <div className="clubs-modal__footer">
+            <button type="button" className="club-action-btn club-action-btn--ghost" onClick={onClose}>{t('clubs.cancel')}</button>
+            <button type="submit" className="club-action-btn club-action-btn--join" disabled={submitting}>
+              {submitting
+                ? <><span className="btn-spinner" /> {t('clubs.saving')}</>
+                : <><FaCheck size={12} /> {t('clubs.saveChanges')}</>}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
 function SubmitClubModal({ onClose, onSubmit, t }) {
-  const [form, setForm] = useState({ name: '', category: '', description: '', meeting_schedule: '', website_url: '', contact_email: '', location: '' })
+  const [form, setForm] = useState({
+    name: '', category: '', description: '', meeting_schedule: '',
+    website_url: '', contact_email: '', location: '', is_private: false,
+    executive_emails: '',
+  })
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone] = useState(false)
   const [errors, setErrors] = useState({})
@@ -327,8 +597,8 @@ function SubmitClubModal({ onClose, onSubmit, t }) {
           <div className="clubs-modal__header-left">
             <span className="clubs-modal__icon"><FaGraduationCap size={22} /></span>
             <div>
-              <h2>{t('clubs.submitModalTitle')}</h2>
-              <p>{t('clubs.submitModalSub')}</p>
+              <h2>{t('clubs.requestModalTitle')}</h2>
+              <p>{t('clubs.requestModalSub')}</p>
             </div>
           </div>
           <button className="clubs-modal__close" onClick={onClose}><FaTimes /></button>
@@ -379,7 +649,34 @@ function SubmitClubModal({ onClose, onSubmit, t }) {
             </div>
             <div className="clubs-field">
               <label>{t('clubs.fieldUrl')}</label>
-              <input type="url" value={form.website_url} onChange={e => set('website_url')(e.target.value)} placeholder="https://\u2026" />
+              <input type="url" value={form.website_url} onChange={e => set('website_url')(e.target.value)} placeholder="https://..." />
+            </div>
+            <div className="clubs-field">
+              <label>{t('clubs.fieldExecEmails')}</label>
+              <textarea value={form.executive_emails} onChange={e => set('executive_emails')(e.target.value)} rows={2} placeholder={t('clubs.fieldExecEmailsPlaceholder')} />
+              <span className="clubs-field-hint">{t('clubs.fieldExecEmailsHint')}</span>
+            </div>
+            <div className="clubs-field">
+              <label>{t('clubs.fieldVisibility')}</label>
+              <div className="clubs-visibility-toggle">
+                <button
+                  type="button"
+                  className={`clubs-visibility-option ${!form.is_private ? 'active' : ''}`}
+                  onClick={() => set('is_private')(false)}
+                >
+                  <FaGlobe size={12} /> {t('clubs.visibilityPublic')}
+                </button>
+                <button
+                  type="button"
+                  className={`clubs-visibility-option ${form.is_private ? 'active' : ''}`}
+                  onClick={() => set('is_private')(true)}
+                >
+                  <FaLock size={11} /> {t('clubs.visibilityPrivate')}
+                </button>
+              </div>
+              <span className="clubs-field-hint">
+                {form.is_private ? t('clubs.visibilityPrivateHint') : t('clubs.visibilityPublicHint')}
+              </span>
             </div>
             <div className="clubs-modal__footer">
               <button type="button" className="club-action-btn club-action-btn--ghost" onClick={onClose}>{t('clubs.cancel')}</button>
@@ -404,6 +701,8 @@ export default function ClubsTab({ user, onClubEventsChange }) {
   const [clubs, setClubs] = useState([])
   const [categories, setCategories] = useState([])
   const [myClubs, setMyClubs] = useState([])
+  const [createdClubs, setCreatedClubs] = useState([])
+  const [pendingCounts, setPendingCounts] = useState({})
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('')
@@ -418,6 +717,8 @@ export default function ClubsTab({ user, onClubEventsChange }) {
   const [loadingMore, setLoadingMore] = useState(false)
   const [showSubmitModal, setShowSubmitModal] = useState(false)
   const [openClub, setOpenClub] = useState(null)
+  const [editingClub, setEditingClub] = useState(null)
+  const [managingRequestsClub, setManagingRequestsClub] = useState(null)
   const [joinToast, setJoinToast] = useState(null)
   const debounceRef = useRef(null)
   const isMounted = useRef(true)
@@ -466,6 +767,27 @@ export default function ClubsTab({ user, onClubEventsChange }) {
     finally { if (isMounted.current) setMyClubsLoading(false) }
   }, [user?.id, onClubEventsChange])
 
+  const fetchCreatedClubs = useCallback(async () => {
+    if (!user?.id) return
+    try {
+      const data = await clubsAPI.getCreatedClubs(user.id)
+      const list = Array.isArray(data) ? data : data.clubs ?? []
+      if (!isMounted.current) return
+      setCreatedClubs(list)
+      // Fetch pending counts for private clubs
+      const counts = {}
+      for (const club of list) {
+        if (club.is_private) {
+          try {
+            const reqData = await clubsAPI.getJoinRequests(club.id)
+            counts[club.id] = (reqData.requests || []).length
+          } catch { counts[club.id] = 0 }
+        }
+      }
+      if (isMounted.current) setPendingCounts(counts)
+    } catch { /* silent */ }
+  }, [user?.id])
+
   const fetchCategories = useCallback(async () => {
     try {
       const data = await clubsAPI.getCategories()
@@ -475,6 +797,7 @@ export default function ClubsTab({ user, onClubEventsChange }) {
 
   useEffect(() => { setPage(1); fetchClubs(1) }, [fetchClubs])
   useEffect(() => { fetchMyClubs() }, [fetchMyClubs])
+  useEffect(() => { fetchCreatedClubs() }, [fetchCreatedClubs])
   useEffect(() => { fetchCategories() }, [fetchCategories])
 
   useEffect(() => {
@@ -489,15 +812,18 @@ export default function ClubsTab({ user, onClubEventsChange }) {
     if (!user?.id) return
     setClubBusy(clubId, true)
     try {
-      await clubsAPI.joinClub(user.id, clubId)
-      await fetchMyClubs()
-      setClubs(prev => prev.map(c => c.id === clubId ? { ...c, member_count: (c.member_count ?? 0) + 1 } : c))
-      if (openClub?.id === clubId) setOpenClub(prev => prev ? { ...prev, member_count: (prev.member_count ?? 0) + 1 } : prev)
-      const club = clubs.find(c => c.id === clubId)
-      if (club) {
-        setJoinToast(t('clubs.joinedToast').replace('{name}', club.name))
-        setTimeout(() => { if (isMounted.current) setJoinToast(null) }, 3000)
+      const result = await clubsAPI.joinClub(user.id, clubId)
+      if (result.status === 'requested') {
+        const club = clubs.find(c => c.id === clubId)
+        setJoinToast(t('clubs.requestSentToast').replace('{name}', club?.name || 'club'))
+      } else {
+        await fetchMyClubs()
+        setClubs(prev => prev.map(c => c.id === clubId ? { ...c, member_count: (c.member_count ?? 0) + 1 } : c))
+        if (openClub?.id === clubId) setOpenClub(prev => prev ? { ...prev, member_count: (prev.member_count ?? 0) + 1 } : prev)
+        const club = clubs.find(c => c.id === clubId)
+        if (club) setJoinToast(t('clubs.joinedToast').replace('{name}', club.name))
       }
+      setTimeout(() => { if (isMounted.current) setJoinToast(null) }, 3000)
     } catch (e) { setError(e.message) }
     finally { setClubBusy(clubId, false) }
   }
@@ -527,6 +853,11 @@ export default function ClubsTab({ user, onClubEventsChange }) {
     await clubsAPI.submitClub({ ...formData, submitted_by: user?.id })
   }
 
+  const handleEditClub = async (clubId, formData) => {
+    await clubsAPI.editClub(clubId, formData)
+    await fetchCreatedClubs()
+  }
+
   const displayClubs = useMemo(() => {
     let list = [...clubs]
     if (sortMode === 'members') list.sort((a, b) => (b.member_count ?? 0) - (a.member_count ?? 0))
@@ -545,6 +876,11 @@ export default function ClubsTab({ user, onClubEventsChange }) {
     return map
   }, [clubs])
 
+  const totalPendingRequests = useMemo(() =>
+    Object.values(pendingCounts).reduce((sum, c) => sum + c, 0),
+    [pendingCounts]
+  )
+
   return (
     <div className="clubs-tab">
       {joinToast && <div className="clubs-toast"><FaCheck size={12} /> {joinToast}</div>}
@@ -558,7 +894,7 @@ export default function ClubsTab({ user, onClubEventsChange }) {
           </div>
         </div>
         <button className="clubs-submit-btn" onClick={() => setShowSubmitModal(true)}>
-          <FaPlus size={11} /> {t('clubs.submitBtn')}
+          <FaPlus size={11} /> {t('clubs.requestAddBtn')}
         </button>
       </div>
 
@@ -568,7 +904,12 @@ export default function ClubsTab({ user, onClubEventsChange }) {
         </button>
         <button className={`clubs-tab-btn ${activeView === 'my-clubs' ? 'active' : ''}`} onClick={() => setActiveView('my-clubs')}>
           <FaHeart size={12} /> {t('clubs.tabMine')}
-          {resolvedMyClubs.length > 0 && <span className="clubs-tab-count">{resolvedMyClubs.length}</span>}
+          {(resolvedMyClubs.length > 0 || createdClubs.length > 0) && (
+            <span className="clubs-tab-count">{resolvedMyClubs.length + createdClubs.length}</span>
+          )}
+          {totalPendingRequests > 0 && (
+            <span className="clubs-tab-notification">{totalPendingRequests}</span>
+          )}
         </button>
       </div>
 
@@ -598,26 +939,21 @@ export default function ClubsTab({ user, onClubEventsChange }) {
 
           {categories.length > 0 && (
             <div className="clubs-filter-row">
-              <div className="clubs-category-chips">
-                <button
-                  className={`clubs-chip ${!selectedCategory ? 'clubs-chip--all-active' : 'clubs-chip--all'}`}
-                  onClick={() => setSelectedCategory('')}
-                >{t('clubs.filterAll')}</button>
-                {categories.map(cat => {
-                  const meta = getCat(cat)
-                  const active = selectedCategory === cat
-                  const label = t(CATEGORY_I18N_KEY[cat] || cat) || cat
-                  return (
-                    <button
-                      key={cat}
-                      className={`clubs-chip ${active ? 'clubs-chip--active' : ''}`}
-                      style={{ background: meta.bg, color: meta.color, borderColor: active ? meta.color : meta.border, fontWeight: active ? 700 : 500, opacity: active ? 1 : 0.75 }}
-                      onClick={() => setSelectedCategory(p => p === cat ? '' : cat)}
-                    >
-                      <span className="clubs-chip__icon">{meta.icon}</span> {label}
-                    </button>
-                  )
-                })}
+              <div className="clubs-category-dropdown-wrap">
+                <FaChevronDown size={11} className="clubs-category-dropdown-icon" />
+                <select
+                  className="clubs-category-dropdown"
+                  value={selectedCategory}
+                  onChange={e => setSelectedCategory(e.target.value)}
+                >
+                  <option value="">{t('clubs.filterAll')}</option>
+                  {categories.map(cat => {
+                    const label = t(CATEGORY_I18N_KEY[cat] || cat) || cat
+                    return (
+                      <option key={cat} value={cat}>{label}</option>
+                    )
+                  })}
+                </select>
               </div>
             </div>
           )}
@@ -628,9 +964,12 @@ export default function ClubsTab({ user, onClubEventsChange }) {
             <div className="clubs-loading"><div className="clubs-spinner" /><p>{t('clubs.loading')}</p></div>
           ) : displayClubs.length === 0 ? (
             <div className="clubs-empty">
-              <div className="clubs-empty__visual"><FaSearch size={52} /></div>
-              <h3>{t('clubs.noResults')}</h3>
-              <p>{t('clubs.noResultsHint')} <button className="clubs-empty__link" onClick={() => setShowSubmitModal(true)}>{t('clubs.noResultsSubmit')}</button>.</p>
+              <div className="clubs-empty__visual"><FaUsers size={52} /></div>
+              <h3>{t('clubs.noClubsYet')}</h3>
+              <p>{t('clubs.noClubsYetDesc')}</p>
+              <button className="club-action-btn club-action-btn--join" onClick={() => setShowSubmitModal(true)}>
+                <FaPlus size={11} /> {t('clubs.requestAddBtn')}
+              </button>
             </div>
           ) : (
             <>
@@ -674,30 +1013,63 @@ export default function ClubsTab({ user, onClubEventsChange }) {
         <div className="clubs-mine">
           {myClubsLoading ? (
             <div className="clubs-loading"><div className="clubs-spinner" /><p>{t('clubs.loadingMine')}</p></div>
-          ) : resolvedMyClubs.length === 0 ? (
-            <div className="clubs-empty">
-              <div className="clubs-empty__visual" style={{ opacity: 0.2 }}><FaHeart size={52} /></div>
-              <h3>{t('clubs.noJoined')}</h3>
-              <p>{t('clubs.noJoinedHint')}</p>
-              <button className="club-action-btn club-action-btn--join" onClick={() => setActiveView('explore')}>
-                <FaSearch size={13} /> {t('clubs.browseBtn')}
-              </button>
-            </div>
           ) : (
-            <div className="clubs-mine__list">
-              {resolvedMyClubs.map(({ club, calendar_synced }) => (
-                <MyClubRow
-                  key={club.id}
-                  club={club}
-                  calSynced={calendar_synced}
-                  onLeave={handleLeave}
-                  onToggleCalendar={handleToggleCalendar}
-                  onOpen={setOpenClub}
-                  clubLoading={clubLoading}
-                  t={t}
-                />
-              ))}
-            </div>
+            <>
+              {/* Created Clubs Section */}
+              {createdClubs.length > 0 && (
+                <div className="clubs-mine__section">
+                  <h3 className="clubs-mine__section-title">
+                    <FaStar size={13} /> {t('clubs.createdByYou')}
+                    <span className="clubs-mine__section-count">{createdClubs.length}</span>
+                  </h3>
+                  <div className="clubs-mine__list">
+                    {createdClubs.map(club => (
+                      <CreatedClubRow
+                        key={club.id}
+                        club={club}
+                        onEdit={setEditingClub}
+                        onManageRequests={setManagingRequestsClub}
+                        pendingCount={pendingCounts[club.id] || 0}
+                        t={t}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Joined Clubs Section */}
+              <div className="clubs-mine__section">
+                <h3 className="clubs-mine__section-title">
+                  <FaHeart size={13} /> {t('clubs.joinedClubs')}
+                  {resolvedMyClubs.length > 0 && <span className="clubs-mine__section-count">{resolvedMyClubs.length}</span>}
+                </h3>
+                {resolvedMyClubs.length === 0 ? (
+                  <div className="clubs-empty" style={{ padding: '40px 20px' }}>
+                    <div className="clubs-empty__visual" style={{ opacity: 0.2 }}><FaHeart size={42} /></div>
+                    <h3>{t('clubs.noJoined')}</h3>
+                    <p>{t('clubs.noJoinedHint')}</p>
+                    <button className="club-action-btn club-action-btn--join" onClick={() => setActiveView('explore')}>
+                      <FaSearch size={13} /> {t('clubs.browseBtn')}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="clubs-mine__list">
+                    {resolvedMyClubs.map(({ club, calendar_synced }) => (
+                      <MyClubRow
+                        key={club.id}
+                        club={club}
+                        calSynced={calendar_synced}
+                        onLeave={handleLeave}
+                        onToggleCalendar={handleToggleCalendar}
+                        onOpen={setOpenClub}
+                        clubLoading={clubLoading}
+                        t={t}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
           )}
         </div>
       )}
@@ -719,6 +1091,19 @@ export default function ClubsTab({ user, onClubEventsChange }) {
 
       {showSubmitModal && (
         <SubmitClubModal onClose={() => setShowSubmitModal(false)} onSubmit={handleSubmitClub} t={t} />
+      )}
+
+      {editingClub && (
+        <EditClubModal club={editingClub} onClose={() => setEditingClub(null)} onSave={handleEditClub} t={t} />
+      )}
+
+      {managingRequestsClub && (
+        <JoinRequestsModal
+          club={managingRequestsClub}
+          onClose={() => setManagingRequestsClub(null)}
+          onAction={() => { fetchCreatedClubs(); fetchMyClubs() }}
+          t={t}
+        />
       )}
     </div>
   )

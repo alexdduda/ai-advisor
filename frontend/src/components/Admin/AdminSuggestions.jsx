@@ -78,7 +78,6 @@ export default function AdminSuggestions() {
         body: JSON.stringify({ status }),
       })
       if (!res.ok) throw new Error()
-      // Remove from list if filtering by pending
       if (filter === 'pending') {
         setSuggestions((prev) => prev.filter((s) => s.id !== id))
       } else {
@@ -94,7 +93,7 @@ export default function AdminSuggestions() {
   if (!authed) {
     return (
       <div className="admin-login">
-        <h2><FaFlag /> Admin — Prof Suggestions</h2>
+        <h2><FaFlag /> Admin Panel</h2>
         <form onSubmit={login}>
           <input
             type="password"
@@ -120,25 +119,15 @@ export default function AdminSuggestions() {
 
   return (
     <div className="admin-page">
+      {error && <div className="admin-error-banner">{error}</div>}
+
       <div className="admin-header">
         <h2><FaFlag /> Professor Suggestions</h2>
         <div className="admin-filter">
-          <button
-            className={`filter-btn ${filter === 'pending' ? 'active' : ''}`}
-            onClick={() => setFilter('pending')}
-          >
-            Pending
-          </button>
-          <button
-            className={`filter-btn ${filter === 'all' ? 'active' : ''}`}
-            onClick={() => setFilter('all')}
-          >
-            All
-          </button>
+          <button className={`filter-btn ${filter === 'pending' ? 'active' : ''}`} onClick={() => setFilter('pending')}>Pending</button>
+          <button className={`filter-btn ${filter === 'all' ? 'active' : ''}`} onClick={() => setFilter('all')}>All</button>
         </div>
       </div>
-
-      {error && <div className="admin-error-banner">{error}</div>}
 
       {suggestions.length === 0 ? (
         <div className="admin-empty">No {filter === 'pending' ? 'pending' : ''} suggestions.</div>
@@ -161,21 +150,12 @@ export default function AdminSuggestions() {
                   <span className="user-id">User: {s.user_id?.slice(0, 8)}…</span>
                 </div>
               </div>
-
               {s.status === 'pending' && (
                 <div className="suggestion-actions">
-                  <button
-                    className="action-btn approve"
-                    disabled={actionLoading === s.id}
-                    onClick={() => handleReview(s.id, 'approved')}
-                  >
+                  <button className="action-btn approve" disabled={actionLoading === s.id} onClick={() => handleReview(s.id, 'approved')}>
                     <FaCheck /> Approve
                   </button>
-                  <button
-                    className="action-btn reject"
-                    disabled={actionLoading === s.id}
-                    onClick={() => handleReview(s.id, 'rejected')}
-                  >
+                  <button className="action-btn reject" disabled={actionLoading === s.id} onClick={() => handleReview(s.id, 'rejected')}>
                     <FaTimes /> Reject
                   </button>
                 </div>

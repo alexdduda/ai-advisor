@@ -2,16 +2,23 @@
 backend/api/routes/clubs.py
 
 Clubs endpoints — browse verified McGill clubs, get starter suggestions
-based on user major/year, join/leave clubs, and submit new clubs for review.
+based on user major/year, join/leave clubs, submit new clubs for review,
+manage join requests for private clubs, and edit clubs you created.
 """
 from fastapi import APIRouter, HTTPException, Query, status, Depends, Request
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, EmailStr, Field, AnyHttpUrl
 from typing import Optional, List
+import hashlib
+import hmac
 import logging
+import time
+from html import escape
 
 from ..utils.supabase_client import get_supabase
 from ..exceptions import DatabaseException
 from ..auth import get_current_user_id, require_self
+from ..config import settings
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -55,15 +62,34 @@ DEFAULT_STARTERS = [
 
 class ClubSubmission(BaseModel):
     name:             str            = Field(..., min_length=2, max_length=100)
-    description:      str            = Field(..., min_length=10, max_length=1000)
-    category:         str            = Field(..., min_length=2, max_length=60)
-    contact_email:    EmailStr
-    website_url:      Optional[AnyHttpUrl] = None
+    description:      str            = Field(..., min_length=2, max_length=1000)
+    category:         Optional[str]  = Field(None, max_length=60)
+    contact_email:    Optional[str]  = Field(None, max_length=200)
+    website_url:      Optional[str]  = None
     meeting_schedule: Optional[str]  = Field(None, max_length=300)
+    location:         Optional[str]  = Field(None, max_length=200)
+    is_private:       bool           = False
+    submitted_by:     Optional[str]  = None
+    executive_emails: str             = Field(..., min_length=2, max_length=500)
 
 
 class JoinClubRequest(BaseModel):
     club_id: str
+
+
+class UpdateClubRequest(BaseModel):
+    name:             Optional[str]  = Field(None, min_length=2, max_length=100)
+    description:      Optional[str]  = Field(None, max_length=1000)
+    category:         Optional[str]  = Field(None, max_length=60)
+    contact_email:    Optional[str]  = Field(None, max_length=200)
+    website_url:      Optional[str]  = None
+    meeting_schedule: Optional[str]  = Field(None, max_length=300)
+    location:         Optional[str]  = Field(None, max_length=200)
+    is_private:       Optional[bool] = None
+
+
+class JoinRequestAction(BaseModel):
+    action: str  # "approve" or "deny"
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -79,6 +105,251 @@ def _get_starter_names(major: Optional[str]) -> List[str]:
     return DEFAULT_STARTERS
 
 
+def _send_join_request_email(creator_email: str, club_name: str, requester_name: str):
+    """Send an email to the club creator when someone requests to join."""
+    try:
+        import resend
+        if not settings.RESEND_API_KEY:
+            logger.warning("RESEND_API_KEY not set — skipping join request email")
+            return
+
+        resend.api_key = settings.RESEND_API_KEY
+        safe_club = escape(club_name)
+        safe_requester = escape(requester_name)
+
+        subject = f"New Join Request: {safe_club}"
+        html = f"""<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:32px 16px;">
+    <tr><td align="center">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
+        <tr><td style="background:#ED1B2F;border-radius:12px 12px 0 0;padding:20px 28px;">
+          <span style="color:#fff;font-size:13px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;opacity:0.85;">McGill AI Advisor</span>
+        </td></tr>
+        <tr><td style="background:#ffffff;padding:28px;border-left:1px solid #e4e4e7;border-right:1px solid #e4e4e7;">
+          <div style="margin-bottom:16px;">
+            <span style="display:inline-block;background:#fef3c7;color:#92400e;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:4px 10px;border-radius:20px;">Join Request</span>
+          </div>
+          <h1 style="margin:0 0 10px;font-size:22px;font-weight:700;color:#111827;line-height:1.3;">{safe_club}</h1>
+          <p style="margin:0 0 20px;font-size:16px;color:#374151;line-height:1.5;">
+            <strong>{safe_requester}</strong> has requested to join your club.
+          </p>
+          <p style="margin:0 0 20px;font-size:14px;color:#6b7280;">
+            Log in to your McGill AI Advisor dashboard to approve or deny this request.
+          </p>
+          <div style="text-align:center;">
+            <a href="https://symbolos.ca" style="display:inline-block;background:#ED1B2F;color:#fff;font-size:14px;font-weight:600;text-decoration:none;padding:12px 28px;border-radius:8px;">Review Request</a>
+          </div>
+        </td></tr>
+        <tr><td style="background:#f9fafb;border:1px solid #e4e4e7;border-top:none;border-radius:0 0 12px 12px;padding:16px 28px;text-align:center;">
+          <p style="margin:0;font-size:11px;color:#9ca3af;line-height:1.6;">
+            You're receiving this because you are the creator of {safe_club} on McGill AI Advisor.
+          </p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>"""
+
+        resend.Emails.send({
+            "from": "McGill AI Advisor <onboarding@resend.dev>",
+            "to": [creator_email],
+            "subject": subject,
+            "html": html,
+        })
+        logger.info(f"Join request email sent to {creator_email} for club {club_name}")
+    except Exception as e:
+        logger.exception(f"Failed to send join request email: {e}")
+
+
+# ── Signed action tokens for email-based club approval ───────────────────────
+_ACTION_TOKEN_TTL = 604800  # 7 days
+
+
+def _generate_action_token(submission_id: str, action: str) -> str:
+    """Generate an HMAC-signed token encoding submission_id + action + expiry."""
+    exp = int(time.time()) + _ACTION_TOKEN_TTL
+    payload = f"club:{submission_id}:{action}:{exp}"
+    sig = hmac.new(
+        settings.ADMIN_SECRET.encode(),
+        payload.encode(),
+        hashlib.sha256,
+    ).hexdigest()
+    return f"{payload}:{sig}"
+
+
+def _verify_action_token(token: str):
+    """Verify a signed action token. Returns (submission_id, action) or raises."""
+    try:
+        parts = token.split(":")
+        if len(parts) != 5 or parts[0] != "club":
+            return None, None
+        _, submission_id, action, exp_str, sig = parts
+        exp = int(exp_str)
+        if time.time() > exp:
+            return None, None
+        payload = f"club:{submission_id}:{action}:{exp_str}"
+        expected_sig = hmac.new(
+            settings.ADMIN_SECRET.encode(),
+            payload.encode(),
+            hashlib.sha256,
+        ).hexdigest()
+        if not hmac.compare_digest(sig, expected_sig):
+            return None, None
+        if action not in ("approved", "rejected"):
+            return None, None
+        return submission_id, action
+    except Exception:
+        return None, None
+
+
+def _send_admin_club_email(submission: dict):
+    """Send an approval/rejection email to admin emails when a club is submitted."""
+    try:
+        import resend
+        if not settings.RESEND_API_KEY:
+            logger.warning("RESEND_API_KEY not set — skipping admin club email")
+            return
+
+        resend.api_key = settings.RESEND_API_KEY
+        admin_emails = [e.strip() for e in settings.ADMIN_EMAILS.split(",") if e.strip()]
+        if not admin_emails:
+            logger.warning("No ADMIN_EMAILS configured — skipping admin club email")
+            return
+
+        safe_name = escape(submission.get("name", "Unknown"))
+        safe_desc = escape(submission.get("description", "")[:200])
+        category = escape(submission.get("category", "Social"))
+        visibility = "Private" if submission.get("is_private") else "Public"
+        location = escape(submission.get("location", "") or "Not specified")
+        schedule = escape(submission.get("meeting_schedule", "") or "Not specified")
+        contact = escape(submission.get("contact_email", "") or "Not provided")
+        exec_emails = escape(submission.get("executive_emails", "") or "Not provided")
+        sub_id = submission.get("id", "")
+
+        approve_token = _generate_action_token(sub_id, "approved")
+        reject_token = _generate_action_token(sub_id, "rejected")
+        # Links go directly to the backend API endpoint which returns an HTML result page
+        base = settings.API_BASE_URL.rstrip("/")
+        approve_url = f"{base}/api/clubs/admin/action?token={approve_token}"
+        reject_url = f"{base}/api/clubs/admin/action?token={reject_token}"
+
+        subject = f"New Club Submission: {safe_name}"
+        html = f"""<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:32px 16px;">
+    <tr><td align="center">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
+        <tr><td style="background:#ED1B2F;border-radius:12px 12px 0 0;padding:20px 28px;">
+          <span style="color:#fff;font-size:13px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;opacity:0.85;">McGill AI Advisor</span>
+        </td></tr>
+        <tr><td style="background:#ffffff;padding:28px;border-left:1px solid #e4e4e7;border-right:1px solid #e4e4e7;">
+          <div style="margin-bottom:16px;">
+            <span style="display:inline-block;background:#fef3c7;color:#92400e;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:4px 10px;border-radius:20px;">New Club Submission</span>
+          </div>
+          <h1 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#111827;line-height:1.3;">{safe_name}</h1>
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
+            <tr><td style="padding:6px 0;font-size:13px;color:#6b7280;width:100px;">Category</td><td style="padding:6px 0;font-size:14px;color:#111827;font-weight:600;">{category}</td></tr>
+            <tr><td style="padding:6px 0;font-size:13px;color:#6b7280;">Visibility</td><td style="padding:6px 0;font-size:14px;color:#111827;font-weight:600;">{visibility}</td></tr>
+            <tr><td style="padding:6px 0;font-size:13px;color:#6b7280;">Location</td><td style="padding:6px 0;font-size:14px;color:#111827;">{location}</td></tr>
+            <tr><td style="padding:6px 0;font-size:13px;color:#6b7280;">Schedule</td><td style="padding:6px 0;font-size:14px;color:#111827;">{schedule}</td></tr>
+            <tr><td style="padding:6px 0;font-size:13px;color:#6b7280;">Contact</td><td style="padding:6px 0;font-size:14px;color:#111827;">{contact}</td></tr>
+            <tr><td style="padding:6px 0;font-size:13px;color:#6b7280;">Exec Emails</td><td style="padding:6px 0;font-size:14px;color:#111827;font-weight:600;">{exec_emails}</td></tr>
+          </table>
+          <p style="margin:0 0 20px;font-size:14px;color:#374151;line-height:1.6;background:#f9fafb;padding:12px;border-radius:8px;">{safe_desc}</p>
+          <table width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+              <td width="48%" style="padding-right:8px;">
+                <a href="{approve_url}" style="display:block;text-align:center;background:#16a34a;color:#fff;font-size:15px;font-weight:700;text-decoration:none;padding:14px 20px;border-radius:8px;">Approve</a>
+              </td>
+              <td width="48%" style="padding-left:8px;">
+                <a href="{reject_url}" style="display:block;text-align:center;background:#dc2626;color:#fff;font-size:15px;font-weight:700;text-decoration:none;padding:14px 20px;border-radius:8px;">Reject</a>
+              </td>
+            </tr>
+          </table>
+        </td></tr>
+        <tr><td style="background:#f9fafb;border:1px solid #e4e4e7;border-top:none;border-radius:0 0 12px 12px;padding:16px 28px;text-align:center;">
+          <p style="margin:0;font-size:11px;color:#9ca3af;line-height:1.6;">
+            This link expires in 7 days. You're receiving this because you are an admin of McGill AI Advisor.
+          </p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>"""
+
+        resend.Emails.send({
+            "from": "McGill AI Advisor <onboarding@resend.dev>",
+            "to": admin_emails,
+            "subject": subject,
+            "html": html,
+        })
+        logger.info(f"Admin club submission email sent to {admin_emails} for club {submission.get('name')}")
+    except Exception as e:
+        logger.exception(f"Failed to send admin club email: {e}")
+
+
+def _send_submitter_notification_email(contact_email: str, club_name: str, status: str):
+    """Notify the club submitter about their submission being approved or rejected."""
+    try:
+        import resend
+        if not settings.RESEND_API_KEY or not contact_email:
+            return
+
+        resend.api_key = settings.RESEND_API_KEY
+        safe_name = escape(club_name)
+        is_approved = status == "approved"
+        badge_bg = "#dcfce7" if is_approved else "#fee2e2"
+        badge_color = "#166534" if is_approved else "#dc2626"
+        badge_text = "Approved" if is_approved else "Rejected"
+        message = (
+            f"Your club <strong>{safe_name}</strong> has been approved and is now live on McGill AI Advisor! Students can find and join your club."
+            if is_approved else
+            f"Unfortunately, your club submission <strong>{safe_name}</strong> was not approved at this time. You can resubmit with updated information."
+        )
+
+        subject = f"Club {'Approved' if is_approved else 'Not Approved'}: {safe_name}"
+        html = f"""<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:32px 16px;">
+    <tr><td align="center">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
+        <tr><td style="background:#ED1B2F;border-radius:12px 12px 0 0;padding:20px 28px;">
+          <span style="color:#fff;font-size:13px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;opacity:0.85;">McGill AI Advisor</span>
+        </td></tr>
+        <tr><td style="background:#ffffff;padding:28px;border-left:1px solid #e4e4e7;border-right:1px solid #e4e4e7;">
+          <div style="margin-bottom:16px;">
+            <span style="display:inline-block;background:{badge_bg};color:{badge_color};font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:4px 10px;border-radius:20px;">{badge_text}</span>
+          </div>
+          <h1 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#111827;line-height:1.3;">{safe_name}</h1>
+          <p style="margin:0 0 20px;font-size:15px;color:#374151;line-height:1.6;">{message}</p>
+          {'<div style="text-align:center;"><a href="https://symbolos.ca" style="display:inline-block;background:#ED1B2F;color:#fff;font-size:14px;font-weight:600;text-decoration:none;padding:12px 28px;border-radius:8px;">Go to Dashboard</a></div>' if is_approved else ''}
+        </td></tr>
+        <tr><td style="background:#f9fafb;border:1px solid #e4e4e7;border-top:none;border-radius:0 0 12px 12px;padding:16px 28px;text-align:center;">
+          <p style="margin:0;font-size:11px;color:#9ca3af;line-height:1.6;">McGill AI Advisor &mdash; symbolos.ca</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>"""
+
+        resend.Emails.send({
+            "from": "McGill AI Advisor <onboarding@resend.dev>",
+            "to": [contact_email],
+            "subject": subject,
+            "html": html,
+        })
+        logger.info(f"Submitter notification email sent to {contact_email} for club {club_name} ({status})")
+    except Exception as e:
+        logger.exception(f"Failed to send submitter notification email: {e}")
+
+
 # ── Routes ────────────────────────────────────────────────────────────────────
 
 @router.get("")
@@ -87,12 +358,7 @@ async def list_clubs(
     category: Optional[str] = None,
     limit: int = Query(default=50, ge=1, le=200),
 ):
-    """
-    Return all verified clubs, optionally filtered by search term or category.
-
-    Intentionally public — the club catalogue is read-only public data.
-    IP-based rate limiting applies via the global middleware in main.py.
-    """
+    """Return all verified clubs, optionally filtered."""
     try:
         supabase = get_supabase()
         query = (
@@ -105,7 +371,6 @@ async def list_clubs(
         if category:
             query = query.eq("category", category)
         if search:
-            # Escape LIKE wildcards to prevent pattern injection
             safe_search = search.replace("\\", "\\\\").replace("%", r"\%").replace("_", r"\_")
             query = query.ilike("name", f"%{safe_search}%")
         result = query.execute()
@@ -145,7 +410,7 @@ async def get_starter_clubs(user_id: str, major: Optional[str] = None, current_u
 
 @router.get("/categories")
 async def get_categories():
-    """Return the distinct club categories in the DB."""
+    """Return the distinct club categories."""
     return {
         "categories": [
             "Academic", "Arts & Culture", "Athletics & Recreation",
@@ -154,6 +419,126 @@ async def get_categories():
             "Science", "Social", "Spiritual & Religious",
         ]
     }
+
+
+@router.get("/created/{user_id}")
+async def get_created_clubs(user_id: str, current_user_id: str = Depends(get_current_user_id)):
+    """Return clubs created by this user."""
+    require_self(current_user_id, user_id)
+    try:
+        supabase = get_supabase()
+        result = (
+            supabase.table("clubs")
+            .select("*")
+            .eq("created_by", user_id)
+            .order("name")
+            .execute()
+        )
+        return {"clubs": result.data or [], "count": len(result.data or [])}
+    except Exception as e:
+        logger.exception(f"Error fetching created clubs: {e}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve created clubs")
+
+
+@router.put("/edit/{club_id}")
+async def edit_club(club_id: str, body: UpdateClubRequest, current_user_id: str = Depends(get_current_user_id)):
+    """Update a club's info. Only the creator can edit."""
+    try:
+        supabase = get_supabase()
+        # Verify ownership
+        club_result = supabase.table("clubs").select("created_by").eq("id", club_id).execute()
+        if not club_result.data:
+            raise HTTPException(status_code=404, detail="Club not found")
+        if club_result.data[0].get("created_by") != current_user_id:
+            raise HTTPException(status_code=403, detail="Only the club creator can edit this club")
+
+        update_data = {k: v for k, v in body.dict().items() if v is not None}
+        if not update_data:
+            return {"success": True, "message": "No changes"}
+
+        supabase.table("clubs").update(update_data).eq("id", club_id).execute()
+        # Return updated club
+        updated = supabase.table("clubs").select("*").eq("id", club_id).execute()
+        return {"success": True, "club": (updated.data or [None])[0]}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception(f"Error editing club: {e}")
+        raise HTTPException(status_code=500, detail="Failed to update club")
+
+
+@router.get("/join-requests/{club_id}")
+async def get_join_requests(club_id: str, current_user_id: str = Depends(get_current_user_id)):
+    """Get pending join requests for a club. Only the creator can view."""
+    try:
+        supabase = get_supabase()
+        # Verify ownership
+        club_result = supabase.table("clubs").select("created_by").eq("id", club_id).execute()
+        if not club_result.data:
+            raise HTTPException(status_code=404, detail="Club not found")
+        if club_result.data[0].get("created_by") != current_user_id:
+            raise HTTPException(status_code=403, detail="Only the club creator can view join requests")
+
+        result = (
+            supabase.table("club_join_requests")
+            .select("*")
+            .eq("club_id", club_id)
+            .eq("status", "pending")
+            .order("created_at", desc=True)
+            .execute()
+        )
+        return {"requests": result.data or [], "count": len(result.data or [])}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception(f"Error fetching join requests: {e}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve join requests")
+
+
+@router.post("/join-requests/{request_id}/action")
+async def handle_join_request(request_id: str, body: JoinRequestAction, current_user_id: str = Depends(get_current_user_id)):
+    """Approve or deny a join request."""
+    if body.action not in ("approve", "deny"):
+        raise HTTPException(status_code=400, detail="Action must be 'approve' or 'deny'")
+    try:
+        supabase = get_supabase()
+        # Get the request
+        req_result = supabase.table("club_join_requests").select("*").eq("id", request_id).execute()
+        if not req_result.data:
+            raise HTTPException(status_code=404, detail="Join request not found")
+        join_req = req_result.data[0]
+
+        # Verify club ownership
+        club_result = supabase.table("clubs").select("created_by").eq("id", join_req["club_id"]).execute()
+        if not club_result.data or club_result.data[0].get("created_by") != current_user_id:
+            raise HTTPException(status_code=403, detail="Only the club creator can handle join requests")
+
+        # Update request status
+        supabase.table("club_join_requests").update({"status": body.action + "d"}).eq("id", request_id).execute()
+
+        # If approved, add user to club
+        if body.action == "approve":
+            # Check not already joined
+            existing = (
+                supabase.table("user_clubs")
+                .select("id")
+                .eq("user_id", join_req["user_id"])
+                .eq("club_id", join_req["club_id"])
+                .execute()
+            )
+            if not existing.data:
+                supabase.table("user_clubs").insert({
+                    "user_id": join_req["user_id"],
+                    "club_id": join_req["club_id"],
+                    "calendar_synced": False,
+                }).execute()
+
+        return {"success": True, "status": body.action + "d"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception(f"Error handling join request: {e}")
+        raise HTTPException(status_code=500, detail="Failed to process join request")
 
 
 @router.get("/user/{user_id}")
@@ -184,9 +569,16 @@ async def get_user_clubs(user_id: str, req: Request, current_user_id: str = Depe
 @router.post("/user/{user_id}/join")
 async def join_club(user_id: str, body: JoinClubRequest, req: Request, current_user_id: str = Depends(get_current_user_id)):
     require_self(current_user_id, user_id)
-    """Add a club to the user's joined list."""
+    """Join a public club directly, or create a join request for a private club."""
     try:
         supabase = get_supabase()
+
+        # Check if club exists and whether it's private
+        club_result = supabase.table("clubs").select("*").eq("id", body.club_id).execute()
+        if not club_result.data:
+            raise HTTPException(status_code=404, detail="Club not found")
+        club = club_result.data[0]
+
         existing = (
             supabase.table("user_clubs")
             .select("id")
@@ -196,12 +588,54 @@ async def join_club(user_id: str, body: JoinClubRequest, req: Request, current_u
         )
         if existing.data:
             raise HTTPException(status_code=409, detail="Already joined this club")
-        supabase.table("user_clubs").insert({
-            "user_id": user_id,
-            "club_id": body.club_id,
-            "calendar_synced": False,
-        }).execute()
-        return {"success": True}
+
+        if club.get("is_private"):
+            # Check for existing pending request
+            existing_req = (
+                supabase.table("club_join_requests")
+                .select("id")
+                .eq("user_id", user_id)
+                .eq("club_id", body.club_id)
+                .eq("status", "pending")
+                .execute()
+            )
+            if existing_req.data:
+                raise HTTPException(status_code=409, detail="You already have a pending request for this club")
+
+            # Get requester info for the email
+            user_result = supabase.table("profiles").select("full_name, email").eq("id", user_id).execute()
+            requester_name = "A student"
+            if user_result.data:
+                requester_name = user_result.data[0].get("full_name") or user_result.data[0].get("email", "A student")
+
+            # Create join request
+            supabase.table("club_join_requests").insert({
+                "user_id": user_id,
+                "club_id": body.club_id,
+                "status": "pending",
+                "requester_name": requester_name,
+            }).execute()
+
+            # Send email to club creator
+            creator_id = club.get("created_by")
+            if creator_id:
+                creator_result = supabase.table("profiles").select("email").eq("id", creator_id).execute()
+                if creator_result.data and creator_result.data[0].get("email"):
+                    _send_join_request_email(
+                        creator_email=creator_result.data[0]["email"],
+                        club_name=club["name"],
+                        requester_name=requester_name,
+                    )
+
+            return {"success": True, "status": "requested", "message": "Join request sent to club creator"}
+        else:
+            # Public club — join directly
+            supabase.table("user_clubs").insert({
+                "user_id": user_id,
+                "club_id": body.club_id,
+                "calendar_synced": False,
+            }).execute()
+            return {"success": True, "status": "joined"}
     except HTTPException:
         raise
     except Exception as e:
@@ -236,20 +670,205 @@ async def toggle_calendar_sync(user_id: str, club_id: str, synced: bool, req: Re
 
 
 @router.post("/submit")
-async def submit_club(submission: ClubSubmission, _: str = Depends(get_current_user_id)):
+async def submit_club(submission: ClubSubmission, current_user_id: str = Depends(get_current_user_id)):
     """Submit a new club for admin review."""
     try:
         supabase = get_supabase()
-        supabase.table("club_submissions").insert({
+        insert_result = supabase.table("club_submissions").insert({
             "name": submission.name,
             "description": submission.description,
-            "category": submission.category,
+            "category": submission.category or "Social",
             "contact_email": submission.contact_email,
             "website_url": submission.website_url,
             "meeting_schedule": submission.meeting_schedule,
+            "location": submission.location,
+            "is_private": submission.is_private,
+            "submitted_by": submission.submitted_by or current_user_id,
+            "executive_emails": submission.executive_emails,
             "status": "pending",
         }).execute()
+
+        # Send approval email to admins
+        if insert_result.data:
+            _send_admin_club_email(insert_result.data[0])
+
         return {"success": True, "message": "Club submission received. We'll review it shortly!"}
     except Exception as e:
         logger.exception(f"Error submitting club: {e}")
         raise HTTPException(status_code=500, detail="Failed to submit club")
+
+
+# ── Admin endpoints ──────────────────────────────────────────────────────────
+
+def _verify_admin_token(req: Request):
+    """Verify admin token from X-Cron-Secret header."""
+    from .admin import verify_admin_token
+    token = req.headers.get("x-cron-secret", "")
+    if not verify_admin_token(token):
+        raise HTTPException(status_code=401, detail="Invalid admin token")
+
+
+@router.get("/admin/submissions")
+async def admin_list_submissions(req: Request, status_filter: Optional[str] = "pending"):
+    """List club submissions for admin review."""
+    _verify_admin_token(req)
+    try:
+        supabase = get_supabase()
+        query = supabase.table("club_submissions").select("*").order("created_at", desc=True)
+        if status_filter and status_filter != "all":
+            query = query.eq("status", status_filter)
+        result = query.execute()
+        return {"submissions": result.data or []}
+    except Exception as e:
+        logger.exception(f"Error listing submissions: {e}")
+        raise HTTPException(status_code=500, detail="Failed to list submissions")
+
+
+@router.patch("/admin/submissions/{submission_id}")
+async def admin_review_submission(submission_id: str, req: Request):
+    """Approve or reject a club submission. On approve, create the club."""
+    _verify_admin_token(req)
+    try:
+        body = await req.json()
+        new_status = body.get("status")
+        if new_status not in ("approved", "rejected"):
+            raise HTTPException(status_code=400, detail="Status must be 'approved' or 'rejected'")
+
+        supabase = get_supabase()
+
+        # Get the submission
+        sub_result = supabase.table("club_submissions").select("*").eq("id", submission_id).execute()
+        if not sub_result.data:
+            raise HTTPException(status_code=404, detail="Submission not found")
+        submission = sub_result.data[0]
+
+        # Update status
+        supabase.table("club_submissions").update({"status": new_status}).eq("id", submission_id).execute()
+
+        # If approved, create the actual club
+        if new_status == "approved":
+            supabase.table("clubs").insert({
+                "name": submission["name"],
+                "description": submission["description"],
+                "category": submission.get("category") or "Social",
+                "contact_email": submission.get("contact_email"),
+                "website_url": submission.get("website_url"),
+                "meeting_schedule": submission.get("meeting_schedule"),
+                "location": submission.get("location"),
+                "is_private": submission.get("is_private", False),
+                "is_verified": True,
+                "created_by": submission.get("submitted_by"),
+                "executive_emails": submission.get("executive_emails"),
+                "member_count": 0,
+            }).execute()
+
+        return {"success": True, "status": new_status}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception(f"Error reviewing submission: {e}")
+        raise HTTPException(status_code=500, detail="Failed to review submission")
+
+
+# ── Email-based club approval (no auth required — token IS the auth) ─────────
+
+def _action_result_html(title: str, message: str, is_success: bool) -> str:
+    """Generate a simple HTML result page for the email action."""
+    bg = "#dcfce7" if is_success else "#fee2e2"
+    color = "#166534" if is_success else "#dc2626"
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>{escape(title)}</title></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;">
+  <div style="max-width:440px;width:100%;margin:40px auto;padding:32px;background:#fff;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,0.08);text-align:center;">
+    <div style="display:inline-block;background:{bg};color:{color};font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:5px 12px;border-radius:20px;margin-bottom:16px;">{escape(title)}</div>
+    <p style="margin:0;font-size:16px;color:#374151;line-height:1.6;">{message}</p>
+    <a href="https://symbolos.ca" style="display:inline-block;margin-top:20px;background:#ED1B2F;color:#fff;font-size:14px;font-weight:600;text-decoration:none;padding:10px 24px;border-radius:8px;">Go to Symbolos</a>
+  </div>
+</body></html>"""
+
+
+@router.get("/admin/action")
+async def admin_email_action(token: str):
+    """
+    Process an approve/reject action from an email link.
+    No auth required — the HMAC-signed token is the credential.
+    Returns an HTML page with the result.
+    """
+    submission_id, action = _verify_action_token(token)
+    if not submission_id:
+        return HTMLResponse(_action_result_html(
+            "Link Expired",
+            "This link has expired or is invalid. Please check your email for a newer link.",
+            False,
+        ))
+
+    try:
+        supabase = get_supabase()
+
+        # Get the submission
+        sub_result = supabase.table("club_submissions").select("*").eq("id", submission_id).execute()
+        if not sub_result.data:
+            return HTMLResponse(_action_result_html(
+                "Not Found",
+                "This club submission was not found. It may have been deleted.",
+                False,
+            ))
+
+        submission = sub_result.data[0]
+
+        # Check if already processed
+        if submission.get("status") != "pending":
+            current = submission["status"].capitalize()
+            return HTMLResponse(_action_result_html(
+                "Already Processed",
+                f"This club submission has already been <strong>{current}</strong>.",
+                False,
+            ))
+
+        # Update status
+        supabase.table("club_submissions").update({"status": action}).eq("id", submission_id).execute()
+
+        # If approved, create the actual club
+        if action == "approved":
+            supabase.table("clubs").insert({
+                "name": submission["name"],
+                "description": submission["description"],
+                "category": submission.get("category") or "Social",
+                "contact_email": submission.get("contact_email"),
+                "website_url": submission.get("website_url"),
+                "meeting_schedule": submission.get("meeting_schedule"),
+                "location": submission.get("location"),
+                "is_private": submission.get("is_private", False),
+                "is_verified": True,
+                "created_by": submission.get("submitted_by"),
+                "executive_emails": submission.get("executive_emails"),
+                "member_count": 0,
+            }).execute()
+
+        # Notify the submitter
+        contact_email = submission.get("contact_email")
+        if contact_email:
+            _send_submitter_notification_email(contact_email, submission["name"], action)
+
+        if action == "approved":
+            return HTMLResponse(_action_result_html(
+                "Club Approved",
+                f"<strong>{escape(submission['name'])}</strong> has been approved and is now live on Symbolos!",
+                True,
+            ))
+        else:
+            return HTMLResponse(_action_result_html(
+                "Club Rejected",
+                f"<strong>{escape(submission['name'])}</strong> has been rejected.",
+                True,
+            ))
+
+    except Exception as e:
+        logger.exception(f"Error processing email action: {e}")
+        return HTMLResponse(_action_result_html(
+            "Error",
+            "Something went wrong processing this action. Please try again.",
+            False,
+        ))
