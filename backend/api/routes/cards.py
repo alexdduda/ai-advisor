@@ -138,8 +138,29 @@ def fetch_student_context(user_id: str) -> dict:
         .order("date", desc=False).limit(20)
         .execute().data or [])
 
+    # Clubs the student has joined
+    joined_clubs = []
+    try:
+        club_result = (supabase.table("user_clubs")
+            .select("clubs(name, category, meeting_schedule)")
+            .eq("user_id", user_id).execute())
+        joined_clubs = [r.get("clubs", {}).get("name", "Unknown") for r in (club_result.data or []) if r.get("clubs")]
+    except Exception:
+        pass
+
+    # Clubs the student created
+    created_clubs = []
+    try:
+        created_result = (supabase.table("clubs")
+            .select("name, category, member_count, is_private")
+            .eq("created_by", user_id).execute())
+        created_clubs = created_result.data or []
+    except Exception:
+        pass
+
     return {"user": user, "favorites": favorites,
-            "completed": completed, "current": current, "calendar": calendar}
+            "completed": completed, "current": current, "calendar": calendar,
+            "joined_clubs": joined_clubs, "created_clubs": created_clubs}
 
 
 def fetch_saved_cards(user_id: str) -> list:
@@ -357,6 +378,10 @@ SAVED/FAVOURITED COURSES
 
 UPCOMING CALENDAR EVENTS
 {calendar_str}
+
+STUDENT CLUBS
+  Joined: {', '.join(ctx.get('joined_clubs', [])) or 'None'}
+  Created: {', '.join(c.get('name','') for c in ctx.get('created_clubs', [])) or 'None'}
 
 INSTRUCTIONS
 Generate exactly 8 cards as a JSON array. Each card must include:
