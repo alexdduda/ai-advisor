@@ -145,6 +145,18 @@ const clubsAPI = {
     return res.json()
   },
 
+  async deleteClub(clubId) {
+    const res = await fetch(`${BASE_URL}/api/clubs/${clubId}`, {
+      method: 'DELETE',
+      headers: await authHeaders(),
+    })
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      throw new Error(err.detail || 'Failed to delete club')
+    }
+    return res.json()
+  },
+
   async getCategories() {
     return {
       categories: [
