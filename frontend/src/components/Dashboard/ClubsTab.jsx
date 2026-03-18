@@ -284,7 +284,7 @@ function ClubCard({ club, joined, calSynced, onJoin, onLeave, onToggleCalendar, 
         {isAdmin && (
           <button
             className="club-delete-chip"
-            onClick={(e) => { e.stopPropagation(); if (window.confirm(`Delete "${club.name}"?`)) onDelete(club.id) }}
+            onClick={(e) => { e.stopPropagation(); const v = window.prompt(`Type "delete" to permanently remove "${club.name}"`); if (v && v.toLowerCase().trim() === 'delete') onDelete(club.id) }}
             title="Delete club"
           >
             <FaTimes size={10} />
@@ -298,7 +298,7 @@ function ClubCard({ club, joined, calSynced, onJoin, onLeave, onToggleCalendar, 
   )
 }
 
-function MyClubRow({ club, calSynced, onLeave, onToggleCalendar, onOpen, clubLoading, t }) {
+function MyClubRow({ club, calSynced, onLeave, onToggleCalendar, onOpen, onDelete, isAdmin, clubLoading, t }) {
   const meta = getCat(club.category)
   const isLoading = clubLoading[club.id] ?? false
   return (
@@ -323,6 +323,15 @@ function MyClubRow({ club, calSynced, onLeave, onToggleCalendar, onOpen, clubLoa
         <button className="club-leave-chip small" onClick={() => onLeave(club.id)} disabled={isLoading} title={t('clubs.leave')}>
           <FaTimes size={10} />
         </button>
+        {isAdmin && (
+          <button
+            className="club-delete-chip"
+            onClick={() => { const v = window.prompt(`Type "delete" to permanently remove "${club.name}"`); if (v && v.toLowerCase().trim() === 'delete') onDelete(club.id) }}
+            title="Delete club"
+          >
+            <FaTimes size={10} />
+          </button>
+        )}
         <button className="club-card__open-btn" onClick={() => onOpen(club)}>
           <FaChevronRight size={11} />
         </button>
@@ -865,6 +874,9 @@ export default function ClubsTab({ user, onClubEventsChange }) {
     try {
       await clubsAPI.deleteClub(clubId)
       setClubs(prev => prev.filter(c => c.id !== clubId))
+      setMyClubs(prev => prev.filter(m => (m.club?.id ?? m.id) !== clubId))
+      setCreatedClubs(prev => prev.filter(c => c.id !== clubId))
+      if (openClub?.id === clubId) setOpenClub(null)
       setJoinToast('Club deleted')
       setTimeout(() => setJoinToast(''), 2500)
     } catch (e) { setError(e.message) }
@@ -1085,6 +1097,8 @@ export default function ClubsTab({ user, onClubEventsChange }) {
                         onLeave={handleLeave}
                         onToggleCalendar={handleToggleCalendar}
                         onOpen={setOpenClub}
+                        onDelete={handleDeleteClub}
+                        isAdmin={isAdmin}
                         clubLoading={clubLoading}
                         t={t}
                       />
