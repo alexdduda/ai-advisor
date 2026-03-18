@@ -795,6 +795,32 @@ def _action_result_html(title: str, message: str, is_success: bool) -> str:
 </body></html>"""
 
 
+@router.get("/admin/debug-token")
+async def debug_token(token: str):
+    """Temporary debug endpoint — remove after fixing."""
+    from urllib.parse import unquote
+    raw = unquote(token)
+    parts = raw.split(":")
+    exp = int(parts[3]) if len(parts) >= 4 else 0
+    now = int(time.time())
+    payload = f"club:{parts[1]}:{parts[2]}:{parts[3]}" if len(parts) >= 4 else ""
+    expected_sig = hmac.new(
+        settings.ADMIN_SECRET.encode(), payload.encode(), hashlib.sha256
+    ).hexdigest() if payload else ""
+    return {
+        "token_length": len(token),
+        "parts_count": len(parts),
+        "parts_preview": [p[:20] for p in parts],
+        "exp": exp,
+        "now": now,
+        "expired": now > exp,
+        "sig_match": hmac.compare_digest(parts[4], expected_sig) if len(parts) == 5 else False,
+        "sig_got": parts[4][:16] + "..." if len(parts) == 5 else "?",
+        "sig_expected": expected_sig[:16] + "..." if expected_sig else "?",
+        "admin_secret_len": len(settings.ADMIN_SECRET),
+    }
+
+
 @router.get("/admin/action")
 async def admin_email_action(token: str):
     """
