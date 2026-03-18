@@ -865,10 +865,7 @@ async def admin_email_action(token: str):
                 False,
             ))
 
-        # Update status
-        supabase.table("club_submissions").update({"status": action}).eq("id", submission_id).execute()
-
-        # If approved, create the actual club
+        # If approved, create the actual club BEFORE updating status
         if action == "approved":
             club_data = {
                 "name": submission["name"],
@@ -882,18 +879,16 @@ async def admin_email_action(token: str):
                 "is_verified": True,
                 "created_by": submission.get("submitted_by"),
             }
-            # Only include executive_emails if the clubs table has it
             if submission.get("executive_emails"):
                 club_data["executive_emails"] = submission["executive_emails"]
-            try:
-                supabase.table("clubs").insert(club_data).execute()
-            except Exception as insert_err:
-                logger.exception(f"Error inserting club (trying without optional fields): {insert_err}")
-                # Retry without optional fields that might not exist in the table
-                club_data.pop("executive_emails", None)
-                supabase.table("clubs").insert(club_data).execute()
+            logger.info(f"Inserting club: {club_data}")
+            supabase.table("clubs").insert(club_data).execute()
+            logger.info(f"Club inserted successfully: {submission['name']}")
 
-        # Notify the submitter
+        # Update status only after successful club creation
+        supabase.table("club_submissions").update({"status": action}).eq("id", submission_id).execute()
+
+        # Notify the submitter (non-critical)
         contact_email = submission.get("contact_email")
         if contact_email:
             try:
