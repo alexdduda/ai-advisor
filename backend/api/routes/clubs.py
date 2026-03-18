@@ -737,6 +737,7 @@ async def submit_club(submission: ClubSubmission, current_user_id: str = Depends
 
 ADMIN_USER_IDS = {
     "82e6f229-ce80-47a8-a63c-f099b03dfc73",  # aduda2469@gmail.com
+    "65ad96d2-1704-4ff2-b661-42626f153fe8",  # dphimister24@gmail.com
 }
 
 
