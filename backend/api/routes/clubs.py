@@ -701,14 +701,16 @@ async def submit_club(submission: ClubSubmission, current_user_id: str = Depends
 
         # Send approval email to admins
         email_sent = False
+        email_error = None
         if insert_result.data:
             try:
                 _send_admin_club_email(insert_result.data[0])
                 email_sent = True
             except Exception as email_err:
+                email_error = str(email_err)
                 logger.exception(f"Failed to send admin email: {email_err}")
 
-        return {"success": True, "email_sent": email_sent, "message": "Club submission received. We'll review it shortly!"}
+        return {"success": True, "email_sent": email_sent, "email_error": email_error, "message": "Club submission received. We'll review it shortly!"}
     except Exception as e:
         logger.exception(f"Error submitting club: {e}")
         raise HTTPException(status_code=500, detail="Failed to submit club")
