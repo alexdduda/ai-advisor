@@ -409,6 +409,12 @@
 .club-leave-chip:hover:not(:disabled) { background: #fee2e2; color: #dc2626; border-color: #dc2626; }
 .club-leave-chip:disabled { opacity: 0.5; cursor: not-allowed; }
 .club-leave-chip.small { padding: 5px 8px; }
+.club-delete-chip {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; background: #fee2e2; border: 1.5px solid #fca5a5;
+  border-radius: 7px; color: #dc2626; cursor: pointer; transition: all .15s;
+}
+.club-delete-chip:hover { background: #dc2626; color: #fff; border-color: #dc2626; }
 .club-card__open-btn {
   display: inline-flex;
   align-items: center;

@@ -735,6 +735,42 @@ async def submit_club(submission: ClubSubmission, current_user_id: str = Depends
         raise HTTPException(status_code=500, detail="Failed to submit club")
 
 
+ADMIN_USER_EMAILS = {"aduda2469@gmail.com", "dphimister24@gmail.com"}
+
+
+def _is_admin_user(user_id: str) -> bool:
+    """Check if the authenticated user is an admin by looking up their email."""
+    try:
+        supabase = get_supabase()
+        result = supabase.table("profiles").select("email").eq("id", user_id).execute()
+        if result.data and result.data[0].get("email") in ADMIN_USER_EMAILS:
+            return True
+        # Fallback: check auth.users via service role
+        user = supabase.auth.admin.get_user_by_id(user_id)
+        if user and user.user and user.user.email in ADMIN_USER_EMAILS:
+            return True
+    except Exception as e:
+        logger.warning(f"Admin check failed: {e}")
+    return False
+
+
+@router.delete("/{club_id}")
+async def delete_club(club_id: str, current_user_id: str = Depends(get_current_user_id)):
+    """Delete a club. Only admin users can delete any club."""
+    if not _is_admin_user(current_user_id):
+        raise HTTPException(status_code=403, detail="Only admins can delete clubs")
+    try:
+        supabase = get_supabase()
+        # Remove all user_clubs references first
+        supabase.table("user_clubs").delete().eq("club_id", club_id).execute()
+        # Delete the club
+        supabase.table("clubs").delete().eq("id", club_id).execute()
+        return {"success": True, "message": "Club deleted"}
+    except Exception as e:
+        logger.exception(f"Error deleting club: {e}")
+        raise HTTPException(status_code=500, detail="Failed to delete club")
+
+
 # ── Admin endpoints ──────────────────────────────────────────────────────────
 
 def _verify_admin_token(req: Request):

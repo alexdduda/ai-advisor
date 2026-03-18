@@ -199,7 +199,7 @@ function ClubDetailDrawer({ club, liveClub, joined, calSynced, onJoin, onLeave, 
   )
 }
 
-function ClubCard({ club, joined, calSynced, onJoin, onLeave, onToggleCalendar, onOpen, clubLoading, t }) {
+function ClubCard({ club, joined, calSynced, onJoin, onLeave, onToggleCalendar, onOpen, onDelete, isAdmin, clubLoading, t }) {
   const meta = getCat(club.category)
   const [justJoined, setJustJoined] = useState(false)
   const isLoading = clubLoading[club.id] ?? false
@@ -279,6 +279,15 @@ function ClubCard({ club, joined, calSynced, onJoin, onLeave, onToggleCalendar, 
               : isPrivate
                 ? <><FaLock size={10} /> {t('clubs.requestJoinBtn')}</>
                 : <><FaPlus size={10} /> {t('clubs.joinBtn')}</>}
+          </button>
+        )}
+        {isAdmin && (
+          <button
+            className="club-delete-chip"
+            onClick={(e) => { e.stopPropagation(); if (window.confirm(`Delete "${club.name}"?`)) onDelete(club.id) }}
+            title="Delete club"
+          >
+            <FaTimes size={10} />
           </button>
         )}
         <button className="club-card__open-btn" onClick={() => onOpen(club)} title="View details">
@@ -695,8 +704,11 @@ function SubmitClubModal({ onClose, onSubmit, t }) {
 
 const PAGE_SIZE = 24
 
+const ADMIN_EMAILS = new Set(['aduda2469@gmail.com', 'dphimister24@gmail.com'])
+
 export default function ClubsTab({ user, onClubEventsChange }) {
   const { t } = useLanguage()
+  const isAdmin = ADMIN_EMAILS.has(user?.email)
   const [activeView, setActiveView] = useState('explore')
   const [clubs, setClubs] = useState([])
   const [categories, setCategories] = useState([])
@@ -849,6 +861,15 @@ export default function ClubsTab({ user, onClubEventsChange }) {
     finally { setClubBusy(clubId, false) }
   }
 
+  const handleDeleteClub = async (clubId) => {
+    try {
+      await clubsAPI.deleteClub(clubId)
+      setClubs(prev => prev.filter(c => c.id !== clubId))
+      setJoinToast('Club deleted')
+      setTimeout(() => setJoinToast(''), 2500)
+    } catch (e) { setError(e.message) }
+  }
+
   const handleSubmitClub = async (formData) => {
     await clubsAPI.submitClub({ ...formData, submitted_by: user?.id })
   }
@@ -990,6 +1011,8 @@ export default function ClubsTab({ user, onClubEventsChange }) {
                     onLeave={handleLeave}
                     onToggleCalendar={handleToggleCalendar}
                     onOpen={setOpenClub}
+                    onDelete={handleDeleteClub}
+                    isAdmin={isAdmin}
                     clubLoading={clubLoading}
                     t={t}
                   />
