@@ -1138,6 +1138,27 @@ export default function CalendarTab({ user, clubEvents = [], managedClubs = [] }
   for (let i = 0; i < firstDay; i++) cells.push(null)
   for (let d = 1; d <= daysInMonth; d++) cells.push(d)
 
+  // Convert time strings like "2:00 PM" to "14:00" (HH:MM 24h format)
+  const to24h = (t) => {
+    if (!t) return null
+    // Already HH:MM 24h format
+    if (/^\d{2}:\d{2}$/.test(t)) return t
+    // Handle "H:MM" without AM/PM (e.g. "2:00")
+    if (/^\d{1,2}:\d{2}$/.test(t) && !t.includes('AM') && !t.includes('PM'))
+      return t.padStart(5, '0')
+    // Handle 12h format like "2:00 PM" or "12:30 AM"
+    const m = t.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i)
+    if (m) {
+      let h = parseInt(m[1], 10)
+      const min = m[2]
+      const period = m[3].toUpperCase()
+      if (period === 'PM' && h !== 12) h += 12
+      if (period === 'AM' && h === 12) h = 0
+      return `${String(h).padStart(2, '0')}:${min}`
+    }
+    return t // fallback: return as-is
+  }
+
   // ── FIX #16: Save handler writes to Supabase ────────────────────
   const handleSaveEvent = async (event) => {
     // ── Club event → save via club API ──────────────────────────────
@@ -1148,8 +1169,8 @@ export default function CalendarTab({ user, clubEvents = [], managedClubs = [] }
           title: event.title,
           description: event.description || '',
           date: event.date,
-          time: event.time || null,
-          end_time: event.end_time || null,
+          time: to24h(event.time),
+          end_time: to24h(event.end_time),
           location: event.location || null,
           recurrence: event.recurrence || null,
         })
