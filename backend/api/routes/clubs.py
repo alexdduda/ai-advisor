@@ -298,16 +298,20 @@ def _send_admin_club_email(submission: dict):
   </table>
 </body></html>"""
 
-        result = resend.Emails.send({
-            "from": "Symbolos <notifications@symbolos.ca>",
-            "to": admin_emails,
-            "subject": subject,
-            "html": html,
-        })
-        logger.info(f"Admin club submission email sent to {admin_emails} for club {submission.get('name')}, resend_id={result}")
+        import httpx
+        resp = httpx.post(
+            "https://api.resend.com/emails",
+            headers={"Authorization": f"Bearer {settings.RESEND_API_KEY}", "Content-Type": "application/json"},
+            json={"from": "Symbolos <notifications@symbolos.ca>", "to": admin_emails, "subject": subject, "html": html},
+            timeout=10,
+        )
+        resp_data = resp.json()
+        logger.info(f"Resend API response for club {submission.get('name')}: status={resp.status_code} body={resp_data}")
+        if resp.status_code >= 400:
+            raise Exception(f"Resend API error {resp.status_code}: {resp_data}")
     except Exception as e:
         logger.exception(f"Failed to send admin club email: {e}")
-        raise  # Re-raise so caller knows it failed
+        raise
 
 
 def _send_submitter_notification_email(contact_email: str, club_name: str, status: str):
