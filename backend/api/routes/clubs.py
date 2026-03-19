@@ -788,7 +788,7 @@ async def join_club(user_id: str, body: JoinClubRequest, req: Request, current_u
 
             supabase.table("club_join_requests").insert(insert_data).execute()
 
-            # Only email club creator if there are 10+ pending requests
+            # Email club creator at milestone pending counts: 10, 20, 40, 60, 80, 100
             try:
                 pending_count_result = (
                     supabase.table("club_join_requests")
@@ -798,7 +798,8 @@ async def join_club(user_id: str, body: JoinClubRequest, req: Request, current_u
                     .execute()
                 )
                 pending_count = pending_count_result.count if pending_count_result.count is not None else len(pending_count_result.data or [])
-                if pending_count >= 10:
+                notify_milestones = {10, 20, 40, 60, 80, 100}
+                if pending_count in notify_milestones:
                     creator_id = club.get("created_by")
                     if creator_id:
                         creator_result = supabase.table("users").select("email").eq("id", creator_id).execute()
