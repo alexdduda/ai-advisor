@@ -69,6 +69,52 @@ function ClubAvatar({ name, category, size = 'md' }) {
   )
 }
 
+function JoinRequestModal({ club, onSubmit, onClose }) {
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [linkedin, setLinkedin] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (!name.trim() || !email.trim()) return
+    setSubmitting(true)
+    try {
+      await onSubmit({ requester_name: name.trim(), requester_email: email.trim(), requester_linkedin: linkedin.trim() || undefined })
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <div className="club-drawer-overlay" onClick={onClose}>
+      <div className="club-join-modal" onClick={e => e.stopPropagation()}>
+        <div className="club-join-modal__header">
+          <h3 style={{ margin: 0, fontSize: '18px' }}>Request to Join {club?.name}</h3>
+          <button className="club-drawer__back" onClick={onClose}><FaTimes size={14} /></button>
+        </div>
+        <form onSubmit={handleSubmit} className="club-join-modal__form">
+          <div className="club-join-modal__field">
+            <label>Name <span style={{ color: '#dc2626' }}>*</span></label>
+            <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Your full name" required />
+          </div>
+          <div className="club-join-modal__field">
+            <label>Email <span style={{ color: '#dc2626' }}>*</span></label>
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Your email address" required />
+          </div>
+          <div className="club-join-modal__field">
+            <label>LinkedIn <span style={{ color: '#9ca3af', fontWeight: 400, fontSize: '12px' }}>(optional)</span></label>
+            <input type="url" value={linkedin} onChange={e => setLinkedin(e.target.value)} placeholder="https://linkedin.com/in/..." />
+          </div>
+          <button type="submit" className="club-action-btn club-action-btn--join" disabled={submitting || !name.trim() || !email.trim()} style={{ width: '100%', marginTop: '8px', justifyContent: 'center' }}>
+            {submitting ? 'Sending...' : 'Submit Request'}
+          </button>
+        </form>
+      </div>
+    </div>
+  )
+}
+
 function ClubDetailDrawer({ club, liveClub, joined, calSynced, onJoin, onLeave, onToggleCalendar, onClose, clubLoading, t }) {
   if (!club) return null
   const display = liveClub ? { ...club, ...liveClub } : club
@@ -751,6 +797,7 @@ export default function ClubsTab({ user, onClubEventsChange }) {
   const [editingClub, setEditingClub] = useState(null)
   const [managingRequestsClub, setManagingRequestsClub] = useState(null)
   const [joinToast, setJoinToast] = useState(null)
+  const [joinRequestClub, setJoinRequestClub] = useState(null)
   const debounceRef = useRef(null)
   const isMounted = useRef(true)
 
@@ -839,24 +886,34 @@ export default function ClubsTab({ user, onClubEventsChange }) {
     return () => clearTimeout(debounceRef.current)
   }, [search])
 
-  const handleJoin = async (clubId) => {
+  const handleJoin = async (clubId, joinInfo) => {
     if (!user?.id) return
+    // For private clubs, show the join request modal first (unless joinInfo already provided)
+    const club = clubs.find(c => c.id === clubId)
+    if (club?.is_private && !joinInfo) {
+      setJoinRequestClub(club)
+      return
+    }
     setClubBusy(clubId, true)
     try {
-      const result = await clubsAPI.joinClub(user.id, clubId)
+      const result = await clubsAPI.joinClub(user.id, clubId, joinInfo || {})
       if (result.status === 'requested') {
-        const club = clubs.find(c => c.id === clubId)
         setJoinToast(t('clubs.requestSentToast').replace('{name}', club?.name || 'club'))
       } else {
         await fetchMyClubs()
         setClubs(prev => prev.map(c => c.id === clubId ? { ...c, member_count: (c.member_count ?? 0) + 1 } : c))
         if (openClub?.id === clubId) setOpenClub(prev => prev ? { ...prev, member_count: (prev.member_count ?? 0) + 1 } : prev)
-        const club = clubs.find(c => c.id === clubId)
         if (club) setJoinToast(t('clubs.joinedToast').replace('{name}', club.name))
       }
       setTimeout(() => { if (isMounted.current) setJoinToast(null) }, 3000)
     } catch (e) { setError(e.message) }
     finally { setClubBusy(clubId, false) }
+  }
+
+  const handleJoinRequestSubmit = async (joinInfo) => {
+    const clubId = joinRequestClub?.id
+    setJoinRequestClub(null)
+    if (clubId) await handleJoin(clubId, joinInfo)
   }
 
   const handleLeave = async (clubId) => {
@@ -927,6 +984,13 @@ export default function ClubsTab({ user, onClubEventsChange }) {
   return (
     <div className="clubs-tab">
       {joinToast && <div className="clubs-toast"><FaCheck size={12} /> {joinToast}</div>}
+      {joinRequestClub && (
+        <JoinRequestModal
+          club={joinRequestClub}
+          onSubmit={handleJoinRequestSubmit}
+          onClose={() => setJoinRequestClub(null)}
+        />
+      )}
 
       <div className="clubs-header">
         <div className="clubs-header__left">

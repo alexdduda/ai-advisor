@@ -64,12 +64,12 @@ const clubsAPI = {
     return { clubs: [], count: 0 }
   },
 
-  async joinClub(userId, clubId) {
+  async joinClub(userId, clubId, { requester_name, requester_email, requester_linkedin } = {}) {
     try {
       const res = await fetch(`${BASE_URL}/api/clubs/user/${userId}/join`, {
         method: 'POST',
         headers: await authHeaders(),
-        body: JSON.stringify({ club_id: clubId }),
+        body: JSON.stringify({ club_id: clubId, requester_name, requester_email, requester_linkedin }),
       })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
