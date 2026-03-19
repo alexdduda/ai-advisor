@@ -126,7 +126,7 @@ def _send_join_request_email(creator_email: str, club_name: str, requester_name:
     <tr><td align="center">
       <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
         <tr><td style="background:#ED1B2F;border-radius:12px 12px 0 0;padding:20px 28px;">
-          <span style="color:#fff;font-size:13px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;opacity:0.85;">McGill AI Advisor</span>
+          <span style="color:#fff;font-size:13px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;opacity:0.85;">Symbolos</span>
         </td></tr>
         <tr><td style="background:#ffffff;padding:28px;border-left:1px solid #e4e4e7;border-right:1px solid #e4e4e7;">
           <div style="margin-bottom:16px;">
@@ -137,7 +137,7 @@ def _send_join_request_email(creator_email: str, club_name: str, requester_name:
             <strong>{safe_requester}</strong> has requested to join your club.
           </p>
           <p style="margin:0 0 20px;font-size:14px;color:#6b7280;">
-            Log in to your McGill AI Advisor dashboard to approve or deny this request.
+            Log in to your Symbolos dashboard to approve or deny this request.
           </p>
           <div style="text-align:center;">
             <a href="https://symbolos.ca" style="display:inline-block;background:#ED1B2F;color:#fff;font-size:14px;font-weight:600;text-decoration:none;padding:12px 28px;border-radius:8px;">Review Request</a>
@@ -145,7 +145,7 @@ def _send_join_request_email(creator_email: str, club_name: str, requester_name:
         </td></tr>
         <tr><td style="background:#f9fafb;border:1px solid #e4e4e7;border-top:none;border-radius:0 0 12px 12px;padding:16px 28px;text-align:center;">
           <p style="margin:0;font-size:11px;color:#9ca3af;line-height:1.6;">
-            You're receiving this because you are the creator of {safe_club} on McGill AI Advisor.
+            You're receiving this because you are the creator of {safe_club} on Symbolos.
           </p>
         </td></tr>
       </table>
@@ -257,7 +257,7 @@ def _send_admin_club_email(submission: dict):
     <tr><td align="center">
       <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
         <tr><td style="background:#ED1B2F;border-radius:12px 12px 0 0;padding:20px 28px;">
-          <span style="color:#fff;font-size:13px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;opacity:0.85;">McGill AI Advisor</span>
+          <span style="color:#fff;font-size:13px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;opacity:0.85;">Symbolos</span>
         </td></tr>
         <tr><td style="background:#ffffff;padding:28px;border-left:1px solid #e4e4e7;border-right:1px solid #e4e4e7;">
           <div style="margin-bottom:16px;">
@@ -286,7 +286,7 @@ def _send_admin_club_email(submission: dict):
         </td></tr>
         <tr><td style="background:#f9fafb;border:1px solid #e4e4e7;border-top:none;border-radius:0 0 12px 12px;padding:16px 28px;text-align:center;">
           <p style="margin:0;font-size:11px;color:#9ca3af;line-height:1.6;">
-            This link expires in 7 days. You're receiving this because you are an admin of McGill AI Advisor.
+            This link expires in 7 days. You're receiving this because you are an admin of Symbolos.
           </p>
         </td></tr>
       </table>
@@ -326,7 +326,7 @@ def _send_submitter_notification_email(contact_email: str, club_name: str, statu
         badge_color = "#166534" if is_approved else "#dc2626"
         badge_text = "Approved" if is_approved else "Rejected"
         message = (
-            f"Your club <strong>{safe_name}</strong> has been approved and is now live on McGill AI Advisor! Students can find and join your club."
+            f"Your club <strong>{safe_name}</strong> has been approved and is now live on Symbolos! Students can find and join your club."
             if is_approved else
             f"Unfortunately, your club submission <strong>{safe_name}</strong> was not approved at this time. You can resubmit with updated information."
         )
@@ -340,7 +340,7 @@ def _send_submitter_notification_email(contact_email: str, club_name: str, statu
     <tr><td align="center">
       <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
         <tr><td style="background:#ED1B2F;border-radius:12px 12px 0 0;padding:20px 28px;">
-          <span style="color:#fff;font-size:13px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;opacity:0.85;">McGill AI Advisor</span>
+          <span style="color:#fff;font-size:13px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;opacity:0.85;">Symbolos</span>
         </td></tr>
         <tr><td style="background:#ffffff;padding:28px;border-left:1px solid #e4e4e7;border-right:1px solid #e4e4e7;">
           <div style="margin-bottom:16px;">
@@ -351,7 +351,7 @@ def _send_submitter_notification_email(contact_email: str, club_name: str, statu
           {'<div style="text-align:center;"><a href="https://symbolos.ca" style="display:inline-block;background:#ED1B2F;color:#fff;font-size:14px;font-weight:600;text-decoration:none;padding:12px 28px;border-radius:8px;">Go to Dashboard</a></div>' if is_approved else ''}
         </td></tr>
         <tr><td style="background:#f9fafb;border:1px solid #e4e4e7;border-top:none;border-radius:0 0 12px 12px;padding:16px 28px;text-align:center;">
-          <p style="margin:0;font-size:11px;color:#9ca3af;line-height:1.6;">McGill AI Advisor &mdash; symbolos.ca</p>
+          <p style="margin:0;font-size:11px;color:#9ca3af;line-height:1.6;">Symbolos &mdash; symbolos.ca</p>
         </td></tr>
       </table>
     </td></tr>
