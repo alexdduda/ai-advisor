@@ -582,7 +582,7 @@ async def handle_join_request(request_id: str, body: JoinRequestAction, current_
             # Check not already joined
             existing = (
                 supabase.table("user_clubs")
-                .select("id")
+                .select("user_id")
                 .eq("user_id", join_req["user_id"])
                 .eq("club_id", join_req["club_id"])
                 .execute()
@@ -642,7 +642,7 @@ async def join_club(user_id: str, body: JoinClubRequest, req: Request, current_u
 
         existing = (
             supabase.table("user_clubs")
-            .select("id")
+            .select("user_id")
             .eq("user_id", user_id)
             .eq("club_id", body.club_id)
             .execute()
@@ -664,10 +664,13 @@ async def join_club(user_id: str, body: JoinClubRequest, req: Request, current_u
                 raise HTTPException(status_code=409, detail="You already have a pending request for this club")
 
             # Get requester info for the email
-            user_result = supabase.table("profiles").select("full_name, email").eq("id", user_id).execute()
             requester_name = "A student"
-            if user_result.data:
-                requester_name = user_result.data[0].get("full_name") or user_result.data[0].get("email", "A student")
+            try:
+                user_result = supabase.table("profiles").select("full_name, email").eq("id", user_id).execute()
+                if user_result.data:
+                    requester_name = user_result.data[0].get("full_name") or user_result.data[0].get("email", "A student")
+            except Exception as e:
+                logger.warning(f"Could not fetch requester profile: {e}")
 
             # Create join request
             supabase.table("club_join_requests").insert({
@@ -677,16 +680,19 @@ async def join_club(user_id: str, body: JoinClubRequest, req: Request, current_u
                 "requester_name": requester_name,
             }).execute()
 
-            # Send email to club creator
-            creator_id = club.get("created_by")
-            if creator_id:
-                creator_result = supabase.table("profiles").select("email").eq("id", creator_id).execute()
-                if creator_result.data and creator_result.data[0].get("email"):
-                    _send_join_request_email(
-                        creator_email=creator_result.data[0]["email"],
-                        club_name=club["name"],
-                        requester_name=requester_name,
-                    )
+            # Send email to club creator (non-blocking — don't fail the join if email fails)
+            try:
+                creator_id = club.get("created_by")
+                if creator_id:
+                    creator_result = supabase.table("profiles").select("email").eq("id", creator_id).execute()
+                    if creator_result.data and creator_result.data[0].get("email"):
+                        _send_join_request_email(
+                            creator_email=creator_result.data[0]["email"],
+                            club_name=club["name"],
+                            requester_name=requester_name,
+                        )
+            except Exception as e:
+                logger.warning(f"Failed to send join request email: {e}")
 
             return {"success": True, "status": "requested", "message": "Join request sent to club creator"}
         else:
