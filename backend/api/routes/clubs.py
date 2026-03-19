@@ -238,11 +238,11 @@ def _notify_club_members_new_event(supabase, club_id: str, club_name: str, title
 
     user_ids = [m["user_id"] for m in members.data]
 
-    # Get emails from auth — try profiles table
+    # Get emails from users table
     emails = []
     for uid in user_ids:
         try:
-            profile = supabase.table("profiles").select("email").eq("id", uid).execute()
+            profile = supabase.table("users").select("email").eq("id", uid).execute()
             if profile.data and profile.data[0].get("email"):
                 emails.append(profile.data[0]["email"])
         except Exception:
@@ -785,7 +785,7 @@ async def join_club(user_id: str, body: JoinClubRequest, req: Request, current_u
             try:
                 creator_id = club.get("created_by")
                 if creator_id:
-                    creator_result = supabase.table("profiles").select("email").eq("id", creator_id).execute()
+                    creator_result = supabase.table("users").select("email").eq("id", creator_id).execute()
                     if creator_result.data and creator_result.data[0].get("email"):
                         _send_join_request_email(
                             creator_email=creator_result.data[0]["email"],
@@ -931,9 +931,9 @@ async def get_club_members(club_id: str, current_user_id: str = Depends(get_curr
     for m in (memberships.data or []):
         profile = {"id": m["user_id"]}
         try:
-            p = supabase.table("profiles").select("full_name, email").eq("id", m["user_id"]).execute()
+            p = supabase.table("users").select("username, email").eq("id", m["user_id"]).execute()
             if p.data:
-                profile["name"] = p.data[0].get("full_name", "")
+                profile["name"] = p.data[0].get("username", "") or p.data[0].get("email", "")
                 profile["email"] = p.data[0].get("email", "")
         except Exception:
             pass
