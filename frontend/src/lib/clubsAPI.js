@@ -174,6 +174,14 @@ const clubsAPI = {
     return res.json()
   },
 
+  async updateMemberRole(clubId, memberUserId) {
+    const res = await fetch(`${BASE_URL}/api/clubs/${clubId}/members/${memberUserId}/role`, {
+      method: 'PATCH', headers: await authHeaders(),
+    })
+    if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.detail || 'Failed to update role') }
+    return res.json()
+  },
+
   // ── Club Events ──────────────────────────────────────────────────────────
   async getSubscribedClubEvents() {
     try {

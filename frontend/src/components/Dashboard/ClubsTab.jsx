@@ -115,7 +115,7 @@ function JoinRequestModal({ club, onSubmit, onClose }) {
   )
 }
 
-function MembersSection({ clubId, meta, refreshKey }) {
+function MembersSection({ clubId, clubOwnerId, meta, refreshKey, canToggleRoles }) {
   const [members, setMembers] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -136,22 +136,51 @@ function MembersSection({ clubId, meta, refreshKey }) {
     } catch { /* silent */ }
   }
 
+  const handleToggleRole = async (userId) => {
+    try {
+      const result = await clubsAPI.updateMemberRole(clubId, userId)
+      setMembers(prev => prev.map(m => m.id === userId ? { ...m, role: result.role } : m))
+    } catch (e) { alert(e.message) }
+  }
+
   if (loading) return <p style={{ fontSize: '13px', color: '#9ca3af', padding: '8px 0' }}>Loading members...</p>
   if (!members.length) return <p style={{ fontSize: '13px', color: '#9ca3af', padding: '8px 0' }}>No members yet.</p>
 
   return (
     <div className="club-members-list">
-      {members.map(m => (
-        <div key={m.id} className="club-member-row">
-          <div className="club-member-info">
-            <span className="club-member-name">{m.name || 'Unknown'}</span>
-            {m.email && <span className="club-member-email">{m.email}</span>}
+      {members.map(m => {
+        const isOwner = m.id === clubOwnerId
+        const role = isOwner ? 'owner' : (m.role || 'member')
+        return (
+          <div key={m.id} className="club-member-row">
+            <div className="club-member-info">
+              <span className="club-member-name">
+                {m.name || 'Unknown'}
+                <span className={`club-member-role-badge club-member-role-badge--${role}`}>
+                  {role === 'owner' ? 'Owner' : role === 'admin' ? 'Admin' : 'Member'}
+                </span>
+              </span>
+              {m.email && <span className="club-member-email">{m.email}</span>}
+            </div>
+            <div className="club-member-actions">
+              {canToggleRoles && !isOwner && (
+                <button
+                  className={`club-member-role-toggle ${role === 'admin' ? 'club-member-role-toggle--demote' : ''}`}
+                  onClick={() => handleToggleRole(m.id)}
+                  title={role === 'admin' ? 'Demote to member' : 'Promote to admin'}
+                >
+                  {role === 'admin' ? '↓ Demote' : '↑ Promote'}
+                </button>
+              )}
+              {!isOwner && (
+                <button className="club-member-remove" onClick={() => handleRemove(m.id, m.name)} title="Remove member">
+                  <FaTimes size={10} />
+                </button>
+              )}
+            </div>
           </div>
-          <button className="club-member-remove" onClick={() => handleRemove(m.id, m.name)} title="Remove member">
-            <FaTimes size={10} />
-          </button>
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }
@@ -271,7 +300,7 @@ function ClubDetailDrawer({ club, liveClub, joined, calSynced, onJoin, onLeave, 
                 <FaUsers size={12} /> Members
                 <button onClick={() => setMemberRefreshKey(k => k + 1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary, #9ca3af)', fontSize: '11px', padding: '2px 6px' }} title="Refresh members">↻</button>
               </h3>
-              <MembersSection clubId={club.id} meta={meta} refreshKey={memberRefreshKey} />
+              <MembersSection clubId={club.id} clubOwnerId={display.created_by} meta={meta} refreshKey={memberRefreshKey} canToggleRoles={canManage} />
             </section>
           )}
 
@@ -950,6 +979,11 @@ export default function ClubsTab({ user, onClubEventsChange }) {
 
   const handleJoin = async (clubId, joinInfo) => {
     if (!user?.id) return
+    // Only @mail.mcgill.ca emails can join clubs
+    if (!user.email?.endsWith('@mail.mcgill.ca') && !ADMIN_EMAILS.has(user.email)) {
+      setError('Only accounts with a @mail.mcgill.ca email can join clubs.')
+      return
+    }
     // For private clubs, show the join request modal first (unless joinInfo already provided)
     const club = clubs.find(c => c.id === clubId)
     if (club?.is_private && !joinInfo) {
