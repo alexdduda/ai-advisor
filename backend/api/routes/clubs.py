@@ -732,6 +732,13 @@ async def join_club(user_id: str, body: JoinClubRequest, req: Request, current_u
     try:
         supabase = get_supabase()
 
+        # Only @mail.mcgill.ca emails can join clubs (admins exempt)
+        if not _is_admin_user(user_id):
+            user_row = supabase.table("users").select("email").eq("id", user_id).execute()
+            user_email = user_row.data[0].get("email", "") if user_row.data else ""
+            if not user_email.endswith("@mail.mcgill.ca"):
+                raise HTTPException(status_code=403, detail="Only accounts with a @mail.mcgill.ca email can join clubs.")
+
         # Check if club exists and whether it's private
         club_result = supabase.table("clubs").select("*").eq("id", body.club_id).execute()
         if not club_result.data:
@@ -904,12 +911,16 @@ def _is_admin_user(user_id: str) -> bool:
 
 
 def _is_club_owner_or_admin(club_id: str, user_id: str) -> bool:
-    """Check if user is the club creator OR a global admin."""
+    """Check if user is the club creator, a global admin, or a per-club admin."""
     if _is_admin_user(user_id):
         return True
     supabase = get_supabase()
     club = supabase.table("clubs").select("created_by").eq("id", club_id).execute()
     if club.data and club.data[0].get("created_by") == user_id:
+        return True
+    # Check per-club admin role
+    membership = supabase.table("user_clubs").select("role").eq("user_id", user_id).eq("club_id", club_id).execute()
+    if membership.data and membership.data[0].get("role") == "admin":
         return True
     return False
 
@@ -923,13 +934,20 @@ async def get_club_members(club_id: str, current_user_id: str = Depends(get_curr
         raise HTTPException(status_code=403, detail="Only club owner or admins can view members")
     supabase = get_supabase()
     try:
-        memberships = supabase.table("user_clubs").select("user_id").eq("club_id", club_id).execute()
+        memberships = supabase.table("user_clubs").select("user_id, role").eq("club_id", club_id).execute()
     except Exception as e:
         logger.exception(f"Error fetching club members: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch members: {str(e)}")
+
+    # Get the club owner
+    club_result = supabase.table("clubs").select("created_by").eq("id", club_id).execute()
+    owner_id = club_result.data[0].get("created_by") if club_result.data else None
+
     members = []
     for m in (memberships.data or []):
-        profile = {"id": m["user_id"]}
+        profile = {"id": m["user_id"], "role": m.get("role") or "member"}
+        if m["user_id"] == owner_id:
+            profile["role"] = "owner"
         try:
             p = supabase.table("users").select("username, email").eq("id", m["user_id"]).execute()
             if p.data:
@@ -938,7 +956,32 @@ async def get_club_members(club_id: str, current_user_id: str = Depends(get_curr
         except Exception:
             pass
         members.append(profile)
+    # Sort: owner first, then admins, then members
+    role_order = {"owner": 0, "admin": 1, "member": 2}
+    members.sort(key=lambda m: role_order.get(m["role"], 2))
     return {"members": members, "count": len(members)}
+
+
+@router.patch("/{club_id}/members/{member_user_id}/role")
+async def update_member_role(club_id: str, member_user_id: str, current_user_id: str = Depends(get_current_user_id)):
+    """Toggle a member's role between admin and member. Only club owner or admins can do this."""
+    if not _is_club_owner_or_admin(club_id, current_user_id):
+        raise HTTPException(status_code=403, detail="Only club owner or admins can change roles")
+    supabase = get_supabase()
+
+    # Can't change the owner's role
+    club_result = supabase.table("clubs").select("created_by").eq("id", club_id).execute()
+    if club_result.data and club_result.data[0].get("created_by") == member_user_id:
+        raise HTTPException(status_code=400, detail="Cannot change the club owner's role")
+
+    # Get current role and toggle
+    membership = supabase.table("user_clubs").select("role").eq("user_id", member_user_id).eq("club_id", club_id).execute()
+    if not membership.data:
+        raise HTTPException(status_code=404, detail="Member not found")
+    current_role = membership.data[0].get("role") or "member"
+    new_role = "member" if current_role == "admin" else "admin"
+    supabase.table("user_clubs").update({"role": new_role}).eq("user_id", member_user_id).eq("club_id", club_id).execute()
+    return {"success": True, "role": new_role}
 
 
 @router.delete("/{club_id}/members/{member_user_id}")
