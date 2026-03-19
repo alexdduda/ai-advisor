@@ -955,3 +955,52 @@
   .club-drawer { width: 100vw; }
   .my-club-row__name { max-width: 140px; }
 }
+
+/* ── Join Request Modal ───────────────────────────────── */
+.club-join-modal {
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--bg-primary, #fff);
+  border-radius: 14px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+  width: 90vw;
+  max-width: 420px;
+  z-index: 600;
+  overflow: hidden;
+}
+.club-join-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border-primary, #e4e4e7);
+}
+.club-join-modal__form {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.club-join-modal__field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary, #374151);
+  margin-bottom: 5px;
+}
+.club-join-modal__field input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border-primary, #d1d5db);
+  border-radius: 8px;
+  font-size: 14px;
+  background: var(--bg-primary, #fff);
+  color: var(--text-primary, #111827);
+  box-sizing: border-box;
+}
+.club-join-modal__field input:focus {
+  outline: none;
+  border-color: #ED1B2F;
+  box-shadow: 0 0 0 3px rgba(237,27,47,0.1);
+}

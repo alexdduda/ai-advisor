@@ -75,6 +75,9 @@ class ClubSubmission(BaseModel):
 
 class JoinClubRequest(BaseModel):
     club_id: str
+    requester_name: Optional[str] = None
+    requester_email: Optional[str] = None
+    requester_linkedin: Optional[str] = None
 
 
 class UpdateClubRequest(BaseModel):
@@ -151,17 +154,21 @@ def _get_starter_names(major: Optional[str]) -> List[str]:
     return DEFAULT_STARTERS
 
 
-def _send_join_request_email(creator_email: str, club_name: str, requester_name: str):
+def _send_join_request_email(creator_email: str, club_name: str, requester_name: str, requester_email: str = "", requester_linkedin: str = ""):
     """Send an email to the club creator when someone requests to join."""
     try:
-        import resend
         if not settings.RESEND_API_KEY:
             logger.warning("RESEND_API_KEY not set — skipping join request email")
             return
 
-        resend.api_key = settings.RESEND_API_KEY
         safe_club = escape(club_name)
-        safe_requester = escape(requester_name)
+        safe_name = escape(requester_name or "A student")
+        safe_email = escape(requester_email or "Not provided")
+        safe_linkedin = escape(requester_linkedin or "")
+
+        linkedin_row = ""
+        if safe_linkedin:
+            linkedin_row = f'<tr><td style="padding:6px 0;font-size:13px;color:#6b7280;width:90px;">LinkedIn</td><td style="padding:6px 0;font-size:14px;color:#111827;"><a href="{safe_linkedin}" style="color:#2563eb;text-decoration:none;">{safe_linkedin}</a></td></tr>'
 
         subject = f"New Join Request: {safe_club}"
         html = f"""<!DOCTYPE html>
@@ -179,9 +186,14 @@ def _send_join_request_email(creator_email: str, club_name: str, requester_name:
             <span style="display:inline-block;background:#fef3c7;color:#92400e;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:4px 10px;border-radius:20px;">Join Request</span>
           </div>
           <h1 style="margin:0 0 10px;font-size:22px;font-weight:700;color:#111827;line-height:1.3;">{safe_club}</h1>
-          <p style="margin:0 0 20px;font-size:16px;color:#374151;line-height:1.5;">
-            <strong>{safe_requester}</strong> has requested to join your club.
+          <p style="margin:0 0 16px;font-size:16px;color:#374151;line-height:1.5;">
+            Someone has requested to join your club.
           </p>
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;background:#f9fafb;padding:12px;border-radius:8px;">
+            <tr><td style="padding:6px 0;font-size:13px;color:#6b7280;width:90px;">Name</td><td style="padding:6px 0;font-size:14px;color:#111827;font-weight:600;">{safe_name}</td></tr>
+            <tr><td style="padding:6px 0;font-size:13px;color:#6b7280;">Email</td><td style="padding:6px 0;font-size:14px;color:#111827;">{safe_email}</td></tr>
+            {linkedin_row}
+          </table>
           <p style="margin:0 0 20px;font-size:14px;color:#6b7280;">
             Log in to your Symbolos dashboard to approve or deny this request.
           </p>
@@ -199,15 +211,103 @@ def _send_join_request_email(creator_email: str, club_name: str, requester_name:
   </table>
 </body></html>"""
 
-        resend.Emails.send({
-            "from": "Symbolos <notifications@symbolos.ca>",
-            "to": [creator_email],
-            "subject": subject,
-            "html": html,
-        })
-        logger.info(f"Join request email sent to {creator_email} for club {club_name}")
+        import httpx
+        resp = httpx.post(
+            "https://api.resend.com/emails",
+            headers={"Authorization": f"Bearer {settings.RESEND_API_KEY}", "Content-Type": "application/json"},
+            json={"from": "Symbolos <notifications@symbolos.ca>", "to": [creator_email], "subject": subject, "html": html},
+            timeout=10,
+        )
+        if resp.status_code >= 400:
+            logger.warning(f"Resend API error for join request: {resp.status_code} {resp.text}")
+        else:
+            logger.info(f"Join request email sent to {creator_email} for club {club_name}")
     except Exception as e:
         logger.exception(f"Failed to send join request email: {e}")
+
+
+def _notify_club_members_new_event(supabase, club_id: str, club_name: str, title: str, date: str, time: str = None, location: str = None, description: str = None):
+    """Email all members of a club about a new event."""
+    if not settings.RESEND_API_KEY:
+        return
+
+    # Get all member user IDs
+    members = supabase.table("user_clubs").select("user_id").eq("club_id", club_id).execute()
+    if not members.data:
+        return
+
+    user_ids = [m["user_id"] for m in members.data]
+
+    # Get emails from auth — try profiles table
+    emails = []
+    for uid in user_ids:
+        try:
+            profile = supabase.table("profiles").select("email").eq("id", uid).execute()
+            if profile.data and profile.data[0].get("email"):
+                emails.append(profile.data[0]["email"])
+        except Exception:
+            continue
+
+    if not emails:
+        return
+
+    safe_name = escape(club_name)
+    safe_title = escape(title)
+    safe_desc = escape((description or "")[:300])
+    safe_loc = escape(location or "TBA")
+    time_str = time or "TBA"
+
+    subject = f"New Event: {safe_title} — {safe_name}"
+    html = f"""<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:32px 16px;">
+    <tr><td align="center">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
+        <tr><td style="background:#ED1B2F;border-radius:12px 12px 0 0;padding:20px 28px;">
+          <span style="color:#fff;font-size:13px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;opacity:0.85;">Symbolos</span>
+        </td></tr>
+        <tr><td style="background:#ffffff;padding:28px;border-left:1px solid #e4e4e7;border-right:1px solid #e4e4e7;">
+          <div style="margin-bottom:16px;">
+            <span style="display:inline-block;background:#dbeafe;color:#1d4ed8;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:4px 10px;border-radius:20px;">New Event</span>
+          </div>
+          <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111827;line-height:1.3;">{safe_title}</h1>
+          <p style="margin:0 0 16px;font-size:14px;color:#6b7280;">Posted by <strong>{safe_name}</strong></p>
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;background:#f9fafb;padding:12px;border-radius:8px;">
+            <tr><td style="padding:6px 0;font-size:13px;color:#6b7280;width:80px;">Date</td><td style="padding:6px 0;font-size:14px;color:#111827;font-weight:600;">{escape(date)}</td></tr>
+            <tr><td style="padding:6px 0;font-size:13px;color:#6b7280;">Time</td><td style="padding:6px 0;font-size:14px;color:#111827;">{escape(time_str)}</td></tr>
+            <tr><td style="padding:6px 0;font-size:13px;color:#6b7280;">Location</td><td style="padding:6px 0;font-size:14px;color:#111827;">{safe_loc}</td></tr>
+          </table>
+          {"<p style='margin:0 0 20px;font-size:14px;color:#374151;line-height:1.6;'>" + safe_desc + "</p>" if safe_desc else ""}
+          <div style="text-align:center;">
+            <a href="https://symbolos.ca" style="display:inline-block;background:#ED1B2F;color:#fff;font-size:14px;font-weight:600;text-decoration:none;padding:12px 28px;border-radius:8px;">View on Symbolos</a>
+          </div>
+        </td></tr>
+        <tr><td style="background:#f9fafb;border:1px solid #e4e4e7;border-top:none;border-radius:0 0 12px 12px;padding:16px 28px;text-align:center;">
+          <p style="margin:0;font-size:11px;color:#9ca3af;line-height:1.6;">
+            You're receiving this because you are a member of {safe_name} on Symbolos.
+          </p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>"""
+
+    try:
+        import httpx
+        resp = httpx.post(
+            "https://api.resend.com/emails",
+            headers={"Authorization": f"Bearer {settings.RESEND_API_KEY}", "Content-Type": "application/json"},
+            json={"from": "Symbolos <notifications@symbolos.ca>", "to": emails, "subject": subject, "html": html},
+            timeout=10,
+        )
+        if resp.status_code >= 400:
+            logger.warning(f"Resend error for event notification: {resp.status_code} {resp.text}")
+        else:
+            logger.info(f"Event notification sent to {len(emails)} members of {club_name}")
+    except Exception as e:
+        logger.exception(f"Failed to send event notification: {e}")
 
 
 # ── DB-stored action tokens for email-based club approval ────────────────────
@@ -663,22 +763,25 @@ async def join_club(user_id: str, body: JoinClubRequest, req: Request, current_u
             if existing_req.data:
                 raise HTTPException(status_code=409, detail="You already have a pending request for this club")
 
-            # Get requester info for the email
-            requester_name = "A student"
-            try:
-                user_result = supabase.table("profiles").select("full_name, email").eq("id", user_id).execute()
-                if user_result.data:
-                    requester_name = user_result.data[0].get("full_name") or user_result.data[0].get("email", "A student")
-            except Exception as e:
-                logger.warning(f"Could not fetch requester profile: {e}")
+            # Use user-provided info from the join form
+            requester_name = body.requester_name or "A student"
+            requester_email = body.requester_email or ""
+            requester_linkedin = body.requester_linkedin or ""
 
             # Create join request
-            supabase.table("club_join_requests").insert({
+            insert_data = {
                 "user_id": user_id,
                 "club_id": body.club_id,
                 "status": "pending",
                 "requester_name": requester_name,
-            }).execute()
+            }
+            # Add optional columns if provided (columns must exist in table)
+            if requester_email:
+                insert_data["requester_email"] = requester_email
+            if requester_linkedin:
+                insert_data["requester_linkedin"] = requester_linkedin
+
+            supabase.table("club_join_requests").insert(insert_data).execute()
 
             # Send email to club creator (non-blocking — don't fail the join if email fails)
             try:
@@ -690,6 +793,8 @@ async def join_club(user_id: str, body: JoinClubRequest, req: Request, current_u
                             creator_email=creator_result.data[0]["email"],
                             club_name=club["name"],
                             requester_name=requester_name,
+                            requester_email=requester_email,
+                            requester_linkedin=requester_linkedin,
                         )
             except Exception as e:
                 logger.warning(f"Failed to send join request email: {e}")
@@ -865,6 +970,19 @@ async def create_club_event(club_id: str, body: ClubEventCreate, current_user_id
             "recurrence": body.recurrence,
             "created_by": current_user_id,
         }).execute()
+
+        # Email all club members about the new event (non-blocking)
+        try:
+            club_result = supabase.table("clubs").select("name").eq("id", club_id).execute()
+            club_name = club_result.data[0]["name"] if club_result.data else "Your Club"
+            _notify_club_members_new_event(
+                supabase, club_id, club_name,
+                title=body.title, date=body.date, time=body.time,
+                location=body.location, description=body.description,
+            )
+        except Exception as e:
+            logger.warning(f"Failed to send event notification emails: {e}")
+
         return {"success": True, "event": result.data[0] if result.data else None}
     except Exception as e:
         logger.exception(f"Error creating club event: {e}")
