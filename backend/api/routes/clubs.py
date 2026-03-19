@@ -298,15 +298,16 @@ def _send_admin_club_email(submission: dict):
   </table>
 </body></html>"""
 
-        resend.Emails.send({
+        result = resend.Emails.send({
             "from": "Symbolos <notifications@symbolos.ca>",
             "to": admin_emails,
             "subject": subject,
             "html": html,
         })
-        logger.info(f"Admin club submission email sent to {admin_emails} for club {submission.get('name')}")
+        logger.info(f"Admin club submission email sent to {admin_emails} for club {submission.get('name')}, resend_id={result}")
     except Exception as e:
         logger.exception(f"Failed to send admin club email: {e}")
+        raise  # Re-raise so caller knows it failed
 
 
 def _send_submitter_notification_email(contact_email: str, club_name: str, status: str):
