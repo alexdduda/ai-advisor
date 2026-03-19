@@ -7,7 +7,7 @@ manage join requests for private clubs, and edit clubs you created.
 """
 from fastapi import APIRouter, HTTPException, Query, status, Depends, Request
 from fastapi.responses import HTMLResponse
-from pydantic import BaseModel, EmailStr, Field, AnyHttpUrl
+from pydantic import BaseModel, EmailStr, Field, AnyHttpUrl, field_validator
 from typing import Optional, List
 import logging
 import secrets
@@ -92,14 +92,45 @@ class JoinRequestAction(BaseModel):
     action: str  # "approve" or "deny"
 
 
+def _convert_to_24h(v: Optional[str]) -> Optional[str]:
+    """Convert time strings like '2:00 PM' to '14:00' (HH:MM 24h format)."""
+    if not v:
+        return None
+    import re
+    v = v.strip()
+    # Already HH:MM 24h format
+    if re.match(r'^\d{2}:\d{2}$', v):
+        return v
+    # Handle "H:MM" without AM/PM (e.g. "2:00")
+    if re.match(r'^\d{1,2}:\d{2}$', v) and 'AM' not in v.upper() and 'PM' not in v.upper():
+        return v.zfill(5)
+    # Handle 12h format like "2:00 PM" or "12:30 AM"
+    m = re.match(r'^(\d{1,2}):(\d{2})\s*(AM|PM)$', v, re.IGNORECASE)
+    if m:
+        h = int(m.group(1))
+        mins = m.group(2)
+        period = m.group(3).upper()
+        if period == 'PM' and h != 12:
+            h += 12
+        if period == 'AM' and h == 12:
+            h = 0
+        return f"{h:02d}:{mins}"
+    return v  # fallback
+
+
 class ClubEventCreate(BaseModel):
     title:       str            = Field(..., min_length=1, max_length=200)
     description: Optional[str]  = Field(None, max_length=1000)
     date:        str            = Field(...)  # YYYY-MM-DD
-    time:        Optional[str]  = None        # HH:MM
-    end_time:    Optional[str]  = None        # HH:MM
+    time:        Optional[str]  = None        # HH:MM (auto-converts 12h format)
+    end_time:    Optional[str]  = None        # HH:MM (auto-converts 12h format)
     location:    Optional[str]  = Field(None, max_length=200)
     recurrence:  Optional[str]  = None        # null, 'weekly_monday', 'biweekly_tuesday', etc.
+
+    @field_validator('time', 'end_time', mode='before')
+    @classmethod
+    def normalize_time(cls, v):
+        return _convert_to_24h(v)
 
 
 class ClubAnnouncementCreate(BaseModel):
