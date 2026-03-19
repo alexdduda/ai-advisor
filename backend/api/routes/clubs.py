@@ -788,19 +788,28 @@ async def join_club(user_id: str, body: JoinClubRequest, req: Request, current_u
 
             supabase.table("club_join_requests").insert(insert_data).execute()
 
-            # Send email to club creator (non-blocking — don't fail the join if email fails)
+            # Only email club creator if there are 10+ pending requests
             try:
-                creator_id = club.get("created_by")
-                if creator_id:
-                    creator_result = supabase.table("users").select("email").eq("id", creator_id).execute()
-                    if creator_result.data and creator_result.data[0].get("email"):
-                        _send_join_request_email(
-                            creator_email=creator_result.data[0]["email"],
-                            club_name=club["name"],
-                            requester_name=requester_name,
-                            requester_email=requester_email,
-                            requester_linkedin=requester_linkedin,
-                        )
+                pending_count_result = (
+                    supabase.table("club_join_requests")
+                    .select("id", count="exact")
+                    .eq("club_id", body.club_id)
+                    .eq("status", "pending")
+                    .execute()
+                )
+                pending_count = pending_count_result.count if pending_count_result.count is not None else len(pending_count_result.data or [])
+                if pending_count >= 10:
+                    creator_id = club.get("created_by")
+                    if creator_id:
+                        creator_result = supabase.table("users").select("email").eq("id", creator_id).execute()
+                        if creator_result.data and creator_result.data[0].get("email"):
+                            _send_join_request_email(
+                                creator_email=creator_result.data[0]["email"],
+                                club_name=club["name"],
+                                requester_name=requester_name,
+                                requester_email=requester_email,
+                                requester_linkedin=requester_linkedin,
+                            )
             except Exception as e:
                 logger.warning(f"Failed to send join request email: {e}")
 
