@@ -699,7 +699,7 @@ async def handle_join_request(request_id: str, body: JoinRequestAction, current_
         raise
     except Exception as e:
         logger.exception(f"Error handling join request: {e}")
-        raise HTTPException(status_code=500, detail="Failed to process join request")
+        raise HTTPException(status_code=500, detail=f"Failed to process join request: {str(e)}")
 
 
 @router.get("/user/{user_id}")
