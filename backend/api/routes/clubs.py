@@ -661,45 +661,38 @@ async def handle_join_request(request_id: str, body: JoinRequestAction, current_
     """Approve or deny a join request."""
     if body.action not in ("approve", "deny"):
         raise HTTPException(status_code=400, detail="Action must be 'approve' or 'deny'")
-    try:
-        supabase = get_supabase()
-        # Get the request
-        req_result = supabase.table("club_join_requests").select("*").eq("id", request_id).execute()
-        if not req_result.data:
-            raise HTTPException(status_code=404, detail="Join request not found")
-        join_req = req_result.data[0]
+    supabase = get_supabase()
 
-        # Verify club ownership or admin
-        if not _is_club_owner_or_admin(join_req["club_id"], current_user_id):
-            raise HTTPException(status_code=403, detail="Only the club creator or admins can handle join requests")
+    # Get the request
+    req_result = supabase.table("club_join_requests").select("*").eq("id", request_id).execute()
+    if not req_result.data:
+        raise HTTPException(status_code=404, detail="Join request not found")
+    join_req = req_result.data[0]
 
-        # Update request status
-        new_status = "approved" if body.action == "approve" else "denied"
-        supabase.table("club_join_requests").update({"status": new_status}).eq("id", request_id).execute()
+    # Verify club ownership or admin
+    if not _is_club_owner_or_admin(join_req["club_id"], current_user_id):
+        raise HTTPException(status_code=403, detail="Only the club creator or admins can handle join requests")
 
-        # If approved, add user to club
-        if body.action == "approve":
-            # Check not already joined
-            existing = (
-                supabase.table("user_clubs")
-                .select("user_id")
-                .eq("user_id", join_req["user_id"])
-                .eq("club_id", join_req["club_id"])
-                .execute()
-            )
-            if not existing.data:
-                supabase.table("user_clubs").insert({
-                    "user_id": join_req["user_id"],
-                    "club_id": join_req["club_id"],
-                    "calendar_synced": False,
-                }).execute()
+    if body.action == "approve":
+        # Add user to club if not already joined
+        existing = (
+            supabase.table("user_clubs")
+            .select("user_id")
+            .eq("user_id", join_req["user_id"])
+            .eq("club_id", join_req["club_id"])
+            .execute()
+        )
+        if not existing.data:
+            supabase.table("user_clubs").insert({
+                "user_id": join_req["user_id"],
+                "club_id": join_req["club_id"],
+                "calendar_synced": False,
+            }).execute()
 
-        return {"success": True, "status": new_status}
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.exception(f"Error handling join request: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to process join request: {str(e)}")
+    # Delete the join request row (cleaner than updating status)
+    supabase.table("club_join_requests").delete().eq("id", request_id).execute()
+
+    return {"success": True, "status": "approved" if body.action == "approve" else "denied"}
 
 
 @router.get("/user/{user_id}")
@@ -914,6 +907,39 @@ def _is_club_owner_or_admin(club_id: str, user_id: str) -> bool:
     if club.data and club.data[0].get("created_by") == user_id:
         return True
     return False
+
+
+# ── Club Members ─────────────────────────────────────────────────────────────
+
+@router.get("/{club_id}/members")
+async def get_club_members(club_id: str, current_user_id: str = Depends(get_current_user_id)):
+    """Get all members of a club. Only club owner or admins can view."""
+    if not _is_club_owner_or_admin(club_id, current_user_id):
+        raise HTTPException(status_code=403, detail="Only club owner or admins can view members")
+    supabase = get_supabase()
+    memberships = supabase.table("user_clubs").select("user_id, created_at").eq("club_id", club_id).execute()
+    members = []
+    for m in (memberships.data or []):
+        profile = {"id": m["user_id"], "joined_at": m.get("created_at")}
+        try:
+            p = supabase.table("profiles").select("full_name, email").eq("id", m["user_id"]).execute()
+            if p.data:
+                profile["name"] = p.data[0].get("full_name", "")
+                profile["email"] = p.data[0].get("email", "")
+        except Exception:
+            pass
+        members.append(profile)
+    return {"members": members, "count": len(members)}
+
+
+@router.delete("/{club_id}/members/{member_user_id}")
+async def remove_club_member(club_id: str, member_user_id: str, current_user_id: str = Depends(get_current_user_id)):
+    """Remove a member from a club. Only club owner or admins can remove."""
+    if not _is_club_owner_or_admin(club_id, current_user_id):
+        raise HTTPException(status_code=403, detail="Only club owner or admins can remove members")
+    supabase = get_supabase()
+    supabase.table("user_clubs").delete().eq("user_id", member_user_id).eq("club_id", club_id).execute()
+    return {"success": True}
 
 
 # ── Club Events ──────────────────────────────────────────────────────────────

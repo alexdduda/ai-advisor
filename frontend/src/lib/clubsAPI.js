@@ -157,6 +157,23 @@ const clubsAPI = {
     return res.json()
   },
 
+  // ── Club Members ────────────────────────────────────────────────────────
+  async getClubMembers(clubId) {
+    try {
+      const res = await fetch(`${BASE_URL}/api/clubs/${clubId}/members`, { headers: await authHeaders() })
+      if (res.ok) return res.json()
+    } catch (_) {}
+    return { members: [], count: 0 }
+  },
+
+  async removeClubMember(clubId, memberUserId) {
+    const res = await fetch(`${BASE_URL}/api/clubs/${clubId}/members/${memberUserId}`, {
+      method: 'DELETE', headers: await authHeaders(),
+    })
+    if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.detail || 'Failed to remove member') }
+    return res.json()
+  },
+
   // ── Club Events ──────────────────────────────────────────────────────────
   async getSubscribedClubEvents() {
     try {

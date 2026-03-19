@@ -115,12 +115,49 @@ function JoinRequestModal({ club, onSubmit, onClose }) {
   )
 }
 
-function ClubDetailDrawer({ club, liveClub, joined, calSynced, onJoin, onLeave, onToggleCalendar, onClose, clubLoading, t }) {
+function MembersSection({ clubId, meta }) {
+  const [members, setMembers] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    clubsAPI.getClubMembers(clubId).then(d => { setMembers(d.members || []); setLoading(false) })
+  }, [clubId])
+
+  const handleRemove = async (userId, name) => {
+    if (!window.confirm(`Remove ${name || 'this member'} from the club?`)) return
+    try {
+      await clubsAPI.removeClubMember(clubId, userId)
+      setMembers(prev => prev.filter(m => m.id !== userId))
+    } catch { /* silent */ }
+  }
+
+  if (loading) return <p style={{ fontSize: '13px', color: '#9ca3af', padding: '8px 0' }}>Loading members...</p>
+  if (!members.length) return <p style={{ fontSize: '13px', color: '#9ca3af', padding: '8px 0' }}>No members yet.</p>
+
+  return (
+    <div className="club-members-list">
+      {members.map(m => (
+        <div key={m.id} className="club-member-row">
+          <div className="club-member-info">
+            <span className="club-member-name">{m.name || 'Unknown'}</span>
+            {m.email && <span className="club-member-email">{m.email}</span>}
+          </div>
+          <button className="club-member-remove" onClick={() => handleRemove(m.id, m.name)} title="Remove member">
+            <FaTimes size={10} />
+          </button>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function ClubDetailDrawer({ club, liveClub, joined, calSynced, onJoin, onLeave, onToggleCalendar, onClose, clubLoading, t, isAdmin, userId }) {
   if (!club) return null
   const display = liveClub ? { ...club, ...liveClub } : club
   const meta = getCat(display.category)
   const isLoading = clubLoading[club.id] ?? false
   const isPrivate = display.is_private ?? false
+  const canManage = isAdmin || display.created_by === userId
 
   return (
     <div className="club-drawer-overlay" onClick={onClose}>
@@ -222,6 +259,13 @@ function ClubDetailDrawer({ club, liveClub, joined, calSynced, onJoin, onLeave, 
             </section>
           )}
 
+          {canManage && (
+            <section className="club-drawer__section">
+              <h3 className="club-drawer__section-title"><FaUsers size={12} /> Members</h3>
+              <MembersSection clubId={club.id} meta={meta} />
+            </section>
+          )}
+
           {(display.website_url || display.contact_email) && (
             <section className="club-drawer__section">
               <h3 className="club-drawer__section-title"><FaExternalLinkAlt size={11} /> {t('clubs.linksContact')}</h3>
@@ -260,12 +304,7 @@ function ClubCard({ club, joined, calSynced, onJoin, onLeave, onToggleCalendar, 
 
   return (
     <article className={`club-card ${joined ? 'club-card--joined' : ''}`} onClick={() => onOpen(club)}>
-      <div className="club-card__accent" style={{ background: meta.color }} />
-      {joined && (
-        <div className="club-card__joined-badge" style={{ background: meta.color }}>
-          <FaCheck size={8} /> {t('clubs.joinedBadge')}
-        </div>
-      )}
+      <div className="club-card__accent" style={{ background: joined ? meta.color : meta.color, opacity: joined ? 1 : 0.5 }} />
       <div className="club-card__body">
         <div className="club-card__top">
           <ClubAvatar name={club.name} category={club.category} size="md" />
@@ -1198,6 +1237,8 @@ export default function ClubsTab({ user, onClubEventsChange }) {
           onClose={() => setOpenClub(null)}
           clubLoading={clubLoading}
           t={t}
+          isAdmin={isAdmin}
+          userId={user?.id}
         />
       )}
 
