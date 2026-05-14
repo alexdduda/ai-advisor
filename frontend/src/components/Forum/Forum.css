@@ -1020,3 +1020,34 @@
   }
   .forum-section-btn.active span { display: inline; }
 }
+
+/* ── Link-out banner to mcgill.courses ─────────────────────────── */
+.forum-linkout-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-left: 3px solid #3b82f6;
+  border-radius: 8px;
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  text-decoration: none;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.forum-linkout-banner:hover {
+  background: var(--bg-primary);
+  border-color: #3b82f6;
+}
+.forum-linkout-banner__icon {
+  color: #3b82f6;
+  flex-shrink: 0;
+}
+.forum-linkout-banner__text {
+  flex: 1;
+  line-height: 1.45;
+}
+.forum-linkout-banner__text strong { color: var(--text-primary); }
+.forum-linkout-banner__text u { text-decoration: underline; color: #3b82f6; }
