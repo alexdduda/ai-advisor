@@ -684,16 +684,31 @@ export default function Forum() {
 
       {/* Reviews sub-tabs */}
       {activeSection === 'reviews' && (
-        <div className="forum-subtab-bar">
-          {REVIEW_SUBTABS.map(s => (
-            <button key={s.key}
-              className={`forum-subtab-btn ${reviewSubtab === s.key ? 'active' : ''}`}
-              style={{ '--cat-color': s.color }}
-              onClick={() => setReviewSubtab(s.key)}>
-              {s.icon} <span>{s.label}</span>
-            </button>
-          ))}
-        </div>
+        <>
+          <div className="forum-subtab-bar">
+            {REVIEW_SUBTABS.map(s => (
+              <button key={s.key}
+                className={`forum-subtab-btn ${reviewSubtab === s.key ? 'active' : ''}`}
+                style={{ '--cat-color': s.color }}
+                onClick={() => setReviewSubtab(s.key)}>
+                {s.icon} <span>{s.label}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Link-out banner: send users to mcgill.courses for broader review coverage */}
+          <a
+            className="forum-linkout-banner"
+            href="https://mcgill.courses"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <FaBookOpen className="forum-linkout-banner__icon" />
+            <span className="forum-linkout-banner__text">
+              <strong>Want more reviews?</strong> Browse student-written course & professor reviews on <u>mcgill.courses</u> ↗
+            </span>
+          </a>
+        </>
       )}
 
       {/* Toolbar */}
