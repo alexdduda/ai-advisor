@@ -48,6 +48,8 @@ class ElectivesRequest(BaseModel):
     # SEC-008 FIX: Added max_length per item (was only on the list)
     courses_taken:   Optional[List[str]] = Field(default_factory=list, max_length=200)
     exclude_courses: Optional[List[str]] = Field(default_factory=list, max_length=200)
+    # Courses recommended in previous refreshes — don't repeat them
+    recently_recommended: Optional[List[str]] = Field(default_factory=list, max_length=200)
 
 
 @router.post("/recommend")
@@ -82,8 +84,14 @@ async def recommend_electives(
             sanitise_user_message(c)
             safe_exclude_courses.append(c.strip()[:20])
 
+        safe_recent = []
+        for c in (req.recently_recommended or []):
+            sanitise_user_message(c)
+            safe_recent.append(c.strip()[:20])
+
         course_list  = ", ".join(safe_courses_taken)  if safe_courses_taken  else "None yet"
         exclude_str  = ", ".join(safe_exclude_courses) if safe_exclude_courses else "None"
+        recent_str   = ", ".join(safe_recent) if safe_recent else "None"
 
         prompt = f"""You are an academic advisor at McGill University Faculty of Arts.
 
@@ -96,6 +104,9 @@ Student profile:
 - Courses taken/taking: {course_list}
 
 IMPORTANT — Do NOT recommend any of these required major/minor courses: {exclude_str}
+
+ALSO — Do NOT re-recommend these courses (the student already saw them on a previous refresh
+and asked for fresh ideas; pick DIFFERENT courses, different departments, different angles): {recent_str}
 
 Recommend exactly 8 ELECTIVE courses from McGill's course catalogue — courses outside the required program.
 These should complement their interests, open new perspectives, or advance their career goals.

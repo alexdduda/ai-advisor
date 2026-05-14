@@ -165,6 +165,24 @@ def fetch_saved_cards(user_id: str, user_sb=None) -> list:
         .execute().data or [])
 
 
+def fetch_recent_card_titles(user_id: str, user_sb=None, limit: int = 24) -> list[str]:
+    """
+    Return titles of the most recently AI-generated cards (across the last few
+    generation batches). Used to nudge Claude away from re-suggesting the same
+    topics on refresh.
+    """
+    sb = user_sb if user_sb is not None else get_supabase()
+    try:
+        resp = (sb.table("advisor_cards")
+                .select("title")
+                .eq("user_id", user_id).eq("source", "ai")
+                .order("generated_at", desc=True).limit(limit)
+                .execute())
+        return [r.get("title", "") for r in (resp.data or []) if r.get("title")]
+    except Exception:
+        return []
+
+
 def cards_are_fresh(user_id: str, max_age_hours: int = 168) -> bool:
     """Returns True if AI cards exist and were generated within max_age_hours (default 7 days)."""
     try:
@@ -306,7 +324,7 @@ def _deduplicate_completed(completed: list) -> list:
     return result
 
 
-def build_rich_context(ctx: dict, saved_cards: list = None) -> str:
+def build_rich_context(ctx: dict, saved_cards: list = None, recent_titles: list[str] | None = None) -> str:
     user = ctx["user"]
     completed, current, favorites, calendar = (ctx["completed"], ctx["current"], ctx["favorites"], ctx["calendar"])
     # Deduplicate: remove withdrawn/failed entries when course was later passed
@@ -346,6 +364,27 @@ def build_rich_context(ctx: dict, saved_cards: list = None) -> str:
             for c in saved_cards)
         saved_section = f"\nSAVED CARDS (already pinned — DO NOT regenerate cards covering these topics):\n{saved_lines}\n"
 
+    # Recently shown card titles — nudge the model toward different angles
+    recent_section = ""
+    if recent_titles:
+        # Deduplicate (in case same title appears multiple times) and cap
+        seen = set()
+        unique = []
+        for t in recent_titles:
+            key = (t or "").strip().lower()
+            if key and key not in seen:
+                seen.add(key)
+                unique.append(sanitise_context_field(t))
+            if len(unique) >= 24:
+                break
+        if unique:
+            recent_section = (
+                "\nRECENTLY SHOWN CARDS (the student has already seen these — DO NOT "
+                "repeat the same topic, angle, or recommendation; surface NEW insights):\n"
+                + "\n".join(f"  - {t}" for t in unique)
+                + "\n"
+            )
+
     safe_username      = sanitise_context_field(str(user.get('username') or user.get('email', 'Student')))
     safe_faculty       = sanitise_context_field(str(user.get('faculty') or 'Not specified'))
     safe_majors        = sanitise_context_field(majors_str)
@@ -354,7 +393,7 @@ def build_rich_context(ctx: dict, saved_cards: list = None) -> str:
 
     return f"""You are a proactive AI academic advisor for McGill University.
 Analyse the student's profile and generate 8 high-value briefing cards.
-{saved_section}
+{saved_section}{recent_section}
 Today: {datetime.now(timezone.utc).date().isoformat()}
 
 STUDENT PROFILE
@@ -515,7 +554,10 @@ async def generate_cards(user_id: str, request: GenerateRequest, req: Request, c
 
         ctx = fetch_student_context(user_id, user_sb=user_sb)
         saved = fetch_saved_cards(user_id, user_sb=user_sb)
-        prompt = build_rich_context(ctx, saved_cards=saved) + _lang_instruction(request.language)
+        # Only pass recent titles when the user is forcing a refresh — on a
+        # first generation there's nothing to diversify against.
+        recent_titles = fetch_recent_card_titles(user_id, user_sb=user_sb) if request.force else []
+        prompt = build_rich_context(ctx, saved_cards=saved, recent_titles=recent_titles) + _lang_instruction(request.language)
 
         client = get_anthropic_client()
         message = client.messages.create(model=settings.CLAUDE_MODEL, max_tokens=4096,
@@ -608,9 +650,9 @@ async def _fetch_student_context_parallel(user_id: str, user_sb=None) -> dict:
             "joined_clubs": joined_clubs, "created_clubs": created_clubs}
 
 
-def _build_ndjson_context(ctx: dict, saved_cards: list = None) -> str:
+def _build_ndjson_context(ctx: dict, saved_cards: list = None, recent_titles: list[str] | None = None) -> str:
     """Like build_rich_context but asks for NDJSON output (one card per line) for streaming."""
-    base = build_rich_context(ctx, saved_cards=saved_cards)
+    base = build_rich_context(ctx, saved_cards=saved_cards, recent_titles=recent_titles)
     # Replace the final return instruction with NDJSON variant
     return base.replace(
         "Return ONLY the JSON array — no markdown, no commentary.",
@@ -668,13 +710,19 @@ async def stream_cards(
 
     async def _generate_stream():
         try:
-            # Parallel DB fetch
-            ctx, saved = await asyncio.gather(
+            # Parallel DB fetch — also include recent card titles on forced refresh
+            # so Claude doesn't repeat the same topics.
+            tasks = [
                 _fetch_student_context_parallel(user_id, user_sb),
                 asyncio.to_thread(fetch_saved_cards, user_id, user_sb),
-            )
+            ]
+            if request.force:
+                tasks.append(asyncio.to_thread(fetch_recent_card_titles, user_id, user_sb))
+            results = await asyncio.gather(*tasks)
+            ctx, saved = results[0], results[1]
+            recent_titles = results[2] if len(results) > 2 else []
 
-            prompt = _build_ndjson_context(ctx, saved_cards=saved) + _lang_instruction(language)
+            prompt = _build_ndjson_context(ctx, saved_cards=saved, recent_titles=recent_titles) + _lang_instruction(language)
             async_client = get_async_anthropic_client()
 
             collected_cards: list = []

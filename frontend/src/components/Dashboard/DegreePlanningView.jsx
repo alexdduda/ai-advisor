@@ -387,6 +387,15 @@ function ElectivesPanel({ profile, completedCourses, currentCourses, programData
 
       const excludeCourses = Array.from(requiredCodes)
 
+      // Pull recently-recommended courses from localStorage so the AI doesn't
+      // repeat them on refresh. Keep a rolling window of the last ~32 codes.
+      const recentKey = profile?.id ? `electives_recent_${profile.id}` : 'electives_recent'
+      let recentlyRecommended = []
+      try {
+        recentlyRecommended = JSON.parse(localStorage.getItem(recentKey) || '[]')
+        if (!Array.isArray(recentlyRecommended)) recentlyRecommended = []
+      } catch { recentlyRecommended = [] }
+
       const { data: { session } } = await supabase.auth.getSession()
       const token = session?.access_token
       if (!token) throw new Error('Not authenticated')
@@ -398,19 +407,36 @@ function ElectivesPanel({ profile, completedCourses, currentCourses, programData
           'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
-          major:           profile?.major        || null,
-          minor:           profile?.minor        || null,
-          concentration:   profile?.concentration|| null,
-          year:            (profile?.year >= 0 && profile?.year <= 10) ? profile.year : null,
-          interests:       profile?.interests    || null,
-          courses_taken:   coursesTaken,
-          exclude_courses: excludeCourses,
+          major:                profile?.major        || null,
+          minor:                profile?.minor        || null,
+          concentration:        profile?.concentration|| null,
+          year:                 (profile?.year >= 0 && profile?.year <= 10) ? profile.year : null,
+          interests:            profile?.interests    || null,
+          courses_taken:        coursesTaken,
+          exclude_courses:      excludeCourses,
+          recently_recommended: recentlyRecommended.slice(0, 32),
         })
       })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
       if (!data.success) throw new Error(data.detail || 'Failed')
       setRecs(data.data)
+
+      // Append the new recommendations to the recent list (keep last 32 unique)
+      try {
+        const newCodes = (data.data?.recommendations || [])
+          .map(r => `${r.subject || ''} ${r.catalog || ''}`.trim())
+          .filter(Boolean)
+        const merged = [...newCodes, ...recentlyRecommended]
+        const seen = new Set()
+        const dedup = merged.filter(c => {
+          const k = c.toUpperCase()
+          if (seen.has(k)) return false
+          seen.add(k)
+          return true
+        }).slice(0, 32)
+        localStorage.setItem(recentKey, JSON.stringify(dedup))
+      } catch { /* localStorage full or unavailable, ignore */ }
     } catch(e) {
       setRecsError('Could not generate recommendations. Try again.')
     } finally {
