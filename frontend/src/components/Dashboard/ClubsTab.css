@@ -1511,3 +1511,389 @@
   background: rgba(220, 38, 38, 0.15);
   color: #fca5a5;
 }
+
+/* ════════════════════════════════════════════════════════════════════
+   ClubsTab redesign (2026-04): pills, curated rows, skeletons,
+   improved card design, drawer quick-actions, mobile polish
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ── #1 Category pill bar (replaces dropdown) ─────────────────── */
+.clubs-cat-bar {
+  display: flex;
+  gap: 6px;
+  padding: 4px 2px 10px;
+  margin: 0 0 12px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scroll-snap-type: x proximity;
+}
+.clubs-cat-bar::-webkit-scrollbar { height: 4px; }
+.clubs-cat-bar::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 2px;
+}
+
+.clubs-cat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1.5px solid var(--border-color);
+  border-radius: 18px;
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  scroll-snap-align: start;
+  flex-shrink: 0;
+}
+.clubs-cat-pill:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+.clubs-cat-pill.active {
+  color: #fff !important;
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+}
+.clubs-cat-pill__icon {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+}
+
+/* ── #2/#3 Curated rows (Trending / For You) ──────────────────── */
+.clubs-curated-row {
+  margin: 0 0 20px;
+}
+.clubs-curated-row__header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 8px;
+  padding: 0 2px;
+}
+.clubs-curated-row__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.clubs-curated-row__sub {
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+.clubs-curated-row__strip {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(260px, 1fr);
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scrollbar-width: thin;
+  scroll-snap-type: x proximity;
+}
+.clubs-curated-row__strip::-webkit-scrollbar { height: 6px; }
+.clubs-curated-row__strip::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+.clubs-curated-row__strip > .club-card { scroll-snap-align: start; }
+
+/* ── #3 Featured badge on cards ───────────────────────────────── */
+.club-card--featured {
+  border-color: rgba(245, 158, 11, 0.35) !important;
+  box-shadow: 0 2px 12px rgba(245, 158, 11, 0.08);
+}
+.club-card__featured-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 11px;
+  color: #fff;
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  z-index: 2;
+}
+
+/* ── #7 CSS line-clamp on descriptions ────────────────────────── */
+.club-card__desc--clamped {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── #6 Unified, subdued meta line ────────────────────────────── */
+.club-card__meta-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: auto;
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+  flex-wrap: wrap;
+}
+.club-card__meta-line span {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.club-card__meta-line svg {
+  opacity: 0.7;
+}
+.club-card__meta-sep {
+  color: var(--text-tertiary);
+  opacity: 0.5;
+  font-weight: 600;
+}
+
+/* ── #9 Asymmetric CTA row: bell icon + primary join ─────────── */
+.club-card__cta-row {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+  align-items: stretch;
+}
+.club-bell-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  flex-shrink: 0;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.club-bell-toggle:hover {
+  color: var(--accent-primary);
+  border-color: var(--accent-primary);
+}
+.club-bell-toggle--on {
+  background: var(--accent-primary);
+  color: #fff;
+  border-color: var(--accent-primary);
+}
+.club-join-btn--primary {
+  flex: 1;
+  background: var(--accent-primary);
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  padding: 8px 12px;
+  font-weight: 700;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: filter 0.15s ease;
+}
+.club-join-btn--primary:hover { filter: brightness(1.08); }
+.club-join-btn--primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── #16 Owner Manage button ──────────────────────────────────── */
+.club-manage-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 7px;
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.club-manage-btn:hover {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+.club-card__owner-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 7px;
+  border-radius: 9px;
+  background: rgba(245, 158, 11, 0.12);
+  color: #b45309;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ── #5 Pending-application progress strip ────────────────────── */
+.club-app-status {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+.club-app-status__strip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+}
+.club-app-status__step {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 6px;
+  border: 1px dashed var(--border-color);
+  border-radius: 5px;
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-tertiary);
+  background: var(--bg-primary);
+  white-space: nowrap;
+}
+.club-app-status__step--done {
+  border-style: solid;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+}
+.club-app-status__step--current {
+  border-style: solid;
+  border-width: 1.5px;
+  background: var(--bg-primary);
+}
+.club-app-status__bar {
+  flex: 1;
+  height: 2px;
+  background: var(--border-color);
+  border-radius: 1px;
+}
+.club-app-status__hint {
+  margin: 2px 0 0;
+  font-size: 0.66rem;
+  color: var(--text-tertiary);
+  text-align: center;
+  line-height: 1.3;
+}
+
+/* ── #15 Calendar overlay badge on avatar ─────────────────────── */
+.club-avatar__cal-badge {
+  position: absolute;
+  bottom: -3px;
+  right: -3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--bg-primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+/* ── #13 Skeleton placeholders ────────────────────────────────── */
+.club-card--skeleton {
+  pointer-events: none;
+}
+.club-skel {
+  background: linear-gradient(90deg,
+    var(--bg-secondary) 0%,
+    var(--bg-tertiary, rgba(0,0,0,0.04)) 50%,
+    var(--bg-secondary) 100%);
+  background-size: 200% 100%;
+  animation: clubSkelShimmer 1.4s ease-in-out infinite;
+  border-radius: 6px;
+}
+@keyframes clubSkelShimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.club-skel--avatar { width: 44px; height: 44px; border-radius: 10px; flex-shrink: 0; }
+.club-skel--title  { width: 70%; height: 14px; margin-bottom: 6px; }
+.club-skel--badge  { width: 40%; height: 10px; }
+.club-skel--line   { width: 100%; height: 9px; margin-top: 8px; }
+.club-skel--meta   { width: 50%; height: 9px; margin-top: 10px; }
+.club-skel--btn    { width: 100%; height: 30px; }
+
+/* ── #14 Better empty state ───────────────────────────────────── */
+.clubs-empty__actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* ── #10 Drawer quick-action chip row ─────────────────────────── */
+.club-drawer__quick-actions {
+  display: flex;
+  gap: 8px;
+  padding: 14px 16px 4px;
+  flex-wrap: wrap;
+}
+.club-drawer__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border: 1.5px solid var(--border-color);
+  border-radius: 9px;
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+.club-drawer__chip:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+.club-drawer__chip:disabled { opacity: 0.5; cursor: not-allowed; }
+.club-drawer__chip--active {
+  border-width: 1.5px;
+  background: var(--bg-secondary);
+}
+.club-drawer__chip--primary {
+  color: #fff !important;
+  border-color: transparent !important;
+}
+.club-drawer__chip--primary:hover { filter: brightness(1.08); }
+
+/* ── #17 Mobile compactness ───────────────────────────────────── */
+@media (max-width: 700px) {
+  .clubs-toolbar { gap: 6px; }
+  .clubs-cat-bar { padding-bottom: 8px; }
+  .clubs-cat-pill { padding: 5px 10px; font-size: 0.72rem; }
+  .clubs-curated-row__strip { grid-auto-columns: minmax(220px, 1fr); }
+  .club-drawer__quick-actions { padding: 10px 12px 4px; gap: 6px; }
+  .club-drawer__chip { padding: 6px 10px; font-size: 0.75rem; }
+  .club-card__featured-badge {
+    top: 6px; right: 6px;
+    padding: 2px 6px;
+    font-size: 0.55rem;
+  }
+}
