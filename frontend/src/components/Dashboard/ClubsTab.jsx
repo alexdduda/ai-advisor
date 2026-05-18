@@ -6,9 +6,10 @@ import {
   FaChevronDown, FaChevronLeft, FaStar, FaCog, FaCrown,
   FaBook, FaPalette, FaGraduationCap,
   FaLock, FaGlobe, FaEdit, FaUserPlus, FaUserCheck, FaUserTimes,
-  FaExclamationTriangle,
+  FaExclamationTriangle, FaFire, FaGem, FaShare,
 } from 'react-icons/fa'
 import { useLanguage } from '../../contexts/LanguageContext'
+import { useAuth } from '../../contexts/AuthContext'
 import clubsAPI from '../../lib/clubsAPI'
 import './ClubsTab.css'
 
@@ -61,11 +62,47 @@ function CategoryBadge({ category, size = 'sm', t }) {
   )
 }
 
-function ClubAvatar({ name, category, size = 'md' }) {
+function ClubAvatar({ name, category, size = 'md', calSynced = false }) {
   const meta = getCat(category)
+  const initials = (name || '?').trim().split(/\s+/).slice(0, 2).map(w => w[0]?.toUpperCase()).join('') || '?'
+  const dim = { sm: 28, md: 44, lg: 64 }[size] ?? 44
   return (
-    <div className={`club-avatar club-avatar--${size}`} style={{ background: meta.bg, color: meta.color }}>
-      <span className="club-avatar__icon">{meta.icon}</span>
+    <div className={`club-avatar club-avatar--${size}`} style={{
+      width: dim, height: dim, borderRadius: 10,
+      background: meta.bg, color: meta.color, border: `1px solid ${meta.border}`,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontSize: dim * 0.36, fontWeight: 700, position: 'relative', flexShrink: 0,
+    }}>
+      {initials}
+      {calSynced && (
+        <span className="club-avatar__cal-badge" title="In your calendar">
+          <FaCalendarAlt size={9} />
+        </span>
+      )}
+    </div>
+  )
+}
+
+// Skeleton placeholder used while the club grid is loading — visually matches a real card
+function ClubCardSkeleton() {
+  return (
+    <div className="club-card club-card--skeleton" aria-hidden>
+      <div className="club-card__accent" style={{ background: 'var(--border-color)' }} />
+      <div className="club-card__body">
+        <div className="club-card__top">
+          <div className="club-skel club-skel--avatar" />
+          <div style={{ flex: 1 }}>
+            <div className="club-skel club-skel--title" />
+            <div className="club-skel club-skel--badge" />
+          </div>
+        </div>
+        <div className="club-skel club-skel--line" />
+        <div className="club-skel club-skel--line" style={{ width: '70%' }} />
+        <div className="club-skel club-skel--meta" />
+      </div>
+      <div className="club-card__footer">
+        <div className="club-skel club-skel--btn" />
+      </div>
     </div>
   )
 }
@@ -254,7 +291,7 @@ function ClubDetailDrawer({ club, liveClub, joined, calSynced, hasPendingRequest
             <FaChevronLeft size={13} /> {t('clubs.back')}
           </button>
           <div className="club-drawer__strip-main">
-            <ClubAvatar name={display.name} category={display.category} size="lg" />
+            <ClubAvatar name={display.name} category={display.category} size="lg" calSynced={calSynced} />
             <div className="club-drawer__strip-text">
               <h2 className="club-drawer__name">{display.name}</h2>
               <div className="club-drawer__badges">
@@ -316,6 +353,69 @@ function ClubDetailDrawer({ club, liveClub, joined, calSynced, hasPendingRequest
         </div>
 
         <div className="club-drawer__body">
+          {/* #10 Four-chip quick-action row at the top of the body */}
+          <div className="club-drawer__quick-actions">
+            {canManage ? null : (
+              <>
+                {display.application_url ? (
+                  <a
+                    href={display.application_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="club-drawer__chip club-drawer__chip--primary"
+                    style={{ background: meta.color }}
+                  >
+                    <FaUserPlus size={11} /> {joined ? t('clubs.joined') || 'Joined' : t('clubs.joinClub')}
+                  </a>
+                ) : (
+                  <button
+                    className="club-drawer__chip club-drawer__chip--primary"
+                    style={{ background: meta.color }}
+                    onClick={() => display.join_instructions && instructionsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })}
+                    disabled={!display.join_instructions}
+                  >
+                    <FaUserPlus size={11} /> {joined ? t('clubs.joined') || 'Joined' : t('clubs.joinClub')}
+                  </button>
+                )}
+                {joined && (
+                  <button
+                    className={`club-drawer__chip ${calSynced ? 'club-drawer__chip--active' : ''}`}
+                    onClick={() => onToggleCalendar(club.id, !calSynced)}
+                    style={calSynced ? { borderColor: meta.color, color: meta.color } : {}}
+                  >
+                    <FaCalendarAlt size={11} /> {calSynced ? t('clubs.calOn') : t('clubs.calOff')}
+                  </button>
+                )}
+                <button
+                  className={`club-drawer__chip ${isSubscribed ? 'club-drawer__chip--active' : ''}`}
+                  onClick={() => onToggleSubscribe(club.id)}
+                  style={isSubscribed ? { borderColor: meta.color, color: meta.color } : {}}
+                  title={isSubscribed ? t('clubs.unsubscribeTooltip') : t('clubs.subscribeTooltip')}
+                >
+                  <FaBell size={11} /> {isSubscribed ? t('clubs.subscribed') : t('clubs.notifyMe') || 'Notify me'}
+                </button>
+              </>
+            )}
+            <button
+              className="club-drawer__chip"
+              onClick={async () => {
+                const url = `${window.location.origin}/clubs/${display.id}`
+                try {
+                  if (navigator.share) {
+                    await navigator.share({ title: display.name, url })
+                  } else {
+                    await navigator.clipboard.writeText(url)
+                    // Lightweight toast — reuse alert for now; could swap for joinToast pattern
+                    alert(t('clubs.linkCopied') || 'Link copied to clipboard')
+                  }
+                } catch { /* user cancelled / blocked */ }
+              }}
+              title={t('clubs.share') || 'Share'}
+            >
+              <FaShare size={11} /> {t('clubs.share') || 'Share'}
+            </button>
+          </div>
+
           <div className="club-drawer__stats">
             {display.member_count != null && (
               <div className="club-drawer__stat">
@@ -421,7 +521,7 @@ function ClubDetailDrawer({ club, liveClub, joined, calSynced, hasPendingRequest
   )
 }
 
-function ClubCard({ club, joined, calSynced, hasPendingRequest, isSubscribed, onJoin, onLeave, onToggleCalendar, onToggleSubscribe, onOpen, onDelete, onEdit, isAdmin, clubLoading, t, userId }) {
+function ClubCard({ club, joined, calSynced, hasPendingRequest, isSubscribed, onJoin, onLeave, onToggleCalendar, onToggleSubscribe, onOpen, onDelete, onEdit, onManage, isAdmin, clubLoading, t, userId, language, isFeatured = false }) {
   const meta = getCat(club.category)
   const [justJoined, setJustJoined] = useState(false)
   const isLoading = clubLoading[club.id] ?? false
@@ -435,11 +535,22 @@ function ClubCard({ club, joined, calSynced, hasPendingRequest, isSubscribed, on
   }
 
   return (
-    <article className={`club-card ${joined ? 'club-card--joined' : ''}`} onClick={() => onOpen(club)}>
-      <div className="club-card__accent" style={{ background: joined ? meta.color : meta.color, opacity: joined ? 1 : 0.5 }} />
+    <article
+      className={`club-card ${joined ? 'club-card--joined' : ''} ${isFeatured ? 'club-card--featured' : ''}`}
+      onClick={() => onOpen(club)}
+      style={{
+        background: `linear-gradient(135deg, ${meta.bg}33 0%, transparent 35%), var(--bg-primary)`,
+      }}
+    >
+      <div className="club-card__accent" style={{ background: meta.color, opacity: joined ? 1 : 0.6 }} />
+      {isFeatured && (
+        <div className="club-card__featured-badge" style={{ background: meta.color }}>
+          <FaFire size={8} /> {t('clubs.featuredBadge') || 'Trending'}
+        </div>
+      )}
       <div className="club-card__body">
         <div className="club-card__top">
-          <ClubAvatar name={club.name} category={club.category} size="md" />
+          <ClubAvatar name={club.name} category={club.category} size="md" calSynced={calSynced} />
           <div className="club-card__info">
             <h3 className="club-card__name">{club.name}</h3>
             <div className="club-card__badges">
@@ -448,28 +559,39 @@ function ClubCard({ club, joined, calSynced, hasPendingRequest, isSubscribed, on
           </div>
         </div>
         {club.description && (
-          <p className="club-card__desc">
-            {club.description.length > 105 ? club.description.slice(0, 105) + '\u2026' : club.description}
-          </p>
+          <p className="club-card__desc club-card__desc--clamped">{club.description}</p>
         )}
-        <div className="club-card__meta-row">
-          {club.member_count != null && (
-            <span className="club-meta-chip"><FaUsers size={10} /> {club.member_count}</span>
-          )}
-          {club.meeting_schedule && (
-            <span className="club-meta-chip"><FaCalendarAlt size={10} /> {club.meeting_schedule.length > 20 ? club.meeting_schedule.slice(0,20)+'\u2026' : club.meeting_schedule}</span>
-          )}
-          {club.location && (
-            <span className="club-meta-chip"><FaStar size={10} /> {club.location}</span>
-          )}
-        </div>
+        {(club.member_count != null || club.meeting_schedule || club.location) && (
+          <div className="club-card__meta-line">
+            {club.member_count != null && (
+              <span><FaUsers size={9} /> {club.member_count}</span>
+            )}
+            {club.meeting_schedule && (
+              <>
+                <span className="club-card__meta-sep">\u00b7</span>
+                <span><FaCalendarAlt size={9} /> {club.meeting_schedule.length > 18 ? club.meeting_schedule.slice(0,18) + '\u2026' : club.meeting_schedule}</span>
+              </>
+            )}
+            {club.location && (
+              <>
+                <span className="club-card__meta-sep">\u00b7</span>
+                <span><FaStar size={9} /> {club.location}</span>
+              </>
+            )}
+          </div>
+        )}
       </div>
       <div className="club-card__footer" onClick={e => e.stopPropagation()}>
         {isOwner ? (
           <div className="club-card__footer-joined">
-            <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: 600, padding: '4px 8px' }}>
-              {t('clubs.managerBadge')}
-            </span>
+            <button
+              className="club-manage-btn"
+              onClick={() => onManage?.(club)}
+              title={t('clubs.manageClub') || 'Manage club'}
+            >
+              <FaCog size={11} /> {t('clubs.manageBtnShort') || 'Manage'}
+            </button>
+            <span className="club-card__owner-pill"><FaCrown size={9} /> {t('clubs.managerBadge')}</span>
           </div>
         ) : joined ? (
           <div className="club-card__footer-joined">
@@ -486,55 +608,61 @@ function ClubCard({ club, joined, calSynced, hasPendingRequest, isSubscribed, on
             </button>
           </div>
         ) : hasPendingRequest ? (
-          <div>
-            <button
-              className="club-join-btn club-join-btn--applied"
-              disabled
-              style={{ background: meta.bg, borderColor: meta.color, color: meta.color, opacity: 0.85 }}
-            >
-              <FaCheck size={10} /> {t('clubs.requestedBtn')}
-            </button>
-            <p style={{ fontSize: '0.65rem', color: 'var(--text-tertiary)', margin: '4px 0 0', textAlign: 'center', lineHeight: 1.3 }}>
-              {language === 'fr' ? 'En attente de réponse' : language === 'zh' ? '等待回复中' : 'Awaiting response'}
+          <div className="club-app-status">
+            <div className="club-app-status__strip">
+              <span className="club-app-status__step club-app-status__step--done">
+                <FaCheck size={8} /> Applied
+              </span>
+              <span className="club-app-status__bar" style={{ background: meta.color }} />
+              <span
+                className="club-app-status__step club-app-status__step--current"
+                style={{ borderColor: meta.color, color: meta.color }}
+              >
+                Reviewing
+              </span>
+              <span className="club-app-status__bar" />
+              <span className="club-app-status__step">Decision</span>
+            </div>
+            <p className="club-app-status__hint">
+              {language === 'fr' ? 'En attente de réponse du club' : language === 'zh' ? '等待俱乐部回复中' : 'Awaiting response from the club'}
             </p>
           </div>
         ) : (
-          <div style={{ display: 'flex', gap: '6px', width: '100%' }}>
+          <div className="club-card__cta-row">
             <button
-              className={`club-join-btn ${isSubscribed ? 'club-join-btn--subscribed' : ''}`}
+              className={`club-bell-toggle ${isSubscribed ? 'club-bell-toggle--on' : ''}`}
               onClick={(e) => { e.stopPropagation(); onToggleSubscribe(club.id) }}
               disabled={isLoading}
-              style={{ flex: 1 }}
+              title={isSubscribed ? t('clubs.subscribed') : t('clubs.subscribe')}
+              aria-label={isSubscribed ? 'Unsubscribe from notifications' : 'Subscribe to notifications'}
             >
-              {isSubscribed ? t('clubs.subscribed') : t('clubs.subscribe')}
+              <FaBell size={12} />
             </button>
             {club.application_url ? (
               <a
                 href={club.application_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="club-join-btn"
+                className="club-join-btn club-join-btn--primary"
                 onClick={e => e.stopPropagation()}
-                style={{ flex: 1, textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
               >
                 {t('clubs.joinClub')}
               </a>
             ) : club.join_instructions ? (
               <button
-                className="club-join-btn"
+                className="club-join-btn club-join-btn--primary"
                 onClick={e => { e.stopPropagation(); onOpen(club) }}
-                style={{ flex: 1 }}
               >
                 {t('clubs.joinClub')}
               </button>
             ) : (
-              <button className="club-join-btn" onClick={e => e.stopPropagation()} disabled style={{ flex: 1, opacity: 0.5 }} title={t('clubs.noJoinInfo')}>
+              <button className="club-join-btn club-join-btn--primary" disabled title={t('clubs.noJoinInfo')}>
                 {t('clubs.joinClub')}
               </button>
             )}
           </div>
         )}
-        {isAdmin && (
+        {isAdmin && !isOwner && (
           <>
             <button
               className="club-edit-btn"
@@ -1398,7 +1526,8 @@ function SubmitClubModal({ onClose, onSubmit, t }) {
 const PAGE_SIZE = 24
 
 export default function ClubsTab({ user, authFlags, onClubEventsChange }) {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
+  const { profile } = useAuth()
   const isAdmin = authFlags?.is_admin ?? false
   const [activeView, setActiveView] = useState('explore')
   const [clubs, setClubs] = useState([])
@@ -1656,6 +1785,56 @@ export default function ClubsTab({ user, authFlags, onClubEventsChange }) {
     return list
   }, [clubs, sortMode])
 
+  // #2/#3 — Curated rows computed from the loaded page of clubs.
+  // Trending = top 5 by member_count; For You = clubs in categories that
+  // loosely match the user's major/faculty keywords.
+  const trendingClubs = useMemo(() => {
+    if (clubs.length < 4) return []
+    return [...clubs]
+      .filter(c => c.member_count != null && c.member_count >= 1)
+      .sort((a, b) => (b.member_count ?? 0) - (a.member_count ?? 0))
+      .slice(0, 5)
+  }, [clubs])
+
+  // Heuristic mapping from program keywords → club categories that overlap
+  const CATEGORY_HINTS = {
+    'Engineering & Technology': ['engineering', 'computer', 'software', 'mechanical', 'electrical'],
+    'Science':                  ['science', 'physics', 'chemistry', 'biology', 'math'],
+    'Academic':                 ['arts', 'humanities', 'literature', 'history'],
+    'Health & Wellness':        ['nursing', 'medicine', 'dentistry', 'physiology', 'kinesiology'],
+    'Debate & Politics':        ['political', 'politics', 'international'],
+    'Arts & Culture':           ['music', 'art', 'theatre', 'film'],
+    'Environment':              ['environment', 'sustainability', 'geography'],
+    'Athletics & Recreation':   ['kinesiology', 'physical education'],
+  }
+
+  const forYouClubs = useMemo(() => {
+    if (clubs.length < 4) return []
+    const blob = `${profile?.major || ''} ${profile?.faculty || ''} ${profile?.minor || ''}`.toLowerCase()
+    if (!blob.trim()) return []
+    const matchingCategories = new Set()
+    for (const [cat, hints] of Object.entries(CATEGORY_HINTS)) {
+      if (hints.some(h => blob.includes(h))) matchingCategories.add(cat)
+    }
+    if (!matchingCategories.size) return []
+    return clubs
+      .filter(c => matchingCategories.has(c.category))
+      .slice(0, 5)
+  }, [clubs, profile?.major, profile?.faculty, profile?.minor])
+
+  const forYouLabel = useMemo(() => {
+    if (profile?.major) return `${t('clubs.basedOn') || 'Based on'} ${profile.major}`
+    if (profile?.faculty) return `${t('clubs.basedOn') || 'Based on'} ${profile.faculty}`
+    return t('clubs.pickedForYou') || 'Picked for you'
+  }, [profile?.major, profile?.faculty, t])
+
+  // #4 — Clubs the user subscribes to but hasn't joined or created
+  const watchingClubs = useMemo(() => {
+    const joined = new Set([...joinedIds])
+    const created = new Set(createdClubs.map(c => c.id))
+    return clubs.filter(c => subscribedIds.has(c.id) && !joined.has(c.id) && !created.has(c.id))
+  }, [clubs, subscribedIds, joinedIds, createdClubs])
+
   const createdClubIds = useMemo(() => new Set(createdClubs.map(c => c.id)), [createdClubs])
 
   const resolvedMyClubs = useMemo(() =>
@@ -1712,6 +1891,7 @@ export default function ClubsTab({ user, authFlags, onClubEventsChange }) {
 
       {activeView === 'explore' && (
         <div className="clubs-explore">
+          {/* #1 — Search + sort on one row, more compact */}
           <div className="clubs-toolbar">
             <div className="clubs-search-wrap">
               <FaSearch className="clubs-search-icon" size={13} />
@@ -1734,39 +1914,139 @@ export default function ClubsTab({ user, authFlags, onClubEventsChange }) {
             </div>
           </div>
 
+          {/* #1 — Category pills replace the dropdown. Horizontal-scroll on mobile. */}
           {categories.length > 0 && (
-            <div className="clubs-filter-row">
-              <div className="clubs-category-dropdown-wrap">
-                <FaChevronDown size={11} className="clubs-category-dropdown-icon" />
-                <select
-                  className="clubs-category-dropdown"
-                  value={selectedCategory}
-                  onChange={e => setSelectedCategory(e.target.value)}
-                >
-                  <option value="">{t('clubs.filterAll')}</option>
-                  {categories.map(cat => {
-                    const label = t(CATEGORY_I18N_KEY[cat] || cat) || cat
-                    return (
-                      <option key={cat} value={cat}>{label}</option>
-                    )
-                  })}
-                </select>
-              </div>
+            <div className="clubs-cat-bar">
+              <button
+                className={`clubs-cat-pill ${!selectedCategory ? 'active' : ''}`}
+                onClick={() => setSelectedCategory('')}
+              >
+                {t('clubs.filterAll')}
+              </button>
+              {categories.map(cat => {
+                const label = t(CATEGORY_I18N_KEY[cat] || cat) || cat
+                const cmeta = getCat(cat)
+                return (
+                  <button
+                    key={cat}
+                    className={`clubs-cat-pill ${selectedCategory === cat ? 'active' : ''}`}
+                    style={selectedCategory === cat
+                      ? { background: cmeta.color, color: '#fff', borderColor: cmeta.color }
+                      : { borderColor: cmeta.border, color: cmeta.color }}
+                    onClick={() => setSelectedCategory(cat === selectedCategory ? '' : cat)}
+                  >
+                    <span className="clubs-cat-pill__icon">{cmeta.icon}</span>
+                    {label}
+                  </button>
+                )
+              })}
             </div>
           )}
 
           {error && <div className="clubs-error">{error}<button onClick={() => setError(null)}><FaTimes size={11} /></button></div>}
 
+          {/* #2/#3 — Curated rows visible only when not actively searching/filtering */}
+          {!loading && !debouncedSearch && !selectedCategory && trendingClubs.length > 0 && (
+            <div className="clubs-curated-row">
+              <div className="clubs-curated-row__header">
+                <h3 className="clubs-curated-row__title"><FaFire size={13} style={{ color: '#f59e0b' }} /> {t('clubs.trendingTitle') || 'Trending this week'}</h3>
+                <span className="clubs-curated-row__sub">{t('clubs.trendingHint') || 'Most popular on Symbolos'}</span>
+              </div>
+              <div className="clubs-curated-row__strip">
+                {trendingClubs.map(club => (
+                  <ClubCard
+                    key={`trend-${club.id}`}
+                    club={club}
+                    joined={joinedIds.has(club.id)}
+                    calSynced={calSyncedIds.has(club.id)}
+                    hasPendingRequest={pendingRequestClubIds.has(club.id)}
+                    isSubscribed={subscribedIds.has(club.id)}
+                    onJoin={handleJoin}
+                    onLeave={handleLeave}
+                    onToggleCalendar={handleToggleCalendar}
+                    onToggleSubscribe={handleToggleSubscribe}
+                    onOpen={setOpenClub}
+                    onDelete={handleDeleteClub}
+                    onEdit={setEditingClub}
+                    onManage={setManagingClub}
+                    isFeatured
+                    isAdmin={isAdmin}
+                    clubLoading={clubLoading}
+                    userId={user?.id}
+                    language={language}
+                    t={t}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {!loading && !debouncedSearch && !selectedCategory && forYouClubs.length > 0 && (
+            <div className="clubs-curated-row">
+              <div className="clubs-curated-row__header">
+                <h3 className="clubs-curated-row__title"><FaGem size={12} style={{ color: 'var(--accent-primary)' }} /> {t('clubs.forYouTitle') || 'For you'}</h3>
+                <span className="clubs-curated-row__sub">{forYouLabel}</span>
+              </div>
+              <div className="clubs-curated-row__strip">
+                {forYouClubs.map(club => (
+                  <ClubCard
+                    key={`fy-${club.id}`}
+                    club={club}
+                    joined={joinedIds.has(club.id)}
+                    calSynced={calSyncedIds.has(club.id)}
+                    hasPendingRequest={pendingRequestClubIds.has(club.id)}
+                    isSubscribed={subscribedIds.has(club.id)}
+                    onJoin={handleJoin}
+                    onLeave={handleLeave}
+                    onToggleCalendar={handleToggleCalendar}
+                    onToggleSubscribe={handleToggleSubscribe}
+                    onOpen={setOpenClub}
+                    onDelete={handleDeleteClub}
+                    onEdit={setEditingClub}
+                    onManage={setManagingClub}
+                    isAdmin={isAdmin}
+                    clubLoading={clubLoading}
+                    userId={user?.id}
+                    language={language}
+                    t={t}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
           {loading ? (
-            <div className="clubs-loading"><div className="clubs-spinner" /><p>{t('clubs.loading')}</p></div>
+            // #13 Skeleton placeholders instead of spinner
+            <div className="clubs-grid">
+              {Array.from({ length: 6 }).map((_, i) => <ClubCardSkeleton key={`skel-${i}`} />)}
+            </div>
           ) : displayClubs.length === 0 ? (
+            // #14 Better empty state with actionable suggestions
             <div className="clubs-empty">
               <div className="clubs-empty__visual"><FaUsers size={52} /></div>
-              <h3>{t('clubs.noClubsYet')}</h3>
-              <p>{t('clubs.noClubsYetDesc')}</p>
-              <button className="club-action-btn club-action-btn--join" onClick={() => setShowSubmitModal(true)}>
-                <FaPlus size={11} /> {t('clubs.requestAddBtn')}
-              </button>
+              <h3>{debouncedSearch || selectedCategory ? (t('clubs.noClubsFound') || 'No clubs match those filters') : t('clubs.noClubsYet')}</h3>
+              <p>
+                {debouncedSearch && selectedCategory
+                  ? (t('clubs.tryClearFilters') || 'Try a different search term or clear the category filter.')
+                  : debouncedSearch
+                    ? (t('clubs.tryClearSearch') || 'Try a different search term or browse by category above.')
+                    : selectedCategory
+                      ? (t('clubs.tryClearCategory') || 'No clubs in this category yet — clear the filter to see all clubs.')
+                      : t('clubs.noClubsYetDesc')}
+              </p>
+              <div className="clubs-empty__actions">
+                {(debouncedSearch || selectedCategory) && (
+                  <button
+                    className="club-action-btn club-action-btn--subscribe"
+                    onClick={() => { setSearch(''); setSelectedCategory('') }}
+                  >
+                    <FaTimes size={11} /> {t('clubs.clearFilters') || 'Clear filters'}
+                  </button>
+                )}
+                <button className="club-action-btn club-action-btn--join" onClick={() => setShowSubmitModal(true)}>
+                  <FaPlus size={11} /> {t('clubs.requestAddBtn')}
+                </button>
+              </div>
             </div>
           ) : (
             <>
@@ -1787,6 +2067,8 @@ export default function ClubsTab({ user, authFlags, onClubEventsChange }) {
                     isSubscribed={subscribedIds.has(club.id)}
                     onJoin={handleJoin}
                     onLeave={handleLeave}
+                    onManage={setManagingClub}
+                    language={language}
                     onToggleCalendar={handleToggleCalendar}
                     onToggleSubscribe={handleToggleSubscribe}
                     onOpen={setOpenClub}
@@ -1877,6 +2159,41 @@ export default function ClubsTab({ user, authFlags, onClubEventsChange }) {
                   </div>
                 )}
               </div>
+
+              {/* #4 — Subscribed / Watching section (clubs you follow but haven't joined) */}
+              {watchingClubs.length > 0 && (
+                <div className="clubs-mine__section">
+                  <h3 className="clubs-mine__section-title">
+                    <FaBell size={12} /> {t('clubs.watchingClubs') || 'Watching'}
+                    <span className="clubs-mine__section-count">{watchingClubs.length}</span>
+                  </h3>
+                  <div className="clubs-grid clubs-grid--mine-watching">
+                    {watchingClubs.map(club => (
+                      <ClubCard
+                        key={`watch-${club.id}`}
+                        club={club}
+                        joined={false}
+                        calSynced={false}
+                        hasPendingRequest={pendingRequestClubIds.has(club.id)}
+                        isSubscribed={true}
+                        onJoin={handleJoin}
+                        onLeave={handleLeave}
+                        onToggleCalendar={handleToggleCalendar}
+                        onToggleSubscribe={handleToggleSubscribe}
+                        onOpen={setOpenClub}
+                        onDelete={handleDeleteClub}
+                        onEdit={setEditingClub}
+                        onManage={setManagingClub}
+                        isAdmin={isAdmin}
+                        clubLoading={clubLoading}
+                        userId={user?.id}
+                        language={language}
+                        t={t}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
             </>
           )}
         </div>
