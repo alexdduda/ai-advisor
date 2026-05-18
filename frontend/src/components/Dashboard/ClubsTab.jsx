@@ -68,9 +68,17 @@ function ClubAvatar({ name, category, size = 'md', calSynced = false, logoUrl = 
   const dim = { sm: 28, md: 44, lg: 64 }[size] ?? 44
 
   // Always stop click from bubbling up to the card (so clicking the avatar
-  // never opens the detail drawer). Only owners get the file picker fired.
-  const handleClick = (e) => {
+  // never opens the detail drawer). Belt-and-braces: stop both mousedown and
+  // click at React and native event levels. Only owners get the file picker.
+  const swallow = (e) => {
     e.stopPropagation()
+    // The native stopImmediatePropagation blocks any other listeners on the
+    // same DOM element from also firing (defensive — useful if any portal
+    // attaches its own native click listener).
+    e.nativeEvent?.stopImmediatePropagation?.()
+  }
+  const handleClick = (e) => {
+    swallow(e)
     if (editable && onEditClick) onEditClick()
   }
 
@@ -78,6 +86,8 @@ function ClubAvatar({ name, category, size = 'md', calSynced = false, logoUrl = 
     <div
       className={`club-avatar club-avatar--${size} ${editable ? 'club-avatar--editable' : ''}`}
       onClick={handleClick}
+      onMouseDown={swallow}
+      onPointerDown={swallow}
       title={editable ? 'Click to change logo' : undefined}
       style={{
         width: dim, height: dim, borderRadius: 10,
