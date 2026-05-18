@@ -122,8 +122,9 @@ class Settings(BaseSettings):
             return ["http://localhost:5173", "http://localhost:3000"]
 
     # ── Rate Limiting ────────────────────────────────────────────────────
-    RATE_LIMIT_PER_MINUTE: int = 100    # General API rate limit per IP
-    CHAT_RATE_LIMIT_PER_MINUTE: int = 50  # Chat endpoint rate limit per IP
+    RATE_LIMIT_PER_MINUTE:        int = 100  # General API rate limit per IP
+    CHAT_RATE_LIMIT_PER_MINUTE:   int = 50   # /api/chat/* per IP (Claude-backed)
+    CLAUDE_RATE_LIMIT_PER_MINUTE: int = 30   # cards, electives, transcript (heavy AI)
 
     # ── Timeouts (seconds) ───────────────────────────────────────────────
     REQUEST_TIMEOUT: int = 30
