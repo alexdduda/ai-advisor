@@ -108,6 +108,28 @@ class UpdateClubRequest(BaseModel):
     application_url:   Optional[str]  = None
     logo_url:          Optional[str]  = Field(None, max_length=500)
 
+    @field_validator("logo_url")
+    @classmethod
+    def _validate_logo_url(cls, v: Optional[str]) -> Optional[str]:
+        """
+        SEC: ensure logo_url is one of our own Supabase Storage public URLs.
+        Without this, an admin (or compromised account) could point logo_url at
+        any URL — useful as a tracking pixel, beacon, or XSS vector via SVG.
+        Empty/None is allowed (= remove logo).
+        """
+        if not v or not v.strip():
+            return None
+        from urllib.parse import urlparse
+        parsed = urlparse(v.strip())
+        if parsed.scheme != "https":
+            raise ValueError("logo_url must be https")
+        expected_host = urlparse(settings.SUPABASE_URL).netloc
+        if not expected_host or expected_host not in parsed.netloc:
+            raise ValueError("logo_url must point to our Supabase Storage")
+        if "/storage/v1/object/public/club-logos/" not in parsed.path:
+            raise ValueError("logo_url must reference the club-logos bucket")
+        return v.strip()
+
 
 class JoinRequestAction(BaseModel):
     action: str  # "approve" or "deny"
@@ -1376,6 +1398,17 @@ async def get_club_activity(
         return {"items": [], "count": 0}
 
 
+# SEC: privacy thresholds for faculty stats.
+# - MIN_CLUB_SIZE: don't return any per-faculty breakdown for clubs under this size
+#   (the entire member list would be tiny + easy to deduce identities).
+# - MIN_BUCKET:    bucket per-faculty counts below this as the literal string "<5"
+#   instead of an exact number, so a count-of-1 can't be back-solved to a person.
+# The caller's OWN faculty count is returned exactly (they already know about
+# themselves) so the "X students from your faculty" UI stays useful.
+_FACULTY_STATS_MIN_CLUB_SIZE = 10
+_FACULTY_STATS_MIN_BUCKET    = 5
+
+
 @router.get("/{club_id}/faculty-stats")
 async def get_club_faculty_stats(
     club_id: str,
@@ -1386,13 +1419,11 @@ async def get_club_faculty_stats(
     privacy-safe for non-members to see "3 students from your faculty" in the
     drawer before joining.
 
-    Response:
-      {
-        "your_faculty": "Science",
-        "your_faculty_count": 3,
-        "by_faculty": [{"faculty": "Science", "count": 12}, ...],
-        "total": 47,
-      }
+    Privacy:
+      - Per-faculty counts below MIN_BUCKET are returned as the string "<5"
+        instead of an exact number, so a "1" can't be re-identified.
+      - For very small clubs (total < MIN_CLUB_SIZE) the by_faculty array is
+        suppressed entirely; only your_faculty_count is returned.
     """
     supabase = get_supabase()
     try:
@@ -1418,18 +1449,32 @@ async def get_club_faculty_stats(
             f = (u.get("faculty") or "Unknown").strip() or "Unknown"
             counts[f] = counts.get(f, 0) + 1
 
-        by_faculty = sorted(
-            [{"faculty": k, "count": v} for k, v in counts.items()],
-            key=lambda x: x["count"], reverse=True,
-        )
-
+        total = len(user_ids)
+        # The caller knows about themselves, so always return their own faculty
+        # count exactly (it's safe to disclose).
         your_faculty_count = counts.get(your_faculty or "", 0)
+
+        # Bucket small counts and suppress the breakdown entirely for tiny clubs
+        if total < _FACULTY_STATS_MIN_CLUB_SIZE:
+            by_faculty = []
+        else:
+            def _safe_count(faculty: str, n: int):
+                # Caller's own faculty: exact (they're inside that bucket anyway)
+                if faculty == your_faculty:
+                    return n
+                return n if n >= _FACULTY_STATS_MIN_BUCKET else f"<{_FACULTY_STATS_MIN_BUCKET}"
+
+            by_faculty = sorted(
+                [{"faculty": k, "count": _safe_count(k, v)} for k, v in counts.items()],
+                key=lambda x: (x["count"] if isinstance(x["count"], int) else 0),
+                reverse=True,
+            )
 
         return {
             "your_faculty":       your_faculty,
             "your_faculty_count": your_faculty_count,
             "by_faculty":         by_faculty,
-            "total":              len(user_ids),
+            "total":              total,
         }
     except Exception as e:
         logger.exception(f"Error fetching club faculty stats: {e}")

@@ -7,6 +7,7 @@ Run these in the Supabase SQL Editor, in order.
 | `2026_04_14_forum_reviews_and_professors.sql` | Adds `professor` to course tables, review fields to `forum_posts`, drops legacy category CHECK |
 | `2026_04_14_club_logos_and_activity.sql` | Adds `clubs.logo_url`, creates the public `club-logos` storage bucket and RLS policies |
 | `2026_04_14_scaling_indexes.sql` | Adds hot-path indexes (forum sort, user-scoped queries, notification cron) — safe to re-run |
+| `2026_04_14_security_tighten_logo_policies.sql` | **SEC FIX**: replaces the over-permissive club-logos RLS so only the club owner can upload/update/delete their own logo (paired with the `logo_url` validator added in code) |
 
 All migrations are idempotent (`IF NOT EXISTS`, `ON CONFLICT DO NOTHING`, `DO $$ ... END $$` guards) so re-running them is a no-op.
 
