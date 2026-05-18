@@ -465,10 +465,18 @@ async def send_message(
             f"Calling Claude ({settings.CLAUDE_MODEL}) with {len(formatted)} messages "
             f"for session {session_id}"
         )
+        # Anthropic prompt caching — the system context is large (student
+        # profile + McGill knowledge + tab guidance) and stable within a
+        # session, so we mark it as ephemeral. Subsequent messages within
+        # ~5 min reuse the cached prefix at ~90% lower cost.
         message = client.messages.create(
             model=settings.CLAUDE_MODEL,
             max_tokens=settings.CLAUDE_MAX_TOKENS,
-            system=system_context,
+            system=[{
+                "type": "text",
+                "text": system_context,
+                "cache_control": {"type": "ephemeral"},
+            }],
             messages=formatted,
         )
         assistant_response = message.content[0].text

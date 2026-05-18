@@ -294,6 +294,42 @@ _ACTIONS_PROMPT = (
 )
 
 
+# Cacheable system prompt for card generation — stable across all users and
+# every refresh, so Anthropic's prompt caching can serve it at ~90% discount
+# on hits. Built once at module load.
+_CARDS_SYSTEM_PROMPT = f"""You are a proactive AI academic advisor for McGill University.
+
+You generate concise, high-signal briefing cards for a single student given their
+profile, courses, calendar, and clubs. Each card surfaces a deadline, gap, opportunity,
+or recommendation tailored to their situation. Do not invent facts; if something is
+uncertain, frame it as a suggestion to verify.
+
+CARD SCHEMA — every card must include:
+  "type"     : one of "urgent" | "warning" | "insight" | "progress"
+  "icon"     : single relevant emoji
+  "label"    : short ALL-CAPS label (≤ 4 words)
+  "title"    : concise headline (≤ 12 words)
+  "body"     : 1–3 sentence explanation with specific, actionable detail
+  {_ACTIONS_PROMPT}
+  "category" : one of:
+{CATEGORIES_PROMPT_LIST}
+  "priority" : integer 1–8 (1 = most important)
+
+PROFESSOR RECOMMENDATIONS FOR OPPORTUNITY CARDS
+For "opportunities" cards, when relevant, recommend specific McGill professors the
+student could reach out to based on their major, completed courses, and interests.
+Include:
+  - Professor name and department
+  - Their research area that aligns with the student's profile
+  - A suggested approach for reaching out (e.g. "Attend their office hours for COMP 251"
+    or "Email about their ML research lab openings")
+  - Only recommend professors when you have high confidence they are real McGill faculty
+  - Add a disclaimer at the end of the card body: "Verify professor details on McGill's department website."
+At least 1 of the 8 cards should be an "opportunities" card with a professor
+recommendation if the student's profile has a declared major.
+"""
+
+
 def _deduplicate_completed(completed: list) -> list:
     """
     Filter completed courses so that withdrawn/failed attempts are excluded
@@ -391,10 +427,10 @@ def build_rich_context(ctx: dict, saved_cards: list = None, recent_titles: list[
     safe_minors        = sanitise_context_field(minors_str)
     safe_concentration = sanitise_context_field(str(user.get('concentration') or 'None'))
 
-    return f"""You are a proactive AI academic advisor for McGill University.
-Analyse the student's profile and generate 8 high-value briefing cards.
-{saved_section}{recent_section}
-Today: {datetime.now(timezone.utc).date().isoformat()}
+    # The stable header + instructions + professor guide are now in
+    # _CARDS_SYSTEM_PROMPT (cacheable). This returns ONLY the per-user
+    # data + return-format instruction for the user message.
+    return f"""{saved_section}{recent_section}Today: {datetime.now(timezone.utc).date().isoformat()}
 
 STUDENT PROFILE
   Name/email   : {safe_username}
@@ -421,30 +457,7 @@ STUDENT CLUBS
   Joined: {', '.join(ctx.get('joined_clubs', [])) or 'None'}
   Created: {', '.join(c.get('name','') for c in ctx.get('created_clubs', [])) or 'None'}
 
-INSTRUCTIONS
-Generate exactly 8 cards as a JSON array. Each card must include:
-  "type"     : one of "urgent" | "warning" | "insight" | "progress"
-  "icon"     : single emoji
-  "label"    : short ALL-CAPS label (≤ 4 words)
-  "title"    : concise headline (≤ 12 words)
-  "body"     : 1–3 sentence explanation with specific, actionable detail
-  {_ACTIONS_PROMPT}
-  "category" : one of:
-{CATEGORIES_PROMPT_LIST}
-  "priority" : integer 1–8 (1 = most important)
-
-PROFESSOR RECOMMENDATIONS FOR OPPORTUNITY CARDS
-For "opportunities" cards, when relevant, recommend specific McGill professors the student
-could reach out to based on their major, completed courses, and interests. Include:
-  - Professor name and department
-  - Their research area that aligns with the student's profile
-  - A suggested approach for reaching out (e.g. "Attend their office hours for COMP 251"
-    or "Email about their ML research lab openings")
-  - Only recommend professors when you have high confidence they are real McGill faculty members
-  - Add a disclaimer at the end of the card body: "Verify professor details on McGill's department website."
-At least 1 of the 8 cards should be an "opportunities" card with a professor recommendation
-if the student's profile has a declared major.
-
+Generate exactly 8 cards based on the schema in the system prompt.
 Return ONLY the JSON array — no markdown, no commentary."""
 
 
@@ -560,8 +573,16 @@ async def generate_cards(user_id: str, request: GenerateRequest, req: Request, c
         prompt = build_rich_context(ctx, saved_cards=saved, recent_titles=recent_titles) + _lang_instruction(request.language)
 
         client = get_anthropic_client()
-        message = client.messages.create(model=settings.CLAUDE_MODEL, max_tokens=4096,
-            messages=[{"role": "user", "content": prompt}])
+        message = client.messages.create(
+            model=settings.CLAUDE_MODEL,
+            max_tokens=4096,
+            system=[{
+                "type":          "text",
+                "text":          _CARDS_SYSTEM_PROMPT,
+                "cache_control": {"type": "ephemeral"},
+            }],
+            messages=[{"role": "user", "content": prompt}],
+        )
 
         raw = message.content[0].text.strip()
         if raw.startswith("```"):
@@ -728,9 +749,18 @@ async def stream_cards(
             collected_cards: list = []
             line_buffer = ""
 
+            # Anthropic prompt caching — static card playbook lives in the
+            # system block and is served at ~90% discount on subsequent calls
+            # within the 5-min cache window.
             async with async_client.messages.stream(
-                model=settings.CLAUDE_MODEL, max_tokens=4096,
-                messages=[{"role": "user", "content": prompt}]
+                model=settings.CLAUDE_MODEL,
+                max_tokens=4096,
+                system=[{
+                    "type":          "text",
+                    "text":          _CARDS_SYSTEM_PROMPT,
+                    "cache_control": {"type": "ephemeral"},
+                }],
+                messages=[{"role": "user", "content": prompt}],
             ) as stream:
                 async for text in stream.text_stream:
                     line_buffer += text
@@ -802,8 +832,14 @@ async def retranslate_cards(user_id: str, request: RetranslateRequest, req: Requ
 
         client = get_anthropic_client()
         message = client.messages.create(
-            model=settings.CLAUDE_MODEL, max_tokens=4096,
-            messages=[{"role": "user", "content": prompt}]
+            model=settings.CLAUDE_MODEL,
+            max_tokens=4096,
+            system=[{
+                "type":          "text",
+                "text":          _CARDS_SYSTEM_PROMPT,
+                "cache_control": {"type": "ephemeral"},
+            }],
+            messages=[{"role": "user", "content": prompt}],
         )
         raw = message.content[0].text.strip()
         if raw.startswith("```"):

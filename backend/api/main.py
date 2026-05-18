@@ -324,8 +324,27 @@ async def rate_limit_middleware(request: Request, call_next):
     raw_path = request.url.path
     normalised_path = raw_path.rstrip("/").lower()
 
-    # Stricter limit for chat (AI calls are expensive)
-    rpm = settings.CHAT_RATE_LIMIT_PER_MINUTE if "/chat" in normalised_path else settings.RATE_LIMIT_PER_MINUTE
+    # Tier the rate limit by endpoint cost:
+    #   - /api/chat/*                       : CHAT_RATE_LIMIT_PER_MINUTE (50/IP)
+    #   - cards generate/stream/ask/translate : tightest — Claude + DB heavy
+    #   - electives/recommend               : tight — single Claude call
+    #   - transcript/parse|import           : tight — Claude with PDF (slow + costly)
+    #   - everything else                   : RATE_LIMIT_PER_MINUTE (100/IP)
+    if "/chat" in normalised_path:
+        rpm = settings.CHAT_RATE_LIMIT_PER_MINUTE
+    elif (
+        "/cards/generate" in normalised_path
+        or "/cards/stream"   in normalised_path
+        or "/cards/ask"      in normalised_path
+        or "/cards/retranslate" in normalised_path
+        or "/electives/recommend" in normalised_path
+        or "/transcript/parse"    in normalised_path
+        or "/transcript/import"   in normalised_path
+        or "/syllabus/parse"      in normalised_path
+    ):
+        rpm = settings.CLAUDE_RATE_LIMIT_PER_MINUTE
+    else:
+        rpm = settings.RATE_LIMIT_PER_MINUTE
 
     # ── IP-based check (covers unauthenticated requests + shared-IP DoS) ──────
     if not _limiter.is_allowed(f"ip:{client_ip}:{normalised_path}", rpm):
