@@ -74,17 +74,17 @@ CREATE INDEX IF NOT EXISTS idx_notification_queue_due
   ON notification_queue (sent, send_on)
   WHERE sent = FALSE;
 
--- ── Course catalogue (search hot path) ──────────────────────────────
-CREATE INDEX IF NOT EXISTS idx_courses_subject_catalog
-  ON courses (subject, catalog);
+-- ── Course catalogue (column names are "Course" and course_name) ────
+CREATE INDEX IF NOT EXISTS idx_courses_code
+  ON courses ("Course");
 
--- Trigram index for fuzzy course search (case-insensitive title/code).
+-- Trigram index for fuzzy course-name search.
 -- Requires pg_trgm extension. Skip silently if not enabled.
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_trgm') THEN
-    CREATE INDEX IF NOT EXISTS idx_courses_title_trgm
-      ON courses USING gin (title gin_trgm_ops);
+    CREATE INDEX IF NOT EXISTS idx_courses_name_trgm
+      ON courses USING gin (course_name gin_trgm_ops);
   END IF;
 EXCEPTION WHEN OTHERS THEN
   -- pg_trgm not available; ILIKE will fall back to seq scan
