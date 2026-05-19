@@ -14,6 +14,7 @@ import CoursesView from './CoursesView'
 
 import Sidebar from './Sidebar'
 import clubsAPI from '../../lib/clubsAPI'
+import { readCache, writeCache, clearAllForUser } from '../../lib/userDataCache'
 
 // Code-split everything that isn't on the default landing screen. Brief/Chat
 // is the default tab and ships in the main bundle; secondary tabs and modals
@@ -148,12 +149,24 @@ export default function Dashboard() {
   const [sortBy, setSortBy] = useState('relevance')
 
   // ── Favorites & completed ──────────────────────────────
-  const [favorites, setFavorites] = useState([])
-  const [favoritesMap, setFavoritesMap] = useState(new Set())
-  const [completedCourses, setCompletedCourses] = useState([])
-  const [completedCoursesMap, setCompletedCoursesMap] = useState(new Set())
-  const [currentCourses, setCurrentCourses] = useState([])
-  const [currentCoursesMap, setCurrentCoursesMap] = useState(new Set())
+  // SWR-style: hydrate user-data state from localStorage so the UI paints
+  // instantly on every visit, then revalidate in the background.
+  const _hydratedFavorites = readCache('favorites', user?.id, [])
+  const _hydratedCompleted = readCache('completed', user?.id, [])
+  const _hydratedCurrent   = readCache('current',   user?.id, [])
+
+  const [favorites, setFavorites]                 = useState(_hydratedFavorites)
+  const [favoritesMap, setFavoritesMap]           = useState(
+    new Set((_hydratedFavorites || []).map(f => (f.course_code || '').replace(/^([A-Za-z]+)(\d)/, '$1 $2')))
+  )
+  const [completedCourses, setCompletedCourses]   = useState(_hydratedCompleted)
+  const [completedCoursesMap, setCompletedCoursesMap] = useState(
+    new Set((_hydratedCompleted || []).map(c => c.course_code))
+  )
+  const [currentCourses, setCurrentCourses]       = useState(_hydratedCurrent)
+  const [currentCoursesMap, setCurrentCoursesMap] = useState(
+    new Set((_hydratedCurrent || []).map(c => c.course_code))
+  )
 
   // ── Mark Complete modal ────────────────────────────────
   const [showCompleteCourseModal, setShowCompleteCourseModal] = useState(false)
@@ -513,17 +526,21 @@ export default function Dashboard() {
   }
 
   // ── Data loaders ───────────────────────────────────────
+  // Each loader updates state AND writes to the userDataCache so subsequent
+  // visits paint from cache before the network call returns.
   const loadFavorites = useCallback(async () => {
     if (!user?.id) return
     try {
       const data = await favoritesAPI.getFavorites(user.id)
-      setFavorites(data.favorites || [])
+      const list = data.favorites || []
+      setFavorites(list)
       // FIX: normalize stored course_code to "SUBJ CAT" format for consistent lookup
-      setFavoritesMap(new Set((data.favorites || []).map(f => {
+      setFavoritesMap(new Set(list.map(f => {
         const code = f.course_code || ''
         // If stored without space (e.g. "COMP202"), insert it
         return code.replace(/^([A-Za-z]+)(\d)/, '$1 $2')
       })))
+      writeCache('favorites', user.id, list)
     } catch (error) {
       console.error('Error loading favorites:', error)
     }
@@ -533,8 +550,10 @@ export default function Dashboard() {
     if (!user?.id) return
     try {
       const data = await completedCoursesAPI.getCompleted(user.id)
-      setCompletedCourses(data.completed_courses || [])
-      setCompletedCoursesMap(new Set((data.completed_courses || []).map(c => c.course_code)))
+      const list = data.completed_courses || []
+      setCompletedCourses(list)
+      setCompletedCoursesMap(new Set(list.map(c => c.course_code)))
+      writeCache('completed', user.id, list)
     } catch (error) {
       console.error('Error loading completed courses:', error)
       setCompletedCourses([])
@@ -546,8 +565,10 @@ export default function Dashboard() {
     if (!user?.id) return
     try {
       const data = await currentCoursesAPI.getCurrent(user.id)
-      setCurrentCourses(data.current_courses || [])
-      setCurrentCoursesMap(new Set((data.current_courses || []).map(c => c.course_code)))
+      const list = data.current_courses || []
+      setCurrentCourses(list)
+      setCurrentCoursesMap(new Set(list.map(c => c.course_code)))
+      writeCache('current', user.id, list)
     } catch (error) {
       console.error('Error loading current courses:', error)
       setCurrentCourses([])
@@ -751,7 +772,11 @@ export default function Dashboard() {
 
   // ── Sign out ───────────────────────────────────────────
   const handleSignOut = async () => {
-    try { await signOut() }
+    try {
+      // Clear cached user data so the next user doesn't see this user's info
+      if (user?.id) clearAllForUser(user.id)
+      await signOut()
+    }
     catch (error) { console.error('Error signing out:', error) }
   }
 
