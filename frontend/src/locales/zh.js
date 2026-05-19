@@ -413,6 +413,7 @@ const ZH_TRANSLATIONS = {
     // 2026-04 redesign — new keys
     'clubs.manageClub':         '管理俱乐部',
     'clubs.manageBtnShort':     '管理',
+    'clubs.manage.members':     '成员',
     'clubs.featuredBadge':      '热门',
     'clubs.fieldLogo':          '俱乐部徽标',
     'clubs.uploadLogo':         '上传徽标',

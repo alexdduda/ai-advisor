@@ -195,6 +195,17 @@ def create_user(user_data: Dict[str, Any]) -> Dict[str, Any]:
     def _run():
         supabase = get_supabase()
         cleaned_data = {k: v for k, v in user_data.items() if v is not None}
+        # Default username to the first name derived from the McGill email
+        # (firstname.last@mail.mcgill.ca → "Firstname") so brand-new accounts
+        # have a readable display name out of the box. User can change it later
+        # from Settings.
+        if not cleaned_data.get("username"):
+            email = (cleaned_data.get("email") or "").strip()
+            if email and "@" in email:
+                local = email.split("@", 1)[0]
+                first = local.split(".", 1)[0]
+                if first:
+                    cleaned_data["username"] = first.capitalize()
         logger.info(f"Creating user profile with ID: {cleaned_data.get('id')}")
         response = supabase.table("users").insert(cleaned_data).execute()
         if not response.data:
