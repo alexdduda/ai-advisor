@@ -1147,7 +1147,9 @@ function ClubManageDashboard({ club, onClose, onSave, t, isAdmin }) {
   const sections = [
     { key: 'overview', icon: <FaStar size={13} />, label: t('clubs.manage.overview') },
     { key: 'edit', icon: <FaEdit size={13} />, label: t('clubs.manage.editInfo') },
-    { key: 'managers', icon: <FaCrown size={13} />, label: t('clubs.manage.managers') },
+    // Members tab replaces the old separate Managers tab — owners/admins
+    // appear at the top of the same list, with promote/demote/remove inline.
+    { key: 'members', icon: <FaUsers size={13} />, label: t('clubs.manage.members') || 'Members' },
     { key: 'announcements', icon: <FaBullhorn size={13} />, label: t('clubs.manage.announcements') },
     { key: 'events', icon: <FaCalendarAlt size={13} />, label: t('clubs.manage.events') },
   ]
@@ -1346,9 +1348,11 @@ function ClubManageDashboard({ club, onClose, onSave, t, isAdmin }) {
             </form>
           )}
 
-          {/* ── Managers ── */}
-          {activeSection === 'managers' && (
-            <div className="club-manage__managers">
+          {/* ── Members (replaces the old separate Managers tab) ── */}
+          {activeSection === 'members' && (
+            <div className="club-manage__members">
+              {/* Promote a McGill email straight to admin — kept from old
+                  Managers tab. Owner/admin can still demote later from the list. */}
               <div className="club-manage__add-manager">
                 <label>{t('clubs.manage.addManagerLabel')}</label>
                 <div className="club-manage__add-row">
@@ -1366,27 +1370,16 @@ function ClubManageDashboard({ club, onClose, onSave, t, isAdmin }) {
                 {managerError && <p className="club-manage__error">{managerError}</p>}
                 {managerSuccess && <p className="club-manage__success-text">{managerSuccess}</p>}
               </div>
-              <div className="club-manage__manager-list">
-                {managers.map((m, i) => (
-                  <div key={m.user_id || i} className="club-manage__manager-row">
-                    <div className="club-manage__manager-info">
-                      <div className="club-manage__manager-avatar">
-                        {m.role === 'owner' ? <FaCrown size={14} style={{ color: '#f59e0b' }} /> : <FaUserCheck size={14} />}
-                      </div>
-                      <div>
-                        <span className="club-manage__manager-name">{m.name || m.email || 'Unknown'}</span>
-                        <span className="club-manage__manager-role">{m.role === 'owner' ? t('clubs.manage.owner') : t('clubs.manage.manager')}</span>
-                      </div>
-                    </div>
-                    {m.role !== 'owner' && (
-                      <button className="club-manage__remove-btn" onClick={() => handleRemoveManager(m.user_id, m.name)} title={t('clubs.manage.removeManager')}>
-                        <FaUserTimes size={12} />
-                      </button>
-                    )}
-                  </div>
-                ))}
-                {managers.length === 0 && <p className="club-manage__empty">{t('clubs.manage.noManagers')}</p>}
-              </div>
+
+              {/* Unified member list — MembersSection already sorts owners
+                  first, then admins, then members; and renders promote /
+                  demote / remove inline for callers with the right role. */}
+              <MembersSection
+                clubId={club.id}
+                clubOwnerId={club.created_by}
+                meta={meta}
+                refreshKey={managerLoading ? 1 : 0}
+              />
             </div>
           )}
 

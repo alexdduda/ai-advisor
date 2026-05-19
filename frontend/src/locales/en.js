@@ -413,6 +413,7 @@ const EN_TRANSLATIONS = {
     // 2026-04 redesign — new keys
     'clubs.manageClub':         'Manage club',
     'clubs.manageBtnShort':     'Manage',
+    'clubs.manage.members':     'Members',
     'clubs.featuredBadge':      'Trending',
     'clubs.fieldLogo':          'Club logo',
     'clubs.uploadLogo':         'Upload logo',

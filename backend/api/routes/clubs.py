@@ -184,6 +184,24 @@ class ClubAnnouncementCreate(BaseModel):
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
+def _display_name_from_email(email: Optional[str]) -> str:
+    """
+    Derive the public display name shown to club managers/admins from a user's
+    McGill email: take the part before '@', then the segment before the first
+    dot, and capitalize it.
+      'first.last@mail.mcgill.ca' → 'First'
+    Used in places where we DON'T want to expose the user's custom username.
+    Falls back to 'Member' if email is missing or malformed.
+    """
+    if not email or '@' not in email:
+        return "Member"
+    local = email.split('@', 1)[0].strip()
+    if not local:
+        return "Member"
+    first = local.split('.', 1)[0]
+    return first.capitalize() if first else "Member"
+
+
 def _get_starter_names(major: Optional[str]) -> List[str]:
     """Return a list of club names relevant to the user's major."""
     if not major:
@@ -724,10 +742,14 @@ async def get_club_members(club_id: str, current_user_id: str = Depends(get_curr
         if m["user_id"] == owner_id:
             profile["role"] = "owner"
         try:
-            p = supabase.table("users").select("username, email").eq("id", m["user_id"]).execute()
+            p = supabase.table("users").select("email").eq("id", m["user_id"]).execute()
             if p.data:
-                profile["name"] = p.data[0].get("username", "") or p.data[0].get("email", "")
-                profile["email"] = p.data[0].get("email", "")
+                email = p.data[0].get("email", "") or ""
+                # Always show the email-derived first name to club staff — never
+                # the user's custom username (privacy: usernames are only for
+                # the user's own settings + forum posts).
+                profile["name"] = _display_name_from_email(email)
+                profile["email"] = email
         except Exception:
             pass
         members.append(profile)
