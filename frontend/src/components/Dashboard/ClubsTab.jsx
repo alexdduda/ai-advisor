@@ -11,6 +11,7 @@ import {
 import { useLanguage } from '../../contexts/LanguageContext'
 import { useAuth } from '../../contexts/AuthContext'
 import clubsAPI from '../../lib/clubsAPI'
+import { readCache, writeCache } from '../../lib/userDataCache'
 import './ClubsTab.css'
 
 const CATEGORY_META = {
@@ -1762,8 +1763,9 @@ export default function ClubsTab({ user, authFlags, onClubEventsChange }) {
   const [activeView, setActiveView] = useState('explore')
   const [clubs, setClubs] = useState([])
   const [categories, setCategories] = useState([])
-  const [myClubs, setMyClubs] = useState([])
-  const [createdClubs, setCreatedClubs] = useState([])
+  // SWR-style hydrate from cache for instant first paint
+  const [myClubs, setMyClubs]         = useState(() => readCache('my_clubs', user?.id, []))
+  const [createdClubs, setCreatedClubs] = useState(() => readCache('created_clubs', user?.id, []))
   const [pendingCounts, setPendingCounts] = useState({})
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
@@ -1785,7 +1787,7 @@ export default function ClubsTab({ user, authFlags, onClubEventsChange }) {
   const [joinToast, setJoinToast] = useState(null)
   const [joinRequestClub, setJoinRequestClub] = useState(null)
   const [pendingRequestClubIds, setPendingRequestClubIds] = useState(new Set())
-  const [subscribedIds, setSubscribedIds] = useState(new Set())
+  const [subscribedIds, setSubscribedIds] = useState(() => new Set(readCache('subscriptions', user?.id, [])))
   const debounceRef = useRef(null)
   const isMounted = useRef(true)
 
@@ -1794,11 +1796,13 @@ export default function ClubsTab({ user, authFlags, onClubEventsChange }) {
     return () => { isMounted.current = false }
   }, [])
 
-  // Fetch user subscriptions on mount
+  // Fetch user subscriptions on mount (cache for instant subsequent renders)
   useEffect(() => {
     if (!user?.id) return
     clubsAPI.getUserSubscriptions(user.id).then(data => {
-      if (isMounted.current) setSubscribedIds(new Set(data.subscribed_club_ids || []))
+      const ids = data.subscribed_club_ids || []
+      if (isMounted.current) setSubscribedIds(new Set(ids))
+      writeCache('subscriptions', user.id, ids)
     }).catch(() => {})
   }, [user?.id])
 
@@ -1830,16 +1834,18 @@ export default function ClubsTab({ user, authFlags, onClubEventsChange }) {
 
   const fetchMyClubs = useCallback(async () => {
     if (!user?.id) return
-    setMyClubsLoading(true)
+    // Only show the spinner if we don't already have cached data on screen
+    if (myClubs.length === 0) setMyClubsLoading(true)
     try {
       const data = await clubsAPI.getUserClubs(user.id)
       const list = Array.isArray(data) ? data : data.clubs ?? []
       if (!isMounted.current) return
       setMyClubs(list)
+      writeCache('my_clubs', user.id, list)
       if (onClubEventsChange) onClubEventsChange(buildClubCalendarEvents(list))
     } catch { /* silent */ }
     finally { if (isMounted.current) setMyClubsLoading(false) }
-  }, [user?.id, onClubEventsChange])
+  }, [user?.id, onClubEventsChange, myClubs.length])
 
   const fetchCreatedClubs = useCallback(async () => {
     if (!user?.id) return
@@ -1856,6 +1862,7 @@ export default function ClubsTab({ user, authFlags, onClubEventsChange }) {
       }
       if (!isMounted.current) return
       setCreatedClubs(isAdmin ? list : list)
+      writeCache('created_clubs', user.id, list)
       // Fetch pending counts for private clubs
       const counts = {}
       for (const club of list) {
