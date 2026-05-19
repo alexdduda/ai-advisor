@@ -206,19 +206,8 @@ def _queue_notifications(supabase, event_id: str, event: CalendarEventIn):
                     "phone":       None,
                     "sent":        False,
                 })
-            if event.notify_sms and event.notify_phone:
-                rows.append({
-                    "user_id":     event.user_id,
-                    "event_id":    event_id,
-                    "event_title": event.title,
-                    "event_date":  event.date,
-                    "event_type":  event.type,
-                    "send_on":     send_on.isoformat(),
-                    "method":      "sms",
-                    "email":       None,
-                    "phone":       event.notify_phone,
-                    "sent":        False,
-                })
+            # SMS removed Apr 2026 — accepted in the request body for backward
+            # compat but no longer queued. Email is the only channel.
         if rows:
             supabase.table("notification_queue").insert(rows).execute()
             logger.info(f"Queued {len(rows)} notifications for event {event_id}")
@@ -247,25 +236,7 @@ def _send_email(to: str, event_title: str, event_date: str, event_type: str, day
         return False
 
 
-def _send_sms(to: str, event_title: str, event_date: str, event_type: str, days_before: int) -> bool:
-    """Send reminder SMS via Twilio. Returns True on success."""
-    try:
-        from twilio.rest import Client
-        meta = _type_meta(event_type)
-        client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
-
-        if days_before == 0:
-            body = f"{meta['emoji']} McGill Reminder: '{event_title}' is TODAY ({event_date}). Good luck!"
-        elif days_before == 1:
-            body = f"{meta['emoji']} McGill Reminder: '{event_title}' is TOMORROW ({event_date})."
-        else:
-            body = f"{meta['emoji']} McGill Reminder: '{event_title}' is in {days_before} days ({event_date})."
-
-        client.messages.create(body=body, from_=settings.TWILIO_FROM_NUMBER, to=to)
-        return True
-    except Exception as e:
-        logger.error(f"Twilio error: {e}")
-        return False
+# _send_sms / Twilio integration removed Apr 2026 — site is email-only.
 
 
 # ── Routes ───────────────────────────────────────────────────────────────────
@@ -388,12 +359,11 @@ async def run_cron(request: Request, x_cron_secret: Optional[str] = Header(None)
                     row.get("event_type", "personal"),
                     (date.fromisoformat(row["event_date"]) - date.today()).days
                 )
-            elif method == "sms" and row.get("phone"):
-                ok = _send_sms(
-                    row["phone"], row["event_title"], row["event_date"],
-                    row.get("event_type", "personal"),
-                    (date.fromisoformat(row["event_date"]) - date.today()).days
-                )
+            else:
+                # method == "sms" (legacy rows) or no email — mark sent so the
+                # cron doesn't keep retrying. SMS support was removed Apr 2026.
+                logger.info(f"Skipping legacy/unsupported notification method={method!r}")
+                ok = True
         except Exception as e:
             logger.error(f"Notification send error for row {row.get('id')}: {e}")
 

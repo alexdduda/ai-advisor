@@ -16,9 +16,8 @@ import { usersAPI } from '../lib/api'
 const STORAGE_KEY = 'mcgill_notification_prefs'
 
 const DEFAULT_PREFS = {
-  method: 'email',          // 'email' | 'sms' | 'both' | 'none'
+  method: 'email',          // 'email' | 'none' (SMS removed Apr 2026)
   email: '',
-  phone: '',
   timing: {
     sameDay: false,
     oneDay: true,
@@ -34,12 +33,22 @@ const DEFAULT_PREFS = {
   },
 }
 
+// Normalise any legacy 'sms' / 'both' values left in localStorage or the DB
+// to 'email' so old accounts don't end up silently disabled.
+function _normaliseMethod(m) {
+  if (m === 'sms' || m === 'both') return 'email'
+  if (m === 'email' || m === 'none') return m
+  return 'email'
+}
+
 function mergeWithDefaults(stored) {
   if (!stored) return { ...DEFAULT_PREFS }
+  const { phone: _drop_phone, ...rest } = stored  // drop deprecated phone field
   return {
     ...DEFAULT_PREFS,
-    ...stored,
-    timing: { ...DEFAULT_PREFS.timing, ...(stored.timing || {}) },
+    ...rest,
+    method:     _normaliseMethod(stored.method),
+    timing:     { ...DEFAULT_PREFS.timing,     ...(stored.timing || {}) },
     eventTypes: { ...DEFAULT_PREFS.eventTypes, ...(stored.eventTypes || {}) },
   }
 }
