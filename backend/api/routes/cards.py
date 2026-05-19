@@ -79,6 +79,12 @@ TRANSCRIPT_REMINDER_LABEL = "TRANSCRIPT UPDATE"
 COURSE_REGISTRATION_REMINDER_DATES = [(5, 20), (5, 28)]
 COURSE_REGISTRATION_REMINDER_LABEL = "COURSE REGISTRATION"
 
+# Summer course registration opens early March. Lower-tone reminder since
+# only some students take summer courses (most use the term for internships
+# or break) — we just surface the date so interested students don't miss it.
+SUMMER_REGISTRATION_REMINDER_DATES = [(3, 1), (3, 8)]
+SUMMER_REGISTRATION_REMINDER_LABEL = "SUMMER REGISTRATION"
+
 
 class ThreadRequest(BaseModel):
     user_id: str
@@ -1287,4 +1293,129 @@ def run_course_registration_reminder_cron() -> dict:
         return {"sent": sent, "days_before_open": days_before_open}
     except Exception as e:
         logger.exception(f"Course-registration reminder cron failed: {e}")
+        return {"sent": 0, "error": str(e)}
+
+
+# ════════════════════════════════════════════════════════════════════
+#  Summer-course-registration opens reminder
+# ════════════════════════════════════════════════════════════════════
+
+def is_summer_registration_day(today: "date | None" = None) -> bool:
+    """True if today is one of the configured summer-registration reminder dates."""
+    from datetime import date as _date
+    t = today or _date.today()
+    return (t.month, t.day) in SUMMER_REGISTRATION_REMINDER_DATES
+
+
+def _has_active_summer_registration_card(user_id: str) -> bool:
+    """True if a summer-registration card was already inserted today (idempotency)."""
+    try:
+        supabase = get_supabase()
+        today_iso = datetime.now(timezone.utc).date().isoformat()
+        resp = (supabase.table("advisor_cards")
+                .select("id")
+                .eq("user_id", user_id)
+                .eq("label", SUMMER_REGISTRATION_REMINDER_LABEL)
+                .gte("generated_at", today_iso)
+                .limit(1).execute())
+        return bool(resp.data)
+    except Exception:
+        return False
+
+
+def _insert_summer_registration_card(user_id: str, days_before_open: int) -> bool:
+    """
+    Insert a summer-registration card for one user. Tone is informational
+    rather than urgent — only a subset of students take summer courses.
+    """
+    if _has_active_summer_registration_card(user_id):
+        return False
+    try:
+        supabase = get_supabase()
+        now = datetime.now(timezone.utc).isoformat()
+
+        # Push existing cards down by 1 so this card lands near the top
+        try:
+            existing = (supabase.table("advisor_cards").select("id, sort_order")
+                        .eq("user_id", user_id).execute().data or [])
+            for c in existing:
+                supabase.table("advisor_cards") \
+                    .update({"sort_order": (c.get("sort_order") or 0) + 1}) \
+                    .eq("id", c["id"]).execute()
+        except Exception:
+            pass
+
+        if days_before_open > 0:
+            title = f"Summer course registration opens in {days_before_open} days"
+            body = (
+                f"Planning to take a summer course? McGill summer registration opens in about "
+                f"{days_before_open} days. Decide whether you want to lighten next year's load, "
+                "catch up on a prereq, or knock out an elective — and have your picks ready."
+            )
+            card_type = "insight"
+        else:
+            title = "Summer course registration is open"
+            body = (
+                "McGill summer course registration is now open on Minerva. If you're planning to "
+                "take a summer course — to catch up on a prereq, lighten next year's load, or "
+                "explore something new — register soon since summer sections often have limited "
+                "seats."
+            )
+            card_type = "warning"
+
+        row = {
+            "user_id": user_id,
+            "source": "system",
+            "card_type": card_type,
+            "icon": "☀️",
+            "label": SUMMER_REGISTRATION_REMINDER_LABEL,
+            "title": title,
+            "body": body,
+            "actions": json.dumps([
+                {"type": "open_degree_planning", "label": "Open Degree Planning"},
+                "Should I take a summer course this year?",
+                "Which prereqs could I catch up on over the summer?",
+                "Are there any electives I should knock out in summer term?",
+            ]),
+            "category": "planning",
+            "priority": 2,
+            "sort_order": 0,
+            "generated_at": now,
+        }
+        supabase.table("advisor_cards").insert(row).execute()
+        return True
+    except Exception as e:
+        logger.warning(f"Failed to insert summer-registration card for {user_id}: {e}")
+        return False
+
+
+def run_summer_registration_reminder_cron() -> dict:
+    """
+    Daily cron: if today is a configured summer-registration reminder date,
+    drop a card into every user's brief (idempotent — one card per user per day).
+    """
+    if not is_summer_registration_day():
+        return {"sent": 0, "skipped": "not_summer_registration_day"}
+    try:
+        from datetime import date as _date
+        today = _date.today()
+        # Latest configured date = "registration opens"; earlier ones are heads-ups
+        sorted_dates = sorted(SUMMER_REGISTRATION_REMINDER_DATES, key=lambda x: (x[0], x[1]))
+        opens_month, opens_day = sorted_dates[-1]
+        try:
+            opens_date = today.replace(month=opens_month, day=opens_day)
+            days_before_open = max(0, (opens_date - today).days)
+        except ValueError:
+            days_before_open = 0
+
+        supabase = get_supabase()
+        users_resp = supabase.table("users").select("id").execute()
+        sent = 0
+        for u in (users_resp.data or []):
+            if u.get("id") and _insert_summer_registration_card(u["id"], days_before_open):
+                sent += 1
+        logger.info(f"Summer-registration reminder cron: inserted {sent} cards (days_before_open={days_before_open})")
+        return {"sent": sent, "days_before_open": days_before_open}
+    except Exception as e:
+        logger.exception(f"Summer-registration reminder cron failed: {e}")
         return {"sent": 0, "error": str(e)}
