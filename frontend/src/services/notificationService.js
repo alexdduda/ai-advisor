@@ -21,19 +21,16 @@ async function _authHeader() {
 }
 
 /**
- * Resolve which channels to use from notification prefs.
- *   method ∈ 'email' | 'sms' | 'both' | 'none'
- * Returns { notify_email, notify_sms, email, phone } honoring the user's choice.
+ * Resolve the email channel from notification prefs.
+ *   method ∈ 'email' | 'none' (SMS removed Apr 2026)
+ * Returns { notify_email, email } honoring the user's choice.
  */
 function _resolveChannels(notifPrefs, fallbackEmail) {
   const method = (notifPrefs?.method) || 'email'
   const email  = (notifPrefs?.email  || fallbackEmail || '').trim() || null
-  const phone  = (notifPrefs?.phone  || '').trim() || null
   return {
-    notify_email: (method === 'email' || method === 'both') && !!email,
-    notify_sms:   (method === 'sms'   || method === 'both') && !!phone,
+    notify_email: method === 'email' && !!email,
     email,
-    phone,
   }
 }
 
@@ -42,7 +39,7 @@ function _resolveChannels(notifPrefs, fallbackEmail) {
  * Honors:
  *   - method !== 'none'
  *   - per-event-type opt-out (eventTypes[event.type] !== false)
- *   - at least one channel actually has credentials (email or phone)
+ *   - email credential exists
  */
 function _shouldSchedule(event, notifPrefs, channels) {
   if (event.notifyEnabled === false) return false
@@ -52,7 +49,7 @@ function _shouldSchedule(event, notifPrefs, channels) {
   const typePref = notifPrefs?.eventTypes
   if (typePref && typePref[type] === false) return false
 
-  return channels.notify_email || channels.notify_sms
+  return channels.notify_email
 }
 
 /**
@@ -75,9 +72,9 @@ export async function scheduleNotification(event, userId, userEmail, notifPrefs 
     // notification_queue. Honor the user's preference here.
     notify_enabled:   willSchedule,
     notify_email:     channels.notify_email,
-    notify_sms:       channels.notify_sms,
+    notify_sms:       false,
     notify_email_addr: channels.email,
-    notify_phone:     channels.phone,
+    notify_phone:     null,
     notify_same_day:  event.notifySameDay ?? false,
     notify_1day:      event.notify1Day   ?? true,
     notify_7days:     event.notify7Days  ?? true,
@@ -125,7 +122,7 @@ export async function queueExamNotification(event, userId, userEmail, notifPrefs
   const willSchedule =
     (notifPrefs?.method) !== 'none'
     && notifPrefs?.eventTypes?.exam !== false
-    && (channels.notify_email || channels.notify_sms)
+    && channels.notify_email
 
   const payload = {
     client_id:        event.id,
@@ -138,9 +135,9 @@ export async function queueExamNotification(event, userId, userEmail, notifPrefs
     description:      event.description || null,
     notify_enabled:   willSchedule,
     notify_email:     channels.notify_email,
-    notify_sms:       channels.notify_sms,
+    notify_sms:       false,
     notify_email_addr: channels.email,
-    notify_phone:     channels.phone,
+    notify_phone:     null,
     notify_same_day:  event.notifySameDay ?? false,
     notify_1day:      event.notify1Day   ?? true,
     notify_7days:     event.notify7Days  ?? true,

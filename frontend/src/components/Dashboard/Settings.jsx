@@ -130,7 +130,6 @@ export default function Settings({ user, profile, onUpdateSettings }) {
   const setNotifMethod  = (v) => { setNotifPrefs(p => ({ ...p, method: v })); flash() }
   const toggleTiming    = (k) => { setNotifPrefs(p => ({ ...p, timing: { ...p.timing, [k]: !p.timing[k] } })); flash() }
   const toggleEventType = (k) => { setNotifPrefs(p => ({ ...p, eventTypes: { ...p.eventTypes, [k]: !p.eventTypes[k] } })); flash() }
-  const setNotifPhone   = (v) => { setNotifPrefs(p => ({ ...p, phone: v })); flash() }
 
   const handleExportData = () => {
     const blob = new Blob([JSON.stringify({ user: { email: user?.email, id: user?.id }, profile, settings, exportDate: new Date().toISOString() }, null, 2)], { type: 'application/json' })
