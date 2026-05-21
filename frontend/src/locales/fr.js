@@ -353,7 +353,7 @@ const FR_TRANSLATIONS = {
 
     // ── Clubs ──────────────────────────────────────────────
     'clubs.title': 'Clubs étudiants',
-    'clubs.subtitle': 'Découvrez, rejoignez et synchronisez les clubs McGill à votre calendrier',
+    'clubs.subtitle': 'Découvrez les clubs McGill et ajoutez leurs événements informatifs à votre calendrier',
     'clubs.submitBtn': 'Demander l\'ajout d\'un club',
     'clubs.requestAddBtn': 'Demander l\'ajout d\'un club',
     'clubs.noClubsYet': 'Aucun club pour le moment',
