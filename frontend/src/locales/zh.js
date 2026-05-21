@@ -353,7 +353,7 @@ const ZH_TRANSLATIONS = {
 
     // ── Clubs ──────────────────────────────────────────────
     'clubs.title': '学生社团',
-    'clubs.subtitle': '发现、加入McGill社团并同步到您的日历',
+    'clubs.subtitle': '探索McGill社团并将其信息活动添加到您的日历',
     'clubs.submitBtn': '申请添加社团',
     'clubs.requestAddBtn': '申请添加社团',
     'clubs.noClubsYet': '暂无社团',

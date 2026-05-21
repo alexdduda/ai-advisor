@@ -353,7 +353,7 @@ const EN_TRANSLATIONS = {
 
     // ── Clubs ──────────────────────────────────────────────
     'clubs.title': 'Student Clubs',
-    'clubs.subtitle': 'Discover, join, and sync McGill clubs to your calendar',
+    'clubs.subtitle': 'Discover McGill clubs and add their informational events to your calendar',
     'clubs.submitBtn': 'Request to Add Club',
     'clubs.requestAddBtn': 'Request to Add Club',
     'clubs.noClubsYet': 'No Clubs Yet',
