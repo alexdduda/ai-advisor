@@ -309,21 +309,56 @@ async def get_categories():
 
 @router.get("/created/{user_id}")
 async def get_created_clubs(user_id: str, current_user_id: str = Depends(get_current_user_id)):
-    """Return clubs created by this user."""
+    """Return clubs the user can manage — owner OR invited admin.
+    (Endpoint name kept for backwards compat; semantics widened so invited
+    managers see their clubs in the My Clubs > Manage section.)"""
     require_self(current_user_id, user_id)
     try:
         supabase = get_supabase()
-        result = (
+
+        # 1. Clubs the user CREATED (owner)
+        owned = (
             supabase.table("clubs")
             .select("*")
             .eq("created_by", user_id)
-            .order("name")
-            .execute()
+            .execute().data or []
         )
-        return {"clubs": result.data or [], "count": len(result.data or [])}
+
+        # 2. Clubs where they have role='admin' in user_clubs
+        admin_rows = (
+            supabase.table("user_clubs")
+            .select("club_id")
+            .eq("user_id", user_id)
+            .eq("role", "admin")
+            .execute().data or []
+        )
+        admin_club_ids = [r["club_id"] for r in admin_rows if r.get("club_id")]
+        admin_clubs = []
+        if admin_club_ids:
+            admin_clubs = (
+                supabase.table("clubs")
+                .select("*")
+                .in_("id", admin_club_ids)
+                .execute().data or []
+            )
+
+        # Merge, dedupe by id, preserve a clear marker so the frontend can tell
+        # how the user can manage this club (mostly cosmetic — privileges are
+        # the same on the backend either way).
+        merged = {}
+        for c in owned:
+            c["_manage_role"] = "owner"
+            merged[c["id"]] = c
+        for c in admin_clubs:
+            if c["id"] not in merged:
+                c["_manage_role"] = "admin"
+                merged[c["id"]] = c
+
+        result = sorted(merged.values(), key=lambda c: (c.get("name") or "").lower())
+        return {"clubs": result, "count": len(result)}
     except Exception as e:
-        logger.exception(f"Error fetching created clubs: {e}")
-        raise HTTPException(status_code=500, detail="Failed to retrieve created clubs")
+        logger.exception(f"Error fetching managed clubs: {e}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve managed clubs")
 
 
 @router.put("/edit/{club_id}")

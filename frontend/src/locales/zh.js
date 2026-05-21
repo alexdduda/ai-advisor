@@ -419,6 +419,7 @@ const ZH_TRANSLATIONS = {
     'clubs.invitedYouTo':        '邀请你管理',
     'clubs.accept':              '接受',
     'clubs.subscribers':         '订阅者',
+    'clubs.adminBadge':          '管理员',
     'clubs.featuredBadge':      '热门',
     'clubs.fieldLogo':          '俱乐部徽标',
     'clubs.uploadLogo':         '上传徽标',

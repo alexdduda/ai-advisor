@@ -419,6 +419,7 @@ const FR_TRANSLATIONS = {
     'clubs.invitedYouTo':        'vous a invité·e à gérer',
     'clubs.accept':              'Accepter',
     'clubs.subscribers':         'Abonnés',
+    'clubs.adminBadge':          'Admin',
     'clubs.featuredBadge':      'Tendance',
     'clubs.fieldLogo':          'Logo du club',
     'clubs.uploadLogo':         'Téléverser un logo',

@@ -10,6 +10,7 @@ Run these in the Supabase SQL Editor, in order.
 | `2026_04_14_security_tighten_logo_policies.sql` | **SEC FIX**: replaces the over-permissive club-logos RLS so only the club owner can upload/update/delete their own logo (paired with the `logo_url` validator added in code) |
 | `2026_05_18_backfill_username_from_email.sql` | Sets `username` to the first name derived from McGill email for any existing user with NULL/empty username (e.g. `first.last@mail.mcgill.ca` → `First`) |
 | `2026_05_18_club_manager_requests.sql` | New `club_manager_requests` table for the manager-invite flow — owners/admins request other Symbolos users to become managers, target accepts/denies from their Clubs tab |
+| `2026_05_18_club_logo_admin_upload.sql` | Widens the club-logos storage RLS so invited admins (not just the owner) can upload/update/delete their club's logo |
 
 All migrations are idempotent (`IF NOT EXISTS`, `ON CONFLICT DO NOTHING`, `DO $$ ... END $$` guards) so re-running them is a no-op.
 
