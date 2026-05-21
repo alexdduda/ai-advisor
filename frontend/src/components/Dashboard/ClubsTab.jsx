@@ -8,7 +8,7 @@ import {
   FaLock, FaGlobe, FaEdit, FaUserPlus, FaUserCheck, FaUserTimes,
   FaExclamationTriangle, FaFire, FaGem, FaShare,
 } from 'react-icons/fa'
-import { useLanguage } from '../../contexts/LanguageContext'
+import { useLanguage } from '../../contexts/PreferencesContext'
 import { useAuth } from '../../contexts/AuthContext'
 import clubsAPI from '../../lib/clubsAPI'
 import { readCache, writeCache } from '../../lib/userDataCache'
@@ -365,7 +365,10 @@ function ClubDetailDrawer({ club, liveClub, joined, calSynced, hasPendingRequest
               name={display.name}
               category={display.category}
               size="lg"
-              calSynced={calSynced}
+              // Hide "in your calendar" badge for owners — redundant alongside
+              // the owner crown / Manage controls. Still useful for joined-but-
+              // not-owned clubs.
+              calSynced={calSynced && !(userId && display.created_by === userId)}
               logoUrl={displayLogo}
               editable={isOwnerOrAdmin && !logoBusy}
               onEditClick={handleDrawerLogoPick}
@@ -559,6 +562,7 @@ function ClubDetailDrawer({ club, liveClub, joined, calSynced, hasPendingRequest
                       <div className="club-drawer__activity-meta">
                         {item.timestamp && new Date(item.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                         {item.location && <> · {item.location}</>}
+                        {item.join_link && <> · <a href={item.join_link} target="_blank" rel="noopener noreferrer" style={{ color: '#1d4ed8' }}>Join</a></>}
                       </div>
                     </div>
                   </div>
@@ -711,7 +715,10 @@ function ClubCard({ club, joined, calSynced, hasPendingRequest, isSubscribed, on
             name={club.name}
             category={club.category}
             size="md"
-            calSynced={calSynced}
+            // Hide the "in your calendar" badge on clubs you OWN — owners
+            // already get the crown pill + Manage button, so the cal dot
+            // is redundant noise on those cards.
+            calSynced={calSynced && !isOwner}
             logoUrl={displayLogoUrl}
             editable={isOwner && !logoBusy}
             onEditClick={handleLogoPick}
@@ -1016,9 +1023,9 @@ function ClubManageDashboard({ club, onClose, onSave, t, isAdmin }) {
   const [managerSuccess, setManagerSuccess] = useState('')
   const [announcements, setAnnouncements] = useState([])
   const [events, setEvents] = useState([])
-  const [annForm, setAnnForm] = useState({ title: '', body: '' })
+  const [annForm, setAnnForm] = useState({ title: '', body: '', join_link: '' })
   const [annSubmitting, setAnnSubmitting] = useState(false)
-  const [eventForm, setEventForm] = useState({ title: '', description: '', event_date: '', location: '' })
+  const [eventForm, setEventForm] = useState({ title: '', description: '', event_date: '', location: '', join_link: '' })
   const [eventSubmitting, setEventSubmitting] = useState(false)
   const [editForm, setEditForm] = useState({
     name: club?.name || '', category: club?.category || '',
@@ -1112,7 +1119,7 @@ function ClubManageDashboard({ club, onClose, onSave, t, isAdmin }) {
     setAnnSubmitting(true)
     try {
       await clubsAPI.createClubAnnouncement(club.id, annForm)
-      setAnnForm({ title: '', body: '' })
+      setAnnForm({ title: '', body: '', join_link: '' })
       // Refresh announcements
       clubsAPI.getClubAnnouncements?.(club.id)?.then?.(d => setAnnouncements(d.announcements || d || []))?.catch?.(() => {})
     } catch {}
@@ -1132,7 +1139,7 @@ function ClubManageDashboard({ club, onClose, onSave, t, isAdmin }) {
     setEventSubmitting(true)
     try {
       await clubsAPI.createClubEvent(club.id, eventForm)
-      setEventForm({ title: '', description: '', event_date: '', location: '' })
+      setEventForm({ title: '', description: '', event_date: '', location: '', join_link: '' })
       clubsAPI.getClubEvents?.(club.id)?.then?.(d => setEvents(d.events || d || []))?.catch?.(() => {})
     } catch {}
     finally { setEventSubmitting(false) }
@@ -1391,6 +1398,10 @@ function ClubManageDashboard({ club, onClose, onSave, t, isAdmin }) {
                   <label>{t('clubs.manage.annBody')}</label>
                   <textarea value={annForm.body} onChange={e => setAnnForm(f => ({ ...f, body: e.target.value }))} rows={3} placeholder={t('clubs.manage.annBodyPlaceholder')} />
                 </div>
+                <div className="clubs-field">
+                  <label>{t('clubs.manage.joinLink') || 'Join Link'}</label>
+                  <input type="url" value={annForm.join_link} onChange={e => setAnnForm(f => ({ ...f, join_link: e.target.value }))} placeholder="Zoom, Teams, or other link…" />
+                </div>
                 <button type="submit" className="club-action-btn club-action-btn--join" disabled={annSubmitting || !annForm.title.trim()}>
                   <FaBullhorn size={12} /> {annSubmitting ? t('clubs.saving') : t('clubs.manage.postAnnouncement')}
                 </button>
@@ -1404,6 +1415,7 @@ function ClubManageDashboard({ club, onClose, onSave, t, isAdmin }) {
                       <button className="club-manage__remove-btn" onClick={() => handleDeleteAnnouncement(a.id)}><FaTrash size={11} /></button>
                     </div>
                     {a.body && <p>{a.body}</p>}
+                    {a.join_link && <p><a href={a.join_link} target="_blank" rel="noopener noreferrer" style={{ color: '#1d4ed8', fontSize: '13px' }}>Join Link</a></p>}
                     {a.created_at && <span className="club-manage__ann-date">{new Date(a.created_at).toLocaleDateString()}</span>}
                   </div>
                 ))}
@@ -1435,6 +1447,10 @@ function ClubManageDashboard({ club, onClose, onSave, t, isAdmin }) {
                     <input value={eventForm.location} onChange={e => setEventForm(f => ({ ...f, location: e.target.value }))} placeholder="e.g. SSMU 302" />
                   </div>
                 </div>
+                <div className="clubs-field">
+                  <label>{t('clubs.manage.joinLink') || 'Join Link'}</label>
+                  <input type="url" value={eventForm.join_link} onChange={e => setEventForm(f => ({ ...f, join_link: e.target.value }))} placeholder="Zoom, Teams, or other link…" />
+                </div>
                 <button type="submit" className="club-action-btn club-action-btn--join" disabled={eventSubmitting || !eventForm.title.trim() || !eventForm.event_date}>
                   <FaCalendarAlt size={12} /> {eventSubmitting ? t('clubs.saving') : t('clubs.manage.createEvent')}
                 </button>
@@ -1452,6 +1468,7 @@ function ClubManageDashboard({ club, onClose, onSave, t, isAdmin }) {
                       {ev.location && <span>📍 {ev.location}</span>}
                     </div>
                     {ev.description && <p>{ev.description}</p>}
+                    {ev.join_link && <p><a href={ev.join_link} target="_blank" rel="noopener noreferrer" style={{ color: '#1d4ed8', fontSize: '13px' }}>Join Link</a></p>}
                   </div>
                 ))}
               </div>
