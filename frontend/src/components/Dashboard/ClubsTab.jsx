@@ -656,7 +656,10 @@ function ClubCard({ club, joined, calSynced, hasPendingRequest, isSubscribed, on
   const meta = getCat(club.category)
   const [justJoined, setJustJoined] = useState(false)
   const isLoading = clubLoading[club.id] ?? false
-  const isOwner = userId && club.created_by === userId
+  // Owner or admin both get full manage privileges — invited managers are
+  // surfaced via the _manage_role flag the /created endpoint now returns.
+  const isOwner   = userId && club.created_by === userId
+  const isManager = isOwner || club._manage_role === 'admin'
 
   // Logo quick-upload (owners only) — click the avatar to swap the picture
   const [logoOptimistic, setLogoOptimistic] = useState(null)
@@ -700,7 +703,7 @@ function ClubCard({ club, joined, calSynced, hasPendingRequest, isSubscribed, on
           <FaFire size={8} /> {t('clubs.featuredBadge') || 'Trending'}
         </div>
       )}
-      {isOwner && (
+      {isManager && (
         <input
           ref={logoInputRef}
           type="file"
@@ -715,12 +718,12 @@ function ClubCard({ club, joined, calSynced, hasPendingRequest, isSubscribed, on
             name={club.name}
             category={club.category}
             size="md"
-            // Hide the "in your calendar" badge on clubs you OWN — owners
-            // already get the crown pill + Manage button, so the cal dot
-            // is redundant noise on those cards.
-            calSynced={calSynced && !isOwner}
+            // Hide the "in your calendar" badge on clubs you MANAGE — managers
+            // already get the crown / Manage controls, so the cal dot is
+            // redundant noise on those cards.
+            calSynced={calSynced && !isManager}
             logoUrl={displayLogoUrl}
-            editable={isOwner && !logoBusy}
+            editable={isManager && !logoBusy}
             onEditClick={handleLogoPick}
           />
           <div className="club-card__info">
@@ -754,7 +757,7 @@ function ClubCard({ club, joined, calSynced, hasPendingRequest, isSubscribed, on
         )}
       </div>
       <div className="club-card__footer" onClick={e => e.stopPropagation()}>
-        {isOwner ? (
+        {isManager ? (
           <div className="club-card__footer-joined">
             <button
               className="club-manage-btn"
@@ -763,7 +766,9 @@ function ClubCard({ club, joined, calSynced, hasPendingRequest, isSubscribed, on
             >
               <FaCog size={11} /> {t('clubs.manageBtnShort') || 'Manage'}
             </button>
-            <span className="club-card__owner-pill"><FaCrown size={9} /> {t('clubs.managerBadge')}</span>
+            <span className="club-card__owner-pill">
+              <FaCrown size={9} /> {isOwner ? t('clubs.managerBadge') : (t('clubs.adminBadge') || 'Admin')}
+            </span>
           </div>
         ) : joined ? (
           <div className="club-card__footer-joined">
