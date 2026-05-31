@@ -7,6 +7,16 @@
 ClassAverageCrowdSourcing.csv
 *.csv
 
+# ── Outreach / private contact lists ────────────────────────────────────
+# Never commit personal/contact email lists — privacy + CASL compliance.
+ssmu_club_emails.*
+club_emails.*
+club_contacts.*
+outreach/
+outreach_*.xlsx
+outreach_*.json
+outreach_*.txt
+
 
 __pycache__/
 *.py[cod]
