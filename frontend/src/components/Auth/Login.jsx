@@ -13,7 +13,7 @@ import TermsOfService from '../Legal/TOS'
 import AboutUs from '../Legal/AboutUs'
 import './Auth.css'
 
-function Login({ forceVerify = false, email: propEmail = '', userId: propUserId = '' }) {
+function Login({ forceVerify = false, email: propEmail = '', userId: propUserId = '', onBack = null }) {
   // Restore verify screen if the component remounts mid-verification
   const storedVerify = (() => { try { return JSON.parse(sessionStorage.getItem('symbolos_verify') || 'null') } catch { return null } })()
 
@@ -160,6 +160,16 @@ function Login({ forceVerify = false, email: propEmail = '', userId: propUserId 
       {legalModal === 'about'   && <AboutUs onClose={() => setLegalModal(null)} />}
       {/* ── Corner controls ── */}
       <div className="auth-corner-controls">
+        {onBack && (
+          <button
+            className="auth-lang-btn"
+            onClick={onBack}
+            title="Back to landing page"
+            style={{ paddingInline: '12px' }}
+          >
+            ← Home
+          </button>
+        )}
         <button
           className="auth-lang-btn"
           onClick={() => setLanguage(language === 'en' ? 'fr' : language === 'fr' ? 'zh' : 'en')}

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { PreferencesProvider } from './contexts/PreferencesContext'
 import Login from './components/Auth/Login'
+import LandingPage from './components/Landing/LandingPage'
 import Dashboard from './components/Dashboard/Dashboard'
 import ProfileSetup from './components/ProfileSetup/ProfileSetup'
 import Loading from './components/Loading/Loading'
@@ -15,6 +16,17 @@ function AppContent() {
   const { user, profile, loading, error, needsOnboarding, refreshProfile } = useAuth()
   const [verifying, setVerifying] = useState(false)
   const [verifyError, setVerifyError] = useState('')
+
+  // Unauthenticated users see the marketing landing page first. They can click
+  // "Sign in" anywhere on it to swap to the login form. We honor URL hints
+  // (?signin or hash #signin) and the verification-flow path so the legacy
+  // direct-to-login links keep working.
+  const _initialShowLogin = (() => {
+    if (typeof window === 'undefined') return false
+    const p = new URLSearchParams(window.location.search)
+    return p.has('signin') || p.has('verify_token') || window.location.hash === '#signin'
+  })()
+  const [showLogin, setShowLogin] = useState(_initialShowLogin)
 
   // Brief flash-prevention only — render as soon as auth resolves (no
   // artificial 2s minimum, that was costing every user 2s on first paint).
@@ -80,7 +92,9 @@ function AppContent() {
 
   if (user && !profile && !error) return <Loading />
 
-  return <Login />
+  // Unauthenticated: show landing first; click "Sign in" → show Login.
+  if (showLogin) return <Login onBack={() => setShowLogin(false)} />
+  return <LandingPage onSignIn={() => setShowLogin(true)} />
 }
 
 function App() {
