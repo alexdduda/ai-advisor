@@ -145,8 +145,39 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
     }
   }, [profile?.faculty])
 
+  // ── Cache helpers — degree requirements are essentially static (only
+  // change when admin reseeds), so 24h TTL is generous. Cache keys are
+  // global (not per-user) since these are public program data.
+  const DR_CACHE_TTL_MS = 24 * 60 * 60 * 1000
+  const _drCacheRead = (key) => {
+    try {
+      const raw = localStorage.getItem(`dr_${key}`)
+      if (!raw) return null
+      const { data, ts } = JSON.parse(raw)
+      if (!data || !ts || Date.now() - ts > DR_CACHE_TTL_MS) return null
+      return data
+    } catch { return null }
+  }
+  const _drCacheWrite = (key, data) => {
+    try { localStorage.setItem(`dr_${key}`, JSON.stringify({ data, ts: Date.now() })) } catch {}
+  }
+
   useEffect(() => {
     const isBaScFilter = facultyFilter === 'Faculty of Arts & Science'
+    const cacheKey = `programs_${facultyFilter || 'all'}`
+
+    // Hydrate from cache instantly
+    const cached = _drCacheRead(cacheKey)
+    if (Array.isArray(cached)) setPrograms(cached)
+
+    // Skip background revalidate if cache is fresh (< 1h — programs change
+    // very rarely, but we still re-check periodically in case admin reseeded)
+    let cachedTs = null
+    try { const raw = localStorage.getItem(`dr_${cacheKey}`); if (raw) cachedTs = JSON.parse(raw).ts } catch {}
+    if (cachedTs && Date.now() - cachedTs < 60 * 60 * 1000 && Array.isArray(cached)) {
+      return
+    }
+
     if (isBaScFilter) {
       // B.A. & Sc.: fetch interfaculty + all Arts + all Science programs
       getAuthHeaders().then(headers =>
@@ -162,9 +193,14 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
             ...(Array.isArray(arts) ? arts : []),
             ...(Array.isArray(sci)  ? sci  : []),
           ]
-          setPrograms(all)
+          // Only setPrograms if the result actually differs from cache
+          const sameAsCached = Array.isArray(cached)
+            && cached.length === all.length
+            && cached.every((p, i) => p.program_key === all[i]?.program_key)
+          if (!sameAsCached) setPrograms(all)
+          _drCacheWrite(cacheKey, all)
         })
-        .catch(() => setError('Could not load programs. Try loading requirements first.'))
+        .catch(() => { if (!cached) setError('Could not load programs. Try loading requirements first.') })
     } else {
       const fParam = facultyFilter ? `?faculty=${encodeURIComponent(facultyFilter)}` : ''
       getAuthHeaders().then(headers =>
@@ -173,41 +209,71 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
             if (!r.ok) throw new Error(`HTTP ${r.status}`)
             return r.json()
           })
-          .then(data => { if (Array.isArray(data)) setPrograms(data) })
-          .catch(() => setError('Could not load programs. Try loading requirements first.'))
+          .then(data => {
+            if (!Array.isArray(data)) return
+            const sameAsCached = Array.isArray(cached)
+              && cached.length === data.length
+              && cached.every((p, i) => p.program_key === data[i]?.program_key)
+            if (!sameAsCached) setPrograms(data)
+            _drCacheWrite(cacheKey, data)
+          })
+          .catch(() => { if (!cached) setError('Could not load programs. Try loading requirements first.') })
       )
     }
   }, [seedDone, facultyFilter])
 
   useEffect(() => {
     if (!selectedKey) return
-    setLoading(true)
-    setProgramDetail(null)
-    setOpenBlocks({})
-    setShowAllCourses({})
-    setDetailError(null)
+
+    const cacheKey = `program_${selectedKey}`
+    const cached = _drCacheRead(cacheKey)
+    const cacheHit = !!cached
+
+    if (cacheHit) {
+      // Paint from cache instantly, no spinner
+      setProgramDetail(cached)
+      const initial = {}
+      cached.blocks?.forEach((b, i) => { if (i < 2) initial[b.id] = true })
+      setOpenBlocks(initial)
+      setShowAllCourses({})
+      setDetailError(null)
+
+      // Skip the revalidate if cache is fresh (< 6 hours)
+      let cachedTs = null
+      try { const raw = localStorage.getItem(`dr_${cacheKey}`); if (raw) cachedTs = JSON.parse(raw).ts } catch {}
+      if (cachedTs && Date.now() - cachedTs < 6 * 60 * 60 * 1000) return
+    } else {
+      // No cache → show spinner during initial fetch
+      setLoading(true)
+      setProgramDetail(null)
+      setOpenBlocks({})
+      setShowAllCourses({})
+      setDetailError(null)
+    }
+
     getAuthHeaders().then(headers =>
       fetch(`${API_BASE}/api/degree-requirements/programs/${selectedKey}`, { headers })
         .then(r => {
-          if (r.status === 404) {
-            setDetailError('not_found')
-            return null
-          }
-          if (!r.ok) {
-            setDetailError('error')
-            return null
-          }
+          if (r.status === 404) { setDetailError('not_found'); return null }
+          if (!r.ok)            { setDetailError('error');     return null }
           return r.json()
         })
         .then(data => {
-          if (data) {
+          if (!data) return
+          // Only update if the data actually changed (cheap shallow check on
+          // block count + name) to avoid re-rendering the whole tree.
+          const sameAsCached = cached
+            && (cached.blocks?.length ?? 0) === (data.blocks?.length ?? 0)
+            && cached.name === data.name
+          if (!sameAsCached) {
             setProgramDetail(data)
             const initial = {}
             data.blocks?.forEach((b, i) => { if (i < 2) initial[b.id] = true })
             setOpenBlocks(initial)
           }
+          _drCacheWrite(cacheKey, data)
         })
-        .catch(() => setDetailError('error'))
+        .catch(() => { if (!cacheHit) setDetailError('error') })
         .finally(() => setLoading(false))
     )
   }, [selectedKey])
