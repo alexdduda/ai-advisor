@@ -312,16 +312,28 @@ export default function Dashboard() {
     if (isLoadingCardsRef.current) return
     isLoadingCardsRef.current = true
     try {
-      setCardsLoading(true)
-
-      // Try localStorage cache first for instant display
+      // SWR pattern: if cache is hit, paint instantly and DO NOT show the
+      // loading spinner — that was making cached visits feel slow because
+      // the UI flashed loading state even though cards were already there.
       const cached = _getCachedCards()
-      if (cached && cached.cards?.length > 0) {
+      const cacheHit = cached && cached.cards?.length > 0
+
+      if (cacheHit) {
         setAdvisorCards(cached.cards)
         setCardsGeneratedAt(cached.generatedAt || null)
+        // Skip the background revalidate entirely if cache is fresh
+        // (< 5 min). The user can hit Refresh to force a regenerate.
+        const ageMs = cached.ts ? Date.now() - cached.ts : Infinity
+        if (ageMs < 5 * 60 * 1000) {
+          isLoadingCardsRef.current = false
+          return
+        }
+      } else {
+        // No cache → only NOW show the loading state
+        setCardsLoading(true)
       }
 
-      // Always fetch from server to get latest
+      // Background revalidate (cache miss OR cache stale)
       const data = await cardsAPI.getCards(user.id)
       const cards = data.cards || []
       const currentLang = languageRef.current
@@ -365,9 +377,16 @@ export default function Dashboard() {
           }
         }
       } else if (cards.length > 0) {
-        // Server cards match current language — display and cache them
-        setAdvisorCards(cards)
-        setCardsGeneratedAt(data.generated_at || null)
+        // Server cards match current language — display and cache them.
+        // If the cached set already matches by id, skip setAdvisorCards to
+        // avoid a re-render that replays the entry-slide animation.
+        const sameAsCached = cacheHit
+          && cached.cards.length === cards.length
+          && cached.cards.every((c, i) => c.id === cards[i]?.id)
+        if (!sameAsCached) {
+          setAdvisorCards(cards)
+          setCardsGeneratedAt(data.generated_at || null)
+        }
         if (serverLang) {
           _cacheCards(cards, data.generated_at, serverLang)
           try { localStorage.setItem(`cards_language_${user.id}`, serverLang) } catch {}
