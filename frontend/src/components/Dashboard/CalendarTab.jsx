@@ -8,7 +8,7 @@ import {
 import { useLanguage, useTimezone } from '../../contexts/PreferencesContext'
 import useNotificationPrefs from '../../hooks/useNotificationPrefs'
 import { scheduleNotification, queueExamNotification, deleteEvent as deleteEventAPI } from '../../services/notificationService'
-import { lookupExam, formatExamTime } from '../../utils/examSchedule2026'
+import { lookupExams, formatExamTime } from '../../utils/examSchedule'
 import currentCoursesAPI from '../../lib/currentCoursesAPI'
 import completedCoursesAPI from '../../lib/completedCoursesAPI'
 import { getEvents, saveEvent, deleteEvent as deleteEventDB, migrateLocalStorageEvents, expandRecurringEvents } from '../../lib/calendarAPI'
@@ -168,30 +168,37 @@ export default function CalendarTab({ user, authFlags, clubEvents = [], managedC
       }
 
       const events = []
+      const todayStr = new Date().toISOString().split('T')[0]
       allCourses.forEach((course, idx) => {
-        const exam = lookupExam(course.course_code)
-        if (!exam) return
-        const timeStr = exam.start ? formatExamTime(exam.start) : ''
-        const endStr  = exam.end   ? formatExamTime(exam.end)   : ''
-        const campusLabel = exam.campus === 'D.T.' ? 'Downtown Campus'
-                          : exam.campus === 'MAC'  ? 'MacDonald Campus' : ''
-        const formatLabel = exam.type === 'ONLINE' ? '(Online)' : campusLabel ? `@ ${campusLabel}` : ''
-        events.push({
-          id: `exam-${course.course_code}-${idx}`,
-          title: `${course.course_code} – Final Exam`,
-          date: exam.date,
-          time: timeStr,
-          type: 'exam',
-          // Tag historical exams differently so the UI can dim them if needed
-          category: course._historical ? 'Past Final Exam' : 'Winter 2026 Finals',
-          description: [course.course_title || exam.title, timeStr && endStr ? `${timeStr} – ${endStr}` : timeStr, formatLabel].filter(Boolean).join(' · '),
-          readOnly: true,
-          // Only queue notifications for FUTURE exams (line below already
-          // filters by date, but historical flag adds a safety belt)
-          notifyEnabled: !course._historical,
-          notifySameDay: notifPrefs.timing.sameDay,
-          notify1Day:    notifPrefs.timing.oneDay,
-          notify7Days:   notifPrefs.timing.oneWeek,
+        // lookupExams returns EVERY matching exam across all loaded terms.
+        // A student who took COMP 251 in two different years gets two
+        // separate exam events in their calendar history.
+        const matches = lookupExams(course.course_code)
+        matches.forEach((exam, mIdx) => {
+          const timeStr = exam.start ? formatExamTime(exam.start) : ''
+          const endStr  = exam.end   ? formatExamTime(exam.end)   : ''
+          const campusLabel = exam.campus === 'D.T.' ? 'Downtown Campus'
+                            : exam.campus === 'MAC'  ? 'MacDonald Campus' : ''
+          const formatLabel = exam.type === 'ONLINE' ? '(Online)' : campusLabel ? `@ ${campusLabel}` : ''
+          const isPast = exam.date < todayStr
+          events.push({
+            id: `exam-${course.course_code}-${idx}-${mIdx}`,
+            title: `${course.course_code} – Final Exam`,
+            date: exam.date,
+            time: timeStr,
+            type: 'exam',
+            // Use the term label baked into each exam entry by the
+            // schedule registry — e.g. "Winter 2026 Finals", "Fall 2026 Finals"
+            category: exam.termLabel || (isPast ? 'Past Final Exam' : 'Final Exam'),
+            description: [course.course_title || exam.title, timeStr && endStr ? `${timeStr} – ${endStr}` : timeStr, formatLabel].filter(Boolean).join(' · '),
+            readOnly: true,
+            // Only queue notifications for FUTURE exams; past exams stay
+            // in calendar as history but don't trigger any email.
+            notifyEnabled: !isPast,
+            notifySameDay: notifPrefs.timing.sameDay,
+            notify1Day:    notifPrefs.timing.oneDay,
+            notify7Days:   notifPrefs.timing.oneWeek,
+          })
         })
       })
       setExamEvents(events)
