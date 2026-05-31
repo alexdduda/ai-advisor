@@ -6,11 +6,12 @@
  * via useScrollReveal). Sticky top nav keeps the "Sign in" CTA one click away.
  *
  * SCREENSHOTS expected at frontend/src/assets/landing/ (drop them here as PNGs):
- *   - brief.png     — Advisor cards / Brief tab
- *   - degree.png    — Degree Planning view
- *   - calendar.png  — Calendar grid with exam dots
- *   - clubs.png     — Clubs tab with card grid
- *   - forum.png     — Forum reviews + posts
+ *   - brief.png      — Advisor cards / Brief tab
+ *   - degree.png     — Degree Planning view
+ *   - calendar.png   — Calendar grid with exam dots
+ *   - clubs1.png     — Clubs directory (first of two side-by-side shots)
+ *   - clubs2.png     — Club detail / drawer / manage (second of two)
+ *   - forum.png      — Forum sections (optional)
  *
  * Missing screenshots gracefully render as a styled "Screenshot placeholder"
  * so the page never breaks if you haven't dropped them yet.
@@ -32,7 +33,8 @@ const _findShot = (basename) => {
 const brief    = _findShot('brief')
 const degree   = _findShot('degree')
 const calendar = _findShot('calendar')
-const clubs    = _findShot('clubs')
+const clubs1   = _findShot('clubs1') || _findShot('clubs')   // backwards compat
+const clubs2   = _findShot('clubs2')
 const forum    = _findShot('forum')
 
 function Screenshot({ src, alt, caption }) {
@@ -220,33 +222,41 @@ export default function LandingPage({ onSignIn }) {
               <li>Run a club? Claim its page, post events, manage your exec team</li>
             </ul>
           </Reveal>
-          <Reveal delay={120} className="landing-feature__visual">
-            <Screenshot src={clubs} alt="Clubs directory with category pills and club cards" />
+          <Reveal delay={120} className="landing-feature__visual landing-feature__visual--double">
+            <Screenshot src={clubs1} alt="Clubs directory with category pills and club cards" />
+            <Screenshot src={clubs2} alt="Club detail drawer with subscribe and join buttons" />
           </Reveal>
         </div>
       </section>
 
       {/* ── 6. Forum ─────────────────────────────────────────────── */}
       <section className="landing-section landing-section--alt" id="forum">
-        <div className="landing-section__inner landing-feature">
-          <Reveal className="landing-feature__copy">
+        <div className="landing-section__inner landing-forum">
+          <Reveal>
             <span className="landing-eyebrow">FORUM</span>
-            <h2 className="landing-feature__title">See what students think before you commit.</h2>
-            <p className="landing-feature__text">
-              Course and professor reviews from McGill students who actually
-              took the class — picked from your own transcript so you can't
-              pretend you took something you didn't. General threads, club
-              discussion, and app feedback all in the same place.
+            <h2 className="landing-feature__title">Three places to talk to other McGill students.</h2>
+            <p className="landing-feature__text landing-forum__lead">
+              A focused, McGill-only forum split into three sections so
+              conversations stay on topic.
             </p>
-            <ul className="landing-feature__bullets">
-              <li>5-star ratings tied to courses + professors</li>
-              <li>Anonymous posting by default; share your name if you want credit</li>
-              <li>McGill emails only — no random outside accounts</li>
-            </ul>
           </Reveal>
-          <Reveal delay={120} className="landing-feature__visual">
-            <Screenshot src={forum} alt="Forum reviews tab with course and professor ratings" />
-          </Reveal>
+          <div className="landing-forum__grid">
+            <Reveal className="landing-forum__card" delay={80}>
+              <span className="landing-forum__pill">Courses</span>
+              <h3>Talk about your classes.</h3>
+              <p>Compare profs, swap notes on what to expect, ask "is this course actually as hard as people say?".</p>
+            </Reveal>
+            <Reveal className="landing-forum__card" delay={160}>
+              <span className="landing-forum__pill">The site</span>
+              <h3>Feedback on Symbolos.</h3>
+              <p>Spot a bug? Want a feature? Post it here — built features get prioritized by what students actually ask for.</p>
+            </Reveal>
+            <Reveal className="landing-forum__card" delay={240}>
+              <span className="landing-forum__pill">General</span>
+              <h3>Everything else.</h3>
+              <p>Apartment hunts, study spots, the latest on union elections — anything McGill students would want to discuss.</p>
+            </Reveal>
+          </div>
         </div>
       </section>
 

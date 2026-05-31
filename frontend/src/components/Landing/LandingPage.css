@@ -438,3 +438,73 @@ body:has(.landing-root),
   .landing-section { padding: 64px 20px; }
   .landing-hero { min-height: 70vh; }
 }
+
+/* ── Double-screenshot layout (Clubs section: directory + detail) ── */
+.landing-feature__visual--double {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+.landing-feature__visual--double .landing-shot {
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.10);
+}
+@media (max-width: 820px) {
+  .landing-feature__visual--double {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Forum 3-card grid ─────────────────────────────────── */
+.landing-forum {
+  text-align: center;
+}
+.landing-forum__lead {
+  max-width: 640px;
+  margin: 0 auto 48px;
+  text-align: center;
+}
+.landing-forum__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+.landing-forum__card {
+  padding: 28px 24px;
+  background: var(--land-bg);
+  border: 1px solid var(--land-border);
+  border-radius: 14px;
+  text-align: left;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.landing-forum__card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+}
+.landing-forum__pill {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: var(--land-accent);
+  color: #fff;
+  margin-bottom: 14px;
+}
+.landing-forum__card h3 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0 0 8px;
+  letter-spacing: -0.01em;
+}
+.landing-forum__card p {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--land-fg-mute);
+  margin: 0;
+}
+@media (max-width: 820px) {
+  .landing-forum__grid { grid-template-columns: 1fr; }
+}
