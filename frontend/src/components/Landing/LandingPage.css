@@ -27,16 +27,33 @@
 }
 .landing-root * { box-sizing: border-box; }
 
-/* When the landing is mounted, the document body/html should NEVER inherit
-   the user's dark theme. Force a cream background + light color-scheme on
-   the document root so dark-mode users don't see a dark gap behind the
-   landing (visible on overscroll bounce, browser chrome, etc.). */
+/* When the landing is mounted, override App.css's flex-centering /
+   fixed-height layout so the page can scroll full-width and full-height.
+   App.css normally has body { display:flex; align-items:center; height:100% }
+   and #root with the same — those are right for the single-screen Dashboard
+   but wrong for a long-scroll marketing page. */
 html:has(.landing-root),
 body:has(.landing-root),
 #root:has(.landing-root) {
   background: #f5f0e6 !important;
   color-scheme: light !important;
   overflow-y: auto !important;
+  display: block !important;
+  align-items: initial !important;
+  justify-content: initial !important;
+  height: auto !important;
+  min-height: 100% !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Edge-to-edge: the landing itself fills the viewport width and grows
+   to the full document height. */
+.landing-root {
+  width: 100%;
+  max-width: 100vw;
+  margin: 0;
 }
 
 /* ── Sticky top nav ───────────────────────────────────────── */
