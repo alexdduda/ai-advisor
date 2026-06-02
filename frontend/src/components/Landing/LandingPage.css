@@ -31,7 +31,15 @@
    fixed-height layout so the page can scroll full-width and full-height.
    App.css normally has body { display:flex; align-items:center; height:100% }
    and #root with the same — those are right for the single-screen Dashboard
-   but wrong for a long-scroll marketing page. */
+   but wrong for a long-scroll marketing page.
+
+   We use TWO selectors so the rules apply in every browser:
+     1. [data-landing="true"]      — set by LandingPage.jsx on mount.
+        Works everywhere, including older Firefox that lacks :has().
+     2. :has(.landing-root)        — pure-CSS fallback for SSR or if
+        the JS hook is somehow not applied yet on first paint. */
+html[data-landing="true"],
+body[data-landing="true"],
 html:has(.landing-root),
 body:has(.landing-root),
 #root:has(.landing-root) {
@@ -46,6 +54,23 @@ body:has(.landing-root),
   width: 100% !important;
   margin: 0 !important;
   padding: 0 !important;
+}
+
+/* Hard-stop: even if the user's theme is "dark" anywhere up the tree,
+   nothing inside .landing-root should ever read a dark token. We force
+   the dashboard-era theme variables back to their light values just
+   inside the landing root, so any stray `var(--bg-primary)` etc.
+   referenced by a shared component resolves to the cream palette. */
+.landing-root,
+.landing-root * {
+  --bg-primary:    #f5f0e6;
+  --bg-secondary:  #ebe4d4;
+  --bg-tertiary:   #ebe4d4;
+  --text-primary:  #1a1a1a;
+  --text-secondary:#5a5a5a;
+  --text-tertiary: #6f6f6f;
+  --border-primary: rgba(0, 0, 0, 0.08);
+  --accent-primary: #ed1b2f;
 }
 
 /* Edge-to-edge: the landing itself fills the viewport width and grows
@@ -476,6 +501,57 @@ body:has(.landing-root),
   .landing-section { padding: 64px 20px; }
   .landing-hero { min-height: 70vh; }
   .landing-feature { gap: 28px; }
+  .landing-nav__inner { padding: 12px 18px; }
+}
+
+/* Phones */
+@media (max-width: 560px) {
+  .landing-section { padding: 56px 18px; }
+  .landing-hero { min-height: 80vh; }
+  .landing-nav__name { font-size: 0.98rem; }
+  .landing-nav__logo { width: 28px; height: 28px; }
+  .landing-nav__cta { padding: 8px 14px; font-size: 0.82rem; }
+
+  .landing-hero__cta-row {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+  .landing-hero__cta-row .landing-btn { justify-content: center; }
+  .landing-btn--xl { padding: 14px 22px; font-size: 1rem; }
+
+  .landing-feature__title,
+  .landing-privacy__title,
+  .landing-cta__title { text-align: center; }
+  .landing-feature__copy { text-align: center; }
+  .landing-feature__copy .landing-feature__bullets {
+    align-items: stretch;
+  }
+
+  .landing-shot__caption { font-size: 0.72rem; padding: 8px 12px; }
+
+  .landing-privacy__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .landing-footer { padding: 32px 18px 24px; }
+  .landing-footer__inner {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .landing-footer__links { justify-content: center; gap: 14px; }
+  .landing-footer__copy {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+}
+
+/* Tiny phones */
+@media (max-width: 360px) {
+  .landing-section { padding: 48px 14px; }
+  .landing-hero__headline { font-size: 2.1rem; }
+  .landing-hero__sub { font-size: 0.98rem; }
+  .landing-feature__title { font-size: 1.6rem; }
 }
 
 /* ── Double-screenshot layout (Clubs section: directory + detail) ── */

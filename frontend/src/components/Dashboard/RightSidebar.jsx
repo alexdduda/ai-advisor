@@ -347,6 +347,15 @@ export default function RightSidebar({
 
   return (
     <>
+      {/* Mobile backdrop — tap to close the drawer (CSS only shows on small screens) */}
+      {isOpen && showSidebar && (
+        <div
+          className="rsb-backdrop"
+          onClick={() => setIsOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
       {/* Draggable tab — clean minimal strip */}
       {!isOpen && showSidebar && (
         <button

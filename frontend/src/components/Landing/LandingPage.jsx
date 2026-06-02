@@ -16,7 +16,7 @@
  * Missing screenshots gracefully render as a styled "Screenshot placeholder"
  * so the page never breaks if you haven't dropped them yet.
  */
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import logoMark from '../../assets/loading-logo.png'
 import useScrollReveal from './useScrollReveal'
 import './LandingPage.css'
@@ -74,6 +74,25 @@ function Reveal({ children, delay = 0, as: Tag = 'div', className = '', ...rest 
 }
 
 export default function LandingPage({ onSignIn }) {
+  // ── Force LIGHT theme while the landing is mounted ────────────────────
+  // The landing page is designed around a cream/light palette and the dark
+  // variant looks broken (low contrast, wrong accents, dark scrollbars).
+  // Override the user's theme preference on <html> for the duration of the
+  // page, then restore it on unmount so the rest of the app still respects
+  // whatever the user picked in Settings.
+  useEffect(() => {
+    const html = document.documentElement
+    const previous = html.getAttribute('data-theme')
+    html.setAttribute('data-theme', 'light')
+    // Also mark the element so any [data-landing] CSS hooks can target it
+    html.setAttribute('data-landing', 'true')
+    return () => {
+      if (previous) html.setAttribute('data-theme', previous)
+      else html.removeAttribute('data-theme')
+      html.removeAttribute('data-landing')
+    }
+  }, [])
+
   // The visual is one long scroll. "Sign in" is in the sticky top nav and
   // appears again as the final CTA — both call the same handler.
   const [navScrolled, setNavScrolled] = useState(false)

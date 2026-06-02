@@ -10,6 +10,7 @@ import { useTheme, useLanguage } from '../../contexts/PreferencesContext'
 import PrivacyPolicy from '../Legal/PrivacyPolicy'
 import TermsOfService from '../Legal/TOS'
 import AboutUs from '../Legal/AboutUs'
+import logoMark from '../../assets/loading-logo.png'
 import './Sidebar.css'
 
 const NAV_ITEMS = (t) => [
@@ -95,7 +96,7 @@ export default function Sidebar({
           <div className={`sidebar-content ${sidebarOpen ? 'sidebar-content--visible' : 'sidebar-content--hidden'}`}>
             <div className="sidebar-header">
               <div className="logo-container">
-                <div className="logo-icon">SY</div>
+                <img src={logoMark} alt="Symbolos" className="logo-icon logo-icon--image" />
                 <span className="logo-name">Symbolos</span>
               </div>
               <button className="sidebar-collapse-btn" onClick={() => setSidebarOpen(false)} title="Collapse">
