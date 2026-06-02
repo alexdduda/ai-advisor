@@ -98,6 +98,17 @@
   to   { transform: scale(1);   opacity: 1; }
 }
 
+/* Image variant of the brand mark — drops the red gradient + "SY" text
+   and shows the actual logo PNG. Same 34×34 footprint as the text variant
+   so it doesn't shift any surrounding layout. */
+.logo-icon--image {
+  background: transparent;
+  padding: 0;
+  object-fit: cover;
+  /* The PNG already has its own rounded edge — keep the same radius so
+     it visually matches the original red square. */
+}
+
 .logo-name {
   font-size: 1rem;
   font-weight: 700;
@@ -552,7 +563,7 @@
   color: #f9fafb;
   /* inherit translateX(3px) from base hover — no override needed */
 }
-[data-theme="dark"] .nav-item:not(.active) .nav-icon { color: #f87171; }
+[data-theme="dark"] .nav-item:not(.active) .nav-icon { color: #ed1b2f; }
 
 /* Active nav — slightly stronger glow on dark */
 [data-theme="dark"] .nav-item.active {
@@ -592,7 +603,7 @@
 [data-theme="dark"] .mini-pill { color: rgba(255,255,255,0.45); }
 [data-theme="dark"] .mini-pill:hover {
   background: rgba(237,27,47,0.15);
-  color: #f87171;
+  color: #ed1b2f;
   /* scale(1.18) from base still applies */
 }
 [data-theme="dark"] .mini-pill:active {
@@ -603,12 +614,12 @@
 /* Active pill — deeper shadow for dark backgrounds */
 [data-theme="dark"] .mini-pill--active:hover {
   background: linear-gradient(135deg, var(--accent-primary, #ED1B2F) 0%, #B01B2E 100%);
-  color: #f87171;
+  color: #ed1b2f;
 }
 
 [data-theme="dark"] .mini-pill--expand { color: rgba(255,255,255,0.25); }
 [data-theme="dark"] .mini-pill--expand:hover {
-  color: #f87171;
+  color: #ed1b2f;
   background: rgba(237,27,47,0.15);
   /* rotate(45deg) from base still applies */
 }
@@ -631,9 +642,9 @@
 [data-theme="dark"] .sidebar-popup-item:active {
   background: rgba(255,255,255,0.04);
 }
-[data-theme="dark"] .sidebar-popup-item--danger { color: #f87171; }
+[data-theme="dark"] .sidebar-popup-item--danger { color: #ed1b2f; }
 [data-theme="dark"] .sidebar-popup-item--danger:hover {
-  background: rgba(248, 113, 113, 0.1);
+  background: rgba(237, 27, 47, 0.1);
 }
 [data-theme="dark"] .sidebar-popup-divider { background: rgba(255,255,255,0.08); }
 
@@ -647,8 +658,35 @@
   .sidebar--open {
     position: fixed;
     left: 0; top: 0;
+    width: min(280px, 84vw);
+    height: 100vh;
+    height: 100dvh;
     box-shadow: 4px 0 16px rgba(0,0,0,0.15);
+    z-index: 110;
   }
+  /* Bigger tap targets on touch */
+  .nav-item { height: 52px; font-size: 1.05rem; }
+  .sidebar-collapse-btn { width: 32px; height: 32px; }
+  .user-info { padding: 10px 12px; }
+
+  /* Mini rail: keep vertically centered, but use safe-area on the left
+     edge for landscape-notched phones. */
+  .mini-rail {
+    left: max(8px, env(safe-area-inset-left, 0));
+  }
+  .mini-pill { width: 38px; height: 38px; font-size: 1rem; }
+  .mini-expand-btn { width: 38px; height: 38px; }
+
+  /* Sidebar footer respects iOS safe area */
+  .sidebar-footer {
+    padding-bottom: calc(8px + env(safe-area-inset-bottom, 0));
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar--open { width: min(280px, 88vw); }
+  .sidebar-header { height: 56px; }
+  .logo-name { font-size: 0.95rem; }
 }
 
 /* Kill old floating toggle if it ever renders */

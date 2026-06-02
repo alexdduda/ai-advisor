@@ -458,10 +458,22 @@ export default function Dashboard() {
   }
 
   // ── Sync right sidebar width as CSS var ──────────────────
+  // On phones the right sidebar overlays the content as a drawer
+  // (see RightSidebar.css mobile rules), so it doesn't push layout
+  // and --rsb-width should stay 0 — otherwise the FeedbackModal
+  // trigger button hides off-screen.
   useEffect(() => {
-    const visible = rightSidebarOpen && activeTab !== 'chat'
-    document.body.style.setProperty('--rsb-width', visible ? '320px' : '0px')
-    return () => document.body.style.setProperty('--rsb-width', '0px')
+    const apply = () => {
+      const isMobile = window.matchMedia('(max-width: 768px)').matches
+      const visible = rightSidebarOpen && activeTab !== 'chat' && !isMobile
+      document.body.style.setProperty('--rsb-width', visible ? '320px' : '0px')
+    }
+    apply()
+    window.addEventListener('resize', apply)
+    return () => {
+      window.removeEventListener('resize', apply)
+      document.body.style.setProperty('--rsb-width', '0px')
+    }
   }, [rightSidebarOpen, activeTab])
 
   // ── Fetch managed clubs (for calendar event/announcement creation) ──

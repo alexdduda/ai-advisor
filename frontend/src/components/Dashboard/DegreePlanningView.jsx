@@ -13,6 +13,7 @@ import DegreeProgressTracker from './DegreeProgressTracker'
 import DegreeRequirementsView from './DegreeRequirementsView'
 import StudyAbroadView from './StudyAbroadView'
 import AdvisingResourcesView from './AdvisingResourcesView'
+import { readCache, writeCache } from '../../lib/userDataCache'
 import './DegreePlanningView.css'
 
 // Fix double /api/api bug
@@ -292,11 +293,15 @@ function ElectivesPanel({ profile, completedCourses, currentCourses, programData
     } catch { return null }
   }
 
-  const [recs, setRecs]           = useState(() => _loadCachedRecs())
+  // Hydrate from cache on first render so the recs panel can show its
+  // previous output instantly instead of forcing the user to hit "Generate"
+  // every visit (which also burned an Anthropic call each time).
+  const _initialCached = _loadCachedRecs()
+  const [recs, setRecs]           = useState(() => _initialCached)
   const [recsLoading, setRecsLoading] = useState(false)
   const [recsError, setRecsError] = useState(null)
-  const [showRecs, setShowRecs]   = useState(false)
-  const hasLoaded                 = useRef(false)
+  const [showRecs, setShowRecs]   = useState(() => !!_initialCached)
+  const hasLoaded                 = useRef(!!_initialCached)
   const [assignedNote, setAssignedNote] = useState(null) // show warning when user assigns an elective
 
   // Build a set of ALL course codes that count toward ANY major or minor
@@ -472,7 +477,10 @@ function ElectivesPanel({ profile, completedCourses, currentCourses, programData
 
   const handleShowRecs = () => {
     setShowRecs(true)
-    if (!hasLoaded.current) {
+    // Only burn a generation if we don't already have recs (from cache or a
+    // previous call this session). Hitting "↻" still calls generateRecs
+    // directly so manual refresh still works.
+    if (!hasLoaded.current && !recs) {
       hasLoaded.current = true
       generateRecs(true) // initial load doesn't count toward rate limit
     }
@@ -846,6 +854,16 @@ function ProgramSection({ prog, completedCourses, currentCourses, advStanding, o
 
 function MyProgramCard({ profile, completedCourses, currentCourses }) {
   const { t } = useLanguage()
+
+  // ── Per-program cache ───────────────────────────────────────
+  // Program-requirement JSON is essentially static (seed data) so it's
+  // safe to hydrate from localStorage on mount and refresh in the
+  // background. Without this every visit to Degree Planning would show
+  // a blank panel + spinner for a few hundred ms while the network
+  // round-tripped.
+  const _progCache = (key) => readCache(`degree_prog_${key}`, profile?.id, null)
+  const _writeProgCache = (key, data) => writeCache(`degree_prog_${key}`, profile?.id, data)
+
   const [programData, setProgramData]         = useState(null)
   const [minorData, setMinorData]             = useState(null)
   const [sciData, setSciData]                 = useState(null)
@@ -945,6 +963,7 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
       if (!res.ok) return 'error'
       const data = await res.json()
       setter(data)
+      _writeProgCache(key, data)
       setOpenBlocks(prev => {
         const init = { ...prev }
         data.blocks?.forEach((b, i) => { if (i < 2) init[b.id] = true })
@@ -961,13 +980,57 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
   useEffect(() => {
     if (!profile) return
     if (!majorKey && !minorKey && !sciKey && extraMajorsList.length === 0 && extraMinorsList.length === 0) return
-    setLoading(true)
+
+    // SWR: hydrate from cache for instant paint, then revalidate from the
+    // network. We only show the loading spinner if there's no cached data
+    // to display — otherwise the user sees their last-known requirements
+    // immediately and the refresh happens silently in the background.
+    const majorCached = majorKey ? _progCache(majorKey) : null
+    const minorCached = minorKey ? _progCache(minorKey) : null
+    const sciCached   = sciKey   ? _progCache(sciKey)   : null
+    const coreCached  = coreKey  ? _progCache(coreKey)  : null
+    const concCached  = concentrationKey ? _progCache(concentrationKey) : null
+    const extraMajorsCached = Object.fromEntries(
+      extraMajorsList.map(({ key }) => [key, _progCache(key)]).filter(([, v]) => v)
+    )
+    const extraMinorsCached = Object.fromEntries(
+      extraMinorsList.map(({ key }) => [key, _progCache(key)]).filter(([, v]) => v)
+    )
+
+    const anyCache = majorCached || minorCached || sciCached || coreCached || concCached
+      || Object.keys(extraMajorsCached).length || Object.keys(extraMinorsCached).length
+
+    if (majorCached) setProgramData(majorCached)
+    if (minorCached) setMinorData(minorCached)
+    if (sciCached)   setSciData(sciCached)
+    if (coreCached)  setCoreData(coreCached)
+    if (concCached)  setConcentrationData(concCached)
+    if (Object.keys(extraMajorsCached).length) setExtraMajorsData(prev => ({ ...prev, ...extraMajorsCached }))
+    if (Object.keys(extraMinorsCached).length) setExtraMinorsData(prev => ({ ...prev, ...extraMinorsCached }))
+
+    // Open the first couple of blocks of cached programs so the
+    // accordion isn't fully collapsed on first paint.
+    setOpenBlocks(prev => {
+      const init = { ...prev }
+      ;[majorCached, minorCached, sciCached, coreCached, concCached,
+        ...Object.values(extraMajorsCached), ...Object.values(extraMinorsCached)]
+        .filter(Boolean)
+        .forEach(prog => prog.blocks?.forEach((b, i) => { if (i < 2) init[b.id] = true }))
+      return init
+    })
+
+    if (!anyCache) {
+      // Cold start — clear stale state and show the spinner.
+      setLoading(true)
+      setProgramData(null)
+      setMinorData(null)
+      setSciData(null)
+      setExtraMajorsData({})
+      setExtraMinorsData({})
+    } else {
+      setLoading(false)
+    }
     setLoadFailed(false)
-    setProgramData(null)
-    setMinorData(null)
-    setSciData(null)
-    setExtraMajorsData({})
-    setExtraMinorsData({})
     setUnavailable({ major: false, minor: false })
     fetchedRef.current = true
 

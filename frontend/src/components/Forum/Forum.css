@@ -430,8 +430,8 @@
 
 [data-theme="dark"] .forum-action-btn--liked {
   background: var(--accent-light, #450a0a);
-  border-color: var(--accent-primary, #f87171);
-  color: var(--accent-primary, #f87171);
+  border-color: var(--accent-primary, #ed1b2f);
+  color: var(--accent-primary, #ed1b2f);
 }
 
 .forum-action-btn--active {

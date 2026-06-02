@@ -601,7 +601,8 @@
   .auth-form-panel {
     padding: 1.5rem 1rem;
     align-items: flex-start;
-    padding-top: 2rem;
+    padding-top: max(2rem, env(safe-area-inset-top));
+    padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
   }
 
   .auth-card {
@@ -613,6 +614,9 @@
   .auth-branding-headline {
     font-size: 1.65rem;
   }
+
+  /* Prevent iOS Safari from zooming the page when focusing a text field */
+  .auth-input { font-size: 16px; }
 }
 
 /* Very small phones */

@@ -199,16 +199,20 @@
   --border-primary: #334155;
   --border-secondary: #475569;
   --border-tertiary: #1e293b;
-  --border-focus: #f87171;
+  --border-focus: #ed1b2f;
   --border-hover: #475569;
-  
-  /* ─── McGill Red Accent (Brighter in dark mode) ─── */
-  --accent-primary: #f87171;
-  --accent-hover: #fb9191;
-  --accent-active: #fca5a5;
+
+  /* ─── McGill Red Accent ──────────────────────────────────────────────
+     Foreground reds match the light-mode brand red exactly so the
+     identity stays consistent across themes. Only background tints
+     (--accent-light / --accent-lighter) stay dark — they're meant to
+     be subtle red-washed surfaces on a dark page. */
+  --accent-primary: #ed1b2f;
+  --accent-hover: #d01929;
+  --accent-active: #b01623;
   --accent-light: #450a0a;
   --accent-lighter: #7f1d1d;
-  --accent-text: #fca5a5;
+  --accent-text: #ed1b2f;
   
   /* ─── Success (Green) ─── */
   --success-primary: #34d399;
@@ -223,10 +227,10 @@
   --warning-text: #fcd34d;
   
   /* ─── Error (Red) ─── */
-  --error-primary: #f87171;
-  --error-hover: #fca5a5;
+  --error-primary: #ed1b2f;
+  --error-hover: #d01929;
   --error-light: #7f1d1d;
-  --error-text: #fca5a5;
+  --error-text: #ed1b2f;
   
   /* ─── Info (Blue) ─── */
   --info-primary: #60a5fa;
@@ -241,24 +245,24 @@
   --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.6);
   --shadow-xl: 0 12px 24px rgba(0, 0, 0, 0.7);
   --shadow-2xl: 0 20px 40px rgba(0, 0, 0, 0.8);
-  --shadow-accent: 0 4px 12px rgba(248, 113, 113, 0.4);
+  --shadow-accent: 0 4px 12px rgba(237, 27, 47, 0.45);
   --shadow-inner: inset 0 2px 4px rgba(0, 0, 0, 0.4);
   
   /* ─── Input Fields ─── */
   --input-bg: #1e293b;
   --input-border: #475569;
   --input-border-hover: #64748b;
-  --input-border-focus: #f87171;
+  --input-border-focus: #ed1b2f;
   --input-text: #f1f5f9;
   --input-placeholder: #64748b;
   --input-disabled-bg: #334155;
   --input-disabled-text: #64748b;
   
   /* ─── Buttons ─── */
-  --btn-primary-bg: #f87171;
-  --btn-primary-hover: #fb9191;
-  --btn-primary-active: #fca5a5;
-  --btn-primary-text: #0f172a;
+  --btn-primary-bg: #ed1b2f;
+  --btn-primary-hover: #d01929;
+  --btn-primary-active: #b01623;
+  --btn-primary-text: #ffffff;
   --btn-secondary-bg: #334155;
   --btn-secondary-hover: #475569;
   --btn-secondary-text: #cbd5e1;
@@ -277,7 +281,7 @@
   --sidebar-border: #334155;
   --sidebar-item-hover: #334155;
   --sidebar-item-active: #7f1d1d;
-  --sidebar-item-active-text: #fca5a5;
+  --sidebar-item-active-text: #ffffff;
   
   /* ─── Modal/Overlay ─── */
   --overlay-bg: rgba(0, 0, 0, 0.75);
@@ -291,7 +295,7 @@
   
   /* ─── Progress Bars ─── */
   --progress-bg: #334155;
-  --progress-fill: #f87171;
+  --progress-fill: #ed1b2f;
   --progress-text: #f1f5f9;
   
   /* ─── Badges ─── */
@@ -310,12 +314,12 @@
   --calendar-header-bg: #334155;
   --calendar-cell-hover: #334155;
   --calendar-today-bg: #7f1d1d;
-  --calendar-today-border: #f87171;
+  --calendar-today-border: #ed1b2f;
   
   /* ─── Chat ─── */
   --chat-bg: #0f172a;
-  --chat-message-user-bg: #f87171;
-  --chat-message-user-text: #0f172a;
+  --chat-message-user-bg: #ed1b2f;
+  --chat-message-user-text: #ffffff;
   --chat-message-ai-bg: #1e293b;
   --chat-message-ai-text: #f1f5f9;
   --chat-input-bg: #1e293b;
@@ -325,7 +329,7 @@
   --tab-bg: #334155;
   --tab-hover-bg: #475569;
   --tab-active-bg: #1e293b;
-  --tab-active-text: #f87171;
+  --tab-active-text: #ed1b2f;
   --tab-inactive-text: #94a3b8;
   
   /* ─── Profile Hero (Dark gradient instead of red) ─── */
@@ -334,8 +338,8 @@
   --profile-hero-text: #f1f5f9;
   
   /* ─── Loading Spinner ─── */
-  --spinner-color: #f87171;
-  --spinner-bg: rgba(248, 113, 113, 0.2);
+  --spinner-color: #ed1b2f;
+  --spinner-bg: rgba(237, 27, 47, 0.2);
 }
 
 /* ────────────────────────────────────────────────────────────────

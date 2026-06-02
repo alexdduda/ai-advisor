@@ -3,7 +3,7 @@
 /* ── Trigger button ──────────────────────────────────────── */
 .feedback-trigger-btn {
   position: fixed;
-  bottom: 24px;
+  bottom: calc(24px + env(safe-area-inset-bottom, 0));
   right: calc(24px + var(--rsb-width, 0px));
   z-index: 900;
   transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1), all 0.2s;
@@ -297,3 +297,19 @@
   flex-direction: column;
   gap: 10px;
 }
+
+
+/* ── Mobile ──────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .feedback-trigger-btn {
+    bottom: calc(16px + env(safe-area-inset-bottom, 0));
+    right: calc(16px + var(--rsb-width, 0px));
+    padding: 8px 12px;
+    font-size: 0.8rem;
+  }
+  .feedback-overlay { padding: 14px; align-items: flex-end; }
+  .feedback-modal { width: 100%; border-radius: 14px 14px 0 0; }
+  .feedback-input,
+  .feedback-textarea { font-size: 16px; }
+}
+

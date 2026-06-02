@@ -408,7 +408,7 @@
 [data-theme="dark"] .rsb-suggestion-chip:hover {
   background: rgba(237, 27, 47, 0.12);
   border-color: rgba(237, 27, 47, 0.4);
-  color: #f87171;
+  color: #ed1b2f;
 }
 
 /* ── Dark mode: draggable toggle tab ── */
@@ -584,5 +584,79 @@
 
 [data-theme="dark"] .rsb-pin-btn--active,
 [data-theme="dark"] .rsb-pin-btn:hover {
-  color: #f87171;
+  color: #ed1b2f;
+}
+
+/* ── Mobile drawer backdrop ─────────────────────────────────
+   Hidden on desktop; on phones it fades in behind the floating drawer
+   and acts as a tap-to-close target. */
+.rsb-backdrop {
+  display: none;
+}
+@media (max-width: 768px) {
+  .rsb-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 1099;
+    animation: rsb-backdrop-fade 0.18s ease both;
+  }
+}
+@keyframes rsb-backdrop-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Mobile / narrow widths ─────────────────────────────────
+   The right sidebar normally lives inside the flex row and is 320px
+   wide. On phones that would squeeze the main content to nothing, so
+   instead we float it as a full-width overlay drawer with a dimmer.
+   The dimmer is the `::before` pseudo-element on .right-sidebar — we
+   cannot easily inject a sibling backdrop without touching JSX. */
+@media (max-width: 768px) {
+  .right-sidebar {
+    position: fixed;
+    inset: 0 0 0 auto;
+    height: 100vh;
+    height: 100dvh;
+    z-index: 1100;
+  }
+  .rsb--open {
+    width: min(360px, 92vw);
+    box-shadow: -8px 0 24px rgba(0, 0, 0, 0.25);
+  }
+  .rsb--closed {
+    width: 0;
+    pointer-events: none;
+  }
+
+  /* Bigger tap targets on touch */
+  .rsb-close-btn,
+  .rsb-unpin-btn { padding: 10px; }
+  .rsb-chat-bar__send { width: 36px; height: 36px; }
+
+  /* Prevent iOS zoom-on-focus by keeping input ≥ 16px */
+  .rsb-chat-bar__input { font-size: 16px; }
+
+  /* Make the draggable handle easier to grab */
+  .rsb-toggle {
+    width: 36px;
+    height: 72px;
+    /* Pull above the iOS home indicator */
+    bottom: env(safe-area-inset-bottom, 0);
+  }
+
+  /* Footer respects iOS safe area */
+  .rsb-footer {
+    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0));
+  }
+}
+
+@media (max-width: 480px) {
+  .rsb--open { width: 100vw; }
+  .rsb-header { padding: 1rem 0.875rem; min-height: 64px; }
+  .rsb-header__title { font-size: 0.9rem; }
+  .rsb-msg__text { max-width: 88%; font-size: 0.875rem; }
+  .rsb-suggestion-chip { font-size: 0.82rem; padding: 0.55rem 0.8rem; }
 }
