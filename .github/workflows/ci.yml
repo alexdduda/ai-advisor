@@ -51,11 +51,14 @@ jobs:
           SUPABASE_URL: "https://test.supabase.co"
           SUPABASE_SERVICE_KEY: "service-dummy"
           SUPABASE_ANON_KEY: "anon-dummy"
-          ADMIN_SECRET: "ci-admin-secret"
-          CRON_SECRET: "ci-cron-secret"
+          # Both secrets need >= 32 chars per config.py validator. These are
+          # CI-only fake values; the real secrets live in Vercel env vars.
+          ADMIN_SECRET: "ci-admin-secret-padded-to-32-chars-or-more"
+          CRON_SECRET:  "ci-cron-secret-padded-to-32-chars-or-more"
           ADMIN_EMAILS: "admin@symbolos.ca"
           RESEND_API_KEY: "re_ci_dummy"
-          ENVIRONMENT: "test"
+          # Settings only accepts development / staging / production.
+          ENVIRONMENT: "development"
         run: pytest tests/ -v --tb=short
 
   frontend:
