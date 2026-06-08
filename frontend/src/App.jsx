@@ -3,6 +3,9 @@ import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { PreferencesProvider } from './contexts/PreferencesContext'
 import Login from './components/Auth/Login'
 import LandingPage from './components/Landing/LandingPage'
+import PrivacyPolicy from './components/Legal/PrivacyPolicy'
+import TermsOfService from './components/Legal/TOS'
+import AboutUs from './components/Legal/AboutUs'
 import Dashboard from './components/Dashboard/Dashboard'
 import ProfileSetup from './components/ProfileSetup/ProfileSetup'
 import Loading from './components/Loading/Loading'
@@ -16,6 +19,18 @@ function AppContent() {
   const { user, profile, loading, error, needsOnboarding, refreshProfile } = useAuth()
   const [verifying, setVerifying] = useState(false)
   const [verifyError, setVerifyError] = useState('')
+
+  // SEC FIX (audit #11): the verification email links to /privacy and /terms.
+  // The Vercel rewrite turns those into /?show=privacy and /?show=terms;
+  // here we open the corresponding legal modal so the URLs don't 404.
+  const _initialLegal = (() => {
+    if (typeof window === 'undefined') return null
+    const p = new URLSearchParams(window.location.search)
+    const show = p.get('show')
+    if (show === 'privacy' || show === 'terms' || show === 'about') return show
+    return null
+  })()
+  const [legalModal, setLegalModal] = useState(_initialLegal)
 
   // Unauthenticated users see the marketing landing page first. They can click
   // "Sign in" anywhere on it to swap to the login form. We honor URL hints
@@ -50,6 +65,10 @@ function AppContent() {
     try {
       await authAPI.verifyEmail(userId, token)
       await refreshProfile()
+      try {
+        const { track, Events } = await import('./lib/telemetry')
+        track(Events.EmailVerified)
+      } catch {}
     } catch (err) {
       setVerifyError(err?.response?.data?.detail || 'Verification failed. The link may have expired.')
     } finally {
@@ -92,9 +111,31 @@ function AppContent() {
 
   if (user && !profile && !error) return <Loading />
 
+  // SEC FIX (audit #11): /privacy and /terms get rewritten to /?show=...
+  // and we render the corresponding legal modal over the landing page so
+  // verification-email footer links actually work.
+  const _closeLegal = () => {
+    setLegalModal(null)
+    try {
+      const url = new URL(window.location.href)
+      url.searchParams.delete('show')
+      window.history.replaceState({}, '', url.toString())
+    } catch {}
+  }
+
   // Unauthenticated: show landing first; click "Sign in" → show Login.
-  if (showLogin) return <Login onBack={() => setShowLogin(false)} />
-  return <LandingPage onSignIn={() => setShowLogin(true)} />
+  const main = showLogin
+    ? <Login onBack={() => setShowLogin(false)} />
+    : <LandingPage onSignIn={() => setShowLogin(true)} />
+
+  return (
+    <>
+      {main}
+      {legalModal === 'privacy' && <PrivacyPolicy onClose={_closeLegal} />}
+      {legalModal === 'terms'   && <TermsOfService onClose={_closeLegal} />}
+      {legalModal === 'about'   && <AboutUs onClose={_closeLegal} />}
+    </>
+  )
 }
 
 function App() {

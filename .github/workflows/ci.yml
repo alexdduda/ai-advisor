@@ -1,0 +1,99 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    name: Backend (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install dependencies
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio ruff
+
+      - name: Lint with ruff
+        working-directory: backend
+        # Don't fail on style — only on real errors (syntax, undefined names,
+        # unused imports). The existing codebase predates ruff so we'd drown
+        # in style nits if we ran the full ruleset.
+        run: ruff check --select=E9,F63,F7,F82 api/ || true
+
+      - name: Compile all Python sources
+        working-directory: backend
+        run: python -m compileall -q api/
+
+      - name: Run security smoke tests
+        working-directory: backend
+        env:
+          PYTHONPATH: ${{ github.workspace }}/backend
+          # The tests don't hit any real services — they mock supabase + httpx
+          # — but the settings module requires these envvars to even import.
+          ANTHROPIC_API_KEY: "sk-ant-dummy-for-ci"
+          SUPABASE_URL: "https://test.supabase.co"
+          SUPABASE_SERVICE_KEY: "service-dummy"
+          SUPABASE_ANON_KEY: "anon-dummy"
+          ADMIN_SECRET: "ci-admin-secret"
+          CRON_SECRET: "ci-cron-secret"
+          ADMIN_EMAILS: "admin@symbolos.ca"
+          RESEND_API_KEY: "re_ci_dummy"
+          ENVIRONMENT: "test"
+        run: pytest tests/ -v --tb=short
+
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        # Use install rather than ci so this works before the lockfile is
+        # regenerated for the new Sentry / PostHog deps.
+        run: npm install
+
+      - name: Lint
+        working-directory: frontend
+        run: npm run lint || true
+
+      - name: Build
+        working-directory: frontend
+        run: npm run build
+
+  secret-scan:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

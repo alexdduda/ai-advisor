@@ -6,8 +6,9 @@ SEC-001 FIX: Corrected table names in delete cascade and added missing tables.
 from fastapi import APIRouter, HTTPException, status, Depends, Request
 # FIX #20/#26: Import field_validator and ConfigDict; remove old `validator`
 from pydantic import BaseModel, EmailStr, Field, field_validator, ConfigDict
-from typing import Optional, List
+from typing import Any, Dict, Optional, List
 import logging
+from datetime import datetime, timezone
 from urllib.parse import urlparse
 
 from api.utils.supabase_client import (
@@ -193,6 +194,22 @@ async def create_new_user(user: UserCreate, req: Request, current_user_id: str =
     # FIX F-03: Ensure the authenticated user can only create their own profile
     require_self(current_user_id, user.id)
 
+    # SEC FIX #2: the profile's `email` column MUST match the verified
+    # auth.users email. Otherwise a user could create their profile with
+    # a fake @mail.mcgill.ca string and then anything that read users.email
+    # (auth_flags, club managers, manager invites) would trust the lie.
+    try:
+        from ..utils.supabase_client import get_supabase
+        u = get_supabase().auth.admin.get_user(current_user_id)
+        auth_email = (getattr(u.user, "email", None) or "").lower()
+    except Exception:
+        auth_email = ""
+    if not auth_email or auth_email != (user.email or "").lower():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Profile email must match the address on your account.",
+        )
+
     try:
         # Check for existing email
         existing = get_user_by_email(user.email)
@@ -369,3 +386,106 @@ async def delete_user_account(user_id: str, req: Request, current_user_id: str =
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={"code": "delete_failed", "message": "Failed to delete account"}
         )
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+#  Quebec Law 25 / GDPR Art. 20 — Right to data portability
+#  Returns every piece of personal data we hold about the user, in a single
+#  structured JSON file. The Settings → Export Data button calls this.
+#
+#  Anything PII-bearing we collect on the user MUST appear here. If you add
+#  a new user-data table later, add it to USER_DATA_TABLES below.
+# ──────────────────────────────────────────────────────────────────────────────
+
+# (table_name, column_to_match_user_id) — kept alongside the deletion list
+# in delete_user_account so the two stay in sync.
+USER_DATA_TABLES = [
+    ("advisor_cards",          "user_id"),
+    ("chat_messages",          "user_id"),
+    ("favorites",              "user_id"),
+    ("completed_courses",      "user_id"),
+    ("current_courses",        "user_id"),
+    ("calendar_events",        "user_id"),
+    ("notification_queue",     "user_id"),
+    ("user_clubs",             "user_id"),
+    ("club_subscriptions",     "user_id"),
+    ("club_join_requests",     "user_id"),
+    ("club_manager_requests",  "from_user_id"),
+    ("club_managers",          "user_id"),
+    ("forum_posts",            "user_id"),
+    ("forum_replies",          "user_id"),
+    ("forum_post_likes",       "user_id"),
+    ("forum_reply_likes",      "user_id"),
+    ("prof_suggestions",       "user_id"),
+]
+
+
+@router.get("/{user_id}/export", response_model=dict)
+async def export_user_data(
+    user_id: str,
+    current_user_id: str = Depends(get_current_user_id),
+):
+    """Return everything we know about this user, in a single JSON payload.
+
+    Satisfies Quebec Law 25 § 27 / GDPR Art. 20 data portability. The frontend
+    Settings → "Export my data" button hits this endpoint and saves the
+    response as a download.
+
+    The old client-side export only included React state (profile + settings),
+    which missed transcripts, chat history, AI cards, forum posts, club
+    memberships, calendar events, and a dozen other things we hold.
+    """
+    require_self(current_user_id, user_id)
+
+    supabase = get_supabase()
+    export: Dict[str, Any] = {
+        "exported_at": datetime.now(timezone.utc).isoformat(),
+        "schema_version": 1,
+        "profile": get_user_by_id(user_id),  # already strips tokens (SEC fix #8)
+    }
+
+    # Also include the verified auth identity (NOT user-editable) so the
+    # exporter knows which Supabase Auth account this belongs to.
+    try:
+        u = supabase.auth.admin.get_user(user_id)
+        export["auth_identity"] = {
+            "id":                  getattr(u.user, "id", None),
+            "email":               getattr(u.user, "email", None),
+            "created_at":          getattr(u.user, "created_at", None),
+            "last_sign_in_at":     getattr(u.user, "last_sign_in_at", None),
+            "email_confirmed_at":  getattr(u.user, "email_confirmed_at", None),
+        }
+    except Exception as exc:
+        logger.warning("auth identity export failed for %s: %s", user_id, type(exc).__name__)
+        export["auth_identity"] = None
+
+    failures: list[str] = []
+    for table, column in USER_DATA_TABLES:
+        try:
+            rows = (
+                supabase.table(table)
+                .select("*")
+                .eq(column, user_id)
+                .execute()
+            )
+            export[table] = rows.data or []
+        except Exception as exc:
+            # Table may not exist on a fresh DB, or column name may differ
+            # in a future migration — log and continue so partial data still
+            # ships rather than the whole export failing.
+            logger.warning("export skipped %s for %s: %s", table, user_id, type(exc).__name__)
+            failures.append(table)
+
+    # Also export any clubs the user owns (not in user_clubs — that's
+    # membership) — owners are stored on clubs.created_by.
+    try:
+        owned = supabase.table("clubs").select("*").eq("created_by", user_id).execute()
+        export["clubs_owned"] = owned.data or []
+    except Exception:
+        export["clubs_owned"] = []
+
+    if failures:
+        export["_skipped_tables"] = failures
+
+    logger.info("Data export served for user %s (%d tables)", user_id, len(USER_DATA_TABLES))
+    return export

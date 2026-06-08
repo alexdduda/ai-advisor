@@ -25,7 +25,7 @@ declared before /{subject}/{catalog}, otherwise FastAPI matches "search" and
 "subjects" as the {subject} path parameter and returns 404.
 """
 
-from fastapi import APIRouter, HTTPException, Query, status, Depends, Request
+from fastapi import APIRouter, HTTPException, Query, Response, status, Depends, Request
 from typing import Optional
 import logging
 import re
@@ -62,6 +62,7 @@ def parse_course_code(course_code: str):
 
 @router.get("/search", response_model=dict)
 async def search(
+    response: Response,
     query: Optional[str] = Query(None, min_length=1, max_length=100),
     subject: Optional[str] = Query(None, min_length=2, max_length=6),
     limit: int = Query(
@@ -151,6 +152,12 @@ async def search(
             "includes_ratings": include_ratings,
         }
         search_cache.set(cache_key, result, ttl=300)
+        # Course catalogue is read-only public data — let the edge cache.
+        # 10-minute TTL with stale-while-revalidate hides DB pressure
+        # during the peak registration window (May / Aug / Jan).
+        response.headers["Cache-Control"] = (
+            "public, s-maxage=600, stale-while-revalidate=3600"
+        )
         return result
 
     except DatabaseException:

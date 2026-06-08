@@ -163,13 +163,27 @@ def check_database_health() -> bool:
 
 # ── User Operations ───────────────────────────────────────────────────────────
 
+_SENSITIVE_USER_FIELDS = {
+    # SEC FIX #8: secrets/tokens that must never leave the server in a
+    # user-facing response. Strip them at the data layer so every caller
+    # benefits (auth_flags, /api/users/{id}, /api/users/me, etc.).
+    "verification_token",
+    "verification_token_expires_at",
+    "last_verification_sent_at",
+}
+
+
+def _strip_sensitive(row: Dict[str, Any]) -> Dict[str, Any]:
+    return {k: v for k, v in row.items() if k not in _SENSITIVE_USER_FIELDS}
+
+
 def get_user_by_id(user_id: str) -> Dict[str, Any]:
     def _run():
         supabase = get_supabase()
         response = supabase.table("users").select("*").eq("id", user_id).execute()
         if not response.data:
             raise UserNotFoundException(user_id)
-        return response.data[0]
+        return _strip_sensitive(response.data[0])
     try:
         return with_retry("get_user_by_id", _run)
     except UserNotFoundException:

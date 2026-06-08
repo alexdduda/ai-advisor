@@ -350,6 +350,12 @@ async def parse_syllabuses(
 ):
     # FIX F-03: Ownership check
     require_self(current_user_id, user_id)
+    # SEC FIX #5 / #7: verified email + daily LLM budget.
+    from ..utils.verified_user import is_email_verified
+    from ..utils.llm_budget import check_and_record_llm_usage
+    if not is_email_verified(current_user_id):
+        raise HTTPException(status_code=403, detail={"code": "email_not_verified", "message": "Verify your email to upload syllabi."})
+    check_and_record_llm_usage(current_user_id, kind="transcript")
     is_dry_run = dry_run.lower() in ("true", "1", "yes")
 
     try:

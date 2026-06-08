@@ -5,7 +5,7 @@ Clubs endpoints — browse verified McGill clubs, get starter suggestions
 based on user major/year, join/leave clubs, submit new clubs for review,
 manage join requests for private clubs, and edit clubs you created.
 """
-from fastapi import APIRouter, HTTPException, Query, status, Depends, Request
+from fastapi import APIRouter, HTTPException, Query, Response, status, Depends, Request
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, EmailStr, Field, AnyHttpUrl, field_validator
 from typing import Optional, List
@@ -218,15 +218,46 @@ def _get_starter_names(major: Optional[str]) -> List[str]:
 
 # ── Routes ────────────────────────────────────────────────────────────────────
 
+# Fields that should NEVER appear in a clubs listing response served to a
+# non-manager. The auditor pulled organizer emails of every club via this
+# endpoint — they were embedded in the row payload. (SEC FIX #4.)
+_CLUB_LIST_PII_FIELDS = (
+    "contact_email",
+    "executive_emails",
+    "created_by",
+    "admin_emails",
+    "owner_email",
+)
+
+
+def _strip_club_pii(row: dict) -> dict:
+    return {k: v for k, v in row.items() if k not in _CLUB_LIST_PII_FIELDS}
+
+
 @router.get("")
 async def list_clubs(
+    response: Response,
     search: Optional[str] = None,
     category: Optional[str] = None,
     limit: int = Query(default=50, ge=1, le=200),
+    current_user_id: str = Depends(get_current_user_id),
 ):
-    """Return all verified clubs, optionally filtered. Each club row is
-    augmented with a `subscriber_count` (computed from club_subscriptions)
-    — the new public metric replacing the legacy member_count."""
+    """Return verified clubs, optionally filtered.
+
+    SEC FIX #4 (HIGH):
+      * Endpoint now requires authentication. The previous version was
+        completely public, which let anonymous scrapers pull every club's
+        contact_email / executive_emails / created_by in one request.
+      * Private clubs (`is_private`) are filtered out for non-managers.
+        Managers + the global admins still see their own private clubs.
+      * Per-club PII columns (contact_email, executive_emails, created_by,
+        owner/admin emails) are stripped from rows the caller does not
+        manage, even on public clubs.
+
+    Note: this hardens the application layer. The Supabase `clubs` table
+    also needs RLS that mirrors this logic so the bundled anon key can't
+    bypass us — see /backend/migrations/2026_06_clubs_rls.sql.
+    """
     try:
         supabase = get_supabase()
         query = (
@@ -244,8 +275,43 @@ async def list_clubs(
         result = query.execute()
         clubs = result.data or []
 
-        # Batched subscriber counts — one query for all clubs on this page
-        ids = [c["id"] for c in clubs if c.get("id")]
+        # Determine which clubs this user manages — they get the full row.
+        is_global_admin = _is_admin_user(current_user_id)
+        managed_ids: set[str] = set()
+        if not is_global_admin:
+            try:
+                owned = (
+                    supabase.table("clubs").select("id")
+                    .eq("created_by", current_user_id).execute()
+                ).data or []
+                managed = (
+                    supabase.table("club_managers").select("club_id")
+                    .eq("user_id", current_user_id).execute()
+                ).data or []
+                admin_in = (
+                    supabase.table("user_clubs").select("club_id")
+                    .eq("user_id", current_user_id).eq("role", "admin").execute()
+                ).data or []
+                managed_ids = (
+                    {c["id"] for c in owned}
+                    | {m["club_id"] for m in managed}
+                    | {a["club_id"] for a in admin_in}
+                )
+            except Exception:
+                pass
+
+        # Filter + redact
+        visible: list[dict] = []
+        for c in clubs:
+            cid = c.get("id")
+            is_private = bool(c.get("is_private"))
+            caller_manages = is_global_admin or (cid in managed_ids)
+            if is_private and not caller_manages:
+                continue
+            visible.append(c if caller_manages else _strip_club_pii(c))
+
+        # Batched subscriber counts — one query for all visible clubs
+        ids = [c["id"] for c in visible if c.get("id")]
         sub_counts: dict = {}
         if ids:
             try:
@@ -257,10 +323,19 @@ async def list_clubs(
                         sub_counts[cid] = sub_counts.get(cid, 0) + 1
             except Exception:
                 pass
-        for c in clubs:
+        for c in visible:
             c["subscriber_count"] = sub_counts.get(c.get("id"), 0)
 
-        return {"clubs": clubs, "count": len(clubs)}
+        # PERF: this list changes rarely (new club approvals are admin-gated)
+        # but every dashboard load currently hits it. Tell the Vercel edge to
+        # cache for 5 min and serve stale for an hour while it revalidates.
+        # Private — the payload differs per-user (subscribed flags, redacted
+        # PII), so we use the CDN-only directive `s-maxage` rather than the
+        # shared `max-age`.
+        response.headers["Cache-Control"] = (
+            "private, s-maxage=300, stale-while-revalidate=3600"
+        )
+        return {"clubs": visible, "count": len(visible)}
     except Exception as e:
         logger.exception(f"Error listing clubs: {e}")
         raise HTTPException(status_code=500, detail="Failed to retrieve clubs")
@@ -295,8 +370,10 @@ async def get_starter_clubs(user_id: str, major: Optional[str] = None, current_u
 # ── STATIC routes must come before dynamic /{user_id} routes ─────────────────
 
 @router.get("/categories")
-async def get_categories():
-    """Return the distinct club categories."""
+async def get_categories(response: Response):
+    """Return the distinct club categories. List is static so the edge
+    can cache it aggressively."""
+    response.headers["Cache-Control"] = "public, s-maxage=86400, max-age=3600"
     return {
         "categories": [
             "Academic", "Arts & Culture", "Athletics & Recreation",
@@ -480,15 +557,27 @@ async def get_user_clubs(user_id: str, req: Request, current_user_id: str = Depe
 async def join_club(user_id: str, body: JoinClubRequest, req: Request, current_user_id: str = Depends(get_current_user_id), user_sb = Depends(get_user_db)):
     require_self(current_user_id, user_id)
     """Join a public club directly, or create a join request for a private club."""
+
+    # SEC FIX #2 / #5: McGill check + verified email.
+    # The previous gate read users.email (user-editable), so anyone could
+    # set their profile email to *@mail.mcgill.ca and join private clubs.
+    # Now we trust ONLY auth.users.email — which the user proved control
+    # of during Supabase Auth signup.
+    from ..utils.verified_user import is_email_verified
+    from ..utils.anomaly import record_action
+    record_action(current_user_id, "club_join")
     try:
         supabase = get_supabase()
-
-        # Only @mail.mcgill.ca emails can join clubs (admins exempt)
         if not _is_admin_user(user_id):
-            user_row = user_sb.table("users").select("email").eq("id", user_id).execute()
-            user_email = user_row.data[0].get("email", "") if user_row.data else ""
-            if not user_email.endswith("@mail.mcgill.ca"):
+            try:
+                auth_user = supabase.auth.admin.get_user(user_id)
+                auth_email = (getattr(auth_user.user, "email", None) or "").lower()
+            except Exception:
+                auth_email = ""
+            if not auth_email.endswith("@mail.mcgill.ca"):
                 raise HTTPException(status_code=403, detail="Only accounts with a @mail.mcgill.ca email can join clubs.")
+            if not is_email_verified(user_id):
+                raise HTTPException(status_code=403, detail={"code": "email_not_verified", "message": "Verify your email to join clubs."})
 
         # Check if club exists and whether it's private
         club_result = supabase.table("clubs").select("*").eq("id", body.club_id).execute()
@@ -649,30 +738,42 @@ async def toggle_calendar_sync(user_id: str, club_id: str, synced: bool, req: Re
 @router.post("/submit")
 async def submit_club(submission: ClubSubmission, current_user_id: str = Depends(get_current_user_id)):
     """Submit a new club for admin review."""
+    from html import escape as _esc
+    from ..utils.anomaly import record_action
+    record_action(current_user_id, "club_submit")
     try:
         supabase = get_supabase()
 
-        # Only @mail.mcgill.ca emails can submit clubs (admins exempt)
+        # SEC FIX #2 / #5: McGill check + verified email — pulled from the
+        # verified auth identity, NOT users.email which the user controls.
         if not _is_admin_user(current_user_id):
-            user_row = supabase.table("users").select("email").eq("id", current_user_id).execute()
-            user_email = user_row.data[0].get("email", "") if user_row.data else ""
-            if not user_email.endswith("@mail.mcgill.ca"):
+            try:
+                auth_user = supabase.auth.admin.get_user(current_user_id)
+                auth_email = (getattr(auth_user.user, "email", None) or "").lower()
+            except Exception:
+                auth_email = ""
+            if not auth_email.endswith("@mail.mcgill.ca"):
                 raise HTTPException(status_code=403, detail="Only accounts with a @mail.mcgill.ca email can submit clubs.")
+            from ..utils.verified_user import is_email_verified
+            if not is_email_verified(current_user_id):
+                raise HTTPException(status_code=403, detail={"code": "email_not_verified", "message": "Verify your email to submit a club."})
 
+        # SEC FIX #9: escape user-controlled free-text on write so even if
+        # a future renderer treats these as HTML it can't smuggle markup.
         insert_result = supabase.table("club_submissions").insert({
-            "name": submission.name,
-            "description": submission.description,
-            "category": submission.category or "Social",
-            "contact_email": submission.contact_email,
-            "website_url": submission.website_url,
-            "meeting_schedule": submission.meeting_schedule,
-            "location": submission.location,
-            "is_private": submission.is_private,
-            "submitted_by": current_user_id,
+            "name":             _esc(submission.name or ""),
+            "description":      _esc(submission.description or ""),
+            "category":         submission.category or "Social",
+            "contact_email":    submission.contact_email,
+            "website_url":      submission.website_url,
+            "meeting_schedule": _esc(submission.meeting_schedule or "") if submission.meeting_schedule else None,
+            "location":         _esc(submission.location or "") if submission.location else None,
+            "is_private":       submission.is_private,
+            "submitted_by":     current_user_id,
             "executive_emails": submission.executive_emails,
-            "join_instructions": submission.join_instructions,
-            "application_url": submission.application_url,
-            "status": "pending",
+            "join_instructions":_esc(submission.join_instructions or "") if submission.join_instructions else None,
+            "application_url":  submission.application_url,
+            "status":           "pending",
         }).execute()
 
         # Generate tokens and send approval email to admins
@@ -1078,8 +1179,17 @@ async def toggle_subscribe(club_id: str, current_user_id: str = Depends(get_curr
 
 
 @router.get("/{club_id}/subscribers")
-async def get_subscribers_count(club_id: str):
-    """Get the subscriber count for a club (public)."""
+async def get_subscribers_count(
+    club_id: str,
+    current_user_id: str = Depends(get_current_user_id),
+):
+    """Get the subscriber count for a club.
+
+    SEC FIX #3: was unauthenticated. Now requires a logged-in user. The
+    aggregate count itself is non-sensitive, but exposing this endpoint
+    without auth let scrapers enumerate every club's popularity without
+    even creating an account.
+    """
     try:
         supabase = get_supabase()
         result = supabase.table("club_subscriptions").select("id", count="exact").eq("club_id", club_id).execute()
@@ -1094,7 +1204,22 @@ async def get_subscribers_count(club_id: str):
 
 @router.get("/{club_id}/managers")
 async def get_club_managers(club_id: str, current_user_id: str = Depends(get_current_user_id)):
-    """Get managers for a club. Any authenticated user can view."""
+    """Get managers for a club.
+
+    SEC FIX #3 (HIGH IDOR): the previous version returned the full manager
+    roster — names, emails, user IDs — to any logged-in user. That was a
+    direct PII leak: a throwaway account could enumerate organizers of
+    every club on the platform (including the owner's personal email).
+
+    Now scoped to:
+      * club owner / per-club admin / per-club manager  → full roster
+      * everyone else                                   → 403
+    """
+    if not _is_club_owner_or_admin(club_id, current_user_id):
+        raise HTTPException(
+            status_code=403,
+            detail="Only club managers can view the manager list.",
+        )
     try:
         supabase = get_supabase()
         result = supabase.table("club_managers").select("*").eq("club_id", club_id).execute()
@@ -1104,8 +1229,11 @@ async def get_club_managers(club_id: str, current_user_id: str = Depends(get_cur
             try:
                 p = supabase.table("users").select("username, email").eq("id", m["user_id"]).execute()
                 if p.data:
-                    profile["name"] = p.data[0].get("username", "") or p.data[0].get("email", "")
-                    profile["email"] = p.data[0].get("email", "")
+                    email = p.data[0].get("email", "") or ""
+                    # Privacy: show the email-derived first name, never the
+                    # user's custom username (same convention as /members).
+                    profile["name"] = _display_name_from_email(email)
+                    profile["email"] = email
             except Exception:
                 pass
             managers.append(profile)
@@ -1118,13 +1246,16 @@ async def get_club_managers(club_id: str, current_user_id: str = Depends(get_cur
             try:
                 p = supabase.table("users").select("username, email").eq("id", creator_id).execute()
                 if p.data:
-                    creator_profile["name"] = p.data[0].get("username", "") or p.data[0].get("email", "")
-                    creator_profile["email"] = p.data[0].get("email", "")
+                    email = p.data[0].get("email", "") or ""
+                    creator_profile["name"] = _display_name_from_email(email)
+                    creator_profile["email"] = email
             except Exception:
                 pass
             managers.insert(0, creator_profile)
 
         return {"managers": managers, "count": len(managers)}
+    except HTTPException:
+        raise
     except Exception as e:
         logger.exception(f"Error fetching club managers: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch managers")
@@ -1440,10 +1571,25 @@ async def get_club_activity(
     Recent activity in a club — most recent N events + announcements merged,
     sorted newest-first. Used by the club drawer to give a "this club is alive"
     signal.
+
+    SEC FIX #3: private clubs only expose activity to members + managers
+    (matching the access pattern for the club's own content). Public clubs
+    stay open to any signed-in user.
     """
     supabase = get_supabase()
     limit = max(1, min(limit, 20))
     try:
+        # Private-club gate
+        meta = supabase.table("clubs").select("is_private").eq("id", club_id).execute()
+        if meta.data and meta.data[0].get("is_private"):
+            if not _is_club_owner_or_admin(club_id, current_user_id):
+                membership = (
+                    supabase.table("user_clubs")
+                    .select("user_id").eq("club_id", club_id).eq("user_id", current_user_id)
+                    .execute()
+                )
+                if not membership.data:
+                    raise HTTPException(status_code=403, detail="This club is private.")
         anns = (supabase.table("club_announcements")
                 .select("id, title, body, join_link, created_at")
                 .eq("club_id", club_id)
@@ -1481,6 +1627,8 @@ async def get_club_activity(
 
         items.sort(key=lambda x: x.get("timestamp") or "", reverse=True)
         return {"items": items[:limit], "count": len(items[:limit])}
+    except HTTPException:
+        raise
     except Exception as e:
         logger.exception(f"Error fetching club activity: {e}")
         return {"items": [], "count": 0}
@@ -1512,9 +1660,20 @@ async def get_club_faculty_stats(
         instead of an exact number, so a "1" can't be re-identified.
       - For very small clubs (total < MIN_CLUB_SIZE) the by_faculty array is
         suppressed entirely; only your_faculty_count is returned.
+      - SEC FIX #3: private clubs gate this behind member/manager auth.
     """
     supabase = get_supabase()
     try:
+        meta = supabase.table("clubs").select("is_private").eq("id", club_id).execute()
+        if meta.data and meta.data[0].get("is_private"):
+            if not _is_club_owner_or_admin(club_id, current_user_id):
+                membership = (
+                    supabase.table("user_clubs")
+                    .select("user_id").eq("club_id", club_id).eq("user_id", current_user_id)
+                    .execute()
+                )
+                if not membership.data:
+                    raise HTTPException(status_code=403, detail="This club is private.")
         # Caller's faculty for the "your faculty" highlight
         caller = supabase.table("users").select("faculty").eq("id", current_user_id).execute().data or []
         your_faculty = (caller[0].get("faculty") if caller else None) or None
@@ -1564,6 +1723,8 @@ async def get_club_faculty_stats(
             "by_faculty":         by_faculty,
             "total":              total,
         }
+    except HTTPException:
+        raise
     except Exception as e:
         logger.exception(f"Error fetching club faculty stats: {e}")
         return {"your_faculty": None, "your_faculty_count": 0, "by_faculty": [], "total": 0}
@@ -1593,6 +1754,8 @@ async def create_manager_request(
     """Owner/admin invites another Symbolos user (by email) to become a manager.
     Inserts a pending row in club_manager_requests; the target sees and acts on
     it from their Clubs tab."""
+    from ..utils.anomaly import record_action
+    record_action(current_user_id, "manager_invite")
     supabase = get_supabase()
     if not _is_club_owner_or_admin(club_id, current_user_id):
         raise HTTPException(status_code=403, detail="Only the club owner or admins can invite managers")

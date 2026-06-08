@@ -50,5 +50,19 @@
         }
       ]
     }
+  ],
+  "rewrites": [
+    {
+      "source": "/privacy",
+      "destination": "/?show=privacy"
+    },
+    {
+      "source": "/terms",
+      "destination": "/?show=terms"
+    },
+    {
+      "source": "/security",
+      "destination": "/.well-known/security.txt"
+    }
   ]
 }

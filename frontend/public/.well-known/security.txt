@@ -1,0 +1,17 @@
+Contact: mailto:security@symbolos.ca
+Expires: 2027-06-01T00:00:00.000Z
+Preferred-Languages: en, fr
+Canonical: https://symbolos.ca/.well-known/security.txt
+Policy: https://symbolos.ca/privacy
+
+# Symbolos welcomes coordinated disclosure of security issues.
+# Please email the address above before public disclosure so we can
+# patch and credit responsibly. We aim to respond within 72 hours.
+#
+# Out of scope:
+#   - Anything affecting only test/staging deployments
+#   - Volumetric DoS / DDoS
+#   - Self-XSS or attacks requiring physical access to the victim's device
+#   - Findings from automated scanners with no proof-of-impact
+#
+# We do not run a paid bounty program.

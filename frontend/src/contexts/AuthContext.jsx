@@ -100,6 +100,13 @@ export const AuthProvider = ({ children }) => {
 
         setUser(session?.user ?? null)
 
+        // Identify into Sentry + PostHog when a session lands; reset on signout.
+        // Lazy import so telemetry stays tree-shakable when env vars are empty.
+        import('../lib/telemetry').then(({ identifyUser, resetTelemetryIdentity }) => {
+          if (session?.user) identifyUser({ id: session.user.id, email: session.user.email })
+          else resetTelemetryIdentity()
+        }).catch(() => {})
+
         if (event === 'PASSWORD_RECOVERY') {
           // User clicked a password-reset link — log them in automatically,
           // flag that the Settings password-change modal should open, then
@@ -227,13 +234,21 @@ export const AuthProvider = ({ children }) => {
         }
       }
 
-      // Send verification email via Resend (bypasses Supabase rate limits)
+      // Send verification email via Resend (bypasses Supabase rate limits).
+      // SEC FIX #1: no body — backend uses the JWT we just got + auth.users.email.
       try {
-        await authAPI.sendVerification(data.user.id, email)
+        await authAPI.sendVerification()
       } catch (emailError) {
         console.error('Failed to send verification email:', emailError)
         // Non-fatal — user can resend from the verify screen
       }
+
+      // PostHog funnel event — fires once per signup. Lazy-imported so it's
+      // a no-op when VITE_POSTHOG_KEY isn't configured.
+      try {
+        const { track, Events } = await import('../lib/telemetry')
+        track(Events.SignupCompleted, { email_domain: (email || '').split('@')[1] || null })
+      } catch {}
 
       justSignedUp.current = false
 
@@ -246,10 +261,13 @@ export const AuthProvider = ({ children }) => {
   }
 
   // ── resendVerificationEmail ───────────────────────────────────────────────
+  // `email` arg kept for backwards-compat with Login.jsx callers but unused —
+  // the backend derives both user_id and email from the JWT.
+  // eslint-disable-next-line no-unused-vars
   const resendVerificationEmail = async (email) => {
     try {
       if (!user?.id) throw new Error('No user session')
-      await authAPI.sendVerification(user.id, email)
+      await authAPI.sendVerification()
       return { error: null }
     } catch (err) {
       return { error: { message: err?.response?.data?.detail || err.message || 'Failed to send email' } }
