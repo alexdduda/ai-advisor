@@ -4,11 +4,14 @@ pytest fixtures shared by the security smoke tests.
 We don't talk to Supabase / Anthropic / Resend in CI. Every external
 client is patched here so the tests run hermetically in <1s.
 
-IMPORTANT: FastAPI captures dependency references at route-definition
-time, so `monkeypatch.setattr(auth_module, ...)` does NOT override what
-`Depends(get_current_user_id)` resolves to. The correct override is
-`app.dependency_overrides[get_current_user_id] = fake_fn`, which we do
-inside the `client` fixture below.
+Strategy: don't try to swap auth dependencies via
+`app.dependency_overrides`. FastAPI caches the dependency signature at
+route-registration time, and the override's parameters get re-parsed
+in confusing ways. Instead we let the REAL `get_current_user_id` run
+end-to-end and just mock the single Supabase call it ends with —
+`supabase.auth.get_user(token)`. The tests then send a plain
+`Authorization: Bearer <user-id>` header and the rest of the codepath
+behaves exactly like production.
 """
 from __future__ import annotations
 
@@ -24,12 +27,14 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 
+# ── Fakes ─────────────────────────────────────────────────────────────────────
+
 class FakeAuthAdmin:
-    """Mimics supabase.auth.admin.get_user — returns a user object whose
-    `email` attribute matches whatever the test sets up."""
-    def __init__(self, email: str = "tester@mail.mcgill.ca"):
+    """Mimics supabase.auth.admin.get_user(user_id) — returns a user
+    object whose `email` matches whatever the test sets up."""
+    def __init__(self, email: str = "tester@mail.mcgill.ca", confirmed: bool = True):
         self.email = email
-        self.confirmed = True
+        self.confirmed = confirmed
 
     def get_user(self, user_id: str):
         user = SimpleNamespace(
@@ -49,43 +54,24 @@ class FakeTable:
         self._data = data if data is not None else []
         self._eq_filters: list = []
 
-    def select(self, *args, **kwargs):
-        return self
-
+    def select(self, *args, **kwargs): return self
     def eq(self, col, val):
         self._eq_filters.append((col, val))
         return self
-
-    def ilike(self, col, val):
-        return self
-
+    def ilike(self, col, val): return self
     def or_(self, *args, **kwargs):
-        """PostgREST OR — no-op shim. The endpoints we test apply a
-        Python-side filter as defense in depth, so the security
-        assertions still hold even when this no-ops."""
+        """PostgREST OR — no-op shim. Defense-in-depth Python filters
+        in the endpoints still enforce the security assertions."""
         return self
-
-    def order(self, *args, **kwargs):
-        return self
-
-    def limit(self, n):
-        return self
-
-    def in_(self, col, vals):
-        return self
-
-    def single(self):
-        return self
-
+    def order(self, *args, **kwargs): return self
+    def limit(self, n): return self
+    def in_(self, col, vals): return self
+    def single(self): return self
     def insert(self, row):
         self._data.append(row if isinstance(row, dict) else dict(row))
         return self
-
-    def update(self, row):
-        return self
-
-    def delete(self):
-        return self
+    def update(self, row): return self
+    def delete(self): return self
 
     def execute(self):
         rows = list(self._data)
@@ -95,11 +81,34 @@ class FakeTable:
 
 
 class FakeSupabase:
-    """Stand-in for the supabase client. Tests can pre-seed tables via
-    `.set_table('users', [...])`."""
+    """Stand-in for the supabase client.
+
+    `.auth.get_user(token)` interprets the Bearer token AS the user_id —
+    that lets the real `get_current_user_id` dependency resolve cleanly
+    when tests send `Authorization: Bearer <user-id>`.
+
+    `.auth.admin.get_user(user_id)` returns the configured auth identity
+    (email + email_confirmed_at) used by the McGill-flag logic.
+    """
     def __init__(self, auth_email: str = "tester@mail.mcgill.ca"):
         self._tables: dict = {}
-        self.auth = SimpleNamespace(admin=FakeAuthAdmin(email=auth_email))
+        self._auth_email = auth_email
+
+        def _resolve_token(token):
+            """get_current_user_id's path. The token IS the user id."""
+            if not token or token == "invalid":
+                raise Exception("invalid token")
+            return SimpleNamespace(user=SimpleNamespace(id=token))
+
+        self.auth = SimpleNamespace(
+            get_user=_resolve_token,
+            admin=FakeAuthAdmin(email=auth_email),
+        )
+
+    # Allow tests to swap the auth-identity email (audit fix #2 test)
+    def set_auth_email(self, email: str) -> None:
+        self._auth_email = email
+        self.auth.admin = FakeAuthAdmin(email=email)
 
     def set_table(self, name: str, rows: list) -> None:
         self._tables[name] = rows
@@ -111,19 +120,21 @@ class FakeSupabase:
         return SimpleNamespace(execute=lambda: SimpleNamespace(data=1))
 
 
+# ── Fixtures ──────────────────────────────────────────────────────────────────
+
 @pytest.fixture
 def fake_supabase(monkeypatch):
-    """Patch every importable get_supabase reference so all routes see
+    """Patch every importable `get_supabase` reference so all routes see
     the fake regardless of where they imported it from."""
     sb = FakeSupabase()
-    # Patch at the canonical module location.
+
     import api.utils.supabase_client as supa
     monkeypatch.setattr(supa, "get_supabase", lambda: sb)
     monkeypatch.setattr(supa, "get_user_supabase", lambda jwt: sb)
 
-    # Routes do `from ..utils.supabase_client import get_supabase` at
-    # module load time, which BINDS the original function into their
-    # own module namespace. We need to override THOSE bindings too.
+    # Each route does `from ..utils.supabase_client import get_supabase`
+    # at module load time, binding the original function into its own
+    # namespace. Override those bindings too.
     for module_path in (
         "api.routes.clubs",
         "api.routes.users",
@@ -144,47 +155,45 @@ def fake_supabase(monkeypatch):
             continue
         if hasattr(mod, "get_supabase"):
             monkeypatch.setattr(mod, "get_supabase", lambda: sb)
+
+    # Patch the auth module too — get_current_user_id calls get_supabase
+    # to resolve the JWT, and we want it to hit the fake.
+    import api.auth as auth_module
+    monkeypatch.setattr(auth_module, "get_supabase", lambda: sb)
+
     return sb
 
 
 @pytest.fixture
 def client(fake_supabase, monkeypatch):
-    """A FastAPI TestClient with auth dependencies overridden.
+    """A FastAPI TestClient that lets the real auth path run.
 
-    Tests pass `X-Test-User: <id>` to identify themselves. No header
-    means the unauthenticated case (expect 401).
+    Tests pass `Authorization: Bearer <user_id>` and the fake supabase
+    resolves it via its `.auth.get_user(token)` shim, which returns a
+    user object whose id == token. The real `get_current_user_id`
+    dependency then returns that id without modification, matching the
+    production codepath exactly.
     """
-    from fastapi import HTTPException, Request
-    from fastapi.testclient import TestClient
-    from api.main import app
-    from api.auth import get_current_user_id, get_current_jwt, get_user_db
-
-    async def _fake_get_user(request: Request):
-        uid = request.headers.get("x-test-user")
-        if not uid:
-            raise HTTPException(status_code=401, detail="Missing test auth header")
-        return uid
-
-    async def _fake_get_jwt(request: Request):
-        return request.headers.get("x-test-user", "")
-
-    async def _fake_get_db(request: Request):
-        return fake_supabase
-
-    # FastAPI overrides — the correct way to swap deps in tests.
-    app.dependency_overrides[get_current_user_id] = _fake_get_user
-    app.dependency_overrides[get_current_jwt]    = _fake_get_jwt
-    app.dependency_overrides[get_user_db]        = _fake_get_db
-
-    # Also override the email-verified gate so tests don't trip on it.
+    # Soft-stub the verified-email gate + LLM budget so the smoke tests
+    # don't need to mock those flows. We're only asserting auth/PII/cache
+    # invariants here — verified-email is its own thing.
     from api.utils import verified_user as vu
-    monkeypatch.setattr(vu, "is_email_verified", lambda _uid: True)
-    # And the LLM budget gate.
     from api.utils import llm_budget as lb
+    monkeypatch.setattr(vu, "is_email_verified", lambda _uid: True)
     monkeypatch.setattr(lb, "check_and_record_llm_usage", lambda *a, **kw: None)
 
-    tc = TestClient(app)
-    try:
-        yield tc
-    finally:
-        app.dependency_overrides.clear()
+    # Anomaly logger is best-effort — don't let it hit the fake's DB shim.
+    from api.utils import anomaly as an
+    monkeypatch.setattr(an, "record_action", lambda *a, **kw: None)
+
+    from fastapi.testclient import TestClient
+    from api.main import app
+    return TestClient(app)
+
+
+# ── Helpers tests can use ─────────────────────────────────────────────────────
+
+def auth(user_id: str) -> dict:
+    """Convenience: produce the headers a test needs to authenticate
+    as `user_id`. The fake supabase decodes the Bearer to the same id."""
+    return {"Authorization": f"Bearer {user_id}"}
