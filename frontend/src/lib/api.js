@@ -236,6 +236,16 @@ export const usersAPI = {
       throw error
     }
   },
+
+  /**
+   * Quebec Law 25 / GDPR data portability.
+   * Returns the full personal-data dump for the authenticated user.
+   * Backend: backend/api/routes/users.py → export_user_data
+   */
+  exportData: async (userId) => {
+    const response = await api.get(`/users/${userId}/export`)
+    return response.data
+  },
 }
 
 // Auth flags API
@@ -248,12 +258,16 @@ export const authAPI = {
       return { is_admin: false, is_mcgill_email: false }
     }
   },
-  async sendVerification(userId, email) {
-    const response = await api.post('/auth/send-verification', {
-      user_id: userId,
-      email,
-      redirect_url: window.location.origin,
-    })
+  /**
+   * Re-send the verification email for the *currently authenticated* user.
+   * SEC FIX #1: the body is empty — backend derives user_id+email from the
+   * JWT and uses a server-side allowlisted redirect URL. We no longer pass
+   * those fields client-side because they were the attack vector that let
+   * any caller send "verify your Symbolos account" mail from our domain
+   * to any recipient with any redirect.
+   */
+  async sendVerification() {
+    const response = await api.post('/auth/send-verification', {})
     return response.data
   },
   async verifyEmail(userId, token) {

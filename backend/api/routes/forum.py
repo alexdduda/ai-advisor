@@ -273,12 +273,30 @@ async def create_post(
     current_user_id: str = Depends(get_current_user_id),
     user_sb = Depends(get_user_db),
 ):
-    """Create a new forum post. Auth required."""
+    """Create a new forum post. Auth + verified email required."""
+    # SEC FIX #5: a throwaway account with mailer_autoconfirm could otherwise
+    # spam the forum from a disposable address. Verified email keeps the
+    # community to people who control a real inbox.
+    from ..utils.verified_user import is_email_verified
+    from ..utils.anomaly import record_action
+    if not is_email_verified(current_user_id):
+        raise HTTPException(status_code=403, detail={"code": "email_not_verified", "message": "Verify your email to post."})
+    record_action(current_user_id, "forum_post")
+
     # Validate review fields are present when category is a review
     try:
         payload.enforce_review_consistency()
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
+
+    # SEC FIX #9: HTML-escape user-controlled content at write time so even
+    # if a future renderer interprets the body as HTML, no markup smuggling
+    # is possible. We escape on write rather than render so existing
+    # consumers (notifications, admin emails) are safe too.
+    payload.title = escape(payload.title or "")
+    payload.body  = escape(payload.body or "")
+    if payload.author:
+        payload.author = escape(payload.author)
 
     def _run():
         data = {
@@ -383,7 +401,16 @@ async def create_reply(
     current_user_id: str = Depends(get_current_user_id),
     user_sb = Depends(get_user_db),
 ):
-    """Add a reply to a post."""
+    """Add a reply to a post. Auth + verified email required."""
+    from ..utils.verified_user import is_email_verified
+    from ..utils.anomaly import record_action
+    if not is_email_verified(current_user_id):
+        raise HTTPException(status_code=403, detail={"code": "email_not_verified", "message": "Verify your email to reply."})
+    record_action(current_user_id, "forum_reply")
+    payload.body = escape(payload.body or "")
+    if payload.author:
+        payload.author = escape(payload.author)
+
     def _run():
         # Verify post exists
         post_check = user_sb.table("forum_posts").select("id").eq("id", post_id).execute()

@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
+import os
 import time
 import uuid
 import logging
@@ -20,6 +21,38 @@ from datetime import datetime, timezone, timedelta
 
 
 from .config import settings
+
+
+# ── Sentry — exception telemetry ──────────────────────────────────────────
+# Init must run BEFORE FastAPI app is created so the integration patches
+# request handlers. Keeps quiet if SENTRY_DSN isn't set so local dev /
+# CI / preview without a DSN doesn't error out.
+def _init_sentry() -> None:
+    dsn = os.getenv("SENTRY_DSN", "").strip()
+    if not dsn:
+        return
+    try:
+        import sentry_sdk
+        from sentry_sdk.integrations.fastapi import FastApiIntegration
+        from sentry_sdk.integrations.starlette import StarletteIntegration
+        sentry_sdk.init(
+            dsn=dsn,
+            # Vercel sets VERCEL_GIT_COMMIT_SHA; we use it as the release tag
+            # so a stack trace in Sentry maps to a specific commit.
+            release=os.getenv("VERCEL_GIT_COMMIT_SHA", "dev"),
+            environment=os.getenv("VERCEL_ENV") or os.getenv("ENVIRONMENT", "development"),
+            integrations=[StarletteIntegration(), FastApiIntegration()],
+            # Sample 10% of transactions in prod to keep quota under control.
+            # We can crank up if we need more visibility.
+            traces_sample_rate=float(os.getenv("SENTRY_TRACES_SAMPLE_RATE", "0.1")),
+            # Strip PII — user IDs are sufficient, we don't need emails or IPs.
+            send_default_pii=False,
+        )
+    except Exception:
+        # Never let a Sentry init failure crash startup.
+        logging.getLogger(__name__).warning("Sentry init skipped — SDK import failed")
+
+_init_sentry()
 from .logging_config import setup_logging
 from .auth import get_current_user_id
 from .exceptions import (
@@ -33,7 +66,7 @@ from .routes import (
     chat, courses, users, favorites, completed, notifications,
     current, suggestions, cards, transcript, degree_requirements,
     electives, clubs, syllabus, professors, admin, newsletters, forum,
-    verification,
+    verification, webhooks,
 )
 
 logger = setup_logging()
@@ -216,8 +249,13 @@ app = FastAPI(
     title=settings.API_TITLE,
     version=settings.API_VERSION,
     lifespan=lifespan,
+    # SEC FIX (audit #11 / Bonus): in production we hide docs AND the raw
+    # OpenAPI schema. The auditor pulled the full 104-route list from
+    # /openapi.json — that's an attacker's shopping list. Local dev still
+    # gets full docs because DEBUG is set.
     docs_url=f"{settings.API_PREFIX}/docs" if settings.DEBUG else None,
     redoc_url=f"{settings.API_PREFIX}/redoc" if settings.DEBUG else None,
+    openapi_url=f"{settings.API_PREFIX}/openapi.json" if settings.DEBUG else None,
 )
 
 
@@ -410,6 +448,7 @@ app.include_router(professors.router,          prefix=f"{settings.API_PREFIX}/pr
 app.include_router(newsletters.router,         prefix=f"{settings.API_PREFIX}/newsletters",         tags=["Newsletters"])
 app.include_router(forum.router,               prefix=f"{settings.API_PREFIX}/forum",               tags=["Forum"])
 app.include_router(verification.router,        prefix=f"{settings.API_PREFIX}/auth",                tags=["Auth"])
+app.include_router(webhooks.router,             prefix=f"{settings.API_PREFIX}/webhooks",            tags=["Webhooks"])
 
 
 @app.get("/")
@@ -436,16 +475,33 @@ async def health_check():
 
 @app.get(f"{settings.API_PREFIX}/auth/flags")
 async def auth_flags(current_user_id: str = Depends(get_current_user_id)):
-    """Return auth flags for the current user (admin status, McGill email)."""
+    """Return auth flags for the current user (admin status, McGill email).
+
+    SEC FIX #2: the McGill flag MUST come from auth.users.email (the verified
+    identity Supabase received during signup), not the users table column the
+    profile owner can edit. The previous version read users.email, so anyone
+    could PATCH their profile to set email="<anything>@mail.mcgill.ca" and
+    flip is_mcgill_email to true — gaining access to private clubs and
+    McGill-only features.
+    """
     from .utils.supabase_client import get_supabase
     admin_emails = set(e.strip().lower() for e in settings.ADMIN_EMAILS.split(",") if e.strip())
     mcgill_domains = ("@mcgill.ca", "@mail.mcgill.ca")
     try:
         sb = get_supabase()
-        resp = sb.table("users").select("email").eq("id", current_user_id).single().execute()
-        email = (resp.data or {}).get("email", "").lower()
-        is_admin = email in admin_emails
-        is_mcgill = any(email.endswith(d) for d in mcgill_domains) or is_admin
+        # Verified auth email — the user CANNOT change this through any
+        # public route. Supabase only updates it after the user proves
+        # control of the new mailbox via Supabase Auth's own email-change
+        # confirmation flow.
+        auth_email = ""
+        try:
+            u = sb.auth.admin.get_user(current_user_id)
+            auth_email = (getattr(u.user, "email", None) or "").lower()
+        except Exception:
+            pass
+
+        is_admin = auth_email in admin_emails
+        is_mcgill = any(auth_email.endswith(d) for d in mcgill_domains) or is_admin
         return {"is_admin": is_admin, "is_mcgill_email": is_mcgill}
     except Exception:
         return {"is_admin": False, "is_mcgill_email": False}

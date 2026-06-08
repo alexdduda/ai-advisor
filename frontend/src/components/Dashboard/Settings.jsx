@@ -9,6 +9,7 @@ import {
 } from 'react-icons/fa'
 import { useLanguage, useTheme, useTimezone, TIMEZONES } from '../../contexts/PreferencesContext'
 import { useAuth } from '../../contexts/AuthContext'
+import { usersAPI } from '../../lib/api'
 import useNotificationPrefs from '../../hooks/useNotificationPrefs'
 import './Settings.css'
 
@@ -129,13 +130,34 @@ export default function Settings({ user, profile, onUpdateSettings }) {
   const toggleTiming    = (k) => { setNotifPrefs(p => ({ ...p, timing: { ...p.timing, [k]: !p.timing[k] } })); flash() }
   const toggleEventType = (k) => { setNotifPrefs(p => ({ ...p, eventTypes: { ...p.eventTypes, [k]: !p.eventTypes[k] } })); flash() }
 
-  const handleExportData = () => {
-    const blob = new Blob([JSON.stringify({ user: { email: user?.email, id: user?.id }, profile, settings, exportDate: new Date().toISOString() }, null, 2)], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = Object.assign(document.createElement('a'), { href: url, download: `mcgill-advisor-data-${new Date().toISOString().split('T')[0]}.json` })
-    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url)
-    setShowExportModal(false)
-    alert(t('settings.dataExported'))
+  // Quebec Law 25 § 27 / GDPR Art. 20 — full personal-data dump.
+  // Hits the backend GET /api/users/{id}/export which gathers every
+  // table that holds user-tied data (profile, courses, chat history,
+  // AI cards, forum posts, club memberships, calendar events, etc.).
+  // The old version only serialised React state and was missing ~90%
+  // of the data we actually hold.
+  const [exporting, setExporting] = useState(false)
+  const handleExportData = async () => {
+    if (!user?.id || exporting) return
+    setExporting(true)
+    try {
+      const data = await usersAPI.exportData(user.id)
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = Object.assign(document.createElement('a'), {
+        href: url,
+        download: `symbolos-data-${new Date().toISOString().split('T')[0]}.json`,
+      })
+      document.body.appendChild(a); a.click(); document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      setShowExportModal(false)
+      alert(t('settings.dataExported'))
+    } catch (err) {
+      console.error('Data export failed:', err)
+      alert(t('settings.dataExportFailed') || 'Could not export your data. Please try again.')
+    } finally {
+      setExporting(false)
+    }
   }
 
   const confirmWord = t('settings.deleteConfirmPlaceholder').replace('Type ', '').replace('Tapez ', '').trim()
@@ -404,8 +426,10 @@ export default function Settings({ user, profile, onUpdateSettings }) {
             <h3 className="modal-title">{t('settings.exportYourData')}</h3>
             <p className="modal-text">{t('settings.exportModalText')}</p>
             <div className="modal-actions">
-              <button className="modal-btn cancel-btn" onClick={() => setShowExportModal(false)}>{t('common.cancel')}</button>
-              <button className="modal-btn confirm-btn" onClick={handleExportData}>{t('settings.downloadJson')}</button>
+              <button className="modal-btn cancel-btn" onClick={() => setShowExportModal(false)} disabled={exporting}>{t('common.cancel')}</button>
+              <button className="modal-btn confirm-btn" onClick={handleExportData} disabled={exporting}>
+                {exporting ? '…' : t('settings.downloadJson')}
+              </button>
             </div>
           </div>
         </div>,

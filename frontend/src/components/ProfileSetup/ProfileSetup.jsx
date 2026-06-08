@@ -48,6 +48,10 @@ export default function ProfileSetup() {
 
   const finish = async () => {
     setFinishing(true)
+    try {
+      const { track, Events } = await import('../../lib/telemetry')
+      track(Events.OnboardingCompleted)
+    } catch {}
     await completeOnboarding()
   }
 

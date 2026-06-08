@@ -55,8 +55,15 @@ class ElectivesRequest(BaseModel):
 @router.post("/recommend")
 async def recommend_electives(
     req: ElectivesRequest,
-    _: str = Depends(get_current_user_id),
+    current_user_id: str = Depends(get_current_user_id),
 ):
+    # SEC FIX #5 / #7: verified email + daily LLM budget.
+    from ..utils.verified_user import is_email_verified
+    from ..utils.llm_budget import check_and_record_llm_usage
+    from fastapi import HTTPException
+    if not is_email_verified(current_user_id):
+        raise HTTPException(status_code=403, detail={"code": "email_not_verified", "message": "Verify your email to generate recommendations."})
+    check_and_record_llm_usage(current_user_id, kind="electives")
     try:
         client = _get_client()
 

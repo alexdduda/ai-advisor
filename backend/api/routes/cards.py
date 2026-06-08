@@ -564,7 +564,15 @@ async def generate_cards(user_id: str, request: GenerateRequest, req: Request, c
     Generate AI cards.
     - If force=False and cards are fresh (< 7 days old), returns existing cards immediately.
     - If force=True, regenerates (max 2 times per week).
+
+    SEC FIX #5 / #7: gated on verified email + daily cost cap.
     """
+    from ..utils.verified_user import is_email_verified
+    from ..utils.llm_budget import check_and_record_llm_usage
+    if not is_email_verified(current_user_id):
+        raise HTTPException(status_code=403, detail={"code": "email_not_verified", "message": "Verify your email to generate cards."})
+    if request.force:
+        check_and_record_llm_usage(current_user_id, kind="cards")
     try:
         get_user_by_id(user_id)
         if not request.force and cards_are_fresh(user_id):
@@ -707,8 +715,15 @@ async def stream_cards(
     SSE streaming card generation. Emits one `data:` event per card as Claude
     produces them, then a final `done` event. Language handling is identical to
     the non-streaming /generate endpoint.
+
+    SEC FIX #5 / #7: verified email + daily LLM budget.
     """
     require_self(current_user_id, user_id)
+    from ..utils.verified_user import is_email_verified
+    from ..utils.llm_budget import check_and_record_llm_usage
+    if not is_email_verified(current_user_id):
+        raise HTTPException(status_code=403, detail={"code": "email_not_verified", "message": "Verify your email to generate cards."})
+    check_and_record_llm_usage(current_user_id, kind="cards")
 
     # Auth check up front (outside the generator so HTTP errors still work)
     try:

@@ -423,8 +423,22 @@ async def send_message(
     Send a chat message and get an AI response.
     Pass card_context to give Claude context about which advisor card triggered
     this conversation.
+
+    SEC FIX #5 / #7: require a verified email before letting the user spend
+    Anthropic tokens (and rate-limited per the daily LLM cost cap).
     """
     require_self(current_user_id, request.user_id)
+
+    # Gate on email verification — otherwise mailer_autoconfirm gives every
+    # fresh signup a free turnkey LLM proxy.
+    from ..utils.verified_user import is_email_verified
+    from ..utils.llm_budget import check_and_record_llm_usage
+    if not is_email_verified(current_user_id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={"code": "email_not_verified", "message": "Verify your email to chat."},
+        )
+    check_and_record_llm_usage(current_user_id, kind="chat")
 
     MAX_MESSAGE_LENGTH = 4000
     if len(request.message) > MAX_MESSAGE_LENGTH:
