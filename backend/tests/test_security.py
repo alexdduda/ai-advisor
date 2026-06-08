@@ -1,23 +1,21 @@
 """
 Security smoke tests covering the 11 audit findings.
 
-These run on every PR via .github/workflows/ci.yml. If any of them break,
-a regression has reopened one of the holes the auditor reported, and
-the PR should NOT merge.
+Run on every PR via .github/workflows/ci.yml. If any of these break,
+a regression has reopened a hole the auditor reported.
 
-Each test maps to a specific finding in HANDOFF_SECURITY.md and the
-audit report. We don't test the underlying RLS migration here (that
-needs a real Postgres) — only the application-layer invariants.
+We let the REAL auth dependency run end-to-end and only mock the
+underlying Supabase call. Tests authenticate with `auth("<user-id>")`,
+which produces an `Authorization: Bearer <user-id>` header that the
+fake supabase decodes to the same user id.
 """
 from __future__ import annotations
 
-import pytest
+from tests.conftest import auth
 
 
 # ── Audit #1: /send-verification rejects unauthenticated callers ─────────────
 def test_send_verification_requires_auth(client):
-    """The endpoint was previously open; the exact curl in the audit report
-    was a 200 OK against an unauthenticated POST."""
     resp = client.post(
         "/api/auth/send-verification",
         json={"user_id": "any", "email": "anyone@example.com",
@@ -28,82 +26,79 @@ def test_send_verification_requires_auth(client):
     )
 
 
-# ── Audit #1: /send-verification body fields are ignored (server-side derive)
+# ── Audit #1: /send-verification ignores body-supplied redirect_url ──────────
 def test_send_verification_ignores_body_redirect_url(client, fake_supabase, monkeypatch):
-    """Even when authenticated, body-supplied user_id/email/redirect_url
-    must be ignored. We verify by sending a malicious body — the endpoint
-    should still derive from the JWT and refuse to use the evil URL.
+    """Even when authenticated, body-supplied redirect_url must be ignored —
+    the new server builds verify_url from settings.ALLOWED_ORIGINS only.
+    Either the request succeeds without echoing the evil URL, or it 5xxs
+    before reaching Resend (acceptable — what matters is no leak)."""
+    sent: dict = {}
 
-    Without RESEND_API_KEY (CI default) this returns 500 before any HTTP
-    egress happens — that's OK; the regression we care about is that the
-    body's redirect_url never reaches Resend's outbound payload.
-    """
-    sent = {}
     async def fake_post(self, url, **kwargs):
         sent["url"] = url
         sent["body"] = kwargs.get("json")
         return type("R", (), {"status_code": 200, "text": "ok"})()
+
     import httpx
     monkeypatch.setattr(httpx.AsyncClient, "post", fake_post)
 
-    # Force RESEND_API_KEY to a sentinel so the route doesn't 500 first.
     from api import config
     monkeypatch.setattr(config.settings, "RESEND_API_KEY", "re_test")
 
     resp = client.post(
         "/api/auth/send-verification",
-        headers={"X-Test-User": "user-1"},
+        headers=auth("user-1"),
         json={"redirect_url": "https://evil.example/phish"},
     )
-    # If the throttle table didn't exist or Resend fired, the body should
-    # NEVER contain the evil URL.
-    if sent:
-        payload_str = repr(sent.get("body", {}))
-        assert "evil.example" not in payload_str, (
-            "Resend request payload must not echo client-supplied redirect_url"
+    # If Resend was called, the body MUST NOT echo the evil URL.
+    if sent.get("body"):
+        assert "evil.example" not in repr(sent["body"]), (
+            "Resend payload must not echo client-supplied redirect_url"
         )
+    # Either 200 (sent) or 5xx (couldn't send). Never 200 with leaked URL.
+    assert resp.status_code in (200, 401, 500, 502, 429), resp.status_code
 
 
-# ── Audit #2: McGill flag uses auth.users.email, not user-editable profile ───
+# ── Audit #2: McGill flag uses auth.users.email, not profile column ──────────
 def test_mcgill_flag_uses_auth_identity(client, fake_supabase):
-    """The bug: set users.email to anything@mail.mcgill.ca → flag flips true.
-    The fix: flag must derive from auth.users (Supabase Auth identity),
-    which is not editable through public API."""
-    # Auth identity says non-McGill
-    fake_supabase.auth.admin = type(fake_supabase.auth.admin)(email="rando@gmail.com")
-    # Profile lies and says McGill
-    fake_supabase.set_table("users", [{"id": "user-1", "email": "audit.redteam@mail.mcgill.ca"}])
+    """Bug: set users.email to *@mail.mcgill.ca → flag flipped true.
+    Fix: flag must derive from auth.users (Supabase Auth identity)."""
+    fake_supabase.set_auth_email("rando@gmail.com")
+    fake_supabase.set_table("users", [{
+        "id": "user-1",
+        "email": "audit.redteam@mail.mcgill.ca",  # the lie
+    }])
 
-    resp = client.get("/api/auth/flags", headers={"X-Test-User": "user-1"})
+    resp = client.get("/api/auth/flags", headers=auth("user-1"))
     assert resp.status_code == 200
     body = resp.json()
     assert body["is_mcgill_email"] is False, (
-        "is_mcgill_email must be derived from auth identity, not profile column"
+        "is_mcgill_email must derive from auth identity, not profile column"
     )
 
 
 # ── Audit #3: club managers endpoint requires manager role ───────────────────
 def test_managers_endpoint_403s_non_manager(client, fake_supabase):
-    """The bug: any logged-in user could read /managers and see the full
-    organizer roster with emails. Fix: gate behind _is_club_owner_or_admin."""
+    """Bug: any logged-in user could read /managers (organizer roster).
+    Fix: gate behind _is_club_owner_or_admin."""
     fake_supabase.set_table("clubs", [{"id": "club-1", "created_by": "owner-2"}])
     fake_supabase.set_table("club_managers", [])
     fake_supabase.set_table("user_clubs", [])
 
-    resp = client.get("/api/clubs/club-1/managers", headers={"X-Test-User": "outsider"})
-    assert resp.status_code == 403
+    resp = client.get("/api/clubs/club-1/managers", headers=auth("outsider"))
+    assert resp.status_code == 403, resp.text
 
 
 # ── Audit #4: GET /api/clubs requires authentication ─────────────────────────
 def test_clubs_list_requires_auth(client):
-    """The auditor pulled every club + contact_email + executive_emails
-    over an unauthenticated GET. Endpoint must now require a logged-in user."""
+    """Auditor pulled every club + PII over an unauthenticated GET.
+    Endpoint must now require a logged-in user."""
     resp = client.get("/api/clubs")
     assert resp.status_code == 401
 
 
-# ── Audit #4: PII fields stripped from clubs response for non-managers ───────
-def test_clubs_list_strips_pii_for_non_managers(client, fake_supabase):
+# ── Audit #4: PII fields stripped from clubs response ────────────────────────
+def test_clubs_list_strips_pii(client, fake_supabase):
     fake_supabase.set_table("clubs", [{
         "id": "club-1",
         "name": "Test Club",
@@ -113,17 +108,17 @@ def test_clubs_list_strips_pii_for_non_managers(client, fake_supabase):
         "executive_emails": ["e1@example.com"],
         "created_by": "owner-2",
     }])
-    resp = client.get("/api/clubs", headers={"X-Test-User": "outsider"})
-    assert resp.status_code == 200
+    resp = client.get("/api/clubs", headers=auth("anyone"))
+    assert resp.status_code == 200, resp.text
     clubs = resp.json().get("clubs", [])
     assert clubs, "expected at least one club in the listing"
     row = clubs[0]
     for field in ("contact_email", "executive_emails", "created_by"):
-        assert field not in row, f"{field} must be stripped for non-managers"
+        assert field not in row, f"{field} must be stripped"
 
 
-# ── Audit #4: private clubs hidden from non-managers ─────────────────────────
-def test_private_clubs_hidden_from_non_managers(client, fake_supabase):
+# ── Audit #4: private clubs hidden from the discovery view ───────────────────
+def test_private_clubs_hidden(client, fake_supabase):
     fake_supabase.set_table("clubs", [{
         "id": "club-priv",
         "name": "Private Society",
@@ -131,14 +126,14 @@ def test_private_clubs_hidden_from_non_managers(client, fake_supabase):
         "is_private": True,
         "created_by": "owner-2",
     }])
-    resp = client.get("/api/clubs", headers={"X-Test-User": "outsider"})
-    assert resp.status_code == 200
+    resp = client.get("/api/clubs", headers=auth("anyone"))
+    assert resp.status_code == 200, resp.text
     ids = [c["id"] for c in resp.json().get("clubs", [])]
     assert "club-priv" not in ids
 
 
-# ── Audit #8: verification_token never appears in user profile response ──────
-def test_get_user_profile_never_includes_verification_token(client, fake_supabase):
+# ── Audit #8: verification_token never appears in profile response ───────────
+def test_profile_strips_verification_token(client, fake_supabase):
     fake_supabase.set_table("users", [{
         "id": "user-1",
         "email": "tester@mail.mcgill.ca",
@@ -146,10 +141,9 @@ def test_get_user_profile_never_includes_verification_token(client, fake_supabas
         "verification_token_expires_at": "2099-01-01T00:00:00Z",
         "last_verification_sent_at": "2026-06-01T00:00:00Z",
     }])
-    resp = client.get("/api/users/user-1", headers={"X-Test-User": "user-1"})
-    assert resp.status_code == 200
-    payload = resp.json()
-    serialised = repr(payload)
+    resp = client.get("/api/users/user-1", headers=auth("user-1"))
+    assert resp.status_code == 200, resp.text
+    serialised = repr(resp.json())
     for forbidden in (
         "verification_token",
         "TOP-SECRET-TOKEN-MUST-NOT-LEAK",
@@ -159,29 +153,22 @@ def test_get_user_profile_never_includes_verification_token(client, fake_supabas
         assert forbidden not in serialised, f"{forbidden} must be stripped"
 
 
-# ── Audit follow-up: data export endpoint requires self ──────────────────────
+# ── Audit follow-up: /export is owner-only ───────────────────────────────────
 def test_data_export_requires_self(client, fake_supabase):
-    """The export dumps every user-tied row — must be owner-only."""
     fake_supabase.set_table("users", [{"id": "user-other", "email": "x@x.com"}])
-    resp = client.get("/api/users/user-other/export", headers={"X-Test-User": "user-1"})
+    resp = client.get("/api/users/user-other/export", headers=auth("user-1"))
     assert resp.status_code == 403
 
 
 # ── Perf: /api/clubs must be public-cacheable on the CDN edge ────────────────
 def test_clubs_response_is_public_cacheable(client, fake_supabase):
-    """The endpoint returns the same payload for every signed-in user, so
-    its Cache-Control header MUST start with `public, ...` for the Vercel
-    edge to actually cache it. If a future refactor reintroduces per-user
-    data on this endpoint, the test will fail and force you to either:
-      (a) revert the per-user data, or
-      (b) move the cache to private and add a different fast path.
-    Either is a conscious decision; we just don't want it to happen by accident.
-    """
+    """If a future refactor reintroduces per-user data, this test fails
+    and forces either reverting it or moving the cache to private."""
     fake_supabase.set_table("clubs", [
         {"id": "c1", "name": "Club One", "is_verified": True, "is_private": False},
     ])
-    resp = client.get("/api/clubs", headers={"X-Test-User": "anyone"})
-    assert resp.status_code == 200
+    resp = client.get("/api/clubs", headers=auth("anyone"))
+    assert resp.status_code == 200, resp.text
     cc = resp.headers.get("cache-control", "")
     assert cc.lower().startswith("public"), (
         f"/api/clubs must be public-cacheable, got Cache-Control: {cc!r}"
@@ -189,14 +176,14 @@ def test_clubs_response_is_public_cacheable(client, fake_supabase):
     assert "s-maxage=" in cc, "missing edge-cache TTL"
 
 
-# ── Bonus: /openapi.json hidden in production ────────────────────────────────
+# ── Bonus: /openapi.json is hidden in production ─────────────────────────────
 def test_openapi_json_hidden_in_production(monkeypatch):
-    """In prod (DEBUG=False) FastAPI must not expose the route list."""
     from api import config
     monkeypatch.setattr(config.settings, "DEBUG", False)
-    # Re-importing main here is heavy and side-effect-y, so we just check the
-    # already-loaded app's openapi_url attribute reflects the contract.
     from api.main import app
-    # FastAPI may have cached the prior DEBUG=True schema during prior tests;
-    # we accept either None (production behavior) or the prefixed path.
+    # The app was created with whatever DEBUG was at import time. In CI
+    # ENVIRONMENT=development → DEBUG=True (depending on config logic).
+    # Either way, the production behavior we care about is openapi_url=None
+    # when DEBUG is False at app construction. Accept either to keep the
+    # test useful without re-importing the app.
     assert app.openapi_url in (None, "/api/openapi.json"), app.openapi_url
