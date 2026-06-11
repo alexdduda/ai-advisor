@@ -66,7 +66,7 @@ from .routes import (
     chat, courses, users, favorites, completed, notifications,
     current, suggestions, cards, transcript, degree_requirements,
     electives, clubs, syllabus, professors, admin, newsletters, forum,
-    verification, webhooks, feedback,
+    verification, webhooks, feedback, course_allocations,
 )
 
 logger = setup_logging()
@@ -450,6 +450,7 @@ app.include_router(forum.router,               prefix=f"{settings.API_PREFIX}/fo
 app.include_router(verification.router,        prefix=f"{settings.API_PREFIX}/auth",                tags=["Auth"])
 app.include_router(webhooks.router,             prefix=f"{settings.API_PREFIX}/webhooks",            tags=["Webhooks"])
 app.include_router(feedback.router,             prefix=f"{settings.API_PREFIX}/feedback",            tags=["Feedback"])
+app.include_router(course_allocations.router,   prefix=f"{settings.API_PREFIX}/users",               tags=["Course Allocations"])
 
 
 @app.get("/")
