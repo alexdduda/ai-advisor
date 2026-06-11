@@ -25,6 +25,14 @@ logger = logging.getLogger(__name__)
 
 # "SUBJ CAT" — 2–6 letters, space, 3 digits + optional trailing letter.
 _CODE_RE = re.compile(r"^[A-Z]{2,6}\s\d{3}[A-Z]?$")
+# program_key is a slug like "anthropology_minor" — lowercase alphanumerics,
+# underscores and hyphens only. Validated so we never store arbitrary text.
+_PROGKEY_RE = re.compile(r"^[a-z0-9][a-z0-9_-]{0,118}$")
+
+# Cap allocations per user. A real student allocates a handful of courses;
+# anything past this is abuse / a bug, and it bounds the row count an
+# attacker can create against their own account.
+_MAX_ALLOCATIONS_PER_USER = 300
 
 
 def _normalize_code(raw: str) -> str:
@@ -74,16 +82,39 @@ async def set_allocation(
     code = _normalize_code(body.course_code)
     if not _CODE_RE.match(code):
         raise HTTPException(status_code=422, detail="Invalid course code")
-    program_key = body.program_key.strip()
+    program_key = (body.program_key or "").strip().lower()
+    if not _PROGKEY_RE.match(program_key):
+        raise HTTPException(status_code=422, detail="Invalid program key")
 
     try:
         sb = get_supabase()
+
+        # Enforce a per-user cap. Only counts against the limit when this is a
+        # NEW course_code (an update to an existing row doesn't grow the table).
+        existing = (
+            sb.table("course_allocations")
+            .select("id", count="exact")
+            .eq("user_id", user_id)
+            .execute()
+        )
+        current_count = existing.count if existing.count is not None else len(existing.data or [])
+        already_has = any(
+            (r.get("course_code") == code) for r in (existing.data or [])
+        ) if existing.data else False
+        if not already_has and current_count >= _MAX_ALLOCATIONS_PER_USER:
+            raise HTTPException(
+                status_code=409,
+                detail=f"Allocation limit reached ({_MAX_ALLOCATIONS_PER_USER}).",
+            )
+
         # Upsert on the (user_id, course_code) unique constraint.
         sb.table("course_allocations").upsert(
             {"user_id": user_id, "course_code": code, "program_key": program_key},
             on_conflict="user_id,course_code",
         ).execute()
         return {"ok": True, "course_code": code, "program_key": program_key}
+    except HTTPException:
+        raise
     except Exception as exc:
         logger.exception("set_allocation failed: %s", exc)
         raise HTTPException(status_code=500, detail="Failed to save allocation")
