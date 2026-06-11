@@ -617,9 +617,6 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
                   {TYPE_LABELS[programDetail.program_type]}
                 </span>
                 <h1 className="drv-detail-title">{programDetail.name}</h1>
-                {programDetail.description && (
-                  <p className="drv-detail-desc">{programDetail.description}</p>
-                )}
               </div>
               <div className="drv-detail-meta">
                 <div className="drv-meta-card">
@@ -640,6 +637,12 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
                 )}
               </div>
             </div>
+
+            {/* Full-width description — nothing sits to its right, so let it
+                use the entire content area for readability. */}
+            {programDetail.description && (
+              <p className="drv-detail-desc">{programDetail.description}</p>
+            )}
 
             {progress && progress.transferBlockedCredits > 0 && (
               <div className="drv-progress-wrap">
