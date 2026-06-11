@@ -1,14 +1,23 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useLanguage } from '../../contexts/PreferencesContext'
 import { getCreditsRequired } from '../../utils/mcgillData'
-import { FaBook, FaBolt, FaCheck, FaBullseye, FaRegCircle, FaGraduationCap, FaLightbulb, FaFlag } from 'react-icons/fa'
+import { FaBook, FaBolt, FaCheck, FaBullseye, FaRegCircle, FaGraduationCap, FaLightbulb, FaFlag, FaTimes } from 'react-icons/fa'
 import { GiPartyPopper } from 'react-icons/gi'
 import { LuBicepsFlexed } from 'react-icons/lu'
 import './DegreeProgressTracker.css'
 
 export default function DegreeProgressTracker({ completedCourses = [], profile = {} }) {
   const { t } = useLanguage()
-  
+
+  // Dismissible "head start" tip — remembers the choice across visits.
+  const [headStartDismissed, setHeadStartDismissed] = useState(
+    () => { try { return localStorage.getItem('dp_dismiss_headstart') === '1' } catch { return false } }
+  )
+  const dismissHeadStart = () => {
+    setHeadStartDismissed(true)
+    try { localStorage.setItem('dp_dismiss_headstart', '1') } catch {}
+  }
+
   const stats = useMemo(() => {
     // Calculate completed course credits
     const completedCredits = completedCourses.reduce((sum, course) => {
@@ -139,10 +148,13 @@ export default function DegreeProgressTracker({ completedCourses = [], profile =
         })}
       </div>
 
-      {stats.advancedStandingCredits > 0 && (
+      {stats.advancedStandingCredits > 0 && !headStartDismissed && (
         <div className="info-note">
           <span className="info-icon"><FaLightbulb /></span>
           <span>{t('degree.creditsHeadStart').replace('{count}', Math.round(stats.advancedStandingCredits))}</span>
+          <button className="info-note-close" onClick={dismissHeadStart} aria-label="Dismiss" title="Dismiss">
+            <FaTimes />
+          </button>
         </div>
       )}
     </div>

@@ -309,6 +309,24 @@
   color: #fde68a;
 }
 
+.info-note-close {
+  margin-left: auto;
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.55;
+  padding: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: opacity 0.15s, background 0.15s;
+}
+.info-note-close:hover { opacity: 1; background: rgba(0,0,0,0.08); }
+[data-theme="dark"] .info-note-close:hover { background: rgba(255,255,255,0.12); }
+
 .info-icon {
   font-size: 18px;
   color: var(--warning-primary);

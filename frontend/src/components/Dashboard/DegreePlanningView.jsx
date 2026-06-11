@@ -4,7 +4,7 @@ import {
   FaBullseye, FaFileUpload, FaChevronDown, FaChevronUp,
   FaGraduationCap, FaListAlt, FaLightbulb, FaExternalLinkAlt,
   FaChevronRight, FaCircle, FaBolt, FaPlane, FaInfoCircle,
-  FaExclamationTriangle,
+  FaExclamationTriangle, FaTimes,
 } from 'react-icons/fa'
 import { useLanguage } from '../../contexts/PreferencesContext'
 import { useCourseDetail } from '../../contexts/CourseDetailContext'
@@ -14,6 +14,7 @@ import DegreeRequirementsView from './DegreeRequirementsView'
 import StudyAbroadView from './StudyAbroadView'
 import AdvisingResourcesView from './AdvisingResourcesView'
 import { readCache, writeCache } from '../../lib/userDataCache'
+import { matchCourse, wildcardBand } from '../../utils/requirementMatch'
 import './DegreePlanningView.css'
 
 // Fix double /api/api bug
@@ -197,13 +198,6 @@ function toProgramKey(name, type = 'major', faculty = '') {
   return `${slug}_${type}`
 }
 
-function matchCourse(req, userCourses) {
-  if (!req.catalog) return null
-  const key = `${req.subject} ${req.catalog}`.toUpperCase()
-  return userCourses.find(c =>
-    `${c.subject || ''} ${c.catalog || ''}`.toUpperCase() === key
-  ) || null
-}
 
 // Transfer credits show as done but do NOT count toward credits
 function normalizeCode(code) {
@@ -687,21 +681,32 @@ function ProgramSection({ prog, completedCourses, currentCourses, advStanding, o
     }
   }))
 
-  // Phase 2: wildcard blocks — blocks with min_level or null-catalog entries
-  // Count any matching user course not already counted above
+  // Phase 2: wildcard blocks — min_level, null-catalog entries, OR
+  // placeholder courses like "Any 200-level X course". Count any matching
+  // user course not already counted above.
   prog.blocks?.forEach(b => {
-    const hasWildcard = (b.courses?.some(c => !c.catalog)) || b.min_level
-    if (!hasWildcard) return
+    const wildcardBands = (b.courses || []).map(c => wildcardBand(c)).filter(Boolean)
+    const legacyApplies = (b.courses?.some(c => !c.catalog)) || !!b.min_level
+    if (!legacyApplies && wildcardBands.length === 0) return
     const blockSubjects = new Set(b.courses?.map(c => c.subject?.toUpperCase()).filter(Boolean))
     const minLevel = b.min_level || 0
+    const blockNeeded = b.credits_needed || Infinity
+    let blockWildcardEarned = 0
     for (const uc of [...completedCourses, ...currentCourses]) {
+      if (blockWildcardEarned >= blockNeeded) break
       const ucKey = `${uc.subject} ${uc.catalog}`.toUpperCase()
       if (seenDbKeys.has(ucKey) || seenUserKeys.has(ucKey)) continue
-      if (!blockSubjects.has(uc.subject?.toUpperCase())) continue
-      if (minLevel > 0) { const lvl = parseInt(uc.catalog); if (isNaN(lvl) || lvl < minLevel) continue }
+      const ucSubj = (uc.subject || '').toUpperCase()
+      const ucLvl  = parseInt(uc.catalog)
+      const inBand = wildcardBands.some(bd =>
+        bd.subject === ucSubj && !isNaN(ucLvl) && ucLvl >= bd.min && ucLvl <= bd.max)
+      let inLegacy = legacyApplies && blockSubjects.has(ucSubj)
+      if (inLegacy && minLevel > 0 && (isNaN(ucLvl) || ucLvl < minLevel)) inLegacy = false
+      if (!(inBand || inLegacy)) continue
       // If overlapping course allocated to a different program, skip it
       if (overlapKeys.has(ucKey) && courseAllocations[ucKey] && courseAllocations[ucKey] !== progKey) continue
       earnedCredits += parseFloat(uc.credits || 3)
+      blockWildcardEarned += parseFloat(uc.credits || 3)
       seenUserKeys.add(ucKey)
     }
   })
@@ -732,19 +737,35 @@ function ProgramSection({ prog, completedCourses, currentCourses, advStanding, o
         })
         const exactKeys = new Set(blockCourses.map(c => `${c.subject} ${c.catalog}`.toUpperCase()))
         const creditsNeeded = block.credits_needed || 0
-        let creditsEarned = exactMatched.reduce((s, c) => s + parseFloat(c.credits || 3), 0)
+        let creditsEarned = exactMatched
+          .filter(c => !wildcardBand(c))   // wildcard placeholders counted below, not here
+          .reduce((s, c) => s + parseFloat(c.credits || 3), 0)
 
-        // Wildcard: blocks with null-catalog entries or min_level count matching user courses
-        const hasWildcard = (block.courses?.some(c => !c.catalog)) || block.min_level
+        // Wildcard credit counting. A block is "wildcard" if it has:
+        //   • a null-catalog placeholder, OR
+        //   • a min_level set, OR
+        //   • a placeholder like "Any 200-level X course" (catalog "200")
+        // For each, count user courses that fall in the relevant band until
+        // the block's credit requirement is met.
+        const wildcardBands = (block.courses || []).map(c => wildcardBand(c)).filter(Boolean)
+        const legacyApplies = (block.courses?.some(c => !c.catalog)) || !!block.min_level
+        const hasWildcard = legacyApplies || wildcardBands.length > 0
         if (hasWildcard && creditsEarned < creditsNeeded) {
           const blockSubjects = new Set(block.courses?.map(c => c.subject?.toUpperCase()).filter(Boolean))
           const minLevel = block.min_level || 0
           for (const uc of [...completedCourses, ...currentCourses]) {
             if (creditsEarned >= creditsNeeded) break
-            const ucKey = `${uc.subject} ${uc.catalog}`.toUpperCase()
+            const ucKey  = `${uc.subject} ${uc.catalog}`.toUpperCase()
             if (exactKeys.has(ucKey)) continue
-            if (!blockSubjects.has(uc.subject?.toUpperCase())) continue
-            if (minLevel > 0) { const lvl = parseInt(uc.catalog); if (isNaN(lvl) || lvl < minLevel) continue }
+            const ucSubj = (uc.subject || '').toUpperCase()
+            const ucLvl  = parseInt(uc.catalog)
+            // Match an explicit wildcard band ("Any 200-level X course")…
+            const inBand = wildcardBands.some(b =>
+              b.subject === ucSubj && !isNaN(ucLvl) && ucLvl >= b.min && ucLvl <= b.max)
+            // …or the legacy subject(+min_level) rule for null-catalog blocks.
+            let inLegacy = legacyApplies && blockSubjects.has(ucSubj)
+            if (inLegacy && minLevel > 0 && (isNaN(ucLvl) || ucLvl < minLevel)) inLegacy = false
+            if (!(inBand || inLegacy)) continue
             creditsEarned += parseFloat(uc.credits || 3)
           }
         }
@@ -793,8 +814,11 @@ function ProgramSection({ prog, completedCourses, currentCourses, advStanding, o
                 {block.courses?.map(c => {
                   const key = `${c.subject} ${c.catalog}`.toUpperCase()
                   const isTransfer = matchTransfer(c, advStanding)
-                  const done = isTransfer || completedCourses.some(uc => `${uc.subject} ${uc.catalog}`.toUpperCase() === key)
-                  const taking = !done && currentCourses.some(uc => `${uc.subject} ${uc.catalog}`.toUpperCase() === key)
+                  // matchCourse handles wildcard placeholders ("Any 200-level
+                  // X course") as well as exact codes, so a 209 fills the 200
+                  // placeholder's radio.
+                  const done = isTransfer || !!matchCourse(c, completedCourses)
+                  const taking = !done && !!matchCourse(c, currentCourses)
                   const isOverlap = c.catalog && overlapKeys.has(key) && (done || taking)
                   const allocatedTo = isOverlap ? (courseAllocations[key] || null) : null
                   const allocatedElsewhere = isOverlap && allocatedTo && allocatedTo !== progKey
@@ -863,6 +887,15 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
   // round-tripped.
   const _progCache = (key) => readCache(`degree_prog_${key}`, profile?.id, null)
   const _writeProgCache = (key, data) => writeCache(`degree_prog_${key}`, profile?.id, data)
+
+  // Dismissible "Foundation Year Waived" banner — persists across visits.
+  const [foundationDismissed, setFoundationDismissed] = useState(
+    () => { try { return localStorage.getItem('dp_dismiss_foundation') === '1' } catch { return false } }
+  )
+  const dismissFoundation = () => {
+    setFoundationDismissed(true)
+    try { localStorage.setItem('dp_dismiss_foundation', '1') } catch {}
+  }
 
   const [programData, setProgramData]         = useState(null)
   const [minorData, setMinorData]             = useState(null)
@@ -1461,13 +1494,16 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
           </div>
 
           {/* Foundation year waived banner */}
-          {foundationWaived && (
+          {foundationWaived && !foundationDismissed && (
             <div className="drv-foundation-waived-banner">
               <span>✓</span>
               <span>
                 <strong style={{ color: 'var(--text-primary)' }}>{t('dp.foundationWaived')}</strong> — {t('dp.foundationWaivedDesc').replace('{count}', transferCredits)}
                 {transferCredits < 30 ? t('dp.foundationWaivedNote') : ''}.
               </span>
+              <button className="dp-banner-close" onClick={dismissFoundation} aria-label="Dismiss" title="Dismiss">
+                <FaTimes />
+              </button>
             </div>
           )}
 

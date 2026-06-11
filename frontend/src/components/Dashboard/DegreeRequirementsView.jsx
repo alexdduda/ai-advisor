@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useLanguage } from '../../contexts/PreferencesContext'
 import { useCourseDetail } from '../../contexts/CourseDetailContext'
 import { supabase } from '../../lib/supabase'
+import { matchCourse as matchCourseWildcard } from '../../utils/requirementMatch'
 import {
   FaGraduationCap, FaChevronDown, FaChevronUp, FaChevronRight,
   FaCheckCircle, FaCircle, FaStar, FaSearch,
@@ -80,14 +81,9 @@ function normalizeFaculty(f) {
   return FACULTY_MAP[f] || f || ''
 }
 
-function matchCourse(req, userCourses) {
-  if (!req.catalog) return null
-  const key = `${req.subject} ${req.catalog}`.toUpperCase()
-  return userCourses.find(c => {
-    const cKey = `${c.subject || ''} ${c.catalog || ''}`.toUpperCase()
-    return cKey === key
-  }) || null
-}
+// Wildcard-aware matcher — handles "Any 200-level X course" placeholder
+// requirements as well as exact codes. See utils/requirementMatch.js.
+const matchCourse = matchCourseWildcard
 
 function normalizeCode(code) {
   return (code || '').toUpperCase()
