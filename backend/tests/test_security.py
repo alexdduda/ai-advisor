@@ -160,6 +160,47 @@ def test_data_export_requires_self(client, fake_supabase):
     assert resp.status_code == 403
 
 
+# ── Course allocations: owner-only + input validation ───────────────────────
+def test_course_allocations_get_requires_self(client, fake_supabase):
+    resp = client.get("/api/users/user-other/course-allocations", headers=auth("user-1"))
+    assert resp.status_code == 403
+
+
+def test_course_allocations_put_requires_self(client, fake_supabase):
+    resp = client.put(
+        "/api/users/user-other/course-allocations",
+        headers=auth("user-1"),
+        json={"course_code": "ANTH 209", "program_key": "anthropology_minor"},
+    )
+    assert resp.status_code == 403
+
+
+def test_course_allocations_put_rejects_bad_code(client, fake_supabase):
+    resp = client.put(
+        "/api/users/user-1/course-allocations",
+        headers=auth("user-1"),
+        json={"course_code": "'; DROP TABLE users; --", "program_key": "anthropology_minor"},
+    )
+    assert resp.status_code == 422
+
+
+def test_course_allocations_put_rejects_bad_program_key(client, fake_supabase):
+    resp = client.put(
+        "/api/users/user-1/course-allocations",
+        headers=auth("user-1"),
+        json={"course_code": "ANTH 209", "program_key": "<script>alert(1)</script>"},
+    )
+    assert resp.status_code == 422
+
+
+def test_course_allocations_delete_requires_self(client, fake_supabase):
+    resp = client.delete(
+        "/api/users/user-other/course-allocations/ANTH%20209",
+        headers=auth("user-1"),
+    )
+    assert resp.status_code == 403
+
+
 # ── Perf: /api/clubs must be public-cacheable on the CDN edge ────────────────
 def test_clubs_response_is_public_cacheable(client, fake_supabase):
     """If a future refactor reintroduces per-user data, this test fails
