@@ -353,6 +353,7 @@ async def delete_user_account(user_id: str, req: Request, current_user_id: str =
             ("chat_messages",      "user_id"),   # was "chat_history" (WRONG)
             ("favorites",          "user_id"),   # was MISSING
             ("prof_suggestions",   "user_id"),   # was MISSING
+            ("course_allocations", "user_id"),   # degree-planning allocations
             ("user_clubs",         "user_id"),
             ("current_courses",    "user_id"),
             ("completed_courses",  "user_id"),
@@ -425,6 +426,7 @@ USER_DATA_TABLES = [
     ("forum_post_likes",       "user_id"),
     ("forum_reply_likes",      "user_id"),
     ("prof_suggestions",       "user_id"),
+    ("course_allocations",     "user_id"),
 ]
 
 

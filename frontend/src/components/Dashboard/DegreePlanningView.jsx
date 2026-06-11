@@ -14,6 +14,7 @@ import DegreeRequirementsView from './DegreeRequirementsView'
 import StudyAbroadView from './StudyAbroadView'
 import AdvisingResourcesView from './AdvisingResourcesView'
 import { readCache, writeCache } from '../../lib/userDataCache'
+import { usersAPI } from '../../lib/api'
 import { matchCourse, wildcardBand, blockWildcardMatches } from '../../utils/requirementMatch'
 import './DegreePlanningView.css'
 
@@ -950,8 +951,33 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
       const c = { ...courseAllocations }; delete c[courseKey]; return c
     })()
     setCourseAllocations(next)
+    // localStorage is the instant-paint cache; the backend is the source of
+    // truth so the choice follows the user across devices.
     localStorage.setItem('dp_course_allocations', JSON.stringify(next))
+    if (profile?.id) {
+      if (programKey) {
+        usersAPI.setCourseAllocation(profile.id, courseKey, programKey).catch(() => {})
+      } else {
+        usersAPI.deleteCourseAllocation(profile.id, courseKey).catch(() => {})
+      }
+    }
   }
+
+  // Hydrate allocations from the backend on mount (merging over the
+  // localStorage cache). Server wins on conflict — it's the source of truth.
+  useEffect(() => {
+    if (!profile?.id) return
+    let alive = true
+    usersAPI.getCourseAllocations(profile.id).then(server => {
+      if (!alive || !server || typeof server !== 'object') return
+      setCourseAllocations(prev => {
+        const merged = { ...prev, ...server }
+        try { localStorage.setItem('dp_course_allocations', JSON.stringify(merged)) } catch {}
+        return merged
+      })
+    }).catch(() => { /* keep localStorage copy on failure */ })
+    return () => { alive = false }
+  }, [profile?.id])
 
   const advStanding = profile?.advanced_standing || []
 

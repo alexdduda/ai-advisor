@@ -53,6 +53,7 @@
 --                               LLM budget, anomaly counters, verify throttle)
 --   feedback                  — user-submitted feedback (2026_06_03)
 --   seen_resend_events        — webhook idempotency dedup (2026_06_03)
+--   course_allocations        — degree-planning course→program choices (2026_06_11)
 --
 -- Columns marked * are sensitive and stripped from API responses /
 -- revoked from anon+authenticated roles (see migrations + supabase_client.py).

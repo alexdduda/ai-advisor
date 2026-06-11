@@ -246,6 +246,26 @@ export const usersAPI = {
     const response = await api.get(`/users/${userId}/export`)
     return response.data
   },
+
+  // ── Degree-planning course allocations ───────────────────────────────────
+  // Which program a student counts a given course toward. Server-persisted
+  // so it follows them across devices.
+  getCourseAllocations: async (userId) => {
+    const response = await api.get(`/users/${userId}/course-allocations`)
+    return response.data?.allocations || {}
+  },
+  setCourseAllocation: async (userId, courseCode, programKey) => {
+    const response = await api.put(`/users/${userId}/course-allocations`, {
+      course_code: courseCode, program_key: programKey,
+    })
+    return response.data
+  },
+  deleteCourseAllocation: async (userId, courseCode) => {
+    const response = await api.delete(
+      `/users/${userId}/course-allocations/${encodeURIComponent(courseCode)}`
+    )
+    return response.data
+  },
 }
 
 // Auth flags API
