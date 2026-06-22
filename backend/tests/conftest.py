@@ -201,7 +201,18 @@ def fake_supabase(monkeypatch):
     # at module load time, binding the original function into its own
     # namespace. Override those bindings too.
     for module_path in (
-        "api.routes.clubs",
+        "api.routes.clubs.discovery",
+        "api.routes.clubs.membership",
+        "api.routes.clubs.members",
+        "api.routes.clubs.events",
+        "api.routes.clubs.announcements",
+        "api.routes.clubs.subscriptions",
+        "api.routes.clubs.managers",
+        "api.routes.clubs.submissions",
+        "api.routes.clubs.activity",
+        "api.routes.clubs.cron",
+        "api.routes.clubs.permissions",
+        "api.routes.clubs.email",
         "api.routes.users",
         "api.routes.verification",
         "api.routes.forum",

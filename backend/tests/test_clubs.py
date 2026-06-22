@@ -300,6 +300,23 @@ def test_submit_club_escapes_free_text(client, fake_supabase):
     assert "<script>" not in stored["description"]
 
 
+def test_submit_club_generates_action_tokens(client, fake_supabase):
+    """Regression test for the email.py import-fix: _generate_action_tokens
+    used to raise NameError on every call (missing `import secrets` /
+    datetime / get_supabase), silently caught here, so token_generated was
+    always False and the admin approval email was never actually sent.
+    Tokens must now actually be generated and stored on the submission."""
+    resp = client.post(
+        "/api/clubs/submit",
+        json={"name": "Club", "description": "desc", "executive_emails": "a@mail.mcgill.ca"},
+        headers=auth("user-1"),
+    )
+    body = resp.json()
+    assert body["token_generated"] is True
+    stored = fake_supabase.table("club_submissions").execute().data[0]
+    assert stored.get("approve_token") and stored.get("reject_token")
+
+
 def test_submit_club_rejects_non_mcgill(client, fake_supabase):
     """KNOWN BUG (pinned, not endorsed): submit_club has no `except
     HTTPException: raise` before its generic `except Exception`, so the
@@ -438,24 +455,60 @@ def test_get_club_managers_includes_creator(client, fake_supabase):
     assert body["managers"][0]["user_id"] == "owner-1"
 
 
-def test_add_club_manager_by_email(client, fake_supabase):
+def test_add_club_manager_endpoint_removed(client, fake_supabase):
+    """docs/adr/0002: add_club_manager (the legacy club_managers-table write
+    path) is dead code — never called by the frontend — and is deleted."""
     fake_supabase.set_table("clubs", [{"id": "c1", "created_by": "owner-1"}])
-    fake_supabase.set_table("users", [{"id": "user-2", "email": "new.manager@mail.mcgill.ca", "username": "newmgr"}])
     resp = client.post(
         "/api/clubs/c1/managers", json={"email": "new.manager@mail.mcgill.ca"}, headers=auth("owner-1"),
     )
-    assert resp.status_code == 200
-    assert resp.json()["manager"]["user_id"] == "user-2"
-    assert fake_supabase.table("club_managers").execute().data[0]["user_id"] == "user-2"
+    assert resp.status_code == 405
 
 
-def test_add_club_manager_unknown_email_404s(client, fake_supabase):
+def test_manager_invite_accept_then_shows_up_in_get_club_managers(client, fake_supabase):
+    """The bug docs/adr/0002 fixes: a Manager added via the only working
+    creation path (invite accept) must actually appear in the manager list."""
     fake_supabase.set_table("clubs", [{"id": "c1", "created_by": "owner-1"}])
-    fake_supabase.set_table("users", [])
-    resp = client.post(
-        "/api/clubs/c1/managers", json={"email": "nobody@mail.mcgill.ca"}, headers=auth("owner-1"),
+    fake_supabase.set_table("users", [{"id": "owner-1", "email": "owner@mail.mcgill.ca"},
+                                       {"id": "user-2", "email": "new.manager@mail.mcgill.ca"}])
+    fake_supabase.set_table("club_manager_requests", [
+        {"id": "inv-1", "club_id": "c1", "target_user_id": "user-2", "status": "pending"},
+    ])
+    accept = client.post(
+        "/api/clubs/manager-requests/inv-1/action", json={"action": "accept"}, headers=auth("user-2"),
     )
-    assert resp.status_code == 404
+    assert accept.status_code == 200
+
+    resp = client.get("/api/clubs/c1/managers", headers=auth("owner-1"))
+    assert resp.status_code == 200
+    user_ids = {m["user_id"] for m in resp.json()["managers"]}
+    assert user_ids == {"owner-1", "user-2"}
+    roles = {m["user_id"]: m["role"] for m in resp.json()["managers"]}
+    assert roles["user-2"] == "manager"
+    assert roles["owner-1"] == "owner"
+
+
+def test_remove_club_manager_revokes_permission(client, fake_supabase):
+    """The other half of the bug fix: removing a Manager added via the
+    invite flow must actually revoke their access, not silently no-op."""
+    fake_supabase.set_table("clubs", [{"id": "c1", "created_by": "owner-1"}])
+    fake_supabase.set_table("user_clubs", [{"id": "uc1", "club_id": "c1", "user_id": "user-2", "role": "admin"}])
+
+    resp = client.delete("/api/clubs/c1/managers/user-2", headers=auth("owner-1"))
+    assert resp.status_code == 200
+
+    membership = fake_supabase.table("user_clubs").execute().data[0]
+    assert membership["role"] == "member"
+
+    # No longer a manager, so manager-only actions are now refused
+    managers_resp = client.get("/api/clubs/c1/managers", headers=auth("user-2"))
+    assert managers_resp.status_code == 403
+
+
+def test_remove_club_manager_cannot_remove_owner(client, fake_supabase):
+    fake_supabase.set_table("clubs", [{"id": "c1", "created_by": "owner-1"}])
+    resp = client.delete("/api/clubs/c1/managers/owner-1", headers=auth("owner-1"))
+    assert resp.status_code == 400
 
 
 def test_remove_club_manager_requires_owner_or_global_admin(client, fake_supabase):
@@ -759,8 +812,8 @@ def test_faculty_stats_buckets_small_counts_for_large_clubs(client, fake_supabas
 # ── email-based admin action (HTML response) ──────────────────────────────────
 
 def test_admin_email_action_invalid_token_shows_expired_page(client, monkeypatch):
-    from api.routes import clubs as clubs_module
-    monkeypatch.setattr(clubs_module, "_verify_action_token", lambda token: (None, None))
+    from api.routes.clubs import email as email_module
+    monkeypatch.setattr(email_module, "_verify_action_token", lambda token: (None, None))
     resp = client.get("/api/clubs/admin/action", params={"token": "bogus"})
     assert resp.status_code == 200
     assert "Link Expired" in resp.text
@@ -768,8 +821,8 @@ def test_admin_email_action_invalid_token_shows_expired_page(client, monkeypatch
 
 
 def test_admin_email_action_approve_creates_club_and_renders_success(client, fake_supabase, monkeypatch):
-    from api.routes import clubs as clubs_module
-    monkeypatch.setattr(clubs_module, "_verify_action_token", lambda token: ("s1", "approved"))
+    from api.routes.clubs import email as email_module
+    monkeypatch.setattr(email_module, "_verify_action_token", lambda token: ("s1", "approved"))
     fake_supabase.set_table("club_submissions", [
         {"id": "s1", "name": "New Club", "description": "desc", "status": "pending", "submitted_by": "user-1"},
     ])
@@ -781,8 +834,8 @@ def test_admin_email_action_approve_creates_club_and_renders_success(client, fak
 
 
 def test_admin_email_action_already_processed(client, fake_supabase, monkeypatch):
-    from api.routes import clubs as clubs_module
-    monkeypatch.setattr(clubs_module, "_verify_action_token", lambda token: ("s1", "approved"))
+    from api.routes.clubs import email as email_module
+    monkeypatch.setattr(email_module, "_verify_action_token", lambda token: ("s1", "approved"))
     fake_supabase.set_table("club_submissions", [
         {"id": "s1", "name": "New Club", "status": "approved"},
     ])
