@@ -61,3 +61,17 @@ frontend/src/
 - **Fix degree requirements**: edit `backend/api/seeds/<faculty>_degree_requirements.py` → reseed
 - **Add a route**: create `backend/api/routes/<name>.py` → register in `main.py`
 - **Change Claude model**: set `CLAUDE_MODEL` / `CLAUDE_CARDS_MODEL` in env or `config.py`
+
+## Agent skills
+
+### Issue tracker
+
+Issues are tracked as GitHub Issues on `damianphim/symbolos` (via the `gh` CLI). External PRs are not pulled into triage. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default label vocabulary (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: one `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
