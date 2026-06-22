@@ -1,12 +1,23 @@
 """
-clubs_email.py — Email notification helpers for the clubs feature.
-Imported by clubs.py — kept separate to reduce file size.
+clubs/email.py — Email notification helpers for the clubs feature.
+Kept separate from the route modules to reduce file size.
+
+FIX: this file was missing `import secrets`, the datetime imports, and
+get_supabase entirely. _generate_action_tokens and _verify_action_token
+both raise NameError on every call, silently swallowed by their own/callers'
+try/except — meaning the whole email-based club-approval flow (admin gets
+an email with Approve/Reject buttons) has never actually worked. The only
+functioning approval path has been admin_review_submission (the
+cron-secret-gated PATCH endpoint). See backend/tests/test_clubs.py for the
+regression tests added alongside this fix.
 """
-from typing import Optional
+import secrets
 import logging
+from datetime import datetime, timedelta, timezone
 from html import escape
 
-from ..config import settings
+from ...config import settings
+from ...utils.supabase_client import get_supabase
 
 logger = logging.getLogger(__name__)
 
@@ -465,9 +476,6 @@ def _send_submitter_notification_email(contact_email: str, club_name: str, statu
         logger.exception(f"Failed to send submitter notification email: {e}")
 
 
-# ── Routes ────────────────────────────────────────────────────────────────────
-
-
 def _send_manager_invite_email(
     target_email: str,
     target_first_name: str,
@@ -475,7 +483,7 @@ def _send_manager_invite_email(
     requester_first_name: str,
     message: str = "",
 ):
-    """Email a Symbolos user when they're invited to be a club manager/admin.
+    """Email a Symbolos user when they're invited to be a club Manager.
     The recipient still sees the invite in their Clubs tab — this is an
     out-of-band heads-up so they don't miss it if they don't open the site
     for a few days."""

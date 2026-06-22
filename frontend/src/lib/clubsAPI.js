@@ -357,15 +357,6 @@ const clubsAPI = {
     return { managers: [], count: 0 }
   },
 
-  async addClubManager(clubId, email) {
-    const res = await fetch(`${BASE_URL}/api/clubs/${clubId}/managers`, {
-      method: 'POST', headers: await authHeaders(),
-      body: JSON.stringify({ email }),
-    })
-    if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.detail || 'Failed to add manager') }
-    return res.json()
-  },
-
   async removeClubManager(clubId, managerUserId) {
     const res = await fetch(`${BASE_URL}/api/clubs/${clubId}/managers/${managerUserId}`, {
       method: 'DELETE', headers: await authHeaders(),
