@@ -45,11 +45,29 @@ export const AuthProvider = ({ children }) => {
       const timeoutPromise = new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Profile load timeout')), 15000)
       )
+      const fetchProfile = () => Promise.race([usersAPI.getUser(userId), timeoutPromise])
 
-      const { user: userProfile } = await Promise.race([
-        usersAPI.getUser(userId),
-        timeoutPromise,
-      ])
+      let result
+      try {
+        result = await fetchProfile()
+      } catch (err) {
+        // Self-heal: signUp()'s create-profile call silently fails when email
+        // confirmation is required, because no session/JWT exists yet at that
+        // point in the flow (Supabase withholds the session until the address
+        // is confirmed). Now that we're authenticated, recreate the row and
+        // retry once — same pattern as ProfileSetup.jsx's ensureUser().
+        if (err.response?.status !== 404) throw err
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session?.user?.email) throw err
+        try {
+          await usersAPI.createUser({ id: userId, email: session.user.email })
+        } catch (createErr) {
+          if (createErr.response?.status !== 409) throw err
+        }
+        result = await fetchProfile()
+      }
+
+      const { user: userProfile } = result
 
       if (mountedRef.current) {
         setProfile(userProfile)
@@ -252,13 +270,21 @@ export const AuthProvider = ({ children }) => {
   }
 
   // ── resendVerificationEmail ───────────────────────────────────────────────
-  // `email` arg kept for backwards-compat with Login.jsx callers but unused —
-  // the backend derives both user_id and email from the JWT.
-  // eslint-disable-next-line no-unused-vars
+  // Two different gates share this one button:
+  //  - Post-login `email_verified` gate (Login forceVerify): a session
+  //    exists, so resend through our authenticated backend round-trip.
+  //  - Post-signup, pre-confirmation verify screen: Supabase withholds the
+  //    session until the address is confirmed, so there's no JWT to call our
+  //    backend with — use Supabase's own session-free resend() API instead.
   const resendVerificationEmail = async (email) => {
     try {
-      if (!user?.id) throw new Error('No user session')
-      await authAPI.sendVerification()
+      if (user?.id) {
+        await authAPI.sendVerification()
+      } else {
+        if (!email) throw new Error('No user session')
+        const { error: resendError } = await supabase.auth.resend({ type: 'signup', email })
+        if (resendError) throw resendError
+      }
       return { error: null }
     } catch (err) {
       return { error: { message: err?.response?.data?.detail || err.message || 'Failed to send email' } }

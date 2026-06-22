@@ -40,7 +40,15 @@ function AppContent() {
   const _initialShowLogin = (() => {
     if (typeof window === 'undefined') return false
     const p = new URLSearchParams(window.location.search)
-    return p.has('signin') || p.has('verify_token') || window.location.hash === '#signin'
+    if (p.has('signin') || p.has('verify_token') || window.location.hash === '#signin') return true
+    // A signup mid email-verification survives reloads via this sessionStorage
+    // key (Login.jsx restores its own 'verify' mode from the same key) — without
+    // this check a remount here would otherwise fall through to the landing page.
+    try {
+      return !!sessionStorage.getItem('symbolos_verify')
+    } catch {
+      return false
+    }
   })()
   const [showLogin, setShowLogin] = useState(_initialShowLogin)
 
