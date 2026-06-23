@@ -277,10 +277,17 @@ async def check_verified(user_id: str):
         except Exception:
             pass
 
-    # Sync our column so authenticated profile fetches also see the flag.
+    # Sync both our column and Supabase Auth so signInWithPassword works.
     if verified:
         try:
             sb.table("users").update({"email_verified": True}).eq("id", user_id).execute()
+        except Exception:
+            pass
+        # Ensure email_confirmed_at is set in auth.users; without this Supabase
+        # rejects signInWithPassword with "Email not confirmed" even though our
+        # custom Resend flow already confirmed it.
+        try:
+            sb.auth.admin.update_user_by_id(user_id, {"email_confirm": True})
         except Exception:
             pass
 
@@ -330,6 +337,15 @@ async def verify_email(req: VerifyEmailRequest):
         }).eq("id", req.user_id).execute()
 
     with_retry("confirm_email", _confirm)
+
+    # Mirror the confirmation into Supabase Auth so signInWithPassword works
+    # after clicking this link (auth.users.email_confirmed_at was null because
+    # we use our own Resend flow, not Supabase's built-in mailer).
+    try:
+        get_supabase().auth.admin.update_user_by_id(req.user_id, {"email_confirm": True})
+    except Exception:
+        pass  # not fatal — our own column is already set
+
     logger.info("Email verified for user %s", req.user_id)
     return {"ok": True}
 
