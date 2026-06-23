@@ -87,6 +87,30 @@ function AppContent() {
 
   useEffect(() => { handleVerifyToken() }, [handleVerifyToken])
 
+  // Auto-continue after email verification.
+  // The original signup tab sits on the "verify your email" screen with a
+  // stale profile (email_verified === false). When the user clicks the link
+  // — which opens a *different* tab, or even a different browser from their
+  // mail client — nothing tells this tab the flag flipped. So while we're
+  // parked on the verify gate we poll for the verified status, and also
+  // refresh the instant the tab regains focus (user switching back after
+  // clicking the link). As soon as it flips true, the gate below falls
+  // through and the user lands on the dashboard with no manual refresh.
+  const needsVerify = !!(user && profile && profile.email_verified === false)
+  useEffect(() => {
+    if (!needsVerify) return
+    const started = Date.now()
+    const id = setInterval(() => {
+      // Stop after 15 min so a forgotten tab doesn't poll forever.
+      if (Date.now() - started > 15 * 60 * 1000) { clearInterval(id); return }
+      refreshProfile().catch(() => {})
+    }, 4000)
+    const onFocus = () => { refreshProfile().catch(() => {}) }
+    window.addEventListener('focus', onFocus)
+    return () => { clearInterval(id); window.removeEventListener('focus', onFocus) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [needsVerify])
+
   if (loading || !minLoadDone || verifying) return <Loading />
 
   if (verifyError) {
