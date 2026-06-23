@@ -24,7 +24,7 @@ const BASE_URL = API_URL.replace(/\/api\/?$/, '').replace(/\/$/, '')
 export default function ProfileSetup() {
   const { user, completeOnboarding } = useAuth()
   const { t, language, setLanguage } = useLanguage()
-  const { theme, setTheme, resolvedTheme } = useTheme()
+  const { setTheme, resolvedTheme } = useTheme()
 
   const [step, setStep] = useState('transcript')
 
@@ -51,7 +51,7 @@ export default function ProfileSetup() {
     try {
       const { track, Events } = await import('../../lib/telemetry')
       track(Events.OnboardingCompleted)
-    } catch {}
+    } catch { /* telemetry is best-effort */ }
     await completeOnboarding()
   }
 
@@ -213,6 +213,18 @@ export default function ProfileSetup() {
 
           {txStep === 'idle' && (
             <>
+              <div className="ps-howto">
+                <p className="ps-howto-title"><FaLightbulb className="ps-howto-icon" /> {t('ps.txHowToTitle')}</p>
+                <ol className="ps-howto-steps">
+                  <li>
+                    {t('ps.txHowToStep1')} <strong>{t('ps.txHowToStep1Link')}</strong> {t('ps.txHowToStep1Rest')}
+                  </li>
+                  <li>
+                    {t('ps.txHowToStep2')} <strong>{t('ps.txHowToStep2Bold')}</strong> {t('ps.txHowToStep2Rest')} <strong>{t('ps.txHowToStep2Rest2')}</strong>
+                  </li>
+                </ol>
+              </div>
+
               <div
                 className={`ps-dropzone ${dragOver ? 'ps-dropzone--over' : ''} ${file ? 'ps-dropzone--has-file' : ''}`}
                 onDragOver={e => { e.preventDefault(); setDragOver(true) }}
@@ -339,6 +351,21 @@ export default function ProfileSetup() {
 
         {sylStep === 'idle' && (
           <>
+            <div className="ps-howto">
+              <p className="ps-howto-title"><FaLightbulb className="ps-howto-icon" /> {t('ps.sylHowToTitle')}</p>
+              <ol className="ps-howto-steps">
+                <li>
+                  {t('ps.sylHowToStep1')} <strong>{t('ps.sylHowToStep1Link')}</strong> {t('ps.sylHowToStep1Rest')}
+                </li>
+                <li>
+                  {t('ps.sylHowToStep2')} <strong>{t('ps.sylHowToStep2Bold')}</strong> {t('ps.sylHowToStep2Rest')}
+                </li>
+                <li>
+                  {t('ps.sylHowToStep3')} <strong>{t('ps.sylHowToStep3Bold')}</strong>
+                </li>
+              </ol>
+            </div>
+
             <div className="ps-syl-info">
               <div className="ps-syl-info-item">
                 <FaCalendarAlt className="ps-syl-info-icon" />

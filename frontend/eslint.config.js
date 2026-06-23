@@ -29,6 +29,7 @@ export default defineConfig([
       'react-hooks/set-state-in-effect': 'off',
       'react-hooks/preserve-manual-memoization': 'off',
       'react-hooks/preserve-caught-error': 'off',
+      'react-hooks/static-components': 'off',
       'preserve-caught-error': 'off',
     },
   },

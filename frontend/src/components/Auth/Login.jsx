@@ -29,7 +29,9 @@ function Login({ forceVerify = false, email: propEmail = '', userId: propUserId 
   const [message, setMessage] = useState('')
   const [animating, setAnimating] = useState(false)
   const [pendingEmail, setPendingEmail] = useState(propEmail || storedVerify?.email || '')
-  const [pendingUserId] = useState(propUserId || storedVerify?.userId || '')
+  const [pendingUserId, setPendingUserId] = useState(propUserId || storedVerify?.userId || '')
+  // Message to surface *after* a mode transition (survives the mode-change effect's setMessage(''))
+  const pendingMsgRef = useRef('')
   const [resendCooldown, setResendCooldown] = useState(0)
   const [resendLoading, setResendLoading] = useState(false)
   const [legalModal, setLegalModal] = useState(null) // 'privacy' | 'terms' | 'about'
@@ -48,7 +50,13 @@ function Login({ forceVerify = false, email: propEmail = '', userId: propUserId 
   useEffect(() => {
     clearError()
     setErrors({})
-    setMessage('')
+    // If a message was queued to survive this mode transition, apply it now.
+    if (pendingMsgRef.current) {
+      setMessage(pendingMsgRef.current)
+      pendingMsgRef.current = ''
+    } else {
+      setMessage('')
+    }
   }, [mode, clearError])
 
   // Poll for verification completion when on the verify screen.
@@ -97,8 +105,9 @@ function Login({ forceVerify = false, email: propEmail = '', userId: propUserId 
           }
           // On success SIGNED_IN fires → AuthContext loads profile → app advances
         } else {
-          // Page was reloaded; password is gone. Show login with a success hint.
-          setMessage(t('auth.verifiedSignIn') || 'Email verified! Please sign in to continue.')
+          // Page was reloaded; password is gone. Queue message to survive the
+          // mode-change effect's setMessage(''), then fall back to login form.
+          pendingMsgRef.current = t('auth.verifiedSignIn') || 'Email verified! Please sign in to continue.'
           setMode('login')
         }
       } catch { /* network errors are silent — next tick retries */ }
@@ -164,6 +173,7 @@ function Login({ forceVerify = false, email: propEmail = '', userId: propUserId 
         else if (needsEmailVerification) {
           const uid = data?.user?.id || ''
           setPendingEmail(email)
+          if (uid) setPendingUserId(uid)
           setResendCooldown(60)
           sessionStorage.setItem('symbolos_verify', JSON.stringify({ email, userId: uid }))
           // Mark this user for onboarding so ProfileSetup shows after they

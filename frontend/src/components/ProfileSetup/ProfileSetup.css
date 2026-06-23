@@ -4,17 +4,24 @@
    ══════════════════════════════════════════════════════ */
 
 .ps-page {
-  min-height: 100vh;
+  height: 100vh;
   width: 100vw;
   position: fixed;
   top: 0; left: 0;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   background: var(--bg-secondary);
   padding: 2rem 1rem;
   overflow-y: auto;
+  box-sizing: border-box;
   z-index: 1000;
+}
+
+/* Center the card vertically when there's room; scroll when there isn't */
+.ps-container {
+  margin-top: auto;
+  margin-bottom: auto;
 }
 
 /* Corner controls (lang + theme) */
@@ -359,4 +366,40 @@
   .ps-container { border-radius: 12px; padding: 1.5rem 1.25rem 1.375rem; }
   .ps-row       { grid-template-columns: 1fr; }
   .ps-page      { align-items: flex-start; padding-top: 1.5rem; }
+}
+
+/* ── How-to instruction card ─────────────────────────── */
+.ps-howto {
+  background: var(--bg-secondary, #f8fafc);
+  border: 1px solid var(--border-primary, #e2e8f0);
+  border-radius: 10px;
+  padding: 0.875rem 1rem 0.875rem 1rem;
+  margin-bottom: 1rem;
+}
+.ps-howto-title {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--text-primary, #111827);
+  margin: 0 0 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.ps-howto-icon {
+  color: var(--accent-primary, #ED1B2F);
+  flex-shrink: 0;
+}
+.ps-howto-steps {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.ps-howto-steps li {
+  font-size: 0.85rem;
+  color: var(--text-secondary, #4b5563);
+  line-height: 1.5;
 }
