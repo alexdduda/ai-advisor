@@ -41,6 +41,13 @@ jobs:
         working-directory: backend
         run: python -m compileall -q api/
 
+      - name: Python dependency audit (SCA)
+        working-directory: backend
+        # Blocks on critical CVEs. pip-audit checks PyPI advisory database.
+        run: |
+          pip install pip-audit
+          pip-audit -r requirements.txt --severity critical
+
       - name: Run security smoke tests
         working-directory: backend
         env:
@@ -79,6 +86,11 @@ jobs:
         # Use install rather than ci so this works before the lockfile is
         # regenerated for the new Sentry / PostHog deps.
         run: npm install
+
+      - name: JS dependency audit (SCA)
+        working-directory: frontend
+        # Blocks on critical CVEs only; high/medium are advisory warnings.
+        run: npm audit --audit-level=critical
 
       - name: Lint
         working-directory: frontend

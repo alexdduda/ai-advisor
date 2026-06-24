@@ -25,6 +25,7 @@ from api.exceptions import (
 )
 from ..config import settings
 from ..auth import get_current_user_id, require_self, get_user_db
+from ..utils.audit import log_access
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -380,6 +381,7 @@ async def update_user(user_id: str, updates: UserUpdate, req: Request, current_u
 async def delete_user_account(user_id: str, req: Request, current_user_id: str = Depends(get_current_user_id)):
     """Permanently delete a user's account. Users may only delete their own account."""
     require_self(current_user_id, user_id)
+    log_access(current_user_id, "account_delete", resource=user_id, req=req)
     try:
         supabase = get_supabase()
 
@@ -471,6 +473,7 @@ USER_DATA_TABLES = [
 @router.get("/{user_id}/export", response_model=dict)
 async def export_user_data(
     user_id: str,
+    req: Request,
     current_user_id: str = Depends(get_current_user_id),
 ):
     """Return everything we know about this user, in a single JSON payload.
@@ -484,6 +487,7 @@ async def export_user_data(
     memberships, calendar events, and a dozen other things we hold.
     """
     require_self(current_user_id, user_id)
+    log_access(current_user_id, "data_export", resource=user_id, req=req)
 
     supabase = get_supabase()
     export: Dict[str, Any] = {

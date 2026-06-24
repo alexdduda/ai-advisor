@@ -13,6 +13,7 @@ import re
 import json
 
 from ..utils.supabase_client import get_supabase, get_user_by_id, update_user
+from ..utils.audit import log_access
 from ..exceptions import UserNotFoundException
 from ..config import settings
 from ..auth import get_current_user_id, require_self, get_user_db
@@ -301,6 +302,7 @@ async def parse_transcript(
     if not is_email_verified(current_user_id):
         raise HTTPException(status_code=403, detail={"code": "email_not_verified", "message": "Verify your email to upload a transcript."})
     check_and_record_llm_usage(current_user_id, kind="transcript")
+    log_access(current_user_id, "transcript_upload", resource=user_id, req=req)
     is_dry_run = dry_run.lower() in ("true", "1", "yes")
 
     try:
