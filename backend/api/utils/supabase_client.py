@@ -231,7 +231,10 @@ def create_user(user_data: Dict[str, Any]) -> Dict[str, Any]:
         return with_retry("create_user", _run)
     except Exception as e:
         error_str = str(e)
-        logger.error(f"Error creating user: {error_str}")
+        if "duplicate key" in error_str.lower() or "23505" in error_str:
+            logger.warning(f"Duplicate user create (race condition), returning existing: {error_str}")
+        else:
+            logger.error(f"Error creating user: {error_str}")
         if "duplicate key" in error_str.lower() or "23505" in error_str:
             user_id = user_data.get("id")
             logger.warning(f"Duplicate detected for user ID: {user_id}")
