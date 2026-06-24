@@ -96,6 +96,14 @@ async def get_user_db(request: Request) -> Client:
 
 _MCGILL_DOMAINS = ("@mcgill.ca", "@mail.mcgill.ca")
 
+# Mirrors routes/clubs/permissions.ADMIN_USER_IDS — kept in sync manually.
+# These users bypass the McGill email gate regardless of which email they
+# signed up with, so platform admins can use the full app on any account.
+_ADMIN_USER_IDS = {
+    "82e6f229-ce80-47a8-a63c-f099b03dfc73",
+    "65ad96d2-1704-4ff2-b661-42626f153fe8",
+}
+
 
 def require_mcgill_email(user_id: str) -> None:
     """
@@ -103,6 +111,8 @@ def require_mcgill_email(user_id: str) -> None:
     Uses auth.users (Supabase-managed, cannot be spoofed via profile edits).
     Admins always pass.
     """
+    if user_id in _ADMIN_USER_IDS:
+        return
     from .config import settings as _settings
     admin_emails = {e.strip().lower() for e in _settings.ADMIN_EMAILS.split(",") if e.strip()}
     try:

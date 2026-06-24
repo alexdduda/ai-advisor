@@ -318,18 +318,17 @@ def test_submit_club_generates_action_tokens(client, fake_supabase):
 
 
 def test_submit_club_rejects_non_mcgill(client, fake_supabase):
-    """KNOWN BUG (pinned, not endorsed): submit_club has no `except
-    HTTPException: raise` before its generic `except Exception`, so the
-    deliberate 403 here gets swallowed and reported as a 500. The frontend
-    presumably expects 403 with {code: "email_not_verified"} semantics for
-    the verified-email case too — neither ever reaches the client today."""
+    """Non-McGill email is rejected with 403 mcgill_email_required.
+    (Previously pinned as 500 due to a starlette <1.0 exception-swallowing
+    bug where HTTPException raised before the try block was caught by the
+    outer `except Exception`. Fixed in starlette 1.x.)"""
     fake_supabase.set_auth_email("nobody@gmail.com")
     resp = client.post(
         "/api/clubs/submit",
         json={"name": "Club", "description": "desc", "executive_emails": "a@mail.mcgill.ca"},
         headers=auth("user-1"),
     )
-    assert resp.status_code == 500
+    assert resp.status_code == 403
 
 
 # ── club members / roles ──────────────────────────────────────────────────────
