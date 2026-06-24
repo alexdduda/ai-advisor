@@ -212,8 +212,8 @@
 .cal-today-btn {
   font-size: 0.73rem;
   font-weight: 600;
-  color: var(--accent-primary);
-  background: var(--accent-lighter);
+  color: var(--tab-calendar-accent);
+  background: var(--tab-calendar-accent-light);
   border: none;
   border-radius: 4px;
   padding: 2px 8px;
@@ -221,7 +221,7 @@
   transition: background 0.15s;
 }
 
-.cal-today-btn:hover { background: var(--accent-light); }
+.cal-today-btn:hover { background: var(--tab-calendar-accent-light); filter: brightness(0.95); }
 
 /* ── Grid ────────────────────────────────────────────────────────── */
 .cal-grid-header {
@@ -278,8 +278,8 @@
 }
 
 .cal-cell-today {
-  border-color: var(--accent-primary);
-  background: var(--accent-lighter);
+  border-color: var(--tab-calendar-accent);
+  background: var(--tab-calendar-accent-light);
 }
 
 .cal-cell-number {
@@ -291,7 +291,7 @@
 }
 
 .cal-cell-number.today {
-  background: var(--accent-primary);
+  background: var(--tab-calendar-accent);
   color: #fff;
   border-radius: 50%;
   width: 20px;

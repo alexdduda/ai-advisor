@@ -147,8 +147,8 @@
   
   /* ─── Chat ─── */
   --chat-bg: #f9fafb;
-  --chat-message-user-bg: #ed1b2f;
-  --chat-message-user-text: #ffffff;
+  --chat-message-user-bg: #fef2f2;
+  --chat-message-user-text: #991b1b;
   --chat-message-ai-bg: #ffffff;
   --chat-message-ai-text: #111827;
   --chat-input-bg: #ffffff;
@@ -225,8 +225,8 @@
   /* ─── Text Colors ── softened off-white is easier on the eye on near-black ─ */
   --text-primary: #e8eaed;
   --text-secondary: #b4bac4;
-  --text-tertiary: #868d99;
-  --text-muted: #5b626d;
+  --text-tertiary: #94a3b8;
+  --text-muted: #64748b;
   --text-inverse: #0a0c10;
   --text-disabled: #3a414d;
 
@@ -353,8 +353,8 @@
 
   /* ─── Chat ─── */
   --chat-bg: #0a0c10;
-  --chat-message-user-bg: #ed1b2f;
-  --chat-message-user-text: #ffffff;
+  --chat-message-user-bg: rgba(237, 27, 47, 0.14);
+  --chat-message-user-text: #fca5a5;
   --chat-message-ai-bg: #14171d;
   --chat-message-ai-text: #e8eaed;
   --chat-input-bg: #14171d;

@@ -127,7 +127,7 @@
   border-radius: 6px 6px 0 0;
 }
 .clubs-tab-btn:hover { color: var(--text-primary, #0a0c10); background: var(--bg-hover, #f9fafb); }
-.clubs-tab-btn.active { color: var(--accent-primary, #dc2626); border-bottom-color: var(--accent-primary, #dc2626); }
+.clubs-tab-btn.active { color: var(--tab-clubs-accent); border-bottom-color: var(--tab-clubs-accent); }
 .clubs-tab-count {
   display: inline-flex;
   align-items: center;
@@ -141,7 +141,7 @@
   font-weight: 700;
   border-radius: 10px;
 }
-.clubs-tab-btn.active .clubs-tab-count { background: var(--accent-primary, #dc2626); color: #fff; }
+.clubs-tab-btn.active .clubs-tab-count { background: var(--tab-clubs-accent); color: #fff; }
 
 /* ── Toolbar ─────────────────────────────────────────────────── */
 .clubs-toolbar {
@@ -1556,8 +1556,8 @@
 }
 .clubs-cat-pill.active {
   color: #fff !important;
-  background: var(--accent-primary);
-  border-color: var(--accent-primary);
+  background: var(--tab-clubs-accent);
+  border-color: var(--tab-clubs-accent);
 }
 .clubs-cat-pill__icon {
   display: inline-flex;
