@@ -25,7 +25,8 @@ declared before /{subject}/{catalog}, otherwise FastAPI matches "search" and
 "subjects" as the {subject} path parameter and returns 404.
 """
 
-from fastapi import APIRouter, HTTPException, Query, Response, status, Depends, Request
+from fastapi import APIRouter, HTTPException, Query, status, Depends, Request
+from fastapi.responses import JSONResponse
 from typing import Optional
 import logging
 import re
@@ -60,9 +61,8 @@ def parse_course_code(course_code: str):
 # ROUTES — specific paths must come before wildcard /{subject}/{catalog}
 # ═══════════════════════════════════════════════════════════════════════════════
 
-@router.get("/search", response_model=dict)
+@router.get("/search")
 async def search(
-    response: Response,
     query: Optional[str] = Query(None, min_length=1, max_length=100),
     subject: Optional[str] = Query(None, min_length=2, max_length=6),
     limit: int = Query(
@@ -152,18 +152,10 @@ async def search(
             "includes_ratings": include_ratings,
         }
         search_cache.set(cache_key, result, ttl=300)
-        # Course catalogue is read-only public data — let the edge cache.
-        # `public` so the Vercel edge can hold ONE copy and serve every
-        # signed-in caller from it. 5-min TTL matches the audit
-        # recommendation; the catalogue itself only changes when we
-        # re-ingest the McGill course feed (~once/term).
-        # 1-hour stale-while-revalidate keeps responses snappy during the
-        # peak registration window (May / Aug / Jan) when this endpoint
-        # gets pounded.
-        response.headers["Cache-Control"] = (
-            "public, max-age=60, s-maxage=300, stale-while-revalidate=3600"
+        return JSONResponse(
+            content=result,
+            headers={"Cache-Control": "public, max-age=60, s-maxage=300, stale-while-revalidate=3600"},
         )
-        return result
 
     except DatabaseException:
         raise
