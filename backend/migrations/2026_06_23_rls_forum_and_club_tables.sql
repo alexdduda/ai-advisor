@@ -11,6 +11,13 @@
 --   club_submissions, forum_posts, forum_replies,
 --   forum_post_likes, forum_reply_likes
 --
+-- Column notes (actual schema, not assumed):
+--   club_events        → created_by  (not user_id)
+--   club_announcements → created_by  (not user_id)
+--   club_submissions   → submitted_by (not user_id)
+--   club_manager_requests → requested_by + target_user_id (no user_id col)
+--   all others         → user_id
+--
 -- Tables intentionally left without user-scoped RLS:
 --   rate_limits, seen_resend_events   — server-side only (service_role)
 --   degree_programs, requirement_blocks, requirement_courses — read-only seed
@@ -22,7 +29,6 @@
 -- ══════════════════════════════════════════════════════════════════════════════
 
 -- ── club_managers ─────────────────────────────────────────────────────────────
--- Managers can see/manage their own rows; club owners see all rows for their club.
 ALTER TABLE club_managers ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "club_managers_select" ON club_managers;
@@ -33,8 +39,8 @@ CREATE POLICY "club_managers_select"
 ON club_managers FOR SELECT
 TO authenticated
 USING (
-  user_id = auth.uid()                    -- own manager row
-  OR is_club_manager(club_id)             -- club owner/admin can see all managers
+  user_id = auth.uid()
+  OR is_club_manager(club_id)
 );
 
 CREATE POLICY "club_managers_insert"
@@ -98,6 +104,7 @@ USING (user_id = auth.uid() OR is_club_manager(club_id));
 
 
 -- ── club_manager_requests ─────────────────────────────────────────────────────
+-- Uses requested_by (sender) and target_user_id (recipient) — no user_id column.
 ALTER TABLE club_manager_requests ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "club_manager_requests_select" ON club_manager_requests;
@@ -108,7 +115,8 @@ CREATE POLICY "club_manager_requests_select"
 ON club_manager_requests FOR SELECT
 TO authenticated
 USING (
-  user_id = auth.uid()
+  requested_by = auth.uid()
+  OR target_user_id = auth.uid()
   OR is_club_manager(club_id)
 );
 
@@ -124,8 +132,8 @@ USING (is_club_manager(club_id));
 
 
 -- ── club_events ───────────────────────────────────────────────────────────────
--- Public events are visible to all authenticated users; private-club events
--- are only visible to members and managers.
+-- Uses created_by (not user_id). Public events visible to all authenticated
+-- users; private-club events only to members/managers.
 ALTER TABLE club_events ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "club_events_select" ON club_events;
@@ -137,7 +145,6 @@ CREATE POLICY "club_events_select"
 ON club_events FOR SELECT
 TO authenticated
 USING (
-  -- Event belongs to a public verified club, OR caller is a member/manager
   EXISTS (
     SELECT 1 FROM clubs c
     WHERE c.id = club_id
@@ -169,6 +176,7 @@ USING (is_club_manager(club_id));
 
 
 -- ── club_announcements ────────────────────────────────────────────────────────
+-- Uses created_by (not user_id).
 ALTER TABLE club_announcements ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "club_announcements_select" ON club_announcements;
@@ -211,7 +219,7 @@ USING (is_club_manager(club_id));
 
 
 -- ── club_submissions ──────────────────────────────────────────────────────────
--- Admin-reviewed pending clubs: submitter sees their own row; admins use service_role.
+-- Uses submitted_by (not user_id). Submitter sees their own row; admins use service_role.
 ALTER TABLE club_submissions ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "club_submissions_select_own" ON club_submissions;
@@ -229,12 +237,10 @@ WITH CHECK (submitted_by = auth.uid());
 
 
 -- ══════════════════════════════════════════════════════════════════════════════
--- FORUM TABLES
+-- FORUM TABLES  (all use user_id)
 -- ══════════════════════════════════════════════════════════════════════════════
 
 -- ── forum_posts ───────────────────────────────────────────────────────────────
--- All authenticated users can read. Authors can update/delete their own posts.
--- Anon role gets no access (no anonymous forum reads via the bundle key).
 ALTER TABLE forum_posts ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "forum_posts_select_auth" ON forum_posts;
