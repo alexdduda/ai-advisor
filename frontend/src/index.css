@@ -390,3 +390,37 @@ tr:last-child td {
     display: none !important;
   }
 }
+
+/* ────────────────────────────────────────────────────────────────
+   SHARED TYPOGRAPHY UTILITIES
+   Reusable across all tabs. Enforce a consistent heading + label
+   scale so each tab doesn't invent its own sizes.
+   ──────────────────────────────────────────────────────────────── */
+
+.tab-section-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.tab-section-heading {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.3;
+  margin: 0;
+}
+
+.tab-body-text {
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+.tab-meta-text {
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--text-tertiary);
+}

@@ -292,6 +292,12 @@ body:has(.landing-root),
   color: var(--land-accent);
   margin-bottom: 14px;
 }
+.landing-eyebrow--chat     { color: #ed1b2f; }
+.landing-eyebrow--degree   { color: #059669; }
+.landing-eyebrow--calendar { color: #059669; }
+.landing-eyebrow--clubs    { color: #7c3aed; }
+.landing-eyebrow--forum    { color: #d97706; }
+.landing-eyebrow--courses  { color: #2563eb; }
 .landing-feature__title {
   font-size: clamp(1.8rem, 3vw, 2.6rem);
   font-weight: 700;
@@ -326,7 +332,7 @@ body:has(.landing-root),
   top: 0.6em;
   width: 12px;
   height: 2px;
-  background: var(--land-accent);
+  background: var(--section-color, var(--land-accent));
   border-radius: 2px;
 }
 

@@ -155,8 +155,8 @@ export default function LandingPage({ onSignIn }) {
       {/* ── 2. Brief ─────────────────────────────────────────────── */}
       <section className="landing-section landing-section--alt" id="brief">
         <div className="landing-section__inner landing-feature">
-          <Reveal className="landing-feature__copy">
-            <span className="landing-eyebrow">YOUR BRIEF</span>
+          <Reveal className="landing-feature__copy" style={{'--section-color': '#ed1b2f'}}>
+            <span className="landing-eyebrow landing-eyebrow--chat">YOUR BRIEF</span>
             <h2 className="landing-feature__title">A personal AI academic advisor.</h2>
             <p className="landing-feature__text">
               Open the app and read a briefing built from your transcript,
@@ -179,8 +179,8 @@ export default function LandingPage({ onSignIn }) {
       {/* ── 3. Courses & degree ──────────────────────────────────── */}
       <section className="landing-section" id="degree">
         <div className="landing-section__inner landing-feature landing-feature--reverse">
-          <Reveal className="landing-feature__copy">
-            <span className="landing-eyebrow">DEGREE PROGRESS</span>
+          <Reveal className="landing-feature__copy" style={{'--section-color': '#059669'}}>
+            <span className="landing-eyebrow landing-eyebrow--degree">DEGREE PROGRESS</span>
             <h2 className="landing-feature__title">Every requirement, every credit.</h2>
             <p className="landing-feature__text">
               Upload your unofficial transcript and your major's requirements
@@ -204,8 +204,8 @@ export default function LandingPage({ onSignIn }) {
       {/* ── 4. Calendar ──────────────────────────────────────────── */}
       <section className="landing-section landing-section--alt" id="calendar">
         <div className="landing-section__inner landing-feature">
-          <Reveal className="landing-feature__copy">
-            <span className="landing-eyebrow">CALENDAR & REMINDERS</span>
+          <Reveal className="landing-feature__copy" style={{'--section-color': '#059669'}}>
+            <span className="landing-eyebrow landing-eyebrow--calendar">CALENDAR & REMINDERS</span>
             <h2 className="landing-feature__title">Never miss a deadline.</h2>
             <p className="landing-feature__text">
               Final exam dates auto-populate from McGill's schedule. Drop a
@@ -228,8 +228,8 @@ export default function LandingPage({ onSignIn }) {
       {/* ── 5. Clubs ─────────────────────────────────────────────── */}
       <section className="landing-section" id="clubs">
         <div className="landing-section__inner landing-feature landing-feature--reverse">
-          <Reveal className="landing-feature__copy">
-            <span className="landing-eyebrow">CLUBS</span>
+          <Reveal className="landing-feature__copy" style={{'--section-color': '#7c3aed'}}>
+            <span className="landing-eyebrow landing-eyebrow--clubs">CLUBS</span>
             <h2 className="landing-feature__title">Discover McGill clubs without the hunt.</h2>
             <p className="landing-feature__text">
               Every verified McGill club in one searchable directory. Subscribe
@@ -254,7 +254,7 @@ export default function LandingPage({ onSignIn }) {
       <section className="landing-section landing-section--alt" id="forum">
         <div className="landing-section__inner landing-forum">
           <Reveal>
-            <span className="landing-eyebrow">FORUM</span>
+            <span className="landing-eyebrow landing-eyebrow--forum">FORUM</span>
             <h2 className="landing-feature__title">Three places to talk to other McGill students.</h2>
             <p className="landing-feature__text landing-forum__lead">
               A focused, McGill-only forum split into three sections so
