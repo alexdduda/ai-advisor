@@ -60,9 +60,10 @@ export default defineConfig(async () => {
       },
       rollupOptions: {
         output: {
-          manualChunks: {
-            'react-vendor': ['react', 'react-dom'],
-            'markdown': ['react-markdown', 'remark-gfm'],
+          // Rolldown (Vite 8) requires manualChunks as a function, not an object
+          manualChunks: (id) => {
+            if (id.includes('/react/') || id.includes('/react-dom/')) return 'react-vendor'
+            if (id.includes('/react-markdown/') || id.includes('/remark-gfm/')) return 'markdown'
           },
         },
       },
