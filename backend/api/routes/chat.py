@@ -475,6 +475,7 @@ async def send_message(
     formatted.append({"role": "user", "content": request.message})
 
     try:
+        from ..utils.langfuse_client import trace_claude
         client = get_anthropic_client()
         logger.info(
             f"Calling Claude ({settings.CLAUDE_MODEL}) with {len(formatted)} messages "
@@ -484,16 +485,26 @@ async def send_message(
         # profile + McGill knowledge + tab guidance) and stable within a
         # session, so we mark it as ephemeral. Subsequent messages within
         # ~5 min reuse the cached prefix at ~90% lower cost.
-        message = client.messages.create(
+        with trace_claude(
+            name="chat",
+            user_id=current_user_id,
+            session_id=session_id,
+            metadata={"tab": request.tab_id} if hasattr(request, "tab_id") else {},
+            input_messages=formatted,
             model=settings.CLAUDE_MODEL,
             max_tokens=settings.CLAUDE_MAX_TOKENS,
-            system=[{
-                "type": "text",
-                "text": system_context,
-                "cache_control": {"type": "ephemeral"},
-            }],
-            messages=formatted,
-        )
+        ) as gen:
+            message = client.messages.create(
+                model=settings.CLAUDE_MODEL,
+                max_tokens=settings.CLAUDE_MAX_TOKENS,
+                system=[{
+                    "type": "text",
+                    "text": system_context,
+                    "cache_control": {"type": "ephemeral"},
+                }],
+                messages=formatted,
+            )
+            gen.finish(message)
         assistant_response = message.content[0].text
         tokens_used = message.usage.input_tokens + message.usage.output_tokens
         logger.info(f"AI response generated. Tokens used: {tokens_used}")

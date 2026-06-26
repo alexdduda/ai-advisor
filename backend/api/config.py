@@ -76,6 +76,11 @@ class Settings(BaseSettings):
     POSTHOG_API_KEY: str = ""
     POSTHOG_HOST: str = "https://us.i.posthog.com"
 
+    # ── Langfuse LLM observability ────────────────────────────────────────
+    LANGFUSE_PUBLIC_KEY: str = ""
+    LANGFUSE_SECRET_KEY: str = ""
+    LANGFUSE_HOST: str = "https://cloud.langfuse.com"
+
     # ── AI ───────────────────────────────────────────────────────────────
     ANTHROPIC_API_KEY: str
     CLAUDE_MODEL: str = "claude-haiku-4-5-20251001"
