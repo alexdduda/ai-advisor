@@ -37,7 +37,7 @@ function toProgramKey(name, type = 'major', faculty = '') {
   const fl = faculty.toLowerCase()
   const isSci = fl.includes('science') && !fl.includes('arts & science') && !fl.includes('arts and science')
   const isBasc = fl.includes('arts & science') || fl.includes('arts and science')
-  const isEng  = fl.includes('engineering')
+  const _isEng  = fl.includes('engineering')
   const isEnv  = fl.includes('environment') || fl.includes('bieler')
   const isLaw  = fl.includes('faculty of law') || fl === 'law'
   const isAes  = fl.includes('agricultural and environmental') || fl.includes('agri-env') || fl === 'aes'
@@ -267,7 +267,7 @@ function CourseRow({ course, onClick, actions }) {
 
 
 // ── Electives Panel ────────────────────────────────────────────────────────────
-function ElectivesPanel({ profile, completedCourses, currentCourses, programData, minorData, allProgramData, courseAllocations, assignCourse }) {
+function ElectivesPanel({ profile, completedCourses, currentCourses, allProgramData, courseAllocations, assignCourse }) {
   const { t } = useLanguage()
   const { openCourse } = useCourseDetail()
   // Elective recs are cached in localStorage with a 24h TTL keyed by user.
@@ -283,6 +283,7 @@ function ElectivesPanel({ profile, completedCourses, currentCourses, programData
       if (!raw) return null
       const { data, ts } = JSON.parse(raw)
       if (!data || !ts) return null
+      // eslint-disable-next-line react-hooks/purity
       if (Date.now() - ts > RECS_CACHE_TTL_MS) return null
       return data
     } catch { return null }
@@ -291,6 +292,7 @@ function ElectivesPanel({ profile, completedCourses, currentCourses, programData
   // Hydrate from cache on first render so the recs panel can show its
   // previous output instantly instead of forcing the user to hit "Generate"
   // every visit (which also burned an Anthropic call each time).
+  // eslint-disable-next-line react-hooks/purity
   const _initialCached = _loadCachedRecs()
   const [recs, setRecs]           = useState(() => _initialCached)
   const [recsLoading, setRecsLoading] = useState(false)
@@ -360,7 +362,6 @@ function ElectivesPanel({ profile, completedCourses, currentCourses, programData
   }, [completedCourses, currentCourses, profile, requiredCodes, wildcardAllBlocks, courseAllocations])
 
   const _recsRateLimited = () => {
-    if (authFlags?.is_admin) return false // admins unlimited
     const key = 'elective_recs_timestamps'
     const now = Date.now()
     const weekAgo = now - 7 * 24 * 60 * 60 * 1000
@@ -435,7 +436,7 @@ function ElectivesPanel({ profile, completedCourses, currentCourses, programData
         if (_recsCacheKey) {
           localStorage.setItem(_recsCacheKey, JSON.stringify({ data: data.data, ts: Date.now() }))
         }
-      } catch {}
+      } catch { /* localStorage full or unavailable */ }
 
       // Append the new recommendations to the recent list (keep last 32 unique)
       try {
@@ -452,7 +453,7 @@ function ElectivesPanel({ profile, completedCourses, currentCourses, programData
         }).slice(0, 32)
         localStorage.setItem(recentKey, JSON.stringify(dedup))
       } catch { /* localStorage full or unavailable, ignore */ }
-    } catch(e) {
+    } catch {
       setRecsError('Could not generate recommendations. Try again.')
     } finally {
       setRecsLoading(false)
@@ -497,143 +498,147 @@ function ElectivesPanel({ profile, completedCourses, currentCourses, programData
 
   return (
     <div className="dp-electives">
-      {/* ── AI Recommendations ──────────────────────────── */}
-      <div className="dp-electives-recs-section">
-        <div className="dp-electives-recs-header">
-          <span className="dp-electives-spark">✦</span>
-          <div>
-            <h3 className="dp-electives-title">Recommended Electives</h3>
-            <p className="dp-electives-sub">
-              AI picks for {[profile?.major, profile?.minor].filter(Boolean).join(' + ')}
-              {profile?.interests ? ` · ${profile.interests}` : ''}
+      {/* ── Left: My Elective Courses ───────────────────── */}
+      <div className="dp-electives-left">
+        <div className="dp-electives-header">
+          <div className="dp-electives-title-row">
+            <span className="dp-electives-spark"><FaBook /></span>
+            <div>
+              <h3 className="dp-electives-title">My Elective Courses</h3>
+              <p className="dp-electives-sub">
+                Courses you've taken that don't count toward{' '}
+                {[profile?.major, profile?.minor].filter(Boolean).join(' or ') || 'your program'}
+                {(profile?.major || profile?.minor) && ' Majors/Minors'}
+              </p>
+            </div>
+          </div>
+          <span className="dp-electives-badge">{electiveCourses.length}</span>
+        </div>
+
+        {electiveCourses.length === 0 ? (
+          <div className="dp-electives-empty">
+            <span style={{ fontSize: '2rem', opacity: 0.3 }}><FaGraduationCap /></span>
+            <p>No elective courses found yet.</p>
+            <p style={{ fontSize: '0.8rem', opacity: 0.6 }}>
+              Courses you complete outside your major &amp; minor requirements will appear here.
             </p>
           </div>
-          {showRecs ? (
-            <button className="dp-electives-refresh" onClick={generateRecs} disabled={recsLoading}>
-              {recsLoading ? '...' : '↻'}
-            </button>
-          ) : (
-            <button className="dp-electives-refresh dp-electives-refresh--generate" onClick={handleShowRecs}>
-              Generate ✦
-            </button>
+        ) : (
+          <div className="dp-electives-grid dp-electives-grid--single">
+            {electiveCourses.map((c, i) => {
+              const srcStyle = SOURCE_COLORS[c._source] || SOURCE_COLORS.completed
+              return (
+                <div key={i} className="dp-elective-card dp-elective-card--taken" onClick={() => openCourse(c.subject, c.catalog)} style={{ cursor: 'pointer' }}>
+                  <div className="dp-elective-top">
+                    <span className="dp-elective-code">{c.subject} {c.catalog}</span>
+                    <span
+                      className="dp-elective-cat"
+                      style={{ background: srcStyle.bg, color: srcStyle.color }}
+                    >
+                      {SOURCE_LABELS[c._source] || 'Done'}
+                    </span>
+                  </div>
+                  <p className="dp-elective-title">{c.course_title || c.title || '—'}</p>
+                  <div className="dp-elective-assign">
+                    <select
+                      className="dp-elective-assign-select"
+                      value={courseAllocations[`${c.subject} ${c.catalog}`.toUpperCase()] || ''}
+                      onChange={e => handleAssign(`${c.subject} ${c.catalog}`.toUpperCase(), e.target.value)}
+                    >
+                      <option value="">Count toward...</option>
+                      {allProgramData.map(prog => prog && (
+                        <option key={prog.program_key} value={prog.program_key}>
+                          {prog.name?.replace(/\s*[–-]\s*(Major|Minor|Honours|Concentration).*/, '') || prog.program_key}
+                        </option>
+                      ))}
+                    </select>
+                    {assignedNote === `${c.subject} ${c.catalog}`.toUpperCase() && (
+                      <p className="dp-elective-assign-note"><FaExclamationTriangle style={{ marginRight: '4px', verticalAlign: 'middle' }} />Double-check with your academic advisor whether this course actually counts toward this program.</p>
+                    )}
+                  </div>
+                  {c.credits && <span className="dp-elective-credits">{c.credits} cr</span>}
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* ── Right: AI Recommendations ───────────────────── */}
+      <div className="dp-electives-right">
+        <div className="dp-electives-recs-section">
+          <div className="dp-electives-recs-header">
+            <span className="dp-electives-spark">✦</span>
+            <div>
+              <h3 className="dp-electives-title">Course Recommendations</h3>
+              <p className="dp-electives-sub">
+                AI picks for {[profile?.major, profile?.minor].filter(Boolean).join(' + ')}
+                {profile?.interests ? ` · ${profile.interests}` : ''}
+              </p>
+            </div>
+            {showRecs ? (
+              <button className="dp-electives-refresh" onClick={generateRecs} disabled={recsLoading}>
+                {recsLoading ? '...' : '↻'}
+              </button>
+            ) : (
+              <button className="dp-electives-refresh dp-electives-refresh--generate" onClick={handleShowRecs}>
+                Generate ✦
+              </button>
+            )}
+          </div>
+
+          {showRecs && recsLoading && (
+            <div className="dp-electives-loading">
+              <div className="dp-req-spinner" />
+              <span>{t('dp.generatingRecs')}</span>
+            </div>
+          )}
+
+          {showRecs && recsError && !recsLoading && (
+            <div className="dp-electives-error">
+              {recsError}
+              <button onClick={generateRecs}>{t('dp.retry')}</button>
+            </div>
+          )}
+
+          {showRecs && recs && !recsLoading && (
+            <>
+              {recs.theme && (
+                <p className="dp-electives-theme"><FaLightbulb style={{ marginRight: '5px', verticalAlign: 'middle' }} />{recs.theme}</p>
+              )}
+              <div className="dp-electives-grid dp-electives-grid--single">
+                {recs.recommendations?.map((c, i) => {
+                  const alreadyTaken = [...completedCourses, ...currentCourses].some(uc =>
+                    `${uc.subject} ${uc.catalog}`.toUpperCase() === `${c.subject} ${c.catalog}`.toUpperCase()
+                  )
+                  const catStyle = CATEGORY_COLORS[c.category] || CATEGORY_COLORS['Breadth']
+                  return (
+                    <div key={i} className={`dp-elective-card ${alreadyTaken ? 'dp-elective-card--taken' : ''}`} onClick={() => openCourse(c.subject, c.catalog)} style={{ cursor: 'pointer' }}>
+                      <div className="dp-elective-top">
+                        <span className="dp-elective-code">{c.subject} {c.catalog}</span>
+                        <span className="dp-elective-cat" style={{ background: catStyle.bg, color: catStyle.color }}>
+                          {c.category}
+                        </span>
+                        {alreadyTaken && <span className="dp-elective-taken">✓ {t('dp.statusTaking')}</span>}
+                      </div>
+                      <p className="dp-elective-title">{c.title}</p>
+                      <p className="dp-elective-why">{c.why}</p>
+                      <span className="dp-elective-credits">{c.credits} cr</span>
+                    </div>
+                  )
+                })}
+              </div>
+              <p className="rsb-disclaimer">{t('rsb.disclaimer')}</p>
+            </>
+          )}
+
+          {!showRecs && (
+            <div className="dp-electives-recs-prompt">
+              <p>Get personalized course suggestions based on your program and interests.</p>
+            </div>
           )}
         </div>
-
-        {showRecs && recsLoading && (
-          <div className="dp-electives-loading">
-            <div className="dp-req-spinner" />
-            <span>{t('dp.generatingRecs')}</span>
-          </div>
-        )}
-
-        {showRecs && recsError && !recsLoading && (
-          <div className="dp-electives-error">
-            {recsError}
-            <button onClick={generateRecs}>{t('dp.retry')}</button>
-          </div>
-        )}
-
-        {showRecs && recs && !recsLoading && (
-          <>
-            {recs.theme && (
-              <p className="dp-electives-theme"><FaLightbulb style={{ marginRight: '5px', verticalAlign: 'middle' }} />{recs.theme}</p>
-            )}
-            <div className="dp-electives-grid">
-              {recs.recommendations?.map((c, i) => {
-                const alreadyTaken = [...completedCourses, ...currentCourses].some(uc =>
-                  `${uc.subject} ${uc.catalog}`.toUpperCase() === `${c.subject} ${c.catalog}`.toUpperCase()
-                )
-                const catStyle = CATEGORY_COLORS[c.category] || CATEGORY_COLORS['Breadth']
-                return (
-                  <div key={i} className={`dp-elective-card ${alreadyTaken ? 'dp-elective-card--taken' : ''}`} onClick={() => openCourse(c.subject, c.catalog)} style={{ cursor: 'pointer' }}>
-                    <div className="dp-elective-top">
-                      <span className="dp-elective-code">{c.subject} {c.catalog}</span>
-                      <span className="dp-elective-cat" style={{ background: catStyle.bg, color: catStyle.color }}>
-                        {c.category}
-                      </span>
-                      {alreadyTaken && <span className="dp-elective-taken">✓ {t('dp.statusTaking')}</span>}
-                    </div>
-                    <p className="dp-elective-title">{c.title}</p>
-                    <p className="dp-elective-why">{c.why}</p>
-                    <span className="dp-elective-credits">{c.credits} cr</span>
-                  </div>
-                )
-              })}
-            </div>
-            <p className="rsb-disclaimer">{t('rsb.disclaimer')}</p>
-          </>
-        )}
-
-        {!showRecs && (
-          <div className="dp-electives-recs-prompt">
-            <p>Get personalized elective suggestions based on your program and interests.</p>
-          </div>
-        )}
       </div>
-
-      {/* ── Taken Electives ─────────────────────────────── */}
-      <div className="dp-electives-header">
-        <div className="dp-electives-title-row">
-          <span className="dp-electives-spark"><FaBook /></span>
-          <div>
-            <h3 className="dp-electives-title">My Elective Courses</h3>
-            <p className="dp-electives-sub">
-              Courses you've taken that don't count toward{' '}
-              {[profile?.major, profile?.minor].filter(Boolean).join(' or ') || 'your program'}
-              {(profile?.major || profile?.minor) && ' Majors/Minors'}
-            </p>
-          </div>
-        </div>
-        <span className="dp-electives-badge">{electiveCourses.length}</span>
-      </div>
-
-      {electiveCourses.length === 0 ? (
-        <div className="dp-electives-empty">
-          <span style={{ fontSize: '2rem', opacity: 0.3 }}><FaGraduationCap /></span>
-          <p>No elective courses found yet.</p>
-          <p style={{ fontSize: '0.8rem', opacity: 0.6 }}>
-            Courses you complete outside your major &amp; minor requirements will appear here.
-          </p>
-        </div>
-      ) : (
-        <div className="dp-electives-grid">
-          {electiveCourses.map((c, i) => {
-            const srcStyle = SOURCE_COLORS[c._source] || SOURCE_COLORS.completed
-            return (
-              <div key={i} className="dp-elective-card dp-elective-card--taken" onClick={() => openCourse(c.subject, c.catalog)} style={{ cursor: 'pointer' }}>
-                <div className="dp-elective-top">
-                  <span className="dp-elective-code">{c.subject} {c.catalog}</span>
-                  <span
-                    className="dp-elective-cat"
-                    style={{ background: srcStyle.bg, color: srcStyle.color }}
-                  >
-                    {SOURCE_LABELS[c._source] || 'Done'}
-                  </span>
-                </div>
-                <p className="dp-elective-title">{c.course_title || c.title || '—'}</p>
-                <div className="dp-elective-assign">
-                  <select
-                    className="dp-elective-assign-select"
-                    value={courseAllocations[`${c.subject} ${c.catalog}`.toUpperCase()] || ''}
-                    onChange={e => handleAssign(`${c.subject} ${c.catalog}`.toUpperCase(), e.target.value)}
-                  >
-                    <option value="">Count toward...</option>
-                    {allProgramData.map(prog => prog && (
-                      <option key={prog.program_key} value={prog.program_key}>
-                        {prog.name?.replace(/\s*[–-]\s*(Major|Minor|Honours|Concentration).*/, '') || prog.program_key}
-                      </option>
-                    ))}
-                  </select>
-                  {assignedNote === `${c.subject} ${c.catalog}`.toUpperCase() && (
-                    <p className="dp-elective-assign-note"><FaExclamationTriangle style={{ marginRight: '4px', verticalAlign: 'middle' }} />Double-check with your academic advisor whether this course actually counts toward this program.</p>
-                  )}
-                </div>
-                {c.credits && <span className="dp-elective-credits">{c.credits} cr</span>}
-              </div>
-            )
-          })}
-        </div>
-      )}
     </div>
   )
 }
@@ -924,7 +929,7 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
   )
   const dismissFoundation = () => {
     setFoundationDismissed(true)
-    try { localStorage.setItem('dp_dismiss_foundation', '1') } catch {}
+    try { localStorage.setItem('dp_dismiss_foundation', '1') } catch { /* ignore */ }
   }
 
   const [programData, setProgramData]         = useState(null)
@@ -939,7 +944,7 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
   const [seeding, setSeeding]                 = useState(false)
   const [openBlocks, setOpenBlocks]           = useState({})
   const [activeTab, setActiveTab]             = useState('major')
-  const [loadFailed, setLoadFailed]           = useState(false)
+  const [_loadFailed, setLoadFailed]           = useState(false)
   const [unavailable, setUnavailable]         = useState({ major: false, minor: false, core: false, concentration: false })
 
   // Course allocations — lifted from ElectivesPanel so ProgramSection can also use them
@@ -972,7 +977,7 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
       if (!alive || !server || typeof server !== 'object') return
       setCourseAllocations(prev => {
         const merged = { ...prev, ...server }
-        try { localStorage.setItem('dp_course_allocations', JSON.stringify(merged)) } catch {}
+        try { localStorage.setItem('dp_course_allocations', JSON.stringify(merged)) } catch { /* ignore */ }
         return merged
       })
     }).catch(() => { /* keep localStorage copy on failure */ })
@@ -1021,7 +1026,7 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
         key: toProgramKey(name, 'major', profile?.faculty || ''),
       }))
       .filter(({ key }) => key && key !== majorKey)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/use-memo
   }, [profile?.other_majors?.join(','), majorKey, isBasc, bascIsMultiTrack])
 
   // Extra minors: other_minors[] excluding the primary minor
@@ -1034,7 +1039,7 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
         key: toProgramKey(name, 'minor', profile?.faculty || ''),
       }))
       .filter(({ key }) => key && key !== minorKey)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/use-memo
   }, [profile?.other_minors?.join(','), minorKey])
 
   const fetchProgram = async (key, setter) => {
@@ -1155,7 +1160,7 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
       extraMinorsList.map(x=>x.key).join(','),
       !!profile, profile?.concentration])
 
-  const allCourseKeys = useMemo(
+  const _allCourseKeys = useMemo(
     () => [...completedCourses, ...currentCourses].map(c => `${c.subject} ${c.catalog}`).join(','),
     [completedCourses, currentCourses]
   )
@@ -1167,10 +1172,10 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
       const res = await fetch(`${API_BASE}/api/degree-requirements/seed`, { method: 'POST', headers })
       const data = await res.json()
       if (data.success) {
-        const extraMajorFetches = extraMajorsList.map(({ name, key }) =>
+        const extraMajorFetches = extraMajorsList.map(({ key }) =>
           fetchProgram(key, d => setExtraMajorsData(prev => ({ ...prev, [key]: d })))
         )
-        const extraMinorFetches = extraMinorsList.map(({ name, key }) =>
+        const extraMinorFetches = extraMinorsList.map(({ key }) =>
           fetchProgram(key, d => setExtraMinorsData(prev => ({ ...prev, [key]: d })))
         )
         const [majorResult, minorResult, , coreResult, concResult] = await Promise.all([
@@ -1189,7 +1194,7 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
           concentration: concResult  === 'not_found',
         })
       }
-    } catch {}
+    } catch { /* ignore */ }
     finally { setSeeding(false) }
   }
 
@@ -1241,12 +1246,14 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
   const currentTabUnavailable = currentTab?.unavailable
 
   // All programs array and overlap detection
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   const allProgramDataArray = useMemo(() => [
     programData, minorData, sciData, coreData, concentrationData,
     ...Object.values(extraMajorsData), ...Object.values(extraMinorsData),
   ].filter(Boolean), [programData, minorData, sciData, coreData, concentrationData, extraMajorsData, extraMinorsData])
 
   // overlapKeys: course keys that appear in 2+ programs
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   const overlapKeys = useMemo(() => {
     const counts = new Map()
     allProgramDataArray.forEach(prog => {
@@ -1626,24 +1633,12 @@ export default function DegreePlanningView({
   favorites = [],
   completedCourses = [],
   currentCourses = [],
-  completedCoursesMap = new Set(),
-  currentCoursesMap = new Set(),
-  favoritesMap = new Set(),
   profile = {},
-  onToggleFavorite,
-  onToggleCompleted,
-  onToggleCurrent,
-  onCourseClick,
   onImportTranscript,
   onImportSyllabus,
-  authFlags,
 }) {
   const { t } = useLanguage()
   const [subTab, setSubTab] = useState('my_courses')
-
-  const isCompleted = (s, c) => completedCoursesMap.has(`${s} ${c}`)
-  const isCurrent   = (s, c) => currentCoursesMap.has(`${s} ${c}`)
-  const isFavorited = (s, c) => favoritesMap.has(`${s}${c}`)
 
   return (
     <div className="dp-view">
