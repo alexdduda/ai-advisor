@@ -13,12 +13,13 @@ import hmac
 import logging
 import time
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel
 
 from ..config import settings
+from ..utils.supabase_client import get_supabase
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -213,4 +214,82 @@ async def verify_admin(request: AdminLoginRequest, req: Request):
     return {
         "token": _issue_admin_token(),
         "expires_in": _ADMIN_TOKEN_TTL,
+    }
+
+
+# ── Stats ─────────────────────────────────────────────────────────────────────
+
+@router.get("/stats")
+async def admin_stats(req: Request):
+    """Aggregate usage stats for the admin dashboard."""
+    token = req.headers.get("X-Cron-Secret", "")
+    if not verify_admin_token(token):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
+
+    sb = get_supabase()
+    now = datetime.now(timezone.utc)
+    week_ago = (now - timedelta(days=7)).isoformat()
+    month_ago = (now - timedelta(days=30)).isoformat()
+
+    def _count(table, *, gte=None, eq=None):
+        q = sb.table(table).select("id", count="exact")
+        if gte:
+            q = q.gte("created_at", gte)
+        if eq:
+            for col, val in eq.items():
+                q = q.eq(col, val)
+        try:
+            return q.execute().count or 0
+        except Exception:
+            return 0
+
+    total_users   = _count("users")
+    new_7d_users  = _count("users", gte=week_ago)
+    new_30d_users = _count("users", gte=month_ago)
+
+    # Active = distinct users who sent at least one message in the past 7 days
+    try:
+        active_rows = (
+            sb.table("chat_messages")
+            .select("user_id")
+            .eq("role", "user")
+            .gte("created_at", week_ago)
+            .execute()
+        )
+        active_7d = len({r["user_id"] for r in (active_rows.data or [])})
+    except Exception:
+        active_7d = 0
+
+    total_msgs    = _count("chat_messages", eq={"role": "user"})
+    msgs_7d       = _count("chat_messages", gte=week_ago, eq={"role": "user"})
+    msgs_30d      = _count("chat_messages", gte=month_ago, eq={"role": "user"})
+
+    feedback_total = _count("feedback")
+    feedback_7d    = _count("feedback", gte=week_ago)
+    jobs_total     = _count("jobs")
+    forum_posts    = _count("forum_posts")
+    club_joins     = _count("user_clubs")
+    advisor_cards  = _count("advisor_cards")
+
+    return {
+        "users": {
+            "total":     total_users,
+            "new_7d":    new_7d_users,
+            "new_30d":   new_30d_users,
+            "active_7d": active_7d,
+        },
+        "messages": {
+            "total":               total_msgs,
+            "last_7d":             msgs_7d,
+            "last_30d":            msgs_30d,
+            "avg_per_active_user": round(msgs_7d / active_7d, 1) if active_7d else 0,
+        },
+        "features": {
+            "transcript_uploads":   jobs_total,
+            "feedback_total":       feedback_total,
+            "feedback_7d":          feedback_7d,
+            "forum_posts":          forum_posts,
+            "club_joins":           club_joins,
+            "advisor_cards":        advisor_cards,
+        },
     }
