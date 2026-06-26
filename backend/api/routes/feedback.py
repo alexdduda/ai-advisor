@@ -25,12 +25,13 @@ from html import escape
 from typing import Optional
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from ..auth import get_current_user_id
 from ..config import settings
 from ..utils.supabase_client import get_supabase
+from ..routes.admin import verify_admin_token
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -127,3 +128,24 @@ async def submit_feedback(
             logger.debug("slack feedback post failed: %s", type(exc).__name__)
 
     return {"ok": True}
+
+
+@router.get("/admin")
+async def admin_list_feedback(req: Request):
+    """Return recent feedback rows for the admin panel."""
+    token = req.headers.get("X-Cron-Secret", "")
+    if not verify_admin_token(token):
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    sb = get_supabase()
+    try:
+        rows = (
+            sb.table("feedback")
+            .select("id, user_id, user_email, kind, message, course, page, created_at, status")
+            .order("created_at", desc=True)
+            .limit(100)
+            .execute()
+        )
+        return {"items": rows.data or []}
+    except Exception as exc:
+        logger.warning("admin feedback list failed: %s", exc)
+        return {"items": []}

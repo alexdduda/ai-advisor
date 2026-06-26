@@ -228,12 +228,69 @@
   color: #374151;
 }
 
+/* ── Stats dashboard ──────────────────────────── */
+.stats-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stats-section-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #9ca3af;
+  margin-top: 20px;
+  margin-bottom: 4px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.stat-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 18px;
+  background: #f9fafb;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+}
+
+.stat-icon {
+  font-size: 1.1rem;
+  color: #ED1B2F;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.stat-value {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--text-primary, #111827);
+  line-height: 1.1;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+.stat-sub {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  margin-top: 2px;
+}
+
 /* ── Admin Tabs ──────────────────────────────── */
 .admin-tabs {
   display: flex;
   gap: 4px;
-  border-bottom: 2px solid #e5e7eb;
-  margin-bottom: 24px;
 }
 .admin-tab-btn {
   display: flex;
