@@ -401,7 +401,7 @@ function RecommendationsPanel({ profile, completedCourses, currentCourses, allPr
   const { t } = useLanguage()
   const { openCourse } = useCourseDetail()
 
-  const RECS_CACHE_TTL_MS = 24 * 60 * 60 * 1000
+  const RECS_CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000
   const _recsCacheKey = profile?.id ? `elective_recs_${profile.id}` : null
 
   const _loadCachedRecs = () => {
@@ -423,6 +423,21 @@ function RecommendationsPanel({ profile, completedCourses, currentCourses, allPr
   const [recsError, setRecsError]     = useState(null)
   const [showRecs, setShowRecs]       = useState(() => !!_initialCached)
   const hasLoaded                     = useRef(!!_initialCached)
+
+  // profile.id may arrive after first render (async load); hydrate from cache when it does
+  useEffect(() => {
+    if (recs || !profile?.id) return
+    try {
+      const raw = localStorage.getItem(`elective_recs_${profile.id}`)
+      if (!raw) return
+      const { data, ts } = JSON.parse(raw)
+      if (!data || !ts || Date.now() - ts > RECS_CACHE_TTL_MS) return
+      setRecs(data)
+      setShowRecs(true)
+      hasLoaded.current = true
+    } catch { /* ignore */ }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.id])
 
   const requiredCodes = useMemo(() => {
     const codes = new Set()
