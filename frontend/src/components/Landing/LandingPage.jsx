@@ -36,7 +36,6 @@ const degree2  = _findShot('degree2')
 const calendar = _findShot('calendar')
 const clubs1   = _findShot('clubs1') || _findShot('clubs')     // backwards compat
 const clubs2   = _findShot('clubs2')
-const forum    = _findShot('forum')
 
 function Screenshot({ src, alt, caption }) {
   if (!src) {
@@ -96,10 +95,10 @@ export default function LandingPage({ onSignIn }) {
   // The visual is one long scroll. "Sign in" is in the sticky top nav and
   // appears again as the final CTA — both call the same handler.
   const [navScrolled, setNavScrolled] = useState(false)
-  // Tiny throttle: only update state at most once per animation frame
-  if (typeof window !== 'undefined') {
+  // Tiny throttle: only update state at most once per animation frame.
+  useEffect(() => {
     let pending = false
-    window.onscroll = () => {
+    const onScroll = () => {
       if (pending) return
       pending = true
       requestAnimationFrame(() => {
@@ -107,7 +106,10 @@ export default function LandingPage({ onSignIn }) {
         pending = false
       })
     }
-  }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    onScroll() // sync initial state (e.g. reload while scrolled)
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
 
   return (
     <div className="landing-root">
