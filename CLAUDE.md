@@ -43,7 +43,7 @@ frontend/src/
 ├── components/Auth/        # Login
 ├── lib/                    # API clients (api.js, cardsAPI.js, favoritesAPI.js, etc.)
 ├── contexts/               # AuthContext, LanguageContext, ThemeContext, TimezoneContext
-└── hooks/                  # useChatTabs, useNotificationPrefs
+└── hooks/                  # useNotificationPrefs, useUpcomingEvents
 ```
 
 ## Key patterns

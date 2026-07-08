@@ -68,7 +68,7 @@ _SITE_KNOWLEDGE = _load("site_knowledge.md")
 _MCGILL_ADVISING = _load("mcgill_advising.md")
 _TAB_GUIDANCE: dict[str, str] = {
     name: _load(f"tab_guidance/{name}.md")
-    for name in ("chat", "calendar", "favorites", "profile", "courses", "clubs", "forum")
+    for name in ("home", "chat", "calendar", "favorites", "profile", "courses", "clubs", "forum")
 }
 
 router = APIRouter()

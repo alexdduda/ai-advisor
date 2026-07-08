@@ -1,78 +1,41 @@
-import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useLayoutEffect, useCallback, useMemo, useRef } from 'react'
 import { FaRocket, FaLightbulb } from 'react-icons/fa'
+import { useLanguage } from '../../contexts/PreferencesContext'
 
-const STEPS = [
+// Short 4-step tour: the Home setup checklist carries the real onboarding,
+// so the tour just orients the user around the three core surfaces.
+const buildSteps = (t) => [
   {
     id: 'welcome',
     target: null,
     tab: null,
-    title: 'Welcome to Symbolos',
-    description: "Your McGill AI Academic Advisor. Let's take a 30-second tour of everything you can do.",
+    title: t('tour.welcomeTitle'),
+    description: t('tour.welcomeDesc'),
     tip: null,
+  },
+  {
+    id: 'home',
+    target: '[data-tour="home"]',
+    tab: 'home',
+    title: t('tour.homeTitle'),
+    description: t('tour.homeDesc'),
+    tip: t('tour.homeTip'),
   },
   {
     id: 'chat',
     target: '[data-tour="chat"]',
     tab: 'chat',
-    title: 'Academic Brief',
-    description: 'Your personalized daily briefing. Get AI-generated cards with course recommendations, degree insights, and academic tips tailored to your profile.',
-    tip: 'Ask anything — "What courses should I take for a COMP major in U1?"',
+    title: t('tour.briefTitle'),
+    description: t('tour.briefDesc'),
+    tip: t('tour.briefTip'),
   },
   {
     id: 'favorites',
     target: '[data-tour="favorites"]',
     tab: 'favorites',
-    title: 'Degree Planning',
-    description: "Visualize your entire degree at a glance. See which requirements you've completed, what's in progress, and what's left — including transfer credits and electives.",
-    tip: 'Completed courses automatically update your degree progress.',
-  },
-  {
-    id: 'courses',
-    target: '[data-tour="courses"]',
-    tab: 'courses',
-    title: 'Explore Courses',
-    description: 'Search all McGill courses by code or keyword. See descriptions, credit values, and save courses for future semesters.',
-    tip: 'Search "COMP 202" or just type "algorithms" to find relevant courses.',
-  },
-  {
-    id: 'calendar',
-    target: '[data-tour="calendar"]',
-    tab: 'calendar',
-    title: 'Calendar',
-    description: "Stay on top of your semester. Final exam schedules are automatically loaded from McGill's official data. Add personal events and set email reminders.",
-    tip: 'Your final exam schedule is always pre-populated each term.',
-  },
-  {
-    id: 'clubs',
-    target: '[data-tour="clubs"]',
-    tab: 'clubs',
-    title: 'Student Clubs',
-    description: 'Explore hundreds of McGill student clubs. Join clubs, get notified about events, and connect with students who share your interests.',
-    tip: 'Club events automatically appear in your calendar once you join.',
-  },
-  {
-    id: 'forum',
-    target: '[data-tour="forum"]',
-    tab: 'forum',
-    title: 'Community Forum',
-    description: 'Ask questions, share advice, and connect with fellow McGill students. Browse posts by category and contribute to the community.',
-    tip: 'Post anonymously or publicly — your choice.',
-  },
-  {
-    id: 'profile',
-    target: '[data-tour="profile"]',
-    tab: 'profile',
-    title: 'Your Profile',
-    description: 'Set your faculty, program, and year so Symbolos can give you the most relevant advice. Switch between light/dark mode and languages at any time.',
-    tip: 'The more you fill out your profile, the smarter your advisor gets.',
-  },
-  {
-    id: 'done',
-    target: null,
-    tab: null,
-    title: "You're All Set!",
-    description: "Your McGill academic journey starts now. Head to Academic Brief to see your personalized cards, or jump to Degree Planning to check your progress.",
-    tip: null,
+    title: t('tour.degreeTitle'),
+    description: t('tour.degreeDesc'),
+    tip: t('tour.degreeTip'),
   },
 ]
 
@@ -80,6 +43,7 @@ const PAD = 10
 const TOOLTIP_W = 300
 
 export default function OnboardingTutorial({ onComplete, onTabChange }) {
+  const { t } = useLanguage()
   const [step, setStep] = useState(0)
   const [rect, setRect] = useState(null)
   const [visible, setVisible] = useState(false)
@@ -87,6 +51,7 @@ export default function OnboardingTutorial({ onComplete, onTabChange }) {
   const [tooltipTop, setTooltipTop] = useState(null)
   const tooltipRef = useRef(null)
 
+  const STEPS = useMemo(() => buildSteps(t), [t])
   const current = STEPS[step]
   const isFirst = step === 0
   const isLast  = step === STEPS.length - 1
@@ -137,7 +102,7 @@ export default function OnboardingTutorial({ onComplete, onTabChange }) {
   }
 
   const finish = () => {
-    if (onTabChange) onTabChange('chat')
+    if (onTabChange) onTabChange('home')
     setVisible(false)
     setTimeout(() => onComplete?.(), 350)
   }
@@ -247,16 +212,16 @@ export default function OnboardingTutorial({ onComplete, onTabChange }) {
               onClick={finish}
               style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.25)', fontSize: '0.76rem', cursor: 'pointer', padding: '4px 0', fontFamily: 'inherit', lineHeight: 1 }}
             >
-              Skip
+              {t('tour.skip')}
             </button>
           )}
           <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
-            {!isFirst && !isLast && (
+            {!isFirst && (
               <button
                 onClick={() => advance('back')}
                 style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem', fontWeight: 500, padding: '6px 14px', borderRadius: 8, cursor: 'pointer', fontFamily: 'inherit' }}
               >
-                ← Back
+                ← {t('tour.back')}
               </button>
             )}
             {!isLast ? (
@@ -264,14 +229,14 @@ export default function OnboardingTutorial({ onComplete, onTabChange }) {
                 onClick={() => advance('fwd')}
                 style={{ background: '#ed1b2f', border: 'none', color: '#fff', fontSize: '0.8rem', fontWeight: 600, padding: '6px 16px', borderRadius: 8, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 3px 10px rgba(237,27,47,0.35)' }}
               >
-                {isFirst ? 'Start Tour →' : 'Next →'}
+                {isFirst ? `${t('tour.start')} →` : `${t('tour.next')} →`}
               </button>
             ) : (
               <button
                 onClick={finish}
                 style={{ background: '#ed1b2f', border: 'none', color: '#fff', fontSize: '0.82rem', fontWeight: 600, padding: '7px 16px', borderRadius: 8, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6, boxShadow: '0 3px 10px rgba(237,27,47,0.35)' }}
               >
-                <FaRocket size={12} /> Go to Dashboard
+                <FaRocket size={12} /> {t('tour.finish')}
               </button>
             )}
           </div>

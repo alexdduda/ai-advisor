@@ -1,17 +1,19 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import {
   FaHeart, FaRegHeart, FaCheckCircle, FaBook, FaUser, FaChartBar,
   FaStar, FaTrophy, FaLayerGroup, FaExclamationCircle, FaTimes, FaExternalLinkAlt,
+  FaFlag,
 } from 'react-icons/fa'
 import { useCourseDetail } from '../../contexts/CourseDetailContext'
+import { useLanguage } from '../../contexts/PreferencesContext'
+import { getBestRating, getTotalReviews } from '../../utils/courseRatings'
+import ProfSuggestionPopover from '../ProfSuggestion/ProfSuggestionPopover'
 import './CourseDetailModal.css'
 
 const DAY_MAP = {
   M:'Mon', T:'Tue', W:'Wed', R:'Thu', F:'Fri', S:'Sat', U:'Sun',
   '1':'Mon','2':'Tue','3':'Wed','4':'Thu','5':'Fri','6':'Sat','7':'Sun',
 }
-
-const getRatingColor = (r) => !r ? undefined : r >= 4 ? '#22c55e' : r >= 3.5 ? '#84cc16' : r >= 3 ? '#f59e0b' : '#ef4444'
 
 const gpaToLetter = (gpa) => {
   if (!gpa) return ''
@@ -34,6 +36,10 @@ export default function CourseDetailModal({
   onToggleFavorite, onToggleCompleted, onToggleCurrent,
 }) {
   const { course, loading, error, closeCourse } = useCourseDetail()
+  const { t } = useLanguage()
+  // "Professor outdated?" flag popover (moved here from the old inline
+  // detail view in CoursesTab so both entry points get it).
+  const [flagOpen, setFlagOpen] = useState(false)
 
   // Close on Escape
   useEffect(() => {
@@ -42,6 +48,9 @@ export default function CourseDetailModal({
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [course, closeCourse])
+
+  // Reset the flag popover whenever a different course is shown
+  useEffect(() => { setFlagOpen(false) }, [course?.subject, course?.catalog])
 
   // Lock body scroll while open
   useEffect(() => {
@@ -56,8 +65,8 @@ export default function CourseDetailModal({
   if (!course) return null
 
   const isLoading = course._loading || loading
-  const rating = course.blended_rating ?? course.rmp_rating ?? course.mc_rating ?? null
-  const ratingColor = getRatingColor(rating)
+  const rating  = getBestRating(course)
+  const reviews = getTotalReviews(course)
 
   const byTerm = {}
   for (const s of course.schedule || []) {
@@ -111,21 +120,21 @@ export default function CourseDetailModal({
                     onClick={() => onToggleFavorite?.(course)}
                   >
                     {isFavorited?.(subj, cat) ? <FaHeart /> : <FaRegHeart />}
-                    {isFavorited?.(subj, cat) ? 'Saved' : 'Save'}
+                    {isFavorited?.(subj, cat) ? t('courses.detailSaved') : t('courses.detailSave')}
                   </button>
                   <button
                     className={`cdm-action-btn btn-done ${isCompleted?.(subj, cat) ? 'active' : ''}`}
                     onClick={() => onToggleCompleted?.(course)}
                   >
                     <FaCheckCircle />
-                    {isCompleted?.(subj, cat) ? 'Completed' : 'Done'}
+                    {isCompleted?.(subj, cat) ? t('courses.detailCompleted') : t('courses.detailDone')}
                   </button>
                   <button
                     className={`cdm-action-btn btn-current ${isCurrent?.(subj, cat) ? 'active' : ''}`}
                     onClick={() => onToggleCurrent?.(course)}
                   >
                     <FaBook />
-                    {isCurrent?.(subj, cat) ? 'Enrolled' : 'Enroll'}
+                    {isCurrent?.(subj, cat) ? t('courses.detailEnrolled') : t('courses.detailEnroll')}
                   </button>
                   <a
                     className="cdm-action-btn btn-vsb"
@@ -142,7 +151,7 @@ export default function CourseDetailModal({
                 {course.average && (
                   <div className="cdm-stat">
                     <FaTrophy className="cdm-stat-icon" />
-                    <span className="cdm-stat-label">Recent GPA</span>
+                    <span className="cdm-stat-label">{t('courses.recentGpa')}</span>
                     <span className="cdm-stat-value gpa-value">{parseFloat(course.average).toFixed(2)}</span>
                     <span className="cdm-stat-sub">({gpaToLetter(course.average)})</span>
                   </div>
@@ -150,7 +159,7 @@ export default function CourseDetailModal({
                 {course.overall_average && (
                   <div className="cdm-stat">
                     <FaChartBar className="cdm-stat-icon" />
-                    <span className="cdm-stat-label">All-time Avg</span>
+                    <span className="cdm-stat-label">{t('courses.allTimeAvg')}</span>
                     <span className="cdm-stat-value">{parseFloat(course.overall_average).toFixed(2)}</span>
                     <span className="cdm-stat-sub">({gpaToLetter(course.overall_average)})</span>
                   </div>
@@ -168,8 +177,8 @@ export default function CourseDetailModal({
                   <div className="cdm-section">
                     <div className="cdm-section-header">
                       <FaLayerGroup />
-                      <h3>Sections</h3>
-                      <span className="cdm-section-count">{(course.schedule || []).length} total</span>
+                      <h3>{t('courses.sections')}</h3>
+                      <span className="cdm-section-count">{t('courses.nTotal').replace('{n}', (course.schedule || []).length)}</span>
                     </div>
                     {recentTerms.map(term => (
                       <div key={term} className="cdm-term-group">
@@ -216,8 +225,8 @@ export default function CourseDetailModal({
                   <div className="cdm-section">
                     <div className="cdm-section-header">
                       <FaChartBar />
-                      <h3>Grade History</h3>
-                      <span className="cdm-section-count">{course.grade_trend.length} years</span>
+                      <h3>{t('courses.gradeHistory')}</h3>
+                      <span className="cdm-section-count">{t('courses.nYears').replace('{n}', course.grade_trend.length)}</span>
                     </div>
                     <div className="cdm-grade-list">
                       {course.grade_trend.map((entry, idx) => {
@@ -247,23 +256,26 @@ export default function CourseDetailModal({
                   <div className="cdm-section">
                     <div className="cdm-section-header">
                       <FaStar />
-                      <h3>Professor Rating</h3>
+                      <h3>{t('courses.professorRating')}</h3>
+                      {reviews && (
+                        <span className="cdm-section-count">{t('courses.ratingsCount').replace('{n}', reviews)}</span>
+                      )}
                     </div>
                     <div className="cdm-rating-grid">
                       <div className="cdm-rating-card">
                         <div className={`cdm-rating-val ${rating >= 4 ? 'good' : rating >= 3 ? 'ok' : 'bad'}`}>{rating.toFixed(1)}</div>
-                        <div className="cdm-rating-label">Rating</div>
+                        <div className="cdm-rating-label">{t('courses.rating')}</div>
                       </div>
                       {course.rmp_difficulty != null && (
                         <div className="cdm-rating-card">
                           <div className={`cdm-rating-val ${course.rmp_difficulty <= 2.5 ? 'good' : course.rmp_difficulty <= 3.5 ? 'ok' : 'bad'}`}>{course.rmp_difficulty.toFixed(1)}</div>
-                          <div className="cdm-rating-label">Difficulty</div>
+                          <div className="cdm-rating-label">{t('courses.difficulty')}</div>
                         </div>
                       )}
                       {course.rmp_would_take_again != null && (
                         <div className="cdm-rating-card">
                           <div className={`cdm-rating-val ${course.rmp_would_take_again >= 70 ? 'good' : course.rmp_would_take_again >= 50 ? 'ok' : 'bad'}`}>{Math.round(course.rmp_would_take_again)}%</div>
-                          <div className="cdm-rating-label">Would Retake</div>
+                          <div className="cdm-rating-label">{t('courses.wouldRetake')}</div>
                         </div>
                       )}
                     </div>
@@ -274,14 +286,31 @@ export default function CourseDetailModal({
                   <div className="cdm-section">
                     <div className="cdm-section-header">
                       <FaUser />
-                      <h3>Instructors</h3>
+                      <h3>{t('courses.instructorsTitle')}</h3>
+                      <span className="cdm-flag-wrapper">
+                        <button
+                          className={`cdm-flag-btn ${flagOpen ? 'active' : ''}`}
+                          onClick={() => setFlagOpen(o => !o)}
+                          title={t('courses.flagProf')}
+                          aria-label={t('courses.flagProf')}
+                        >
+                          <FaFlag />
+                        </button>
+                        {flagOpen && (
+                          <ProfSuggestionPopover
+                            courseCode={`${subj} ${cat}`}
+                            currentInstructor={course.instructors[0] || course.instructor || null}
+                            onClose={() => setFlagOpen(false)}
+                          />
+                        )}
+                      </span>
                     </div>
                     <div className="cdm-instructors">
                       {course.instructors.map((name, idx) => (
                         <div key={idx} className="cdm-instructor-chip">
                           <FaUser className="cdm-instructor-icon" />
                           <span>{name}</span>
-                          {idx === 0 && <span className="cdm-instructor-badge">most recent</span>}
+                          {idx === 0 && <span className="cdm-instructor-badge">{t('courses.mostRecent')}</span>}
                         </div>
                       ))}
                     </div>
@@ -292,24 +321,24 @@ export default function CourseDetailModal({
                   <div className="cdm-section">
                     <div className="cdm-section-header">
                       <FaExclamationCircle />
-                      <h3>Requirements</h3>
+                      <h3>{t('courses.requirementsTitle')}</h3>
                     </div>
                     <div className="cdm-reqs">
                       {course.prerequisites && (
                         <div className="cdm-req-item">
-                          <span className="cdm-req-label">Prerequisites</span>
+                          <span className="cdm-req-label">{t('courses.prerequisites')}</span>
                           <span className="cdm-req-text">{course.prerequisites}</span>
                         </div>
                       )}
                       {course.corequisites && (
                         <div className="cdm-req-item">
-                          <span className="cdm-req-label">Corequisites</span>
+                          <span className="cdm-req-label">{t('courses.corequisites')}</span>
                           <span className="cdm-req-text">{course.corequisites}</span>
                         </div>
                       )}
                       {course.restrictions && (
                         <div className="cdm-req-item">
-                          <span className="cdm-req-label">Restrictions</span>
+                          <span className="cdm-req-label">{t('courses.restrictions')}</span>
                           <span className="cdm-req-text">{course.restrictions}</span>
                         </div>
                       )}

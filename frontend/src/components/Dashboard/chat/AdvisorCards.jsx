@@ -575,7 +575,7 @@ export default function AdvisorCards({
         Object.entries(raw).filter(([, ts]) => now - ts < _DELETED_TTL_MS)
       )
       // Persist pruned version back immediately
-      try { localStorage.setItem(deletedKey, JSON.stringify(pruned)) } catch {}
+      try { localStorage.setItem(deletedKey, JSON.stringify(pruned)) } catch { /* ignore */ }
       return new Set(Object.keys(pruned))
     } catch { return new Set() }
   })
@@ -590,7 +590,7 @@ export default function AdvisorCards({
   const [expandedCards, setExpanded] = useState(new Set())
 
   useEffect(() => {
-    try { localStorage.setItem(storageKey, JSON.stringify(threadMap)) } catch {}
+    try { localStorage.setItem(storageKey, JSON.stringify(threadMap)) } catch { /* ignore */ }
   }, [threadMap, storageKey])
 
   const feedRef = useRef(null)
@@ -658,7 +658,7 @@ export default function AdvisorCards({
           ? Object.fromEntries([...raw].map(id => [id, 0]))
           : raw
         localStorage.setItem(deletedKey, JSON.stringify({ ...existing, [cardId]: Date.now() }))
-      } catch {}
+      } catch { /* ignore */ }
       return n
     })
     if (onDeleteCard) onDeleteCard(cardId)
@@ -670,6 +670,20 @@ export default function AdvisorCards({
   }, [pinnedCardId, onPinToggle])
 
   const showSkeletons = isLoading || isGenerating
+
+  // Auto-open the top card's chat panel so it's immediately obvious that
+  // cards are chats, not static tips. Fires once per tab visit — this
+  // component remounts every time the user switches to the Brief tab
+  // (Dashboard conditionally renders it), so the guard just prevents it
+  // from re-firing on every re-render within a single visit.
+  const autoExpandedRef = useRef(false)
+  useEffect(() => {
+    if (autoExpandedRef.current || showSkeletons) return
+    const topCard = visibleCards[0]
+    if (!topCard) return
+    autoExpandedRef.current = true
+    setExpanded(prev => new Set([...prev, topCard.id]))
+  }, [showSkeletons, visibleCards])
 
   // Counts are all based on visibleCards (deleted cards excluded)
   const categoryCounts = visibleCards.reduce((acc, card) => {
