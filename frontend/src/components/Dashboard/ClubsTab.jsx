@@ -3,7 +3,7 @@ import {
   FaSearch, FaUsers, FaHeart, FaCalendarAlt,
   FaPlus, FaTimes, FaExternalLinkAlt, FaChevronRight,
   FaEnvelope, FaCheck, FaBell, FaBullhorn, FaTrash,
-  FaChevronDown, FaChevronLeft, FaStar, FaCog, FaCrown,
+  FaChevronDown, FaStar, FaCog, FaCrown,
   FaBook, FaPalette, FaGraduationCap,
   FaLock, FaGlobe, FaEdit, FaUserPlus, FaUserCheck, FaUserTimes,
   FaExclamationTriangle, FaFire, FaGem, FaShare,
@@ -12,22 +12,33 @@ import { useLanguage } from '../../contexts/PreferencesContext'
 import { useAuth } from '../../contexts/AuthContext'
 import clubsAPI from '../../lib/clubsAPI'
 import { readCache, writeCache } from '../../lib/userDataCache'
+import Breadcrumb from '../ui/Breadcrumb'
 import './ClubsTab.css'
 
+// Colors come from theme.css --club-cat-* tokens (light + dark variants),
+// so category chips/badges render correctly in both themes. `var(...)`
+// strings are safe in inline styles — do NOT concatenate alpha suffixes
+// onto them (use the -bg token for tints instead).
+const catVars = (slug) => ({
+  color:  `var(--club-cat-${slug})`,
+  bg:     `var(--club-cat-${slug}-bg)`,
+  border: `var(--club-cat-${slug}-border)`,
+})
+
 const CATEGORY_META = {
-  'Academic':                { color: '#2563eb', bg: '#dbeafe', border: '#93c5fd', icon: <FaBook /> },
-  'Engineering & Technology':{ color: '#7c3aed', bg: '#ede9fe', border: '#c4b5fd', icon: <FaStar /> },
-  'Professional':            { color: '#0f766e', bg: '#ccfbf1', border: '#5eead4', icon: <FaStar /> },
-  'Debate & Politics':       { color: '#b45309', bg: '#fef3c7', border: '#fcd34d', icon: <FaSearch /> },
-  'Athletics & Recreation':  { color: '#16a34a', bg: '#dcfce7', border: '#86efac', icon: <FaUsers /> },
-  'Arts & Culture':          { color: '#db2777', bg: '#fce7f3', border: '#f9a8d4', icon: <FaPalette /> },
-  'Environment':             { color: '#15803d', bg: '#dcfce7', border: '#6ee7b7', icon: <FaHeart /> },
-  'Health & Wellness':       { color: '#0284c7', bg: '#e0f2fe', border: '#7dd3fc', icon: <FaHeart /> },
-  'Community Service':       { color: '#ea580c', bg: '#ffedd5', border: '#fdba74', icon: <FaHeart /> },
-  'International':           { color: '#0891b2', bg: '#cffafe', border: '#67e8f9', icon: <FaSearch /> },
-  'Science':                 { color: '#4f46e5', bg: '#e0e7ff', border: '#a5b4fc', icon: <FaBook /> },
-  'Social':                  { color: '#dc2626', bg: '#fee2e2', border: '#fca5a5', icon: <FaUsers /> },
-  'Spiritual & Religious':   { color: '#a16207', bg: '#fefce8', border: '#fde047', icon: <FaHeart /> },
+  'Academic':                { ...catVars('academic'),      icon: <FaBook /> },
+  'Engineering & Technology':{ ...catVars('engineering'),   icon: <FaStar /> },
+  'Professional':            { ...catVars('professional'),  icon: <FaStar /> },
+  'Debate & Politics':       { ...catVars('debate'),        icon: <FaSearch /> },
+  'Athletics & Recreation':  { ...catVars('athletics'),     icon: <FaUsers /> },
+  'Arts & Culture':          { ...catVars('arts'),          icon: <FaPalette /> },
+  'Environment':             { ...catVars('environment'),   icon: <FaHeart /> },
+  'Health & Wellness':       { ...catVars('health'),        icon: <FaHeart /> },
+  'Community Service':       { ...catVars('community'),     icon: <FaHeart /> },
+  'International':           { ...catVars('international'), icon: <FaSearch /> },
+  'Science':                 { ...catVars('science'),       icon: <FaBook /> },
+  'Social':                  { ...catVars('social'),        icon: <FaUsers /> },
+  'Spiritual & Religious':   { ...catVars('spiritual'),     icon: <FaHeart /> },
   'Default':                 { color: 'var(--text-secondary)', bg: 'var(--bg-tertiary)', border: 'var(--border-secondary)', icon: <FaGraduationCap /> },
 }
 
@@ -172,15 +183,15 @@ function JoinRequestModal({ club, onSubmit, onClose }) {
         </div>
         <form onSubmit={handleSubmit} className="club-join-modal__form">
           <div className="club-join-modal__field">
-            <label>{t('clubs.joinName')} <span style={{ color: '#dc2626' }}>*</span></label>
+            <label>{t('clubs.joinName')} <span style={{ color: 'var(--error-primary)' }}>*</span></label>
             <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder={t('clubs.joinNamePlaceholder')} required />
           </div>
           <div className="club-join-modal__field">
-            <label>{t('clubs.joinEmail')} <span style={{ color: '#dc2626' }}>*</span></label>
+            <label>{t('clubs.joinEmail')} <span style={{ color: 'var(--error-primary)' }}>*</span></label>
             <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder={t('clubs.joinEmailPlaceholder')} required />
           </div>
           <div className="club-join-modal__field">
-            <label>{t('clubs.joinLinkedIn')} <span style={{ color: '#9ca3af', fontWeight: 400, fontSize: '12px' }}>{t('clubs.joinOptional')}</span></label>
+            <label>{t('clubs.joinLinkedIn')} <span style={{ color: 'var(--text-muted)', fontWeight: 400, fontSize: '12px' }}>{t('clubs.joinOptional')}</span></label>
             <input type="url" value={linkedin} onChange={e => setLinkedin(e.target.value)} placeholder={t('clubs.joinLinkedInPlaceholder')} />
           </div>
           <button type="submit" className="club-action-btn club-action-btn--join" disabled={submitting || !name.trim() || !email.trim()} style={{ width: '100%', marginTop: '8px', justifyContent: 'center' }}>
@@ -192,7 +203,7 @@ function JoinRequestModal({ club, onSubmit, onClose }) {
   )
 }
 
-function MembersSection({ clubId, clubOwnerId, meta, refreshKey }) {
+function MembersSection({ clubId, refreshKey }) {
   const { t } = useLanguage()
   const [members, setMembers] = useState([])
   const [loading, setLoading] = useState(true)
@@ -229,8 +240,8 @@ function MembersSection({ clubId, clubOwnerId, meta, refreshKey }) {
     } catch (e) { alert(e.message) }
   }
 
-  if (loading) return <p style={{ fontSize: '13px', color: '#9ca3af', padding: '8px 0' }}>{t('clubs.membersLoading')}</p>
-  if (!members.length) return <p style={{ fontSize: '13px', color: '#9ca3af', padding: '8px 0' }}>{t('clubs.membersNone')}</p>
+  if (loading) return <p style={{ fontSize: '13px', color: 'var(--text-muted)', padding: '8px 0' }}>{t('clubs.membersLoading')}</p>
+  if (!members.length) return <p style={{ fontSize: '13px', color: 'var(--text-muted)', padding: '8px 0' }}>{t('clubs.membersNone')}</p>
 
   const canManage = callerRole === 'owner' || callerRole === 'admin'
   const roleOrder = { owner: 0, admin: 1, member: 2 }
@@ -313,7 +324,7 @@ function MembersSection({ clubId, clubOwnerId, meta, refreshKey }) {
   )
 }
 
-function ClubDetailDrawer({ club, liveClub, joined, calSynced, hasPendingRequest, onJoin, onLeave, onToggleCalendar, onClose, clubLoading, t, isAdmin, userId, isSubscribed, onToggleSubscribe, onLogoChanged, isMcGill }) {
+function ClubDetailDrawer({ club, liveClub, joined, calSynced, onToggleCalendar, onClose, clubLoading, t, isAdmin, userId, isSubscribed, onToggleSubscribe, onLogoChanged, isMcGill, onManage }) {
   const [memberRefreshKey, setMemberRefreshKey] = useState(0)
   const [activity, setActivity] = useState(null)        // #11 — recent announcements/events
   const [facultyStats, setFacultyStats] = useState(null) // #12 — faculty social proof
@@ -359,12 +370,16 @@ function ClubDetailDrawer({ club, liveClub, joined, calSynced, hasPendingRequest
     <div className="club-drawer-overlay" onClick={onClose}>
       <aside className="club-drawer" onClick={e => e.stopPropagation()}>
         <div className="club-drawer__strip" style={{
-          background: `linear-gradient(135deg, ${meta.color}18, ${meta.color}08)`,
+          background: `linear-gradient(135deg, ${meta.bg}, transparent)`,
           borderBottom: `3px solid ${meta.color}`
         }}>
-          <button className="club-drawer__back" onClick={onClose}>
-            <FaChevronLeft size={13} /> {t('clubs.back')}
-          </button>
+          <Breadcrumb
+            className="club-drawer__breadcrumb"
+            items={[
+              { key: 'clubs', label: t('nav.clubs'), onClick: onClose },
+              { key: 'club', label: display.name },
+            ]}
+          />
           <div className="club-drawer__strip-main">
             <ClubAvatar
               name={display.name}
@@ -406,9 +421,15 @@ function ClubDetailDrawer({ club, liveClub, joined, calSynced, hasPendingRequest
           <div className="club-drawer__strip-actions" style={{ display: 'flex', gap: '8px' }}>
             {/* Subscribe and Join buttons — hidden for owners/managers */}
             {canManage ? (
-              <span className="club-action-btn club-action-btn--subscribed" style={{ cursor: 'default', opacity: 0.75 }}>
-                ✓ {t('clubs.manage.owner') || 'Manager'}
-              </span>
+              onManage ? (
+                <button className="club-action-btn club-action-btn--subscribed" onClick={() => onManage(display)}>
+                  <FaCog size={11} /> {t('clubs.manage.manageBtn') || 'Manage club'}
+                </button>
+              ) : (
+                <span className="club-action-btn club-action-btn--subscribed" style={{ cursor: 'default', opacity: 0.75 }}>
+                  ✓ {t('clubs.manage.owner') || 'Manager'}
+                </span>
+              )
             ) : isMcGill ? (
               <>
                 <button
@@ -665,9 +686,8 @@ function ClubDetailDrawer({ club, liveClub, joined, calSynced, hasPendingRequest
   )
 }
 
-function ClubCard({ club, joined, calSynced, hasPendingRequest, isSubscribed, onJoin, onLeave, onToggleCalendar, onToggleSubscribe, onOpen, onDelete, onEdit, onManage, onLogoChanged, isAdmin, clubLoading, t, userId, language, isFeatured = false, isMcGill = false }) {
+function ClubCard({ club, joined, calSynced, isSubscribed, onLeave, onToggleCalendar, onToggleSubscribe, onOpen, onDelete, onEdit, onManage, onLogoChanged, isAdmin, clubLoading, t, userId, isFeatured = false, isMcGill = false }) {
   const meta = getCat(club.category)
-  const [justJoined, setJustJoined] = useState(false)
   const isLoading = clubLoading[club.id] ?? false
   // Owner or admin both get full manage privileges — invited managers are
   // surfaced via the _manage_role flag the /created endpoint now returns.
@@ -910,8 +930,7 @@ function MyClubRow({ club, calSynced, onLeave, onToggleCalendar, onOpen, onDelet
   )
 }
 
-function CreatedClubRow({ club, onEdit, onManage, onManageRequests, onOpen, pendingCount, t }) {
-  const meta = getCat(club.category)
+function CreatedClubRow({ club, onManage, onOpen, t }) {
   return (
     <div className="my-club-row created-club-row" onClick={() => onOpen(club)} style={{ cursor: 'pointer' }}>
       <ClubAvatar name={club.name} category={club.category} size="sm" logoUrl={club.logo_url} />
@@ -1020,7 +1039,7 @@ function JoinRequestsModal({ club, onClose, onAction, t }) {
 }
 
 // ── Club Management Dashboard ─────────────────────────────────────────────────
-function ClubManageDashboard({ club, onClose, onSave, t, isAdmin }) {
+function ClubManageDashboard({ club, onClose, onSave, t }) {
   const [activeSection, setActiveSection] = useState('overview')
   const [managers, setManagers] = useState([])
   const [subscribers, setSubscribers] = useState({ count: 0 })
@@ -1095,14 +1114,6 @@ function ClubManageDashboard({ club, onClose, onSave, t, isAdmin }) {
     }
   }
 
-  const handleRemoveManager = async (userId, name) => {
-    if (!window.confirm(t('clubs.manage.removeManagerConfirm').replace('{name}', name || ''))) return
-    try {
-      await clubsAPI.removeClubManager(club.id, userId)
-      setManagers(prev => prev.filter(m => m.user_id !== userId))
-    } catch (e) { setManagerError(e.message) }
-  }
-
   const handleSaveEdit = async (e) => {
     e.preventDefault()
     if (!editForm.application_url?.trim() && !editForm.join_instructions?.trim()) {
@@ -1129,7 +1140,7 @@ function ClubManageDashboard({ club, onClose, onSave, t, isAdmin }) {
       setAnnForm({ title: '', body: '', join_link: '' })
       // Refresh announcements
       clubsAPI.getClubAnnouncements?.(club.id)?.then?.(d => setAnnouncements(d.announcements || d || []))?.catch?.(() => {})
-    } catch {}
+    } catch { /* ignore */ }
     finally { setAnnSubmitting(false) }
   }
 
@@ -1137,7 +1148,7 @@ function ClubManageDashboard({ club, onClose, onSave, t, isAdmin }) {
     try {
       await clubsAPI.deleteClubAnnouncement(club.id, annId)
       setAnnouncements(prev => prev.filter(a => a.id !== annId))
-    } catch {}
+    } catch { /* ignore */ }
   }
 
   const handleCreateEvent = async (e) => {
@@ -1148,7 +1159,7 @@ function ClubManageDashboard({ club, onClose, onSave, t, isAdmin }) {
       await clubsAPI.createClubEvent(club.id, eventForm)
       setEventForm({ title: '', description: '', event_date: '', location: '', join_link: '' })
       clubsAPI.getClubEvents?.(club.id)?.then?.(d => setEvents(d.events || d || []))?.catch?.(() => {})
-    } catch {}
+    } catch { /* ignore */ }
     finally { setEventSubmitting(false) }
   }
 
@@ -1156,7 +1167,7 @@ function ClubManageDashboard({ club, onClose, onSave, t, isAdmin }) {
     try {
       await clubsAPI.deleteClubEvent(club.id, eventId)
       setEvents(prev => prev.filter(ev => ev.id !== eventId))
-    } catch {}
+    } catch { /* ignore */ }
   }
 
   const sections = [
@@ -1268,7 +1279,7 @@ function ClubManageDashboard({ club, onClose, onSave, t, isAdmin }) {
                         className="clubs-modal__btn clubs-modal__btn--ghost"
                         onClick={async () => {
                           setLogoUrl(null)
-                          try { await clubsAPI.editClub(club.id, { logo_url: '' }) } catch {}
+                          try { await clubsAPI.editClub(club.id, { logo_url: '' }) } catch { /* ignore */ }
                         }}
                         disabled={logoUploading}
                       >
@@ -2123,13 +2134,6 @@ export default function ClubsTab({ user, authFlags, onClubEventsChange }) {
     return clubs.filter(c => subscribedIds.has(c.id) && !joined.has(c.id) && !created.has(c.id))
   }, [clubs, subscribedIds, joinedIds, createdClubs])
 
-  const createdClubIds = useMemo(() => new Set(createdClubs.map(c => c.id)), [createdClubs])
-
-  const resolvedMyClubs = useMemo(() =>
-    myClubs.map(m => ({ club: m.club ?? m, calendar_synced: m.calendar_synced ?? false })).filter(m => m.club?.id && !createdClubIds.has(m.club.id)),
-    [myClubs, createdClubIds]
-  )
-
   const clubsById = useMemo(() => {
     const map = {}
     clubs.forEach(c => { map[c.id] = c })
@@ -2535,6 +2539,7 @@ export default function ClubsTab({ user, authFlags, onClubEventsChange }) {
           isAdmin={isAdmin}
           userId={user?.id}
           isMcGill={isMcGill}
+          onManage={(clubToManage) => { setOpenClub(null); setManagingClub(clubToManage) }}
         />
       )}
 
@@ -2568,6 +2573,7 @@ export default function ClubsTab({ user, authFlags, onClubEventsChange }) {
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components -- pure helper, also imported by tests
 export function buildClubCalendarEvents(myClubs) {
   const events = []
   const today = new Date()

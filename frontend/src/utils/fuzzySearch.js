@@ -45,16 +45,31 @@ function levenshtein(a, b, maxD = 3) {
   return dp[a.length]
 }
 
-// ── Closest known subject (returns null if nothing within maxD edits) ────────
-export function closestSubject(typed, maxD = 2) {
+// ── Closest known subjects (all ties at the best distance) ──────────────────
+// Several subjects can sit at the same edit distance ("CMOP" is 2 edits from
+// both CCOM and COMP), so return every tie and let the caller retry each in
+// order. Anagrams of the typed prefix rank first — a same-letters candidate
+// is almost always a letter-swap typo (CMOP → COMP), which plain Levenshtein
+// under-ranks because it counts a transposition as two substitutions.
+export function closestSubjects(typed, maxD = 2) {
   const upper = typed.toUpperCase().replace(/[^A-Z]/g, '')
-  if (upper.length < 2) return null
-  let best = null, bestD = maxD + 1
+  if (upper.length < 2) return []
+  let bestD = maxD + 1
+  let best = []
   for (const s of KNOWN_SUBJECTS) {
     const d = levenshtein(upper, s, maxD)
-    if (d < bestD) { bestD = d; best = s }
+    if (d < bestD) { bestD = d; best = [s] }
+    else if (d === bestD && d <= maxD) best.push(s)
   }
-  return bestD <= maxD ? best : null
+  if (bestD > maxD) return []
+  const sortedUpper = [...upper].sort().join('')
+  const isAnagram = (s) => [...s].sort().join('') === sortedUpper
+  return best.sort((a, b) => (isAnagram(b) ? 1 : 0) - (isAnagram(a) ? 1 : 0))
+}
+
+// ── Closest known subject (returns null if nothing within maxD edits) ────────
+export function closestSubject(typed, maxD = 2) {
+  return closestSubjects(typed, maxD)[0] ?? null
 }
 
 // ── Normalise a raw user query ───────────────────────────────────────────────
@@ -76,25 +91,28 @@ export function normalizeQuery(raw) {
 }
 
 // ── Build correction candidates from a zero-result query ────────────────────
+// Returns every closest-subject tie as its own candidate; the caller retries
+// them in order and uses the first that produces results.
 export function buildCorrectionCandidates(raw) {
   const normalized = normalizeQuery(raw)
   const parts = normalized.split(' ')
 
+  const toCandidates = (subjectPart, catalog) =>
+    closestSubjects(subjectPart)
+      .filter(s => s !== subjectPart.toUpperCase())
+      .map(s => ({ query: `${s} ${catalog}`, note: `${s} ${catalog}` }))
+
   // Might be a course code like "CMOP 202"
   if (parts.length >= 2 && /^\d{3}$/.test(parts[parts.length - 1])) {
-    const subjectPart = parts.slice(0, -1).join('')
-    const catalog     = parts[parts.length - 1]
-    const corrected   = closestSubject(subjectPart)
-    if (corrected && corrected !== subjectPart.toUpperCase()) {
-      return [{ query: `${corrected} ${catalog}`, note: `${corrected} ${catalog}` }]
-    }
+    const candidates = toCandidates(parts.slice(0, -1).join(''), parts[parts.length - 1])
+    if (candidates.length) return candidates
   }
 
   // Single token that looks like a malformed code e.g. "CMOP202"
   const m = raw.trim().match(/^([A-Za-z]{2,6})(\d{3})$/)
   if (m) {
-    const corrected = closestSubject(m[1])
-    if (corrected) return [{ query: `${corrected} ${m[2]}`, note: `${corrected} ${m[2]}` }]
+    const candidates = toCandidates(m[1], m[2])
+    if (candidates.length) return candidates
   }
 
   return []

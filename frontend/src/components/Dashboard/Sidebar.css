@@ -195,9 +195,13 @@
   transform: translateX(1px) scale(0.98);
 }
 
+/* Tinted background + colored left rail, per tab (--nav-accent* set inline
+   per nav item) instead of one uniform red fill for every section. */
 .nav-item.active {
-  background: linear-gradient(135deg, var(--accent-primary, #ED1B2F) 0%, #B01B2E 100%);
-  color: white;
+  background: var(--nav-accent-light, var(--accent-light));
+  color: var(--nav-accent-text, var(--accent-text));
+  border-left: 3px solid var(--nav-accent, var(--accent-primary));
+  padding-left: calc(1rem - 3px);
   animation: nav-item-enter 0.22s cubic-bezier(0.4, 0, 0.2, 1) both,
              nav-activate 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both;
   animation-delay: calc(0.05s + var(--nav-index, 0) * 0.04s), 0s;
@@ -212,6 +216,8 @@
 /* Override hover translate on active items */
 .nav-item.active:hover {
   transform: translateX(2px);
+  background: var(--nav-accent-light, var(--accent-light));
+  color: var(--nav-accent-text, var(--accent-text));
 }
 
 .nav-icon {
@@ -229,11 +235,49 @@
 }
 
 .nav-item:not(.active) .nav-icon { color: var(--accent-primary, #ED1B2F); }
-.nav-item.active .nav-icon { color: white; }
+.nav-item.active .nav-icon { color: var(--nav-accent, var(--accent-primary)); }
 /* Prevent icon color changing on hover when item is active */
-.nav-item.active:hover .nav-icon { color: white; transform: scale(1.12); }
+.nav-item.active:hover .nav-icon { color: var(--nav-accent, var(--accent-primary)); transform: scale(1.12); }
 
 .nav-label { font-weight: 500; font-size: 1rem; }
+
+/* ── Nav badges (e.g. Calendar urgent-deadline count) ── */
+.nav-badge {
+  margin-left: auto;
+  flex-shrink: 0;
+  background: var(--error-primary);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mini-pill { position: relative; }
+
+.mini-pill-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  background: var(--error-primary);
+  color: white;
+  font-size: 0.6rem;
+  font-weight: 700;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 3px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  border: 2px solid var(--sidebar-bg, #fff);
+}
 
 /* ── Footer (open) ── */
 .sidebar-footer {
@@ -407,9 +451,9 @@
 }
 
 .mini-pill--active {
-  background: linear-gradient(135deg, var(--accent-primary, #ED1B2F) 0%, #B01B2E 100%);
+  background: var(--nav-accent, var(--accent-primary));
   color: white;
-  box-shadow: 0 2px 8px rgba(237, 27, 47, 0.4);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
   animation: pill-enter 0.22s cubic-bezier(0.4, 0, 0.2, 1) both,
              pill-activate 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
   animation-delay: calc(0.04s + var(--pill-index, 0) * 0.03s), 0s;
@@ -422,7 +466,7 @@
 }
 
 .mini-pill--active:hover {
-  background: linear-gradient(135deg, var(--accent-primary, #ED1B2F) 0%, #B01B2E 100%);
+  background: var(--nav-accent, var(--accent-primary));
   color: white;
   transform: scale(1.12);
 }
@@ -565,17 +609,6 @@
 }
 [data-theme="dark"] .nav-item:not(.active) .nav-icon { color: #ed1b2f; }
 
-/* Active nav — slightly stronger glow on dark */
-[data-theme="dark"] .nav-item.active {
-  box-shadow: 0 2px 12px rgba(237, 27, 47, 0.35);
-}
-
-/* Lock active nav icon to white — prevent red hover color bleeding through */
-[data-theme="dark"] .nav-item.active .nav-icon,
-[data-theme="dark"] .nav-item.active:hover .nav-icon {
-  color: white;
-}
-
 /* Lock active mini pill icon to white on hover */
 [data-theme="dark"] .mini-pill--active,
 [data-theme="dark"] .mini-pill--active:hover {
@@ -609,12 +642,6 @@
 [data-theme="dark"] .mini-pill:active {
   /* scale(0.88) from base still applies */
   background: rgba(237,27,47,0.2);
-}
-
-/* Active pill — deeper shadow for dark backgrounds */
-[data-theme="dark"] .mini-pill--active:hover {
-  background: linear-gradient(135deg, var(--accent-primary, #ED1B2F) 0%, #B01B2E 100%);
-  color: #ed1b2f;
 }
 
 [data-theme="dark"] .mini-pill--expand { color: rgba(255,255,255,0.25); }

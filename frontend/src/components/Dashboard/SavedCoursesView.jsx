@@ -14,7 +14,6 @@ export default function SavedCoursesView({
   onToggleFavorite,
   onToggleCompleted,
   onToggleCurrent,
-  onCourseClick,
 }) {
   const { t, language } = useLanguage()
   const { openCourse } = useCourseDetail()

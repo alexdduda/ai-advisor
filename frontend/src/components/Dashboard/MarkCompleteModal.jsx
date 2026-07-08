@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { FaTimes } from 'react-icons/fa'
 import { useLanguage } from '../../contexts/PreferencesContext'
+import Modal from '../ui/Modal'
 import './MarkCompleteModal.css'
 
 export default function MarkCompleteModal({ 
@@ -32,14 +32,7 @@ export default function MarkCompleteModal({
   }
 
   return (
-    <div className="modal-overlay" onClick={onCancel}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2>{t('modal.markComplete')}</h2>
-          <button className="modal-close" onClick={onCancel}><FaTimes /></button>
-        </div>
-
-        <div className="modal-body">
+    <Modal onClose={onCancel} title={t('modal.markComplete')} size="md">
           <div className="course-info">
             <div className="course-code-display">{course.code}</div>
             <div className="course-title-display">{course.title}</div>
@@ -128,8 +121,6 @@ export default function MarkCompleteModal({
               </button>
             </div>
           </form>
-        </div>
-      </div>
-    </div>
+    </Modal>
   )
 }

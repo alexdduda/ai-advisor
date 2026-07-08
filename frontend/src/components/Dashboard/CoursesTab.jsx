@@ -1,66 +1,41 @@
 import { useState } from 'react'
 import {
   FaHeart, FaRegHeart, FaCheckCircle, FaStar, FaBook,
-  FaUser, FaChartBar, FaFlag, FaChevronLeft, FaChevronRight,
-  FaArrowLeft, FaTrophy, FaLayerGroup, FaCalendarAlt, FaExternalLinkAlt,
-  FaExclamationCircle
+  FaUser, FaChevronLeft, FaChevronRight, FaCalendarAlt,
+  FaExternalLinkAlt, FaInfoCircle, FaSearch,
 } from 'react-icons/fa'
 import { MdOutlineRateReview } from 'react-icons/md'
 import { useLanguage } from '../../contexts/PreferencesContext'
+import { useCourseDetail } from '../../contexts/CourseDetailContext'
+import {
+  getRatingColor, getDifficultyColor, getBestRating, getTotalReviews,
+} from '../../utils/courseRatings'
+import Skeleton from '../ui/Skeleton'
+import EmptyState from '../ui/EmptyState'
 import './CoursesTab.css'
-import ProfSuggestionPopover from '../ProfSuggestion/ProfSuggestionPopover'
 
 const PAGE_SIZE = 10
 
-const getRatingColor = (rating) => {
-  if (!rating) return undefined
-  if (rating >= 4.0) return '#22c55e'
-  if (rating >= 3.5) return '#84cc16'
-  if (rating >= 3.0) return '#f59e0b'
-  return '#ef4444'
-}
-
-const getDifficultyColor = (difficulty) => {
-  if (!difficulty) return undefined
-  if (difficulty <= 2.0) return '#22c55e'
-  if (difficulty <= 3.0) return '#84cc16'
-  if (difficulty <= 4.0) return '#f59e0b'
-  return '#ef4444'
-}
-
-const getBestRating = (course) =>
-  course?.blended_rating ?? course?.rmp_rating ?? course?.mc_rating ?? null
-
-const getTotalReviews = (course) => {
-  if (!course) return null
-  const total = (course.rmp_num_ratings ?? 0) + (course.mc_num_ratings ?? 0)
-  return total > 0 ? total : null
-}
-
-const DAY_MAP = {
-  M:'Mon', T:'Tue', W:'Wed', R:'Thu', F:'Fri', S:'Sat', U:'Sun',
-  '1':'Mon','2':'Tue','3':'Wed','4':'Thu','5':'Fri','6':'Sat','7':'Sun',
-}
-
 export default function CoursesTab({
   searchQuery, setSearchQuery,
-  searchResults, setSearchResults,
+  searchResults,
   isSearching, searchError,
   handleCourseSearch,
-  selectedCourse, setSelectedCourse, handleCourseClick,
   sortBy, setSortBy, sortCourses,
   isFavorited, isCompleted, isCurrent,
   handleToggleFavorite, handleToggleCompleted, handleToggleCurrent,
   gpaToLetterGrade,
+  searchCorrection, hasSearched,
 }) {
   const { t, language } = useLanguage()
-  const [openFlagCard,   setOpenFlagCard]   = useState(null)
-  const [openFlagDetail, setOpenFlagDetail] = useState(false)
-  const [currentPage,    setCurrentPage]    = useState(1)
+  // Detail viewing goes through the shared CourseDetailModal (mounted once in
+  // Dashboard) — same overlay the My Courses tab uses, so both entry points
+  // share one detail UI.
+  const { openCourse } = useCourseDetail()
+  const [currentPage, setCurrentPage] = useState(1)
 
-  const toggleFlagCard   = (e, key) => { e.stopPropagation(); setOpenFlagCard(p => p === key ? null : key) }
-  const handleSortChange = (val)    => { setSortBy(val); setCurrentPage(1) }
-  const handleSearch     = (e)      => { setCurrentPage(1); handleCourseSearch(e) }
+  const handleSortChange = (val) => { setSortBy(val); setCurrentPage(1) }
+  const handleSearch     = (e)   => { setCurrentPage(1); handleCourseSearch(e) }
 
   const sortedResults = sortCourses(searchResults, sortBy)
   const totalPages    = Math.ceil(sortedResults.length / PAGE_SIZE)
@@ -90,29 +65,53 @@ export default function CoursesTab({
       </form>
 
       {/* ── VSB Banner ──────────────────────────────────────── */}
-      {!selectedCourse && (
-        <a
-          href={`https://vsb.mcgill.ca/criteria.jsp?access=0&lang=${language === 'fr' ? 'fr' : 'en'}&tip=2&page=criteria&scratch=0&advice=0&legend=1&term=202601&sort=none&filters=iiiiiiiiii&bbs=&ds=&cams=OFF-CAMPUS_DISTANCE_DOWNTOWN_MACDONALD&locs=any&isrts=any&ses=any&pl=&pac=1`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="vsb-banner"
-        >
-          <div className="vsb-banner__left">
-            <FaCalendarAlt className="vsb-banner__icon" />
-            <div>
-              <span className="vsb-banner__title">{t('courses.vsbLabel')}</span>
-              <span className="vsb-banner__desc">{t('courses.vsbDesc')}</span>
-            </div>
+      <a
+        href={`https://vsb.mcgill.ca/criteria.jsp?access=0&lang=${language === 'fr' ? 'fr' : 'en'}&tip=2&page=criteria&scratch=0&advice=0&legend=1&term=202601&sort=none&filters=iiiiiiiiii&bbs=&ds=&cams=OFF-CAMPUS_DISTANCE_DOWNTOWN_MACDONALD&locs=any&isrts=any&ses=any&pl=&pac=1`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="vsb-banner"
+      >
+        <div className="vsb-banner__left">
+          <FaCalendarAlt className="vsb-banner__icon" />
+          <div>
+            <span className="vsb-banner__title">{t('courses.vsbLabel')}</span>
+            <span className="vsb-banner__desc">{t('courses.vsbDesc')}</span>
           </div>
-          <FaExternalLinkAlt className="vsb-banner__arrow" />
-        </a>
-      )}
+        </div>
+        <FaExternalLinkAlt className="vsb-banner__arrow" />
+      </a>
 
       {searchError && <div className="error-banner">{searchError}</div>}
 
+      {/* ── Loading skeletons ───────────────────────────────── */}
+      {isSearching && (
+        <div className="course-list">
+          {[0, 1, 2, 3].map(i => (
+            <div key={i} className="course-card course-card--skeleton">
+              <Skeleton width="8rem" height="1.1rem" />
+              <Skeleton width="60%" height="1rem" />
+              <Skeleton width="40%" height="0.85rem" />
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* ── Results list ────────────────────────────────────── */}
-      {searchResults.length > 0 && !selectedCourse && (
+      {searchResults.length > 0 && !isSearching && (
         <div className="search-results">
+          {/* Typo-correction notice — Dashboard already auto-applied the
+              corrected query; this just tells the user what happened. */}
+          {searchCorrection && (
+            <div className="search-correction-banner">
+              <FaInfoCircle />
+              <span>
+                {t('courses.correctionPrefix')}{' '}
+                <strong>{searchCorrection.corrected}</strong>{' '}
+                {t('courses.correctionSuffix').replace('{original}', searchCorrection.original)}
+              </span>
+            </div>
+          )}
+
           <div className="results-header-bar">
             <h3 className="results-header">
               {searchResults.length === 1
@@ -139,14 +138,14 @@ export default function CoursesTab({
           <div className="course-list">
             {pageResults.map((course) => {
               const cardKey     = `${course.subject}-${course.catalog}`
-              const isFlagOpen  = openFlagCard === cardKey
               const rating      = getBestRating(course)
+              const reviews     = getTotalReviews(course)
               const ratingColor = getRatingColor(rating)
               const diffColor   = getDifficultyColor(course.rmp_difficulty)
 
               return (
                 <div key={cardKey} className="course-card">
-                  <div className="course-card-content" onClick={() => handleCourseClick(course)}>
+                  <div className="course-card-content" onClick={() => openCourse(course.subject, course.catalog)}>
                     <div className="course-header">
                       <div className="course-code">{course.subject} {course.catalog}</div>
                       {course.average != null && (
@@ -162,11 +161,12 @@ export default function CoursesTab({
                         <div className="instructor-name"><FaUser /> {course.instructor}</div>
                         {rating && (
                           <div className="rmp-compact">
-                            <div className="rmp-stat">
+                            <div className="rmp-stat" title={reviews ? t('courses.ratingsCount').replace('{n}', reviews) : undefined}>
                               <span className="rmp-label" style={{ color: ratingColor }}>
                                 <FaStar style={{ color: ratingColor }} /> {t('courses.rating')}:
                               </span>
                               <span className="rmp-value" style={{ color: ratingColor }}>{rating.toFixed(1)}/5.0</span>
+                              {reviews && <span className="rmp-reviews">· {reviews}</span>}
                             </div>
                             {course.rmp_difficulty && (
                               <div className="rmp-stat">
@@ -179,20 +179,6 @@ export default function CoursesTab({
                           </div>
                         )}
                       </div>
-                    )}
-                  </div>
-
-                  <div className="prof-flag-wrapper">
-                    <button className={`prof-flag-btn ${isFlagOpen ? 'active' : ''}`} onClick={(e) => toggleFlagCard(e, cardKey)} data-tooltip="Report wrong professor">
-                      <FaFlag />
-                    </button>
-                    {isFlagOpen && (
-                      <ProfSuggestionPopover
-                        courseSubject={course.subject}
-                        courseCatalog={course.catalog}
-                        currentInstructor={course.instructor}
-                        onClose={() => setOpenFlagCard(null)}
-                      />
                     )}
                   </div>
 
@@ -232,251 +218,17 @@ export default function CoursesTab({
         </div>
       )}
 
-      {/* ── Course detail ────────────────────────────────────── */}
-      {selectedCourse && (() => {
-        const rating       = getBestRating(selectedCourse)
-        const totalReviews = getTotalReviews(selectedCourse)
-        const ratingColor  = getRatingColor(rating)
+      {/* ── No results ──────────────────────────────────────── */}
+      {hasSearched && !isSearching && !searchError && searchResults.length === 0 && (
+        <EmptyState
+          icon={<FaSearch />}
+          title={t('courses.noResultsTitle')}
+          subtitle={t('courses.noResultsDesc')}
+        />
+      )}
 
-        const byTerm = {}
-        for (const s of selectedCourse.schedule || []) {
-          const term = s.term || 'Unknown'
-          if (!byTerm[term]) byTerm[term] = []
-          byTerm[term].push(s)
-        }
-        const recentTerms = Object.keys(byTerm).sort((a, b) => b.localeCompare(a)).slice(0, 2)
-
-        return (
-          <div className="course-details">
-
-            <button className="btn-back" onClick={() => { setSelectedCourse(null); setOpenFlagDetail(false) }}>
-              <FaArrowLeft /> {t('courses.backToResults')}
-            </button>
-
-            {/* ── Hero ────────────────────────────────────────── */}
-            <div className="course-detail-hero">
-              <div className="course-detail-hero-top">
-                <div className="course-detail-code-block">
-                  <div className="course-detail-code-row">
-                    <span className="course-detail-code">{selectedCourse.subject} {selectedCourse.catalog}</span>
-                    {selectedCourse.credits != null && (
-                      <span className="course-detail-credits">{selectedCourse.credits} cr</span>
-                    )}
-                  </div>
-                  <h2 className="course-detail-title">{selectedCourse.title}</h2>
-                  {selectedCourse.description && (
-                    <p className="course-detail-description">{selectedCourse.description}</p>
-                  )}
-                </div>
-
-                <div className="course-detail-actions">
-                  <button className={`course-detail-action-btn btn-save ${isFavorited(selectedCourse.subject, selectedCourse.catalog) ? 'active' : ''}`} onClick={() => handleToggleFavorite(selectedCourse)}>
-                    {isFavorited(selectedCourse.subject, selectedCourse.catalog) ? <FaHeart /> : <FaRegHeart />}
-                    {isFavorited(selectedCourse.subject, selectedCourse.catalog) ? 'Saved' : 'Save'}
-                  </button>
-                  <button className={`course-detail-action-btn btn-done ${isCompleted(selectedCourse.subject, selectedCourse.catalog) ? 'active' : ''}`} onClick={() => handleToggleCompleted(selectedCourse)}>
-                    <FaCheckCircle />
-                    {isCompleted(selectedCourse.subject, selectedCourse.catalog) ? 'Completed' : 'Done'}
-                  </button>
-                  <button className={`course-detail-action-btn btn-current ${isCurrent(selectedCourse.subject, selectedCourse.catalog) ? 'active' : ''}`} onClick={() => handleToggleCurrent(selectedCourse)}>
-                    <FaBook />
-                    {isCurrent(selectedCourse.subject, selectedCourse.catalog) ? 'Enrolled' : 'Enroll'}
-                  </button>
-                </div>
-              </div>
-
-              <div className="course-detail-stats">
-                {selectedCourse.average && (
-                  <div className="course-detail-stat">
-                    <FaTrophy className="course-detail-stat-icon" />
-                    <span className="course-detail-stat-label">Recent GPA</span>
-                    <span className="course-detail-stat-value gpa-value">{parseFloat(selectedCourse.average).toFixed(2)}</span>
-                    <span className="course-detail-stat-sub">({gpaToLetterGrade(selectedCourse.average)})</span>
-                  </div>
-                )}
-                {selectedCourse.overall_average && (
-                  <div className="course-detail-stat">
-                    <FaChartBar className="course-detail-stat-icon" />
-                    <span className="course-detail-stat-label">All-time Avg</span>
-                    <span className="course-detail-stat-value">{parseFloat(selectedCourse.overall_average).toFixed(2)}</span>
-                    <span className="course-detail-stat-sub">({gpaToLetterGrade(selectedCourse.overall_average)})</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* ── Two-column body ──────────────────────────────── */}
-            <div className="course-detail-body">
-
-              {/* LEFT — schedule + grade history */}
-              <div className="course-detail-col">
-
-                {recentTerms.length > 0 && (
-                  <div className="course-detail-section">
-                    <div className="course-detail-section-header">
-                      <FaLayerGroup />
-                      <h3 className="course-detail-section-title">Sections</h3>
-                      <span className="course-detail-section-count">{(selectedCourse.schedule || []).length} total</span>
-                    </div>
-                    {recentTerms.map(term => (
-                      <div key={term} className="schedule-term-group">
-                        <div className="schedule-term-label">{term}</div>
-                        <div className="schedule-cards-grid">
-                          {byTerm[term].map((s, idx) => (
-                            <div key={idx} className="schedule-card">
-                              <div className="schedule-card-header">
-                                {s.section_type && (
-                                  <span className={`schedule-type-badge type-${s.section_type.toLowerCase()}`}>{s.section_type}</span>
-                                )}
-                                {s.crn && <span className="schedule-crn">CRN {s.crn}</span>}
-                              </div>
-                              {s.instructor && (
-                                <div className="schedule-card-row">
-                                  <FaUser className="schedule-card-icon" />
-                                  <span className="schedule-card-value">{s.instructor}</span>
-                                </div>
-                              )}
-                              {s.days && (
-                                <div className="schedule-card-row">
-                                  <div className="schedule-day-pills">
-                                    {s.days.split('').map((d, i) => (
-                                      <span key={i} className="schedule-day-pill">{DAY_MAP[d] || d}</span>
-                                    ))}
-                                  </div>
-                                  {s.times && <span className="schedule-time-value">{s.times}</span>}
-                                </div>
-                              )}
-                              {s.location && (
-                                <div className="schedule-card-row">
-                                  <span className="schedule-location-value">📍 {s.location}</span>
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {selectedCourse.grade_trend?.length > 0 && (
-                  <div className="course-detail-section">
-                    <div className="course-detail-section-header">
-                      <FaChartBar />
-                      <h3 className="course-detail-section-title">Grade History</h3>
-                      <span className="course-detail-section-count">{selectedCourse.grade_trend.length} years</span>
-                    </div>
-                    <div className="grade-trend-list">
-                      {selectedCourse.grade_trend.map((entry, idx) => {
-                        const gpa    = parseFloat(entry.average)
-                        const barPct = Math.min(100, (gpa / 4.0) * 100)
-                        return (
-                          <div key={idx} className="grade-trend-row">
-                            <span className="grade-trend-year">{entry.year}</span>
-                            <div className="grade-trend-bar-wrap">
-                              <div className="grade-trend-bar" style={{ width: `${barPct}%` }} />
-                            </div>
-                            <span className="grade-trend-gpa">{gpa.toFixed(2)}</span>
-                            <span className="grade-trend-letter">{gpaToLetterGrade(gpa)}</span>
-                            <span className="grade-trend-sections">{entry.sections} section{entry.sections !== 1 ? 's' : ''}</span>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* RIGHT — rating + instructors + requirements */}
-              <div className="course-detail-col">
-
-                {rating && (
-                  <div className="course-detail-section">
-                    <div className="course-detail-section-header">
-                      <FaStar />
-                      <h3 className="course-detail-section-title">{t('courses.professorRating')}</h3>
-                    </div>
-                    <div className="rmp-grid">
-                      <div className="rmp-grid-card">
-                        <div className={`rmp-grid-value ${rating >= 4 ? 'good' : rating >= 3 ? 'ok' : 'bad'}`}>{rating.toFixed(1)}</div>
-                        <div className="rmp-grid-label">{t('courses.rating')}</div>
-                      </div>
-                      {selectedCourse.rmp_difficulty != null && (
-                        <div className="rmp-grid-card">
-                          <div className={`rmp-grid-value ${selectedCourse.rmp_difficulty <= 2.5 ? 'good' : selectedCourse.rmp_difficulty <= 3.5 ? 'ok' : 'bad'}`}>{selectedCourse.rmp_difficulty.toFixed(1)}</div>
-                          <div className="rmp-grid-label">{t('courses.difficulty')}</div>
-                        </div>
-                      )}
-                      {selectedCourse.rmp_would_take_again != null && (
-                        <div className="rmp-grid-card">
-                          <div className={`rmp-grid-value ${selectedCourse.rmp_would_take_again >= 70 ? 'good' : selectedCourse.rmp_would_take_again >= 50 ? 'ok' : 'bad'}`}>{Math.round(selectedCourse.rmp_would_take_again)}%</div>
-                          <div className="rmp-grid-label">{t('courses.wouldRetake')}</div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {selectedCourse.instructors?.length > 0 && (
-                  <div className="course-detail-section">
-                    <div className="course-detail-section-header">
-                      <FaUser />
-                      <h3 className="course-detail-section-title">Instructors</h3>
-                    </div>
-                    <div className="instructors-list">
-                      {selectedCourse.instructors.map((name, idx) => (
-                        <div key={idx} className="instructor-chip">
-                          <FaUser className="instructor-chip-icon" />
-                          <span>{name}</span>
-                          {idx === 0 && <span className="instructor-recent-badge">most recent</span>}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* ── Requirements ────────────────────────────── */}
-                {(selectedCourse.prerequisites || selectedCourse.corequisites || selectedCourse.restrictions) && (
-                  <div className="course-detail-section">
-                    <div className="course-detail-section-header">
-                      <FaExclamationCircle />
-                      <h3 className="course-detail-section-title">Requirements</h3>
-                    </div>
-                    <div className="requirements-list">
-
-                      {selectedCourse.prerequisites && (
-                        <div className="requirement-item">
-                          <span className="requirement-label">Prerequisites</span>
-                          <span className="requirement-text">{selectedCourse.prerequisites}</span>
-                        </div>
-                      )}
-
-                      {selectedCourse.corequisites && (
-                        <div className="requirement-item">
-                          <span className="requirement-label">Corequisites</span>
-                          <span className="requirement-text">{selectedCourse.corequisites}</span>
-                        </div>
-                      )}
-
-                      {selectedCourse.restrictions && (
-                        <div className="requirement-item">
-                          <span className="requirement-label">Restrictions</span>
-                          <span className="requirement-text">{selectedCourse.restrictions}</span>
-                        </div>
-                      )}
-
-                    </div>
-                  </div>
-                )}
-
-              </div>
-            </div>
-
-          </div>
-        )
-      })()}
-
-      {!searchResults.length && !selectedCourse && !searchError && !isSearching && (
+      {/* ── Pre-search placeholder ──────────────────────────── */}
+      {!hasSearched && !searchError && !isSearching && (
         <div className="placeholder-content">
           <div className="placeholder-icon"><FaBook /></div>
           <h3>{t('courses.explorerTitle')}</h3>

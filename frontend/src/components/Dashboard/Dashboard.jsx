@@ -9,6 +9,8 @@ import { normalizeQuery, buildCorrectionCandidates } from '../../utils/fuzzySear
 import { useLanguage } from '../../contexts/PreferencesContext'
 import cardsAPI from '../../lib/cardsAPI'
 import AdvisorCards from './chat/AdvisorCards'
+import HomeTab from './HomeTab'
+import useUpcomingEvents from '../../hooks/useUpcomingEvents'
 import RightSidebar from './RightSidebar'
 import CoursesView from './CoursesView'
 
@@ -16,9 +18,10 @@ import Sidebar from './Sidebar'
 import clubsAPI from '../../lib/clubsAPI'
 import { readCache, writeCache, clearAllForUser } from '../../lib/userDataCache'
 
-// Code-split everything that isn't on the default landing screen. Brief/Chat
-// is the default tab and ships in the main bundle; secondary tabs and modals
-// only download when the user navigates to them.
+// Code-split everything that isn't on the default landing screen. Home is
+// the default tab and ships in the main bundle (Brief/Chat stays static too
+// since Home links straight into it); secondary tabs and modals only
+// download when the user navigates to them.
 const ClubsTab          = lazy(() => import('./ClubsTab'))
 const ProfileTab        = lazy(() => import('./ProfileTab'))
 const DegreePlanningView = lazy(() => import('./DegreePlanningView'))
@@ -61,7 +64,7 @@ export default function Dashboard() {
 
   // ── Layout ─────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState(() =>
-    localStorage.getItem('symbolos_open_pw_change') ? 'profile' : 'chat'
+    localStorage.getItem('symbolos_open_pw_change') ? 'profile' : 'home'
   )
 
   // Sidebar open/closed state — persisted across reloads but defaults to OPEN
@@ -82,6 +85,7 @@ export default function Dashboard() {
   // ── Dynamic browser tab title ────────────────────────
   useEffect(() => {
     const tabNameKey = {
+      home:      'nav.home',
       chat:      'nav.chat',
       favorites: 'nav.degreePlanning',
       courses:   'nav.courses',
@@ -157,8 +161,6 @@ export default function Dashboard() {
   const [searchError, setSearchError] = useState(null)
   const [searchCorrection, setSearchCorrection] = useState(null) // { original, corrected }
   const [hasSearched, setHasSearched] = useState(false)
-  const [selectedCourse, setSelectedCourse] = useState(null)
-  const [isLoadingCourse, setIsLoadingCourse] = useState(false)
   const [sortBy, setSortBy] = useState('relevance')
 
   // ── Favorites & completed ──────────────────────────────
@@ -180,6 +182,15 @@ export default function Dashboard() {
   const [currentCoursesMap, setCurrentCoursesMap] = useState(
     new Set((_hydratedCurrent || []).map(c => c.course_code))
   )
+
+  // Computed once here (not inside HomeTab) because the Sidebar's Calendar
+  // badge needs the same urgentCount — avoids a second fetch of the feed.
+  const {
+    events: upcomingEvents,
+    loading: upcomingEventsLoading,
+    urgentCount: upcomingUrgentCount,
+    hasCourseEvents: hasUpcomingCourseEvents,
+  } = useUpcomingEvents(user, currentCourses, { limit: 5 })
 
   // ── Mark Complete modal ────────────────────────────────
   const [showCompleteCourseModal, setShowCompleteCourseModal] = useState(false)
@@ -623,7 +634,6 @@ export default function Dashboard() {
   // ── Tab change ─────────────────────────────────────────
   const handleTabChange = (tab) => {
     setActiveTab(tab)
-    setSelectedCourse(null)
     setSearchResults([])
     setSearchError(null)
     setSearchCorrection(null)
@@ -639,7 +649,6 @@ export default function Dashboard() {
     setIsSearching(true)
     setSearchError(null)
     setSearchCorrection(null)
-    setSelectedCourse(null)
     setHasSearched(true)
     try {
       const normalized = normalizeQuery(rawQuery)
@@ -683,19 +692,6 @@ export default function Dashboard() {
       setSearchResults([])
     } finally {
       setIsSearching(false)
-    }
-  }
-
-  const handleCourseClick = async (course) => {
-    setIsLoadingCourse(true)
-    try {
-      const data = await coursesAPI.getDetails(course.subject, course.catalog)
-      setSelectedCourse(data.course || data)
-    } catch (error) {
-      console.error('Error loading course details:', error)
-      setSearchError('Failed to load course details.')
-    } finally {
-      setIsLoadingCourse(false)
     }
   }
 
@@ -885,6 +881,7 @@ export default function Dashboard() {
         user={user}
         profile={profile}
         onSignOut={handleSignOut}
+        badges={{ calendar: upcomingUrgentCount > 0 ? upcomingUrgentCount : null }}
       />
 
       <main className="main-content">
@@ -895,6 +892,23 @@ export default function Dashboard() {
         >☰</button>
 
         <div className="content-area">
+
+          {activeTab === 'home' && (
+            <HomeTab
+              user={user}
+              profile={profile}
+              advisorCards={advisorCards}
+              cardsLoading={cardsLoading}
+              currentCourses={currentCourses}
+              completedCourses={completedCourses}
+              events={upcomingEvents}
+              eventsLoading={upcomingEventsLoading}
+              hasCourseEvents={hasUpcomingCourseEvents}
+              onTabChange={handleTabChange}
+              onImportTranscript={() => { setTranscriptUploadTab('transcript'); setShowTranscriptUpload(true) }}
+              onImportSyllabus={() => { setTranscriptUploadTab('syllabus'); setShowTranscriptUpload(true) }}
+            />
+          )}
 
           {activeTab === 'chat' && (
             <AdvisorCards
@@ -946,19 +960,13 @@ export default function Dashboard() {
               onToggleFavorite={handleToggleFavorite}
               onToggleCompleted={handleToggleCompleted}
               onToggleCurrent={handleToggleCurrent}
-              onCourseClick={handleCourseClick}
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
               searchResults={searchResults}
-              setSearchResults={setSearchResults}
               isSearching={isSearching}
               searchError={searchError}
               searchCorrection={searchCorrection}
-              onSearchWithCorrection={(q) => { setSearchQuery(q); handleCourseSearch(null, q) }}
               hasSearched={hasSearched}
-              selectedCourse={selectedCourse}
-              setSelectedCourse={setSelectedCourse}
-              isLoadingCourse={isLoadingCourse}
               sortBy={sortBy}
               setSortBy={setSortBy}
               sortCourses={sortCourses}
@@ -966,7 +974,6 @@ export default function Dashboard() {
               isCompleted={isCompleted}
               isCurrent={isCurrent}
               handleCourseSearch={handleCourseSearch}
-              handleCourseClick={handleCourseClick}
               handleToggleFavorite={handleToggleFavorite}
               handleToggleCompleted={handleToggleCompleted}
               handleToggleCurrent={handleToggleCurrent}

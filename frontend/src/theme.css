@@ -198,6 +198,62 @@
   --tab-forum-accent-hover: #d97706;
   --tab-forum-accent-light: #fef3c7;
   --tab-forum-accent-text:  #92400e;
+
+  /* Home — teal (distinct from every other tab identity) */
+  --tab-home-accent:       #0d9488;
+  --tab-home-accent-hover: #0f766e;
+  --tab-home-accent-light: #ccfbf1;
+  --tab-home-accent-text:  #115e59;
+
+  /* ─── Course/professor rating ramp (great → poor) ─── */
+  --rating-great: #22c55e;
+  --rating-good:  #84cc16;
+  --rating-ok:    #f59e0b;
+  --rating-poor:  #ef4444;
+
+  /* ─── Club category palette (fg / tint bg / border per category) ───
+     Consumed from ClubsTab's CATEGORY_META via inline styles, so both
+     themes finally get correct category colors (the old hardcoded
+     pastels were light-theme-only). */
+  --club-cat-academic:            #2563eb;
+  --club-cat-academic-bg:         #dbeafe;
+  --club-cat-academic-border:     #93c5fd;
+  --club-cat-engineering:         #7c3aed;
+  --club-cat-engineering-bg:      #ede9fe;
+  --club-cat-engineering-border:  #c4b5fd;
+  --club-cat-professional:        #0f766e;
+  --club-cat-professional-bg:     #ccfbf1;
+  --club-cat-professional-border: #5eead4;
+  --club-cat-debate:              #b45309;
+  --club-cat-debate-bg:           #fef3c7;
+  --club-cat-debate-border:       #fcd34d;
+  --club-cat-athletics:           #16a34a;
+  --club-cat-athletics-bg:        #dcfce7;
+  --club-cat-athletics-border:    #86efac;
+  --club-cat-arts:                #db2777;
+  --club-cat-arts-bg:             #fce7f3;
+  --club-cat-arts-border:         #f9a8d4;
+  --club-cat-environment:         #15803d;
+  --club-cat-environment-bg:      #dcfce7;
+  --club-cat-environment-border:  #6ee7b7;
+  --club-cat-health:              #0284c7;
+  --club-cat-health-bg:           #e0f2fe;
+  --club-cat-health-border:       #7dd3fc;
+  --club-cat-community:           #ea580c;
+  --club-cat-community-bg:        #ffedd5;
+  --club-cat-community-border:    #fdba74;
+  --club-cat-international:       #0891b2;
+  --club-cat-international-bg:    #cffafe;
+  --club-cat-international-border:#67e8f9;
+  --club-cat-science:             #4f46e5;
+  --club-cat-science-bg:          #e0e7ff;
+  --club-cat-science-border:      #a5b4fc;
+  --club-cat-social:              #dc2626;
+  --club-cat-social-bg:           #fee2e2;
+  --club-cat-social-border:       #fca5a5;
+  --club-cat-spiritual:           #a16207;
+  --club-cat-spiritual-bg:        #fefce8;
+  --club-cat-spiritual-border:    #fde047;
 }
 
 /* ────────────────────────────────────────────────────────────────
@@ -396,6 +452,58 @@
   --tab-forum-accent-hover: #fcd34d;
   --tab-forum-accent-light: #78350f;
   --tab-forum-accent-text:  #fde68a;
+
+  --tab-home-accent:       #2dd4bf;
+  --tab-home-accent-hover: #5eead4;
+  --tab-home-accent-light: #134e4a;
+  --tab-home-accent-text:  #5eead4;
+
+  /* ─── Course/professor rating ramp — brighter on near-black ─── */
+  --rating-great: #4ade80;
+  --rating-good:  #a3e635;
+  --rating-ok:    #fbbf24;
+  --rating-poor:  #f87171;
+
+  /* ─── Club category palette (dark) — brighter fg, translucent tints ─── */
+  --club-cat-academic:            #60a5fa;
+  --club-cat-academic-bg:         rgba(59, 130, 246, 0.15);
+  --club-cat-academic-border:     #1d4ed8;
+  --club-cat-engineering:         #a78bfa;
+  --club-cat-engineering-bg:      rgba(139, 92, 246, 0.15);
+  --club-cat-engineering-border:  #6d28d9;
+  --club-cat-professional:        #2dd4bf;
+  --club-cat-professional-bg:     rgba(20, 184, 166, 0.15);
+  --club-cat-professional-border: #0f766e;
+  --club-cat-debate:              #fbbf24;
+  --club-cat-debate-bg:           rgba(245, 158, 11, 0.15);
+  --club-cat-debate-border:       #b45309;
+  --club-cat-athletics:           #4ade80;
+  --club-cat-athletics-bg:        rgba(34, 197, 94, 0.15);
+  --club-cat-athletics-border:    #15803d;
+  --club-cat-arts:                #f472b6;
+  --club-cat-arts-bg:             rgba(236, 72, 153, 0.15);
+  --club-cat-arts-border:         #be185d;
+  --club-cat-environment:         #34d399;
+  --club-cat-environment-bg:      rgba(16, 185, 129, 0.15);
+  --club-cat-environment-border:  #047857;
+  --club-cat-health:              #38bdf8;
+  --club-cat-health-bg:           rgba(14, 165, 233, 0.15);
+  --club-cat-health-border:       #0369a1;
+  --club-cat-community:           #fb923c;
+  --club-cat-community-bg:        rgba(249, 115, 22, 0.15);
+  --club-cat-community-border:    #c2410c;
+  --club-cat-international:       #22d3ee;
+  --club-cat-international-bg:    rgba(6, 182, 212, 0.15);
+  --club-cat-international-border:#0e7490;
+  --club-cat-science:             #818cf8;
+  --club-cat-science-bg:          rgba(99, 102, 241, 0.15);
+  --club-cat-science-border:      #4338ca;
+  --club-cat-social:              #f87171;
+  --club-cat-social-bg:           rgba(239, 68, 68, 0.15);
+  --club-cat-social-border:       #b91c1c;
+  --club-cat-spiritual:           #facc15;
+  --club-cat-spiritual-bg:        rgba(234, 179, 8, 0.15);
+  --club-cat-spiritual-border:    #a16207;
 }
 
 /* ────────────────────────────────────────────────────────────────

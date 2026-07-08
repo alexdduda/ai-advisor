@@ -15,9 +15,10 @@
  */
 
 import { useState, useRef, useEffect } from 'react'
-import { FaFlag, FaCheck, FaTimes, FaCommentAlt, FaSearch } from 'react-icons/fa'
+import { FaFlag, FaCheck, FaCommentAlt, FaSearch } from 'react-icons/fa'
 import { useAuth } from '../../contexts/AuthContext'
 import { useLanguage } from '../../contexts/PreferencesContext'
+import Modal from '../ui/Modal'
 import './FeedbackModal.css'
 
 export default function FeedbackModal() {
@@ -28,30 +29,13 @@ export default function FeedbackModal() {
   const [text, setText]     = useState('')
   const [course, setCourse] = useState('')
   const [status, setStatus] = useState('idle') // idle | submitting | success | error | duplicate
-  const modalRef = useRef(null)
   const inputRef = useRef(null)
 
   // Focus first input when mode is selected
+  // (overlay-click + Escape close are handled by the shared Modal)
   useEffect(() => {
     if (mode) setTimeout(() => inputRef.current?.focus(), 50)
   }, [mode])
-
-  // Close on outside click
-  useEffect(() => {
-    if (!open) return
-    const handle = (e) => {
-      if (modalRef.current && !modalRef.current.contains(e.target)) close()
-    }
-    document.addEventListener('mousedown', handle)
-    return () => document.removeEventListener('mousedown', handle)
-  }, [open])
-
-  // Close on Escape
-  useEffect(() => {
-    const handle = (e) => { if (e.key === 'Escape') close() }
-    document.addEventListener('keydown', handle)
-    return () => document.removeEventListener('keydown', handle)
-  }, [])
 
   const close = () => {
     setOpen(false)
@@ -114,18 +98,7 @@ export default function FeedbackModal() {
 
       {/* Overlay + Modal */}
       {open && (
-        <div className="feedback-overlay">
-          <div className="feedback-modal" ref={modalRef}>
-
-            {/* Header */}
-            <div className="feedback-modal-header">
-              <FaFlag className="feedback-modal-flag" />
-              <span>{t('fb.title')}</span>
-              <button className="feedback-modal-close" onClick={close}>
-                <FaTimes />
-              </button>
-            </div>
-
+        <Modal onClose={close} title={t('fb.title')} icon={<FaFlag />} size="sm">
             {/* Mode selection */}
             {!mode && status === 'idle' && (
               <div className="feedback-mode-select">
@@ -224,9 +197,7 @@ export default function FeedbackModal() {
                 <button className="feedback-cancel-btn" onClick={close}>{t('fb.close')}</button>
               </div>
             )}
-
-          </div>
-        </div>
+        </Modal>
       )}
     </>
   )

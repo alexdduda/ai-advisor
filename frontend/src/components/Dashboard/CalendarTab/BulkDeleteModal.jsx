@@ -1,6 +1,7 @@
 import React from 'react'
 import { FaTimes, FaCheck, FaEdit, FaClock, FaCalendarAlt, FaLayerGroup } from 'react-icons/fa'
 import { L } from './calendarConstants'
+import Modal from '../../ui/Modal'
 
 const DAY_OPTIONS = [
   { value: 'weekly_monday',    label: 'Monday' },
@@ -39,7 +40,6 @@ function SlotRow({ ev, isHidden, onToggleHide, onSave, language }) {
   const [timeEnd,  setTimeEnd]  = React.useState(ev.end_time || '')
   const [saving,   setSaving]   = React.useState(false)
 
-  const missingTime = !ev.time
 
   const handleSave = async () => {
     setSaving(true)
@@ -113,7 +113,7 @@ function SlotRow({ ev, isHidden, onToggleHide, onSave, language }) {
   )
 }
 
-export default function BulkDeleteModal({ userEvents, allEvents = [], onHide, hiddenSlotKeys, onUnhideAll, onClose, language, onEditSlot, serverClubEvents = [], mutedClubIds, onToggleMuteClub, hiddenEventIds, onToggleHideEvent, typeConfig = {}, getEventStyle }) {
+export default function BulkDeleteModal({ userEvents, allEvents = [], onHide, hiddenSlotKeys, onUnhideAll, onClose, language, onEditSlot, mutedClubIds, onToggleMuteClub, hiddenEventIds, onToggleHideEvent, typeConfig = {} }) {
   const classGroups = React.useMemo(() => {
     const anchors = userEvents.filter(e => e.recurrence && e.course_code && !e._isRecurringOccurrence)
     const map = {}
@@ -161,31 +161,25 @@ export default function BulkDeleteModal({ userEvents, allEvents = [], onHide, hi
   const typeOrder = ['course', 'academic', 'exam', 'personal', 'club']
 
   return (
-    <div className="cal-bulk-overlay" onClick={onClose}>
-      <div className="mgr-modal" onClick={e => e.stopPropagation()}>
-
-        <div className="mgr-header">
-          <div className="mgr-header-left">
-            <FaLayerGroup size={15} style={{ color: '#ed1b2f' }} />
-            <div>
-              <h3 className="mgr-title">{L(language, 'Manage Events', 'Gérer les événements', '管理事件')}</h3>
-              {totalHidden > 0 && (
-                <p className="mgr-subtitle">
-                  {L(language, `${totalHidden} item${totalHidden !== 1 ? 's' : ''} hidden`, `${totalHidden} élément${totalHidden !== 1 ? 's' : ''} masqué${totalHidden !== 1 ? 's' : ''}`, `${totalHidden}项已隐藏`)}
-                </p>
-              )}
-            </div>
-          </div>
-          <div className="mgr-header-right">
-            {totalHidden > 0 && (
-              <button className="mgr-show-all-btn" onClick={onUnhideAll}>
-                <EyeIcon /> {L(language, 'Show all', 'Tout afficher', '全部显示')}
-              </button>
-            )}
-            <button className="mgr-close" onClick={onClose}><FaTimes /></button>
-          </div>
-        </div>
-
+    <Modal
+      onClose={onClose}
+      title={L(language, 'Manage Events', 'Gérer les événements', '管理事件')}
+      subtitle={totalHidden > 0
+        ? L(language, `${totalHidden} item${totalHidden !== 1 ? 's' : ''} hidden`, `${totalHidden} élément${totalHidden !== 1 ? 's' : ''} masqué${totalHidden !== 1 ? 's' : ''}`, `${totalHidden}项已隐藏`)
+        : undefined}
+      icon={<FaLayerGroup size={15} style={{ color: '#ed1b2f' }} />}
+      size="lg"
+      headerActions={totalHidden > 0 && (
+        <button className="mgr-show-all-btn" onClick={onUnhideAll}>
+          <EyeIcon /> {L(language, 'Show all', 'Tout afficher', '全部显示')}
+        </button>
+      )}
+      footer={
+        <button className="mgr-done-btn" onClick={onClose}>
+          {L(language, 'Done', 'Terminé', '完成')}
+        </button>
+      }
+    >
         <div className="mgr-legend">
           <span className="mgr-legend-item mgr-legend-visible"><EyeIcon /> {L(language, 'Visible', 'Visible', '可见')}</span>
           <span className="mgr-legend-item mgr-legend-hidden"><EyeOffIcon /> {L(language, 'Hidden', 'Masqué', '已隐藏')}</span>
@@ -224,7 +218,7 @@ export default function BulkDeleteModal({ userEvents, allEvents = [], onHide, hi
                       </button>
                     </div>
                     <div className="mgr-slots">
-                      {Object.entries(days).sort(([a],[b]) => a.localeCompare(b)).map(([rec, evs]) =>
+                      {Object.entries(days).sort(([a],[b]) => a.localeCompare(b)).map(([, evs]) =>
                         evs.map(ev => (
                           <SlotRow
                             key={`${slotKey(ev)}-${ev.time}-${ev.recurrence}`}
@@ -357,13 +351,6 @@ export default function BulkDeleteModal({ userEvents, allEvents = [], onHide, hi
             </div>
           )}
         </div>
-
-        <div className="mgr-footer">
-          <button className="mgr-done-btn" onClick={onClose}>
-            {L(language, 'Done', 'Terminé', '完成')}
-          </button>
-        </div>
-      </div>
-    </div>
+    </Modal>
   )
 }
