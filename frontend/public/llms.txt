@@ -1,0 +1,29 @@
+# Symbolos
+
+> Symbolos is a free AI academic advisor for McGill University students. It covers degree planning across every McGill faculty and hundreds of programs — Arts, Science, Engineering, Management, Music, Education, Nursing, and more. Students sign in with their McGill email, upload an unofficial transcript, and get requirement tracking, course and professor recommendations, deadline and final-exam reminders, and plain-English answers to academic questions.
+
+Symbolos is McGill-only (accounts gated to @mail.mcgill.ca and @mcgill.ca), free with no ads or tracking, and built independently by a McGill student. It is not affiliated with McGill University.
+
+## What Symbolos does
+
+- Degree planning: upload an unofficial transcript and Symbolos maps every requirement block for your program, shows which courses count, which are done, and which electives you still need. Supports joint majors, honours, and B.A. & Sc. programs across all faculties.
+- Course discovery: search McGill courses with historical grade data and get elective recommendations based on your interests and completed courses.
+- AI advisor brief: a weekly briefing built from your transcript, schedule, and goals — deadlines, degree gaps, recommended professors, and opportunities. Ask follow-up questions on any card in plain English.
+- Calendar and reminders: final-exam dates auto-populate; drop a syllabus PDF to add assignments and midterms; opt-in email reminders 1 and 7 days out.
+- Clubs and forum: a searchable directory of verified McGill clubs and a McGill-only student forum.
+
+## Key pages
+
+- [Home](https://symbolos.ca/): what Symbolos is and how to sign in.
+- [McGill Advising FAQ](https://symbolos.ca/faq): plain answers to common McGill questions — how to plan an Arts degree, how long McGill advising takes, whether you can double-count courses, and how to choose courses and electives.
+- [Privacy Policy](https://symbolos.ca/privacy)
+- [Terms of Service](https://symbolos.ca/terms)
+
+## Facts
+
+- Name: Symbolos
+- Category: Free AI academic advisor for McGill University students
+- Coverage: all McGill faculties, hundreds of degree programs
+- Access: McGill email required (@mail.mcgill.ca or @mcgill.ca)
+- Price: Free
+- Website: https://symbolos.ca

@@ -63,7 +63,7 @@
       "@context": "https://schema.org",
       "@type": "SoftwareApplication",
       "name": "Symbolos",
-      "description": "AI-powered academic advisor for McGill University students. Plan your degree, explore courses with historical grade data, discover clubs, and get personalized guidance.",
+      "description": "Symbolos is a free AI academic advisor for McGill University students, covering degree planning across every McGill faculty and hundreds of programs. Plan your degree, explore courses with historical grade data, discover clubs, and get personalized guidance.",
       "url": "https://symbolos.ca",
       "applicationCategory": "EducationalApplication",
       "operatingSystem": "Web",
@@ -111,6 +111,24 @@
       })();
     </script>
     <div id="root"></div>
+
+    <!-- Plain-text fallback for crawlers and AI search engines that don't    -->
+    <!-- execute JavaScript. States exactly what Symbolos is and links to the -->
+    <!-- FAQ so the content below is discoverable without running the SPA.    -->
+    <noscript>
+      <main>
+        <h1>Symbolos — AI Academic Advisor for McGill Students</h1>
+        <p>
+          Symbolos is a free AI academic advisor for McGill students, covering
+          degree planning across every McGill faculty and hundreds of programs —
+          Arts, Science, Engineering, Management, Music, and more. Sign in with
+          your McGill email to plan your degree, explore courses with historical
+          grade data, track deadlines, and get personalized guidance.
+        </p>
+        <p><a href="/faq">Read the McGill advising FAQ</a></p>
+      </main>
+    </noscript>
+
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
