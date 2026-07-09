@@ -53,6 +53,10 @@
   ],
   "rewrites": [
     {
+      "source": "/faq",
+      "destination": "/faq.html"
+    },
+    {
       "source": "/privacy",
       "destination": "/?show=privacy"
     },

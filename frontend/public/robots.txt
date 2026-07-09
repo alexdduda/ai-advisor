@@ -1,9 +1,47 @@
 # Symbolos — robots.txt
 # https://symbolos.ca
 
+# ── AI search & training crawlers ──────────────────────────────────────
+# Explicitly allowed so Symbolos can be retrieved and quoted by AI search.
+# (These are also covered by the User-agent: * rule below, but naming them
+#  makes the intent unambiguous.)
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+# ── Everyone else ──────────────────────────────────────────────────────
 User-agent: *
 
-# Allow the landing page to be indexed
+# Allow the landing page, FAQ, and legal pages to be indexed
 Allow: /
 
 # Block authenticated app routes — crawlers can't access them anyway

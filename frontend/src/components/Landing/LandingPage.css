@@ -201,6 +201,14 @@ body:has(.landing-root),
   background-clip: text;
   color: transparent;
 }
+.landing-hero__oneliner {
+  font-size: clamp(1.05rem, 1.7vw, 1.3rem);
+  font-weight: 600;
+  color: var(--land-fg);
+  line-height: 1.5;
+  margin: 0 auto 18px;
+  max-width: 720px;
+}
 .landing-hero__sub {
   font-size: clamp(1.05rem, 1.6vw, 1.32rem);
   color: var(--land-fg-mute);
