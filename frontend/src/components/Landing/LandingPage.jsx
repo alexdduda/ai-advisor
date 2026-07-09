@@ -135,6 +135,10 @@ export default function LandingPage({ onSignIn }) {
             The McGill student planner.<br />
             <span className="landing-hero__accent">All in one place.</span>
           </Reveal>
+          <Reveal delay={80} as="p" className="landing-hero__oneliner">
+            Symbolos is a free AI academic advisor for McGill students, covering
+            degree planning for every McGill faculty.
+          </Reveal>
           <Reveal delay={120} as="p" className="landing-hero__sub">
             Your personal AI advisor, degree progress, course planner, calendar,
             club directory, and student forum, built by McGill students, for
@@ -341,6 +345,7 @@ export default function LandingPage({ onSignIn }) {
             <a href="#clubs">Clubs</a>
             <a href="#forum">Forum</a>
             <a href="#privacy">Privacy</a>
+            <a href="/faq">FAQ</a>
             <button className="landing-footer__signin" onClick={onSignIn}>Sign in</button>
           </div>
         </div>
