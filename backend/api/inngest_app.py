@@ -91,7 +91,11 @@ async def process_transcript(ctx: inngest.Context, step: inngest.Step) -> dict:
         # message instead of a raw exception string (mirrors process_syllabus).
         import json as _json
         import anthropic
-        if isinstance(exc, (anthropic.APIConnectionError, anthropic.APITimeoutError)):
+        from .routes.transcript import UnreadableTranscriptError
+        if isinstance(exc, UnreadableTranscriptError):
+            # User-facing, actionable message (scanned/no-text transcript).
+            msg = str(exc)
+        elif isinstance(exc, (anthropic.APIConnectionError, anthropic.APITimeoutError)):
             msg = "Couldn't reach the AI service. Please try again in a moment."
         elif isinstance(exc, anthropic.APIStatusError):
             status = getattr(exc, "status_code", None)

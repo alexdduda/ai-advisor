@@ -265,13 +265,19 @@ def _scrub_pii(value):
     return value
 
 
+class UnreadableTranscriptError(Exception):
+    """Raised when a transcript has no extractable text layer, so we cannot
+    redact its PII locally. We refuse rather than send an un-redactable image
+    to Claude."""
+
+
 def _redact_transcript_text(pdf_bytes: bytes) -> str | None:
     """Extract the transcript's text locally and redact PII *before* anything is
     sent to Claude, so the student ID and permanent code never leave our server.
 
     Returns redacted plain text, or None when the PDF has no usable text layer
-    (scanned/image transcript) — in which case the caller falls back to sending
-    the PDF itself, still protected by the post-extraction _scrub_pii.
+    (scanned/image transcript) — the caller refuses those so no un-redactable
+    PII is ever sent to the model.
     """
     try:
         import io
@@ -298,22 +304,22 @@ async def extract_transcript_data(pdf_bytes: bytes) -> dict:
     # Claude the redacted text so those identifiers never leave our server.
     # Only a scanned/image transcript (no text layer) falls back to the PDF.
     redacted_text = _redact_transcript_text(pdf_bytes)
-    if redacted_text is not None:
-        logger.info("Transcript redacted locally; sending text to Claude")
-        content = [
-            {"type": "text",
-             "text": "STUDENT TRANSCRIPT (personal identifiers already redacted):\n\n"
-                     + redacted_text},
-            {"type": "text", "text": EXTRACTION_PROMPT},
-        ]
-    else:
-        logger.info("Transcript has no text layer; sending PDF (output still PII-scrubbed)")
-        pdf_b64 = base64.standard_b64encode(pdf_bytes).decode("utf-8")
-        content = [
-            {"type": "document",
-             "source": {"type": "base64", "media_type": "application/pdf", "data": pdf_b64}},
-            {"type": "text", "text": EXTRACTION_PROMPT},
-        ]
+    if redacted_text is None:
+        # No text layer (scanned/photo). We can't redact its PII locally, so we
+        # refuse rather than send an un-redactable image to Claude.
+        logger.info("Transcript has no text layer; refusing to protect PII")
+        raise UnreadableTranscriptError(
+            "This looks like a scanned or photographed transcript, which we "
+            "can't redact your student ID from. Please upload the text-based "
+            "PDF from Minerva (Unofficial Transcript → Print → Save as PDF)."
+        )
+    logger.info("Transcript redacted locally; sending text to Claude")
+    content = [
+        {"type": "text",
+         "text": "STUDENT TRANSCRIPT (personal identifiers already redacted):\n\n"
+                 + redacted_text},
+        {"type": "text", "text": EXTRACTION_PROMPT},
+    ]
 
     last_exc: Exception = RuntimeError("unreachable")
     for attempt in range(_ANTHROPIC_MAX_RETRIES + 1):
