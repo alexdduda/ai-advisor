@@ -505,6 +505,7 @@ function DraggableFeed({
       {items.map((card, idx) => (
         <div
           key={card.id}
+          data-card-id={card.id}
           className={`dnd-row ${dragIdx === idx ? 'dnd-row--dragging' : ''} ${overIdx === idx ? 'dnd-row--over' : ''}`}
           draggable
           onDragStart={handleDragStart(idx)}
@@ -553,6 +554,8 @@ export default function AdvisorCards({
   freeformInput,
   setFreeformInput,
   onFreeformSubmit,
+  openCardId = null,
+  onOpenedCard,
 }) {
   const { t, language } = useLanguage()
   const [activeCategory, setActiveCategory] = useState('all')
@@ -592,6 +595,18 @@ export default function AdvisorCards({
   useEffect(() => {
     try { localStorage.setItem(storageKey, JSON.stringify(threadMap)) } catch { /* ignore */ }
   }, [threadMap, storageKey])
+
+  // Deep link from Home: expand the requested card's chat and scroll to it.
+  useEffect(() => {
+    if (!openCardId || !cards.some(c => c.id === openCardId)) return
+    setExpanded(prev => new Set(prev).add(openCardId))
+    requestAnimationFrame(() => {
+      const el = document.querySelector(`[data-card-id="${openCardId}"]`)
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    })
+    onOpenedCard?.()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openCardId, cards])
 
   const feedRef = useRef(null)
   const prevLen = useRef(visibleCards.length)

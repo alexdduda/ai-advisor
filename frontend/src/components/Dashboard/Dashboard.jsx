@@ -75,6 +75,13 @@ export default function Dashboard() {
     if (activeTab !== 'courses') setCoursesDeepLink(null)
   }, [activeTab])
 
+  // Deep link into the Brief: open a specific advisor card's chat (from Home).
+  const [briefOpenCardId, setBriefOpenCardId] = useState(null)
+  const handleOpenBriefCard = (cardId) => {
+    setBriefOpenCardId(cardId)
+    handleTabChange('chat')
+  }
+
   // Sidebar open/closed state — persisted across reloads but defaults to OPEN
   // on first visit so new users see the navigation rail.
   const [sidebarOpen, setSidebarOpen] = useState(() => {
@@ -942,6 +949,7 @@ export default function Dashboard() {
                 setCoursesDeepLink({ subTab: 'my_courses', savedTab: 'current' })
                 handleTabChange('courses')
               }}
+              onOpenBriefCard={handleOpenBriefCard}
               onImportTranscript={() => { setTranscriptUploadTab('transcript'); setShowTranscriptUpload(true) }}
               onImportSyllabus={() => { setTranscriptUploadTab('syllabus'); setShowTranscriptUpload(true) }}
             />
@@ -971,6 +979,8 @@ export default function Dashboard() {
               freeformInput={freeformInput}
               setFreeformInput={setFreeformInput}
               onFreeformSubmit={handleFreeformSubmit}
+              openCardId={briefOpenCardId}
+              onOpenedCard={() => setBriefOpenCardId(null)}
             />
           )}
 
