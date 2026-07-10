@@ -146,7 +146,7 @@ def fetch_student_context(user_id: str, user_sb=None) -> dict:
         .execute().data or [])
 
     current = (sb.table("current_courses")
-        .select("course_code, course_title, subject, catalog, credits")
+        .select("course_code, course_title, subject, catalog, credits, term, year")
         .eq("user_id", user_id).execute().data or [])
 
     today = datetime.now(timezone.utc).date().isoformat()
@@ -396,6 +396,19 @@ def build_rich_context(ctx: dict, saved_cards: list = None, recent_titles: list[
             f"  - {i[code_key]} ({sanitise_context_field(i.get(title_key,''))})" for i in items
         ) or "  None recorded"
 
+    # Term-aware enrollment (mirrors chat.py): upcoming-term registrations
+    # must not be described as courses the student is taking right now.
+    from ..utils.terms import get_active_term, split_current_courses
+    _active_term, _active_year = get_active_term()
+    _taking_now, _upcoming_terms = split_current_courses(current)
+    _upcoming_str = "\n".join(
+        f"  {term} {year}:\n" + "\n".join(
+            f"    - {c['course_code']} ({sanitise_context_field(c.get('course_title',''))})"
+            for c in cs
+        )
+        for (term, year), cs in _upcoming_terms
+    ) or "  None"
+
     calendar_str = "\n".join(
         f"  - {e['date']}: {sanitise_context_field(e['title'])} [{e.get('type','personal')}]"
         + (f" — {sanitise_context_field(e['description'])}" if e.get('description') else "")
@@ -459,8 +472,11 @@ STUDENT PROFILE
 COMPLETED COURSES
 {fmt_completed()}
 
-CURRENT COURSES
-{fmt_list(current)}
+COURSES THIS TERM ({_active_term} {_active_year})
+{fmt_list(_taking_now)}
+
+REGISTERED FOR UPCOMING TERMS (not yet started — say "registered for", never "currently taking" or "this term")
+{_upcoming_str}
 
 SAVED/FAVOURITED COURSES
 {fmt_list(favorites)}
@@ -657,7 +673,7 @@ async def _fetch_student_context_parallel(user_id: str, user_sb=None) -> dict:
 
     def q_current():
         return (sb.table("current_courses")
-            .select("course_code, course_title, subject, catalog, credits")
+            .select("course_code, course_title, subject, catalog, credits, term, year")
             .eq("user_id", user_id).execute().data or [])
 
     def q_calendar():

@@ -231,7 +231,7 @@ def _build_base_context(user: dict, user_sb=None) -> str:
             .execute().data or [])
 
         current = (supabase.table("current_courses")
-            .select("course_code, course_title, subject, catalog, credits")
+            .select("course_code, course_title, subject, catalog, credits, term, year")
             .eq("user_id", user_id).execute().data or [])
 
         today = datetime.now(timezone.utc).date().isoformat()
@@ -265,6 +265,19 @@ def _build_base_context(user: dict, user_sb=None) -> str:
                 f"  - {i[code_key]} ({sanitise_context_field(i.get(title_key,''))})"
                 for i in items
             ) or "  None recorded"
+
+        # Term-aware enrollment: don't tell the model the student is
+        # "currently taking" courses that only start next semester.
+        from ..utils.terms import get_active_term, split_current_courses
+        active_term, active_year = get_active_term()
+        taking_now, upcoming_terms = split_current_courses(current)
+        upcoming_str = "\n".join(
+            f"  {term} {year}:\n" + "\n".join(
+                f"    - {c['course_code']} ({sanitise_context_field(c.get('course_title',''))})"
+                for c in cs
+            )
+            for (term, year), cs in upcoming_terms
+        ) or "  None"
 
         calendar_str = "\n".join(
             f"  - {e['date']}: {sanitise_context_field(e['title'])} [{e.get('type','personal')}]"
@@ -306,9 +319,14 @@ STUDENT PROFILE
   Adv standing : {adv_summary}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-CURRENT SEMESTER COURSES
+COURSES THIS TERM ({active_term} {active_year})
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-{fmt_list(current)}
+{fmt_list(taking_now)}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+REGISTERED FOR UPCOMING TERMS (not yet started — say "registered for", never "currently taking")
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{upcoming_str}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 COMPLETED COURSES (most recent first)
