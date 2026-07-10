@@ -74,10 +74,12 @@ export default function HomeTab({
   advisorCards = [], cardsLoading = false,
   currentCourses = [], completedCourses = [],
   events = [], eventsLoading = false, hasCourseEvents = false,
-  onTabChange, onViewCurrentCourses, onImportTranscript, onImportSyllabus,
+  onTabChange, onViewCurrentCourses, onOpenBriefCard, onImportTranscript, onImportSyllabus,
 }) {
   // Deep-link to My Courses → Current when available.
   const goToCurrentCourses = onViewCurrentCourses ?? (() => onTabChange('courses'))
+  // Open a specific Brief card's chat; fall back to just switching tabs.
+  const openBriefCard = (id) => (onOpenBriefCard ? onOpenBriefCard(id) : onTabChange('chat'))
   const { t, language } = useLanguage()
 
   // Term-aware current courses: only show registrations for the semester we
@@ -217,7 +219,7 @@ export default function HomeTab({
             ) : topCards.length > 0 ? (
               <div className="home-brief__list">
                 {topCards.map(card => (
-                  <button key={card.id} className="home-brief__item" onClick={() => onTabChange('chat')}>
+                  <button key={card.id} className="home-brief__item" onClick={() => openBriefCard(card.id)}>
                     <span className="home-brief__icon">{CARD_TYPE_ICONS[card.card_type] || <FaRegLightbulb />}</span>
                     <div className="home-brief__item-text">
                       <span className="home-brief__title">{card.title}</span>
