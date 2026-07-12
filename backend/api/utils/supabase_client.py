@@ -19,7 +19,12 @@ import uuid
 import time
 import httpx
 from api.config import settings
-from api.exceptions import DatabaseException, UserNotFoundException
+from api.exceptions import (
+    DatabaseException,
+    UserNotFoundException,
+    UserAlreadyExistsException,
+    UsernameAlreadyTakenException,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -206,20 +211,27 @@ def get_user_by_email(email: str) -> Optional[Dict[str, Any]]:
 
 
 def create_user(user_data: Dict[str, Any]) -> Dict[str, Any]:
-    def _run():
+    cleaned_data = {k: v for k, v in user_data.items() if v is not None}
+    # Default username to the first name derived from the McGill email
+    # (firstname.last@mail.mcgill.ca → "Firstname") so brand-new accounts
+    # have a readable display name out of the box. User can change it later
+    # from Settings. We track whether WE derived it: if two students share a
+    # first name (john.smith / john.doe both → "John") the second insert
+    # collides on the username unique constraint. Because the student never
+    # chose that handle, we must silently de-collide (John → John2 → …) rather
+    # than fail their signup with a "username taken" they can't act on.
+    username_auto_derived = False
+    if not cleaned_data.get("username"):
+        email = (cleaned_data.get("email") or "").strip()
+        if email and "@" in email:
+            local = email.split("@", 1)[0]
+            first = local.split(".", 1)[0]
+            if first:
+                cleaned_data["username"] = first.capitalize()
+                username_auto_derived = True
+
+    def _insert():
         supabase = get_supabase()
-        cleaned_data = {k: v for k, v in user_data.items() if v is not None}
-        # Default username to the first name derived from the McGill email
-        # (firstname.last@mail.mcgill.ca → "Firstname") so brand-new accounts
-        # have a readable display name out of the box. User can change it later
-        # from Settings.
-        if not cleaned_data.get("username"):
-            email = (cleaned_data.get("email") or "").strip()
-            if email and "@" in email:
-                local = email.split("@", 1)[0]
-                first = local.split(".", 1)[0]
-                if first:
-                    cleaned_data["username"] = first.capitalize()
         logger.info(f"Creating user profile with ID: {cleaned_data.get('id')}")
         response = supabase.table("users").insert(cleaned_data).execute()
         if not response.data:
@@ -227,25 +239,55 @@ def create_user(user_data: Dict[str, Any]) -> Dict[str, Any]:
         logger.info(f"User profile created: {response.data[0].get('id')}")
         return response.data[0]
 
+    def _is_dupe(err: str) -> bool:
+        return "duplicate key" in err.lower() or "23505" in err
+
     try:
-        return with_retry("create_user", _run)
+        return with_retry("create_user", _insert)
     except Exception as e:
         error_str = str(e)
-        if "duplicate key" in error_str.lower() or "23505" in error_str:
-            logger.warning(f"Duplicate user create (race condition), returning existing: {error_str}")
-        else:
+        if not _is_dupe(error_str):
             logger.error(f"Error creating user: {error_str}")
-        if "duplicate key" in error_str.lower() or "23505" in error_str:
-            user_id = user_data.get("id")
-            logger.warning(f"Duplicate detected for user ID: {user_id}")
-            try:
-                return get_user_by_id(user_id)
-            except UserNotFoundException:
-                pass
-            if "email" in error_str:
-                raise DatabaseException("create_user", "Email already in use by another account")
-            if "username" in error_str:
-                raise DatabaseException("create_user", "Username already taken")
+            raise DatabaseException("create_user", error_str)
+
+        user_id = user_data.get("id")
+        logger.warning(f"Duplicate on user create for ID {user_id}: {error_str}")
+
+        # Same auth user retrying signup (self-heal / double submit): their row
+        # already exists, so return it instead of erroring.
+        try:
+            return get_user_by_id(user_id)
+        except UserNotFoundException:
+            pass
+
+        # A different account already owns this email → 409, let the client show
+        # the "already have an account?" path.
+        if "email" in error_str:
+            raise UserAlreadyExistsException(cleaned_data.get("email", ""))
+
+        if "username" in error_str:
+            if username_auto_derived:
+                # Retry with numeric suffixes on the derived handle; the student
+                # never picked it, so this must not surface as an error.
+                base = cleaned_data["username"]
+                for suffix in range(2, 12):
+                    cleaned_data["username"] = f"{base}{suffix}"
+                    try:
+                        return with_retry("create_user", _insert)
+                    except Exception as retry_err:
+                        rs = str(retry_err)
+                        if _is_dupe(rs) and "username" in rs:
+                            continue  # this suffix is taken too — try the next
+                        logger.error(f"Error creating user (de-collide): {rs}")
+                        raise DatabaseException("create_user", rs)
+                # Astronomically unlikely (10 "John"s racing) — fall back to a
+                # short unique suffix so signup still succeeds.
+                cleaned_data["username"] = f"{base}{uuid.uuid4().hex[:6]}"
+                return with_retry("create_user", _insert)
+            # The student explicitly chose this username → 409 so they can pick
+            # another. Routine client error, not a server fault.
+            raise UsernameAlreadyTakenException()
+
         raise DatabaseException("create_user", error_str)
 
 

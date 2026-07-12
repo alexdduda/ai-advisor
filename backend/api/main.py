@@ -221,7 +221,13 @@ class SupabaseRateLimiter:
             return new_count < limit
 
         except Exception as e:
-            logger.error(
+            # This is a HANDLED, expected degradation: Supabase blipped (e.g. a
+            # transient ReadTimeout) and we fall back to the per-instance
+            # in-memory limiter. Log at WARNING, not ERROR — otherwise every
+            # transient DB timeout fires a Sentry issue for a path that already
+            # self-heals. It stays as a breadcrumb so we can still see it if a
+            # real 5xx follows.
+            logger.warning(
                 f"[SECURITY] Rate limiter DB unavailable — falling back to in-memory "
                 f"(limit={self._FALLBACK_RPM} rpm). Multi-instance protection is "
                 f"degraded until Supabase recovers. Error: {type(e).__name__}"
