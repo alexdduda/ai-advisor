@@ -33,6 +33,7 @@ class ErrorCode(str, Enum):
     # Users
     USER_NOT_FOUND = "user_not_found"
     USER_ALREADY_EXISTS = "user_already_exists"
+    USERNAME_TAKEN = "username_taken"
     PROFILE_CREATE_FAILED = "profile_create_failed"
     
     # Database
@@ -99,6 +100,20 @@ class UserAlreadyExistsException(AppException):
         )
 
 
+# A username collision is a routine, user-correctable condition (someone picked a
+# handle that's already in use), NOT a server fault. It must map to 409 so the
+# client can prompt for a different username — never a 500 DatabaseException,
+# which would both mislead the user and page us in Sentry.
+class UsernameAlreadyTakenException(AppException):
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_409_CONFLICT,
+            code=ErrorCode.USERNAME_TAKEN,
+            message="That username is already taken. Please choose another.",
+            details=None,
+        )
+
+
 # SEC-015: DatabaseException no longer sends raw Supabase/Postgres error strings
 # to the HTTP client. The raw error is logged server-side for debugging; the
 # client only sees the operation name.
@@ -132,7 +147,12 @@ class DatabaseException(AppException):
 # Error Handlers
 async def app_exception_handler(request: Request, exc: AppException):
     """Handler for custom application exceptions"""
-    logger.error(
+    # 4xx are client errors (duplicate, not found, bad input) — expected and
+    # user-correctable. Log them at WARNING so they stay as Sentry breadcrumbs
+    # instead of firing error-level events. Reserve ERROR (which Sentry captures
+    # as an issue) for genuine 5xx server faults.
+    log = logger.error if exc.status_code >= 500 else logger.warning
+    log(
         f"AppException: {exc.code} - {exc.detail}",
         extra={
             "code": exc.code,
