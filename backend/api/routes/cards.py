@@ -24,6 +24,7 @@ import anthropic
 import asyncio
 import logging
 import json
+import re
 from datetime import datetime, timezone, timedelta
 from typing import List, Optional
 
@@ -877,21 +878,37 @@ async def retranslate_cards(user_id: str, request: RetranslateRequest, req: Requ
         prompt = build_rich_context(ctx, saved_cards=None) + _lang_instruction(request.language)
 
         client = get_anthropic_client()
-        message = client.messages.create(
-            model=settings.CLAUDE_MODEL,
-            max_tokens=4096,
-            system=[{
-                "type":          "text",
-                "text":          _CARDS_SYSTEM_PROMPT,
-                "cache_control": {"type": "ephemeral"},
-            }],
-            messages=[{"role": "user", "content": prompt}],
-        )
-        raw = message.content[0].text.strip()
-        if raw.startswith("```"):
-            raw = raw.split("\n", 1)[1].rsplit("```", 1)[0].strip()
 
-        cards = json.loads(raw)
+        # Haiku occasionally emits slightly malformed JSON (e.g. a missing
+        # comma). Tolerate trailing commas / prose wrappers, and retry the
+        # call once before giving up — this turns a hard 500 into a rare miss.
+        cards = None
+        for attempt in range(2):
+            message = client.messages.create(
+                model=settings.CLAUDE_MODEL,
+                max_tokens=4096,
+                system=[{
+                    "type":          "text",
+                    "text":          _CARDS_SYSTEM_PROMPT,
+                    "cache_control": {"type": "ephemeral"},
+                }],
+                messages=[{"role": "user", "content": prompt}],
+            )
+            raw = message.content[0].text.strip()
+            if raw.startswith("```"):
+                raw = raw.split("\n", 1)[1].rsplit("```", 1)[0].strip()
+            # Keep only the JSON array and strip trailing commas before ] or }.
+            if "[" in raw and "]" in raw:
+                raw = raw[raw.find("["):raw.rfind("]") + 1]
+            raw = re.sub(r",(\s*[\]}])", r"\1", raw)
+            try:
+                cards = json.loads(raw)
+                break
+            except json.JSONDecodeError as e:
+                if attempt == 0:
+                    logger.warning(f"Retranslate JSON invalid, retrying once: {e}")
+                    continue
+                raise
         if not isinstance(cards, list):
             raise ValueError("AI did not return a JSON array")
         for card in cards:
