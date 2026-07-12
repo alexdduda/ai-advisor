@@ -65,6 +65,38 @@ export default function CoursesTab({
         </button>
       </form>
 
+      {/* ── Filters (always visible) ────────────────────────── */}
+      <div className="courses-filter-bar">
+        {availableTerms.length > 0 && setSearchTerm && (
+          <div className="filter-group">
+            <label htmlFor="term-select" className="sort-label">{t('courses.semester')}</label>
+            <select
+              id="term-select"
+              className="sort-select"
+              value={searchTerm || ''}
+              onChange={(e) => { setCurrentPage(1); setSearchTerm(e.target.value) }}
+            >
+              <option value="">{t('courses.allSemesters')}</option>
+              {availableTerms.map(tm => <option key={tm} value={tm}>{tm}</option>)}
+            </select>
+          </div>
+        )}
+        <div className="filter-group">
+          <label htmlFor="sort-select" className="sort-label">{t('courses.sortBy')}</label>
+          <select id="sort-select" className="sort-select" value={sortBy} onChange={(e) => handleSortChange(e.target.value)}>
+            <option value="relevance">{t('courses.relevance')}</option>
+            <option value="rating-high">{t('courses.sortRatingHigh')}</option>
+            <option value="rating-low">{t('courses.sortRatingLow')}</option>
+            <option value="name-az">{t('courses.sortNameAZ')}</option>
+            <option value="name-za">{t('courses.sortNameZA')}</option>
+            <option value="instructor-az">{t('courses.sortInstructorAZ')}</option>
+            <option value="instructor-za">{t('courses.sortInstructorZA')}</option>
+            <option value="number">{t('courses.sortNumber')}</option>
+            <option value="grade-high">{t('courses.sortGradeHigh')}</option>
+          </select>
+        </div>
+      </div>
+
       {/* ── VSB Banner ──────────────────────────────────────── */}
       <a
         href={`https://vsb.mcgill.ca/criteria.jsp?access=0&lang=${language === 'fr' ? 'fr' : 'en'}&tip=2&page=criteria&scratch=0&advice=0&legend=1&term=202601&sort=none&filters=iiiiiiiiii&bbs=&ds=&cams=OFF-CAMPUS_DISTANCE_DOWNTOWN_MACDONALD&locs=any&isrts=any&ses=any&pl=&pac=1`}
@@ -122,34 +154,6 @@ export default function CoursesTab({
                 <span className="results-page-info"> — page {currentPage} of {totalPages}</span>
               )}
             </h3>
-            <div className="sort-controls">
-              {availableTerms.length > 0 && setSearchTerm && (
-                <>
-                  <label htmlFor="term-select" className="sort-label">{t('courses.semester')}</label>
-                  <select
-                    id="term-select"
-                    className="sort-select"
-                    value={searchTerm || ''}
-                    onChange={(e) => { setCurrentPage(1); setSearchTerm(e.target.value) }}
-                  >
-                    <option value="">{t('courses.allSemesters')}</option>
-                    {availableTerms.map(tm => <option key={tm} value={tm}>{tm}</option>)}
-                  </select>
-                </>
-              )}
-              <label htmlFor="sort-select" className="sort-label">{t('courses.sortBy')}</label>
-              <select id="sort-select" className="sort-select" value={sortBy} onChange={(e) => handleSortChange(e.target.value)}>
-                <option value="relevance">{t('courses.relevance')}</option>
-                <option value="rating-high">{t('courses.sortRatingHigh')}</option>
-                <option value="rating-low">{t('courses.sortRatingLow')}</option>
-                <option value="name-az">{t('courses.sortNameAZ')}</option>
-                <option value="name-za">{t('courses.sortNameZA')}</option>
-                <option value="instructor-az">{t('courses.sortInstructorAZ')}</option>
-                <option value="instructor-za">{t('courses.sortInstructorZA')}</option>
-                <option value="number">{t('courses.sortNumber')}</option>
-                <option value="grade-high">{t('courses.sortGradeHigh')}</option>
-              </select>
-            </div>
           </div>
 
           <div className="course-list">

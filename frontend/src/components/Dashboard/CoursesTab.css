@@ -359,3 +359,22 @@
 .course-term-prof strong { color: var(--text-primary, #222); }
 .term-prof-avg { color: var(--accent-primary, #ed1b2f); font-weight: 600; }
 .term-prof-avg--none { color: var(--text-tertiary, #999); font-weight: 400; font-style: italic; }
+
+/* Persistent filter bar under the search box (Semester + Sort) */
+.courses-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 18px;
+  margin: 10px 0 4px;
+}
+.courses-filter-bar .filter-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+@media (max-width: 640px) {
+  .courses-filter-bar { gap: 10px; }
+  .courses-filter-bar .filter-group { flex: 1 1 45%; }
+  .courses-filter-bar .sort-select { flex: 1; }
+}
