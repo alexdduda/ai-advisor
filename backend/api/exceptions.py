@@ -99,6 +99,20 @@ class UserAlreadyExistsException(AppException):
         )
 
 
+class UsernameTakenException(AppException):
+    """A chosen username collides with an existing account. This is a normal
+    user-input conflict (409), NOT a server error — so it is logged at info
+    level and never escalates as a DATABASE_ERROR."""
+    def __init__(self):
+        logger.info("Duplicate signup attempt: username already taken")
+        super().__init__(
+            status_code=status.HTTP_409_CONFLICT,
+            code=ErrorCode.USER_ALREADY_EXISTS,
+            message="That username is already taken. Please choose another.",
+            details=None
+        )
+
+
 # SEC-015: DatabaseException no longer sends raw Supabase/Postgres error strings
 # to the HTTP client. The raw error is logged server-side for debugging; the
 # client only sees the operation name.
