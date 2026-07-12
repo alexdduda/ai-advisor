@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import {
-  FaChevronRight, FaComments, FaBook,
+  FaChevronRight, FaComments, FaBook, FaHome, FaRegLightbulb,
   FaUser, FaCog, FaPalette, FaSignOutAlt, FaCalendarAlt,
   FaGraduationCap, FaUsers, FaExpandAlt, FaInfoCircle, FaShieldAlt, FaFileAlt,
   FaSun, FaMoon
@@ -14,7 +14,8 @@ import logoMark from '../../assets/loading-logo.png'
 import './Sidebar.css'
 
 const NAV_ITEMS = (t) => [
-  { key: 'chat',      icon: <FaComments />,     label: t('nav.chat') },
+  { key: 'home',      icon: <FaHome />,          label: t('nav.home') },
+  { key: 'chat',      icon: <FaRegLightbulb />,  label: t('nav.chat') },
   { key: 'favorites', icon: <FaGraduationCap />, label: t('nav.degreePlanning') },
   { key: 'courses',   icon: <FaBook />,          label: t('nav.courses') },
   { key: 'calendar',  icon: <FaCalendarAlt />,   label: t('nav.calendar') },
@@ -23,10 +24,26 @@ const NAV_ITEMS = (t) => [
   { key: 'profile',   icon: <FaUser />,          label: t('nav.profile') },
 ]
 
+// One identity color per tab so the active nav item reads distinctly
+// instead of a uniform red for every section. Chat/Profile keep the
+// brand red, Degree Planning reuses the existing success-green identity
+// already used for "done" states in that tab.
+const NAV_ACCENT = {
+  home:      { accent: 'var(--tab-home-accent)',     light: 'var(--tab-home-accent-light)',     text: 'var(--tab-home-accent-text)' },
+  chat:      { accent: 'var(--accent-primary)',      light: 'var(--accent-light)',               text: 'var(--accent-text)' },
+  favorites: { accent: 'var(--success-primary)',     light: 'var(--success-light)',              text: 'var(--success-text)' },
+  courses:   { accent: 'var(--tab-courses-accent)',  light: 'var(--tab-courses-accent-light)',   text: 'var(--tab-courses-accent-text)' },
+  calendar:  { accent: 'var(--tab-calendar-accent)', light: 'var(--tab-calendar-accent-light)',  text: 'var(--tab-calendar-accent-text)' },
+  clubs:     { accent: 'var(--tab-clubs-accent)',    light: 'var(--tab-clubs-accent-light)',     text: 'var(--tab-clubs-accent-text)' },
+  forum:     { accent: 'var(--tab-forum-accent)',    light: 'var(--tab-forum-accent-light)',     text: 'var(--tab-forum-accent-text)' },
+  profile:   { accent: 'var(--accent-primary)',      light: 'var(--accent-light)',               text: 'var(--accent-text)' },
+}
+
 export default function Sidebar({
   sidebarOpen, setSidebarOpen,
   activeTab, onTabChange,
   user, profile, profileImage, onSignOut,
+  badges = {},
 }) {
   const [popupOpen, setPopupOpen] = useState(false)
   const [isMounted, setIsMounted] = useState(sidebarOpen)
@@ -105,18 +122,28 @@ export default function Sidebar({
             </div>
 
             <nav className="sidebar-nav">
-              {navItems.map(({ key, icon, label }, index) => (
-                <button
-                  key={key}
-                  data-tour={key}
-                  className={`nav-item ${activeTab === key ? 'active' : ''}`}
-                  onClick={() => onTabChange(key)}
-                  style={{ '--nav-index': index }}
-                >
-                  <span className="nav-icon">{icon}</span>
-                  <span className="nav-label">{label}</span>
-                </button>
-              ))}
+              {navItems.map(({ key, icon, label }, index) => {
+                const accent = NAV_ACCENT[key] || NAV_ACCENT.chat
+                const badge = badges[key]
+                return (
+                  <button
+                    key={key}
+                    data-tour={key}
+                    className={`nav-item ${activeTab === key ? 'active' : ''}`}
+                    onClick={() => onTabChange(key)}
+                    style={{
+                      '--nav-index': index,
+                      '--nav-accent': accent.accent,
+                      '--nav-accent-light': accent.light,
+                      '--nav-accent-text': accent.text,
+                    }}
+                  >
+                    <span className="nav-icon">{icon}</span>
+                    <span className="nav-label">{label}</span>
+                    {badge ? <span className="nav-badge">{badge > 9 ? '9+' : badge}</span> : null}
+                  </button>
+                )
+              })}
             </nav>
 
             <div className="sidebar-footer">
@@ -181,17 +208,22 @@ export default function Sidebar({
         {!sidebarOpen && !isMounted && (
           <div className="mini-rail">
             <div className="mini-capsule">
-              {navItems.map(({ key, icon, label }, index) => (
-                <button
-                  key={key}
-                  className={`mini-pill ${activeTab === key ? 'mini-pill--active' : ''}`}
-                  onClick={() => onTabChange(key)}
-                  title={label}
-                  style={{ '--pill-index': index }}
-                >
-                  {icon}
-                </button>
-              ))}
+              {navItems.map(({ key, icon, label }, index) => {
+                const accent = NAV_ACCENT[key] || NAV_ACCENT.chat
+                const badge = badges[key]
+                return (
+                  <button
+                    key={key}
+                    className={`mini-pill ${activeTab === key ? 'mini-pill--active' : ''}`}
+                    onClick={() => onTabChange(key)}
+                    title={label}
+                    style={{ '--pill-index': index, '--nav-accent': accent.accent }}
+                  >
+                    {icon}
+                    {badge ? <span className="mini-pill-badge">{badge > 9 ? '9+' : badge}</span> : null}
+                  </button>
+                )
+              })}
               <div className="mini-capsule-divider" />
               <button
                 className="mini-pill mini-pill--theme"

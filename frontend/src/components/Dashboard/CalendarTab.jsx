@@ -3,7 +3,7 @@ import {
   FaChevronLeft, FaChevronRight, FaPlus, FaTimes, FaBell,
   FaCalendarAlt, FaBullhorn, FaGraduationCap, FaUser, FaExternalLinkAlt, FaDownload,
   FaTrash, FaEdit, FaCheck, FaClipboardList, FaUsers, FaBook, FaLayerGroup, FaClock, FaExclamationTriangle,
-  FaStar, FaBullseye, FaNewspaper, FaSearch, FaBellSlash
+  FaStar, FaBullseye, FaNewspaper, FaSearch, FaBellSlash, FaEllipsisH
 } from 'react-icons/fa'
 import { useLanguage, useTimezone } from '../../contexts/PreferencesContext'
 import useNotificationPrefs from '../../hooks/useNotificationPrefs'
@@ -21,7 +21,7 @@ import {
   L, getDaysInMonth, getFirstDayOfMonth, toDateStr, daysUntil,
   getClubEventStyle,
 } from './CalendarTab/calendarConstants'
-import { downloadICS, googleCalendarUrl } from './CalendarTab/calendarUtils'
+import { downloadICS } from './CalendarTab/calendarUtils'
 import EventModal from './CalendarTab/EventModal'
 import EventPopup from './CalendarTab/EventPopup'
 import DayDrawer from './CalendarTab/DayDrawer'
@@ -352,7 +352,7 @@ export default function CalendarTab({ user, authFlags, clubEvents = [], managedC
   const [dayDrawer, setDayDrawer]     = useState(null)
   const [popupEvent, setPopupEvent]   = useState(null)
   const [notifSaved, setNotifSaved]   = useState(false)
-  const [showExportMenu, setShowExportMenu] = useState(false)
+  const [showMoreMenu, setShowMoreMenu] = useState(false)
   const [showGCalGuide, setShowGCalGuide] = useState(false)
   const [showBulkDelete, setShowBulkDelete] = useState(false)
   const [hiddenSlotKeys, setHiddenSlotKeys] = useState(() => {
@@ -427,6 +427,16 @@ export default function CalendarTab({ user, authFlags, clubEvents = [], managedC
     }),
     [allEvents, filter, hiddenSlotKeys, mutedClubIds, hiddenEventIds]
   )
+
+  // Per-type counts from the full (unfiltered) event universe — used to fold
+  // chips for types the student has no events of behind "+N more", so the
+  // filter bar doesn't force everyone to scan six chips up front.
+  const eventCountsByType = useMemo(() => {
+    const counts = {}
+    allEvents.forEach(e => { counts[e.type] = (counts[e.type] || 0) + 1 })
+    return counts
+  }, [allEvents])
+  const [showAllFilterChips, setShowAllFilterChips] = useState(false)
 
   const eventsByDate = useMemo(() => {
     const map = {}
@@ -620,6 +630,12 @@ export default function CalendarTab({ user, authFlags, clubEvents = [], managedC
 
   const urgentEvents = upcomingEvents.filter(e => daysUntil(e.date) <= 7)
 
+  // Announcements list shows 5 at a time — urgentEvents above stays computed
+  // from the full upcomingEvents so the "N events in 7 days" banner and any
+  // badge counts stay accurate regardless of how much is expanded on screen.
+  const [showAllUpcoming, setShowAllUpcoming] = useState(false)
+  const displayedUpcoming = showAllUpcoming ? upcomingEvents : upcomingEvents.slice(0, 5)
+
   const countdownLabel = (days) => {
     if (days === 0) return L(language, '🔴 Today!', "🔴 Aujourd'hui!", '🔴 今天！')
     if (days === 1) return `⚠️ ${t('calendar.tomorrow')}`
@@ -633,13 +649,7 @@ export default function CalendarTab({ user, authFlags, clubEvents = [], managedC
       {userEvents.some(e => e.recurrence && e.course_code && !e._isRecurringOccurrence && !e.time) && (
         <div className="cal-missing-time-banner">
           <FaExclamationTriangle className="cal-missing-icon" />
-          <span>
-            {language === 'zh'
-              ? '⚠️ 部分课程缺少时间信息'
-              : language === 'fr'
-              ? "Certains cours n'ont pas d'heure. Cliquez sur \u00abAfficher/masquer des cours\u00bb pour les corriger."
-              : 'Some classes are missing their time. Click "Show/Hide Classes" to fix them.'}
-          </span>
+          <span>{L(language, 'Some classes are missing their time.', "Certaines classes n'ont pas d'heure.", '部分课程缺少时间信息')}</span>
           <button className="cal-missing-fix-btn" onClick={() => setShowBulkDelete(true)}>
             {L(language, 'Fix now', 'Corriger', '立即修复')}
           </button>
@@ -672,40 +682,60 @@ export default function CalendarTab({ user, authFlags, clubEvents = [], managedC
             </button>
           </div>
           <div className="cal-export-wrap">
-            <button className="cal-export-btn" onClick={() => setShowExportMenu(p => !p)}>
-              <FaDownload size={13} /> {t('calendar.exportBtn')}
+            <button
+              className="cal-export-btn cal-more-btn"
+              onClick={() => setShowMoreMenu(p => !p)}
+              aria-label={L(language, 'More options', "Plus d'options", '更多选项')}
+              title={L(language, 'More options', "Plus d'options", '更多选项')}
+            >
+              <FaEllipsisH size={13} />
             </button>
-            {showExportMenu && (
+            {showMoreMenu && (
               <div className="cal-export-menu">
-                <button className="cal-export-item" onClick={() => { downloadICS(filteredEvents, 'mcgill-calendar.ics'); setShowExportMenu(false) }}>
+                <button className="cal-export-item" onClick={() => { downloadICS(filteredEvents, 'mcgill-calendar.ics'); setShowMoreMenu(false) }}>
                   <FaDownload size={11} /> {t('calendar.exportICS')}
                 </button>
-                <button className="cal-export-item cal-export-item--google" onClick={() => { downloadICS(filteredEvents, 'mcgill-calendar.ics'); setShowGCalGuide(true); setShowExportMenu(false) }}>
+                <button className="cal-export-item cal-export-item--google" onClick={() => { downloadICS(filteredEvents, 'mcgill-calendar.ics'); setShowGCalGuide(true); setShowMoreMenu(false) }}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
                   {t('calendar.exportGoogleHelp')}
+                </button>
+                <button className="cal-export-item" onClick={() => { setShowBulkDelete(true); setShowMoreMenu(false) }}>
+                  <FaLayerGroup size={11} /> {L(language, 'Edit Events', 'Modifier les événements', '编辑事件')}
                 </button>
               </div>
             )}
           </div>
-          <button className="cal-bulk-toggle-btn" onClick={() => setShowBulkDelete(true)} title={L(language, 'Manage events', 'Gérer les événements', '管理事件')}>
-            <FaLayerGroup size={12} /> {L(language, 'Edit Events', 'Modifier les événements', '编辑事件')}
-          </button>
           <button className="cal-add-btn" onClick={() => { setPreselectedDate(null); setEditEvent(null); setShowModal(true) }}>
             <FaPlus /> {t('calendar.addEventBtn')}
           </button>
         </div>
       </div>
 
-      {/* Filter Bar */}
+      {/* Filter Bar — chips for types with zero events fold behind "+N more" */}
       <div className="cal-filter-bar">
-        {Object.entries(typeConfig).filter(([key]) => key !== 'newsletter' || isMcGillEmail).map(([key, cfg]) => (
-          <button key={key}
-            className={`cal-filter-chip ${filter[key] ? 'active' : ''}`}
-            style={filter[key] ? { borderColor: cfg.color, background: cfg.bg, color: cfg.color } : {}}
-            onClick={() => setFilter(f => ({ ...f, [key]: !f[key] }))}>
-            {cfg.icon} {cfg.label}
-          </button>
-        ))}
+        {(() => {
+          const visibleTypes = Object.entries(typeConfig).filter(([key]) => key !== 'newsletter' || isMcGillEmail)
+          const withEvents = visibleTypes.filter(([key]) => (eventCountsByType[key] || 0) > 0)
+          const withoutEvents = visibleTypes.filter(([key]) => (eventCountsByType[key] || 0) === 0)
+          const shown = showAllFilterChips ? visibleTypes : withEvents
+          return (
+            <>
+              {shown.map(([key, cfg]) => (
+                <button key={key}
+                  className={`cal-filter-chip ${filter[key] ? 'active' : ''}`}
+                  style={filter[key] ? { borderColor: cfg.color, background: cfg.bg, color: cfg.color } : {}}
+                  onClick={() => setFilter(f => ({ ...f, [key]: !f[key] }))}>
+                  {cfg.icon} {cfg.label}
+                </button>
+              ))}
+              {!showAllFilterChips && withoutEvents.length > 0 && (
+                <button className="cal-filter-chip cal-filter-chip--more" onClick={() => setShowAllFilterChips(true)}>
+                  +{withoutEvents.length} {L(language, 'more', 'de plus', '更多')}
+                </button>
+              )}
+            </>
+          )
+        })()}
       </div>
 
       {isLoadingEvents && (
@@ -794,7 +824,7 @@ export default function CalendarTab({ user, authFlags, clubEvents = [], managedC
                 <FaCalendarAlt size={40} />
                 <p>{t('calendar.noUpcoming')}</p>
               </div>
-            ) : upcomingEvents.map(event => {
+            ) : displayedUpcoming.map(event => {
               const style = getEventStyle(event, typeConfig)
               const days = daysUntil(event.date)
               const isUrgent = days <= 7 && days >= 0
@@ -824,6 +854,12 @@ export default function CalendarTab({ user, authFlags, clubEvents = [], managedC
               )
             })}
           </div>
+
+          {!showAllUpcoming && upcomingEvents.length > displayedUpcoming.length && (
+            <button className="cal-show-more-btn" onClick={() => setShowAllUpcoming(true)}>
+              {L(language, 'Show more', 'Afficher plus', '显示更多')} ({upcomingEvents.length - displayedUpcoming.length})
+            </button>
+          )}
 
           {clubAnnouncements.length > 0 && (
             <>

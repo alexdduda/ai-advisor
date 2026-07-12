@@ -158,6 +158,11 @@
 .cal-filter-chip:hover { background: var(--bg-hover); }
 .cal-filter-chip.active { font-weight: 600; }
 
+.cal-filter-chip--more {
+  border-style: dashed;
+  color: var(--text-tertiary);
+}
+
 /* ── Calendar Body ───────────────────────────────────────────────── */
 .cal-body {
   flex: 1;
@@ -384,6 +389,26 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.cal-show-more-btn {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+  border: 1.5px dashed var(--border-secondary);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-tertiary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.cal-show-more-btn:hover {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
 }
 
 .cal-announce-card {
@@ -1292,6 +1317,11 @@
   background: var(--accent-lighter, #fff5f5);
 }
 
+/* Icon-only variant — Export + Edit Events collapsed into one overflow menu */
+.cal-more-btn {
+  padding: 7px 9px;
+}
+
 .cal-export-menu {
   position: absolute;
   top: calc(100% + 6px);
@@ -1504,27 +1534,6 @@
 .cal-gcal-modal__done-btn:hover { background: var(--bg-secondary); }
 
 [data-theme='dark'] .cal-gcal-step-num { background: rgba(26,115,232,0.2); }
-
-/* ── Bulk Delete Button (header) ─────────────────────────────────── */
-.cal-bulk-toggle-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 12px;
-  border-radius: 8px;
-  border: 1.5px solid var(--border-primary);
-  background: transparent;
-  color: var(--text-secondary);
-  font-size: 0.78rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
-}
-.cal-bulk-toggle-btn:hover {
-  border-color: var(--accent-primary, #ED1B2F);
-  color: var(--accent-primary, #ED1B2F);
-  background: rgba(237,27,47,0.06);
-}
 
 /* ── Bulk Delete Modal ───────────────────────────────────────────── */
 .cal-bulk-overlay {
@@ -1772,7 +1781,12 @@
   color: #fcd34d;
 }
 .cal-missing-icon { color: #f59e0b; flex-shrink: 0; }
-.cal-missing-time-banner span { flex: 1; }
+.cal-missing-time-banner span {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .cal-missing-fix-btn {
   white-space: nowrap;
   padding: 4px 12px;

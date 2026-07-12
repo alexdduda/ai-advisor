@@ -19,7 +19,10 @@ import uuid
 import time
 import httpx
 from api.config import settings
-from api.exceptions import DatabaseException, UserNotFoundException
+from api.exceptions import (
+    DatabaseException, UserNotFoundException,
+    UserAlreadyExistsException, UsernameTakenException,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -242,10 +245,12 @@ def create_user(user_data: Dict[str, Any]) -> Dict[str, Any]:
                 return get_user_by_id(user_id)
             except UserNotFoundException:
                 pass
+            # These are user-input conflicts (409), not server errors — raise
+            # 409s so they don't escalate as DATABASE_ERROR in error tracking.
             if "email" in error_str:
-                raise DatabaseException("create_user", "Email already in use by another account")
+                raise UserAlreadyExistsException()
             if "username" in error_str:
-                raise DatabaseException("create_user", "Username already taken")
+                raise UsernameTakenException()
         raise DatabaseException("create_user", error_str)
 
 

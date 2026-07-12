@@ -9,6 +9,8 @@ import { normalizeQuery, buildCorrectionCandidates } from '../../utils/fuzzySear
 import { useLanguage } from '../../contexts/PreferencesContext'
 import cardsAPI from '../../lib/cardsAPI'
 import AdvisorCards from './chat/AdvisorCards'
+import HomeTab from './HomeTab'
+import useUpcomingEvents from '../../hooks/useUpcomingEvents'
 import RightSidebar from './RightSidebar'
 import CoursesView from './CoursesView'
 
@@ -16,9 +18,10 @@ import Sidebar from './Sidebar'
 import clubsAPI from '../../lib/clubsAPI'
 import { readCache, writeCache, clearAllForUser } from '../../lib/userDataCache'
 
-// Code-split everything that isn't on the default landing screen. Brief/Chat
-// is the default tab and ships in the main bundle; secondary tabs and modals
-// only download when the user navigates to them.
+// Code-split everything that isn't on the default landing screen. Home is
+// the default tab and ships in the main bundle (Brief/Chat stays static too
+// since Home links straight into it); secondary tabs and modals only
+// download when the user navigates to them.
 const ClubsTab          = lazy(() => import('./ClubsTab'))
 const ProfileTab        = lazy(() => import('./ProfileTab'))
 const DegreePlanningView = lazy(() => import('./DegreePlanningView'))
@@ -61,8 +64,23 @@ export default function Dashboard() {
 
   // ── Layout ─────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState(() =>
-    localStorage.getItem('symbolos_open_pw_change') ? 'profile' : 'chat'
+    localStorage.getItem('symbolos_open_pw_change') ? 'profile' : 'home'
   )
+
+  // Deep link into the Courses tab (e.g. Home → "View upcoming courses"
+  // lands on My Courses → Current). Cleared when leaving the tab so a normal
+  // visit gets the default view again.
+  const [coursesDeepLink, setCoursesDeepLink] = useState(null)
+  useEffect(() => {
+    if (activeTab !== 'courses') setCoursesDeepLink(null)
+  }, [activeTab])
+
+  // Deep link into the Brief: open a specific advisor card's chat (from Home).
+  const [briefOpenCardId, setBriefOpenCardId] = useState(null)
+  const handleOpenBriefCard = (cardId) => {
+    setBriefOpenCardId(cardId)
+    handleTabChange('chat')
+  }
 
   // Sidebar open/closed state — persisted across reloads but defaults to OPEN
   // on first visit so new users see the navigation rail.
@@ -82,6 +100,7 @@ export default function Dashboard() {
   // ── Dynamic browser tab title ────────────────────────
   useEffect(() => {
     const tabNameKey = {
+      home:      'nav.home',
       chat:      'nav.chat',
       favorites: 'nav.degreePlanning',
       courses:   'nav.courses',
@@ -157,9 +176,9 @@ export default function Dashboard() {
   const [searchError, setSearchError] = useState(null)
   const [searchCorrection, setSearchCorrection] = useState(null) // { original, corrected }
   const [hasSearched, setHasSearched] = useState(false)
-  const [selectedCourse, setSelectedCourse] = useState(null)
-  const [isLoadingCourse, setIsLoadingCourse] = useState(false)
   const [sortBy, setSortBy] = useState('relevance')
+  const [searchTerm, setSearchTerm] = useState('')      // semester filter, '' = all
+  const [availableTerms, setAvailableTerms] = useState([])
 
   // ── Favorites & completed ──────────────────────────────
   // SWR-style: hydrate user-data state from localStorage so the UI paints
@@ -180,6 +199,15 @@ export default function Dashboard() {
   const [currentCoursesMap, setCurrentCoursesMap] = useState(
     new Set((_hydratedCurrent || []).map(c => c.course_code))
   )
+
+  // Computed once here (not inside HomeTab) because the Sidebar's Calendar
+  // badge needs the same urgentCount — avoids a second fetch of the feed.
+  const {
+    events: upcomingEvents,
+    loading: upcomingEventsLoading,
+    urgentCount: upcomingUrgentCount,
+    hasCourseEvents: hasUpcomingCourseEvents,
+  } = useUpcomingEvents(user, currentCourses, { limit: 5 })
 
   // ── Mark Complete modal ────────────────────────────────
   const [showCompleteCourseModal, setShowCompleteCourseModal] = useState(false)
@@ -209,6 +237,18 @@ export default function Dashboard() {
       case 'name-za':       return sorted.sort((a, b) => `${b.subject} ${b.catalog}`.localeCompare(`${a.subject} ${a.catalog}`))
       case 'instructor-az': return sorted.sort((a, b) => (a.instructor || 'ZZZ').localeCompare(b.instructor || 'ZZZ'))
       case 'instructor-za': return sorted.sort((a, b) => (b.instructor || '').localeCompare(a.instructor || ''))
+      case 'number':        return sorted.sort((a, b) => (parseInt(a.catalog, 10) || 0) - (parseInt(b.catalog, 10) || 0))
+      // Highest average grade with the semester's specific professor,
+      // historically. Courses where we know that prof's history rank first
+      // (by that average); the rest fall to the bottom, ordered by the
+      // course's own recent average.
+      case 'grade-high':    return sorted.sort((a, b) => {
+                                    const av = a.prof_historical_avg, bv = b.prof_historical_avg
+                                    if (av != null && bv != null) return bv - av
+                                    if (av != null) return -1
+                                    if (bv != null) return 1
+                                    return (b.average ?? -1) - (a.average ?? -1)
+                                  })
       default: return sorted
     }
   }
@@ -623,7 +663,6 @@ export default function Dashboard() {
   // ── Tab change ─────────────────────────────────────────
   const handleTabChange = (tab) => {
     setActiveTab(tab)
-    setSelectedCourse(null)
     setSearchResults([])
     setSearchError(null)
     setSearchCorrection(null)
@@ -639,7 +678,6 @@ export default function Dashboard() {
     setIsSearching(true)
     setSearchError(null)
     setSearchCorrection(null)
-    setSelectedCourse(null)
     setHasSearched(true)
     try {
       const normalized = normalizeQuery(rawQuery)
@@ -654,7 +692,7 @@ export default function Dashboard() {
         searchQuery   = codeMatch[2]
       }
 
-      const data = await coursesAPI.search(searchQuery, searchSubject, 50)
+      const data = await coursesAPI.search(searchQuery, searchSubject, 50, searchTerm || null)
       let courses = data.courses || data || []
       if (!Array.isArray(courses)) courses = []
 
@@ -665,7 +703,7 @@ export default function Dashboard() {
           const corrCode = candidate.query.match(/^([A-Z]{2,6})\s+(\d{3}[A-Z]?)$/)
           const retrySub = corrCode ? corrCode[1] : null
           const retryQ   = corrCode ? corrCode[2] : candidate.query
-          const retry = await coursesAPI.search(retryQ, retrySub, 50)
+          const retry = await coursesAPI.search(retryQ, retrySub, 50, searchTerm || null)
           const retryList = retry.courses || retry || []
           if (Array.isArray(retryList) && retryList.length > 0) {
             setSearchCorrection({ original: rawQuery, corrected: candidate.note })
@@ -686,18 +724,16 @@ export default function Dashboard() {
     }
   }
 
-  const handleCourseClick = async (course) => {
-    setIsLoadingCourse(true)
-    try {
-      const data = await coursesAPI.getDetails(course.subject, course.catalog)
-      setSelectedCourse(data.course || data)
-    } catch (error) {
-      console.error('Error loading course details:', error)
-      setSearchError('Failed to load course details.')
-    } finally {
-      setIsLoadingCourse(false)
-    }
-  }
+  // Load the list of semesters we have section data for (for the filter).
+  useEffect(() => {
+    coursesAPI.getTerms().then(d => setAvailableTerms(d?.terms || [])).catch(() => {})
+  }, [])
+
+  // Re-run the current search whenever the semester filter changes.
+  useEffect(() => {
+    if (hasSearched && searchQuery.trim()) handleCourseSearch()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm])
 
   // ── Toggle favorite ────────────────────────────────────
   const handleToggleFavorite = async (course) => {
@@ -885,6 +921,7 @@ export default function Dashboard() {
         user={user}
         profile={profile}
         onSignOut={handleSignOut}
+        badges={{ calendar: upcomingUrgentCount > 0 ? upcomingUrgentCount : null }}
       />
 
       <main className="main-content">
@@ -895,6 +932,28 @@ export default function Dashboard() {
         >☰</button>
 
         <div className="content-area">
+
+          {activeTab === 'home' && (
+            <HomeTab
+              user={user}
+              profile={profile}
+              advisorCards={advisorCards}
+              cardsLoading={cardsLoading}
+              currentCourses={currentCourses}
+              completedCourses={completedCourses}
+              events={upcomingEvents}
+              eventsLoading={upcomingEventsLoading}
+              hasCourseEvents={hasUpcomingCourseEvents}
+              onTabChange={handleTabChange}
+              onViewCurrentCourses={() => {
+                setCoursesDeepLink({ subTab: 'my_courses', savedTab: 'current' })
+                handleTabChange('courses')
+              }}
+              onOpenBriefCard={handleOpenBriefCard}
+              onImportTranscript={() => { setTranscriptUploadTab('transcript'); setShowTranscriptUpload(true) }}
+              onImportSyllabus={() => { setTranscriptUploadTab('syllabus'); setShowTranscriptUpload(true) }}
+            />
+          )}
 
           {activeTab === 'chat' && (
             <AdvisorCards
@@ -920,6 +979,8 @@ export default function Dashboard() {
               freeformInput={freeformInput}
               setFreeformInput={setFreeformInput}
               onFreeformSubmit={handleFreeformSubmit}
+              openCardId={briefOpenCardId}
+              onOpenedCard={() => setBriefOpenCardId(null)}
             />
           )}
 
@@ -937,6 +998,8 @@ export default function Dashboard() {
 
           {activeTab === 'courses' && (
             <CoursesView
+              defaultSubTab={coursesDeepLink?.subTab ?? 'course_search'}
+              defaultSavedTab={coursesDeepLink?.savedTab ?? 'saved'}
               favorites={favorites}
               completedCourses={completedCourses}
               completedCoursesMap={completedCoursesMap}
@@ -946,27 +1009,23 @@ export default function Dashboard() {
               onToggleFavorite={handleToggleFavorite}
               onToggleCompleted={handleToggleCompleted}
               onToggleCurrent={handleToggleCurrent}
-              onCourseClick={handleCourseClick}
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
               searchResults={searchResults}
-              setSearchResults={setSearchResults}
               isSearching={isSearching}
               searchError={searchError}
               searchCorrection={searchCorrection}
-              onSearchWithCorrection={(q) => { setSearchQuery(q); handleCourseSearch(null, q) }}
               hasSearched={hasSearched}
-              selectedCourse={selectedCourse}
-              setSelectedCourse={setSelectedCourse}
-              isLoadingCourse={isLoadingCourse}
               sortBy={sortBy}
               setSortBy={setSortBy}
               sortCourses={sortCourses}
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              availableTerms={availableTerms}
               isFavorited={isFavorited}
               isCompleted={isCompleted}
               isCurrent={isCurrent}
               handleCourseSearch={handleCourseSearch}
-              handleCourseClick={handleCourseClick}
               handleToggleFavorite={handleToggleFavorite}
               handleToggleCompleted={handleToggleCompleted}
               handleToggleCurrent={handleToggleCurrent}

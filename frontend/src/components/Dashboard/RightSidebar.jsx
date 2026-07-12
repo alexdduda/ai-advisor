@@ -91,6 +91,7 @@ function SidebarChatBar({ onSend, isThinking, placeholder }) {
 // ── Tab name helper ───────────────────────────────────────────────────────────
 function getTabLabel(activeTab, t) {
   const tabKey = {
+    home: 'rsb.tab.home',
     courses: 'rsb.tab.courses',
     calendar: 'rsb.tab.calendar',
     favorites: 'rsb.tab.degree',
@@ -104,6 +105,7 @@ function getTabLabel(activeTab, t) {
 // ── Per-tab welcome message ───────────────────────────────────────────────────
 function getWelcomeMessage(activeTab, t) {
   const key = {
+    home: 'rsb.welcome.home',
     calendar: 'rsb.welcome.calendar',
     favorites: 'rsb.welcome.degree',
     clubs: 'rsb.welcome.clubs',
@@ -163,12 +165,6 @@ export default function RightSidebar({
       return [...prev, { ...msg, tab: msg.tab || activeTab, pinnedAt: Date.now() }]
     })
   }, [activeTab])
-
-  const isMessagePinned = useCallback((msg) => {
-    return pinnedMessages.some(
-      p => p.content === msg.content && p.role === msg.role
-    )
-  }, [pinnedMessages])
 
   // ── Tab switch: save current conversation, restore new tab's ───────────────
   useEffect(() => {
@@ -289,6 +285,7 @@ export default function RightSidebar({
   const tabLabel = getTabLabel(activeTab, t)
 
   const suggestionKeys = {
+    home:          ['rsb.nav.home.1','rsb.nav.home.2','rsb.nav.home.3'],
     courses:       ['rsb.nav.courses.1','rsb.nav.courses.2','rsb.nav.courses.3'],
     calendar:      ['rsb.nav.calendar.1','rsb.nav.calendar.2','rsb.nav.calendar.3'],
     favorites:     ['rsb.nav.degree.1','rsb.nav.degree.2','rsb.nav.degree.3'],

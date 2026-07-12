@@ -16,6 +16,7 @@ import AdvisingResourcesView from './AdvisingResourcesView'
 import { readCache, writeCache } from '../../lib/userDataCache'
 import { usersAPI } from '../../lib/api'
 import { matchCourse, wildcardBand, blockWildcardMatches } from '../../utils/requirementMatch'
+import SectionHeader from '../ui/SectionHeader'
 import './DegreePlanningView.css'
 
 // Fix double /api/api bug
@@ -701,7 +702,6 @@ function ProgramSection({ prog, completedCourses, currentCourses, advStanding, o
 
       {/* Blocks */}
       {prog.blocks?.map(block => {
-        const isOpen = openBlocks[block.id]
         // For block progress: count matched courses (any, not just is_required) + wildcard matches
         const blockCourses = block.courses?.filter(c => c.catalog) || []
         const exactMatched = blockCourses.filter(c => {
@@ -729,6 +729,10 @@ function ProgramSection({ prog, completedCourses, currentCourses, advStanding, o
         }
         const blockDone     = creditsNeeded > 0 && creditsEarned >= creditsNeeded
         const hasProgress   = creditsEarned > 0
+        // Default-collapse blocks that are already 100% complete — the pill
+        // badge in the header still shows their status. Once the user
+        // explicitly toggles a block, that choice wins over the default.
+        const isOpen = openBlocks[block.id] ?? !blockDone
 
         // Pill label when not done
         const reqCourses = blockCourses.filter(c => c.is_required)
@@ -1035,11 +1039,8 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
       const data = await res.json()
       setter(data)
       _writeProgCache(key, data)
-      setOpenBlocks(prev => {
-        const init = { ...prev }
-        data.blocks?.forEach((b, i) => { if (i < 2) init[b.id] = true })
-        return init
-      })
+      // No prefill here — ProgramSection defaults each block's open state
+      // to "open unless already complete" until the user toggles it.
       return 'ok'
     } catch {
       return 'error'
@@ -1079,16 +1080,8 @@ function MyProgramCard({ profile, completedCourses, currentCourses }) {
     if (Object.keys(extraMajorsCached).length) setExtraMajorsData(prev => ({ ...prev, ...extraMajorsCached }))
     if (Object.keys(extraMinorsCached).length) setExtraMinorsData(prev => ({ ...prev, ...extraMinorsCached }))
 
-    // Open the first couple of blocks of cached programs so the
-    // accordion isn't fully collapsed on first paint.
-    setOpenBlocks(prev => {
-      const init = { ...prev }
-      ;[majorCached, minorCached, sciCached, coreCached, concCached,
-        ...Object.values(extraMajorsCached), ...Object.values(extraMinorsCached)]
-        .filter(Boolean)
-        .forEach(prog => prog.blocks?.forEach((b, i) => { if (i < 2) init[b.id] = true }))
-      return init
-    })
+    // No open-block prefill here — ProgramSection defaults each block to
+    // "open unless already complete" until the user explicitly toggles it.
 
     if (!anyCache) {
       // Cold start — clear stale state and show the spinner.
@@ -1702,22 +1695,24 @@ export default function DegreePlanningView({
         <>
           {/* Degree Progress */}
           <div className="dp-section-card">
-            <div className="dp-section-header">
-              <span className="dp-section-icon"><FaBullseye /></span>
-              <h2 className="dp-section-title">{t('profile.degreeProgress')}</h2>
-              <div className="dp-import-btns">
-                {onImportTranscript && (
-                  <button className="dp-import-btn" onClick={onImportTranscript}>
-                    <FaFileUpload /> {t('dp.transcript')}
-                  </button>
-                )}
-                {onImportSyllabus && (
-                  <button className="dp-import-btn dp-import-btn--secondary" onClick={onImportSyllabus}>
-                    <FaBook /> {t('dp.syllabuses')}
-                  </button>
-                )}
-              </div>
-            </div>
+            <SectionHeader
+              icon={<FaBullseye />}
+              title={t('profile.degreeProgress')}
+              action={
+                <div className="dp-import-btns">
+                  {onImportTranscript && (
+                    <button className="dp-import-btn" onClick={onImportTranscript}>
+                      <FaFileUpload /> {t('dp.transcript')}
+                    </button>
+                  )}
+                  {onImportSyllabus && (
+                    <button className="dp-import-btn dp-import-btn--secondary" onClick={onImportSyllabus}>
+                      <FaBook /> {t('dp.syllabuses')}
+                    </button>
+                  )}
+                </div>
+              }
+            />
             <DegreeProgressTracker completedCourses={completedCourses} profile={profile} />
           </div>
 
