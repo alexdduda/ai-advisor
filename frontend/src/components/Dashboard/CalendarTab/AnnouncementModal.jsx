@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
-import { FaTimes, FaCheck, FaBullhorn, FaCalendarAlt, FaLink } from 'react-icons/fa'
+import { FaCheck, FaBullhorn, FaCalendarAlt, FaLink } from 'react-icons/fa'
 import { L } from './calendarConstants'
+import Modal from '../../ui/Modal'
 
 export default function AnnouncementModal({ clubs, onSave, onClose, language }) {
   const [form, setForm] = useState({ title: '', body: '', clubId: clubs[0]?.id || '', join_link: '', attachEvent: false, eventDate: '', eventTime: '', eventEndTime: '', eventLocation: '' })
@@ -11,17 +12,14 @@ export default function AnnouncementModal({ clubs, onSave, onClose, language }) 
     onSave(form)
   }
   return (
-    <div className="cal-modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="cal-modal cal-modal-v2" style={{ maxWidth: '460px' }}>
-        <div className="cal-modal-accent" style={{ background: '#d97706' }} />
-        <div className="cal-modal-header-v2">
-          <div className="cal-modal-header-left">
-            <span className="cal-modal-type-icon"><FaBullhorn /></span>
-            <h3>{L(language, 'Post Announcement', 'Publier une annonce', '发布公告')}</h3>
-          </div>
-          <button className="cal-modal-close" onClick={onClose}><FaTimes /></button>
-        </div>
-        <form className="cal-modal-body-v2" onSubmit={handleSubmit}>
+    <Modal
+      onClose={onClose}
+      title={L(language, 'Post Announcement', 'Publier une annonce', '发布公告')}
+      icon={<FaBullhorn style={{ color: '#d97706' }} />}
+      accent="#d97706"
+      size="sm"
+    >
+        <form className="cal-modal-body-v2" onSubmit={handleSubmit} style={{ padding: 0 }}>
           <div className="cal-v2-field">
             <label className="cal-v2-label">{L(language, 'Club', 'Club', '社团')}</label>
             <select className="cal-v2-input" value={form.clubId} onChange={e => setForm(p => ({ ...p, clubId: e.target.value }))}>
@@ -76,7 +74,6 @@ export default function AnnouncementModal({ clubs, onSave, onClose, language }) 
             </div>
           </div>
         </form>
-      </div>
-    </div>
+    </Modal>
   )
 }

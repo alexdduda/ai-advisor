@@ -8,6 +8,7 @@ import {
   FaCheckCircle, FaCircle, FaStar, FaSearch,
   FaLightbulb, FaExternalLinkAlt, FaTimes
 } from 'react-icons/fa'
+import Breadcrumb from '../ui/Breadcrumb'
 import './DegreeRequirementsView.css'
 
 // Fix double /api/api bug — strip trailing /api from env var
@@ -117,7 +118,7 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
   const [typeFilter, setTypeFilter]       = useState('all')
   const [openBlocks, setOpenBlocks]       = useState({})
   const [showAllCourses, setShowAllCourses] = useState({})
-  const [showRecommended, setShowRecommended] = useState(false)
+  const [showRecommended] = useState(false)
   const [sidebarOpen, setSidebarOpen]     = useState(true)
   const [facultyFilter, setFacultyFilter] = useState(normalizeFaculty(profile?.faculty))
 
@@ -155,7 +156,7 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
     } catch { return null }
   }
   const _drCacheWrite = (key, data) => {
-    try { localStorage.setItem(`dr_${key}`, JSON.stringify({ data, ts: Date.now() })) } catch {}
+    try { localStorage.setItem(`dr_${key}`, JSON.stringify({ data, ts: Date.now() })) } catch { /* ignore */ }
   }
 
   useEffect(() => {
@@ -169,7 +170,7 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
     // Skip background revalidate if cache is fresh (< 1h — programs change
     // very rarely, but we still re-check periodically in case admin reseeded)
     let cachedTs = null
-    try { const raw = localStorage.getItem(`dr_${cacheKey}`); if (raw) cachedTs = JSON.parse(raw).ts } catch {}
+    try { const raw = localStorage.getItem(`dr_${cacheKey}`); if (raw) cachedTs = JSON.parse(raw).ts } catch { /* ignore */ }
     if (cachedTs && Date.now() - cachedTs < 60 * 60 * 1000 && Array.isArray(cached)) {
       return
     }
@@ -236,7 +237,7 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
 
       // Skip the revalidate if cache is fresh (< 6 hours)
       let cachedTs = null
-      try { const raw = localStorage.getItem(`dr_${cacheKey}`); if (raw) cachedTs = JSON.parse(raw).ts } catch {}
+      try { const raw = localStorage.getItem(`dr_${cacheKey}`); if (raw) cachedTs = JSON.parse(raw).ts } catch { /* ignore */ }
       if (cachedTs && Date.now() - cachedTs < 6 * 60 * 60 * 1000) return
     } else {
       // No cache → show spinner during initial fetch
@@ -600,6 +601,12 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
 
         {programDetail && !loading && (
           <div className="drv-detail">
+            <Breadcrumb
+              items={[
+                { key: 'requirements', label: t('dp.degreeRequirements'), onClick: () => setSidebarOpen(true) },
+                { key: 'program', label: programDetail.name },
+              ]}
+            />
             <div className="drv-detail-header">
               <div className="drv-detail-header-left">
                 <span

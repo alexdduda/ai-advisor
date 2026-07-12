@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { FaStar, FaSearch } from 'react-icons/fa'
+import { useLanguage } from '../../contexts/PreferencesContext'
 import SavedCoursesView from './SavedCoursesView'
 import CoursesTab from './CoursesTab'
 import './DegreePlanningView.css'
@@ -16,34 +17,32 @@ export default function CoursesView({
   onToggleFavorite,
   onToggleCompleted,
   onToggleCurrent,
-  onCourseClick,
   // CoursesTab props
   searchQuery,
   setSearchQuery,
   searchResults,
-  setSearchResults,
   isSearching,
   searchError,
-  selectedCourse,
-  setSelectedCourse,
-  isLoadingCourse,
   sortBy,
   setSortBy,
   sortCourses,
+  searchTerm,
+  setSearchTerm,
+  availableTerms = [],
   isFavorited,
   isCompleted,
   isCurrent,
   handleCourseSearch,
-  handleCourseClick,
   handleToggleFavorite,
   handleToggleCompleted,
   handleToggleCurrent,
   gpaToLetterGrade,
   searchCorrection,
-  onSearchWithCorrection,
   hasSearched,
   defaultSubTab = 'course_search',
+  defaultSavedTab = 'saved',
 }) {
+  const { t } = useLanguage()
   const [subTab, setSubTab] = useState(defaultSubTab)
 
   const totalMyCourses =
@@ -58,7 +57,7 @@ export default function CoursesView({
           onClick={() => setSubTab('my_courses')}
         >
           <FaStar className="dp-subtab-icon" />
-          <span>My Courses</span>
+          <span>{t('courses.tabMyCourses')}</span>
           {totalMyCourses > 0 && (
             <span className="dp-subtab-count">{totalMyCourses}</span>
           )}
@@ -69,7 +68,7 @@ export default function CoursesView({
           onClick={() => setSubTab('course_search')}
         >
           <FaSearch className="dp-subtab-icon" />
-          <span>Course Search</span>
+          <span>{t('courses.tabSearch')}</span>
         </button>
       </div>
 
@@ -77,6 +76,7 @@ export default function CoursesView({
       {subTab === 'my_courses' && (
         <div className="courses-my-panel">
           <SavedCoursesView
+            defaultTab={defaultSavedTab}
             favorites={favorites}
             completedCourses={completedCourses}
             currentCourses={currentCourses}
@@ -86,7 +86,6 @@ export default function CoursesView({
             onToggleFavorite={onToggleFavorite}
             onToggleCompleted={onToggleCompleted}
             onToggleCurrent={onToggleCurrent}
-            onCourseClick={onCourseClick}
           />
         </div>
       )}
@@ -97,15 +96,14 @@ export default function CoursesView({
         style={{ display: subTab === 'course_search' ? 'block' : 'none' }}
       >
         <CoursesTab
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          availableTerms={availableTerms}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           searchResults={searchResults}
-          setSearchResults={setSearchResults}
           isSearching={isSearching}
           searchError={searchError}
-          selectedCourse={selectedCourse}
-          setSelectedCourse={setSelectedCourse}
-          isLoadingCourse={isLoadingCourse}
           sortBy={sortBy}
           setSortBy={setSortBy}
           sortCourses={sortCourses}
@@ -113,9 +111,7 @@ export default function CoursesView({
           isCompleted={isCompleted}
           isCurrent={isCurrent}
           handleCourseSearch={handleCourseSearch}
-          handleCourseClick={handleCourseClick}
           searchCorrection={searchCorrection}
-          onSearchWithCorrection={onSearchWithCorrection}
           hasSearched={hasSearched}
           handleToggleFavorite={handleToggleFavorite}
           handleToggleCompleted={handleToggleCompleted}
