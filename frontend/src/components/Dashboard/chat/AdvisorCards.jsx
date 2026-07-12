@@ -173,14 +173,19 @@ function AdvisorCard({
 
   const chips = card.actions || []
 
-  // Sync with parent expanded state
-  useEffect(() => { if (isExpanded) setPanelOpen(true) }, [isExpanded])
+  // Sync with parent expanded state (two-way): the parent can both open this
+  // card and collapse it — so opening one card from Home closes the others,
+  // and click-outside actually closes the panel.
+  useEffect(() => { setPanelOpen(isExpanded) }, [isExpanded])
 
-  // Auto-open only when a NEW message arrives (not on initial mount from localStorage)
+  // Auto-open only when a NEW message arrives (not on initial mount from localStorage).
+  // Also register in the parent's expanded set so open state is fully tracked
+  // (lets a Home deep-link collapse this card too).
   const prevThreadLen = useRef(thread.length)
   useEffect(() => {
-    if (thread.length > prevThreadLen.current) setPanelOpen(true)
+    if (thread.length > prevThreadLen.current) { setPanelOpen(true); onExpand(card.id) }
     prevThreadLen.current = thread.length
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [thread.length])
 
   const handleSave = async (e) => {
@@ -596,10 +601,11 @@ export default function AdvisorCards({
     try { localStorage.setItem(storageKey, JSON.stringify(threadMap)) } catch { /* ignore */ }
   }, [threadMap, storageKey])
 
-  // Deep link from Home: expand the requested card's chat and scroll to it.
+  // Deep link from Home: open ONLY the requested card's chat (collapsing any
+  // others that were open) and scroll to it.
   useEffect(() => {
     if (!openCardId || !cards.some(c => c.id === openCardId)) return
-    setExpanded(prev => new Set(prev).add(openCardId))
+    setExpanded(new Set([openCardId]))
     requestAnimationFrame(() => {
       const el = document.querySelector(`[data-card-id="${openCardId}"]`)
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
