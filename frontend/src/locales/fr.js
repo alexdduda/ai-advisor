@@ -1512,7 +1512,7 @@ const FR_TRANSLATIONS = {
     'cookie.acceptAll': 'Tout accepter',
 
     // TEMPORAIRE — retirer une fois la livraison des courriels de vérification rétablie
-    'auth.tempAuthNotice': 'À noter : certains courriels de vérification sont actuellement retardés par le filtre de courriel de McGill. Nous y travaillons — si votre code n\'arrive pas, revenez dans un jour ou deux.',
+    'auth.tempAuthNotice': 'À noter : certains courriels de vérification sont actuellement retenus par le filtre de courriel de McGill. Si votre code n\'arrive pas, pas d\'inquiétude — nous avons contacté les TI de McGill pour régler le problème. Revenez dans un jour ou deux.',
 };
 
 export default FR_TRANSLATIONS;
