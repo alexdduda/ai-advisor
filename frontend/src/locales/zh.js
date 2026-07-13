@@ -1493,7 +1493,7 @@ const ZH_TRANSLATIONS = {
     'cookie.acceptAll': '全部接受',
 
     // 临时提示 — 验证邮件送达问题解决后移除
-    'auth.tempAuthNotice': '请注意：部分验证邮件目前被McGill的邮件过滤器延迟。我们正在处理——如果没有收到验证码，请过一两天再来试试。',
+    'auth.tempAuthNotice': '请注意：部分验证邮件目前被McGill的邮件过滤器拦截。如果没有收到验证码，请放心——我们已联系McGill IT解决此问题。请过一两天再来试试。',
 };
 
 export default ZH_TRANSLATIONS;

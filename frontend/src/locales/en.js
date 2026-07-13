@@ -1514,7 +1514,7 @@ const EN_TRANSLATIONS = {
     'cookie.acceptAll': 'Accept all',
 
     // TEMPORARY — remove once verification-email delivery is fixed
-    'auth.tempAuthNotice': 'Heads up: some verification emails are currently delayed by McGill\'s mail filter. We\'re working on it — if your code doesn\'t arrive, please check back in a day or two.',
+    'auth.tempAuthNotice': 'Heads up: some verification emails are currently held up by McGill\'s mail filter. If your code doesn\'t arrive, don\'t worry — we\'ve contacted McGill IT to fix it. Please check back in a day or two.',
 };
 
 export default EN_TRANSLATIONS;
