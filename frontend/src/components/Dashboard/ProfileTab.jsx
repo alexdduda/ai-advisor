@@ -1,8 +1,6 @@
-import { FaCamera, FaChartBar, FaBullseye, FaLightbulb, FaFileUpload } from 'react-icons/fa'
+import { FaCamera } from 'react-icons/fa'
 import { useLanguage } from '../../contexts/PreferencesContext'
 import PersonalInfoCard from './PersonalInfoCard'
-import DegreeProgressTracker from './DegreeProgressTracker'
-import GPATrendChart from './GPATrendChart'
 import Settings from './Settings'
 import './ProfileTab.css'
 
@@ -17,8 +15,6 @@ export default function ProfileTab({
   fileInputRef,
   handleImageUpload,
   handleAvatarClick,
-  // Data
-  completedCourses,
 }) {
   const { t } = useLanguage()
   
@@ -71,40 +67,12 @@ export default function ProfileTab({
       <div className="profile-content">
         <div className="profile-grid">
           {/* Personal Information Card */}
-          <div className="profile-card-main">
+          <div className="card-full-width">
             <PersonalInfoCard
               profile={profile}
               user={user}
               onUpdateProfile={updateProfile}
             />
-          </div>
-
-          {/* Academic Performance Card */}
-          <div className="profile-section-card profile-card-sidebar">
-            <div className="card-header">
-              <div className="card-title-group">
-                <span className="card-icon"><FaChartBar /></span>
-                <h2 className="card-title">{t('profile.academicPerformance')}</h2>
-              </div>
-            </div>
-            <div className="card-content">
-              <div className="stat-showcase">
-                <div className="stat-item">
-                  <div className="stat-value-large">{profile?.current_gpa || '--'}</div>
-                  <div className="stat-label">{t('profile.currentGpa')}</div>
-                </div>
-              </div>
-              <div className="performance-tips">
-                <div className="tip-item">
-                  <span className="tip-icon"><FaLightbulb /></span>
-                  <p className="tip-text">{t('profile.gpaTip')}</p>
-                </div>
-              </div>
-              <GPATrendChart
-                completedCourses={completedCourses}
-                currentGPA={profile?.current_gpa}
-              />
-            </div>
           </div>
 
           {/* Settings */}

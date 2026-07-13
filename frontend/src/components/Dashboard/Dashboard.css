@@ -48,7 +48,9 @@ body {
   overflow-y: scroll;
   padding: 2rem;
   padding-right: calc(var(--rsb-width, 0px) + 2rem);
-  transition: padding 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Must match .sidebar's width transition (Sidebar.css, 0.25s same curve)
+     exactly — any mismatch makes content drift and snap back on toggle. */
+  transition: padding 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   scrollbar-gutter: stable;
   min-width: 0;
   display: flex;

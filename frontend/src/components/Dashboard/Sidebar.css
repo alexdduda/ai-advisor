@@ -195,12 +195,11 @@
   transform: translateX(1px) scale(0.98);
 }
 
-/* Tinted background + colored left rail, per tab (--nav-accent* set inline
-   per nav item) instead of one uniform red fill for every section. */
+/* Brand-red tinted background + red left rail for the active tab. */
 .nav-item.active {
-  background: var(--nav-accent-light, var(--accent-light));
-  color: var(--nav-accent-text, var(--accent-text));
-  border-left: 3px solid var(--nav-accent, var(--accent-primary));
+  background: var(--accent-light);
+  color: var(--accent-text);
+  border-left: 3px solid var(--accent-primary);
   padding-left: calc(1rem - 3px);
   animation: nav-item-enter 0.22s cubic-bezier(0.4, 0, 0.2, 1) both,
              nav-activate 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both;
@@ -216,8 +215,8 @@
 /* Override hover translate on active items */
 .nav-item.active:hover {
   transform: translateX(2px);
-  background: var(--nav-accent-light, var(--accent-light));
-  color: var(--nav-accent-text, var(--accent-text));
+  background: var(--accent-light);
+  color: var(--accent-text);
 }
 
 .nav-icon {
@@ -408,12 +407,26 @@
   align-items: center;
   pointer-events: all;
   z-index: 101;
-  animation: mini-rail-enter 0.25s cubic-bezier(0.4, 0, 0.2, 1) both;
+  /* The rail mounts the moment the sidebar starts collapsing; the delay
+     holds it invisible until the panel has mostly shrunk, then fades it in. */
+  animation: mini-rail-enter 0.25s cubic-bezier(0.4, 0, 0.2, 1) 0.2s both;
 }
 
 @keyframes mini-rail-enter {
   from { opacity: 0; transform: translateY(-50%) translateX(-8px); }
   to   { opacity: 1; transform: translateY(-50%) translateX(0); }
+}
+
+/* On expand the rail fades out under the growing panel instead of
+   vanishing instantly (the JSX keeps it mounted for ~180ms). */
+.mini-rail--exiting {
+  animation: mini-rail-exit 0.16s ease both;
+  pointer-events: none;
+}
+
+@keyframes mini-rail-exit {
+  from { opacity: 1; transform: translateY(-50%) translateX(0); }
+  to   { opacity: 0; transform: translateY(-50%) translateX(-8px); }
 }
 
 .mini-capsule {
@@ -453,9 +466,9 @@
   transition: background 0.15s ease, color 0.15s ease,
               transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1),
               box-shadow 0.15s ease;
-  /* Staggered entrance */
+  /* Staggered entrance — the 0.2s base matches .mini-rail's enter delay */
   animation: pill-enter 0.22s cubic-bezier(0.4, 0, 0.2, 1) both;
-  animation-delay: calc(0.04s + var(--pill-index, 0) * 0.03s);
+  animation-delay: calc(0.24s + var(--pill-index, 0) * 0.03s);
 }
 
 @keyframes pill-enter {
@@ -480,7 +493,7 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
   animation: pill-enter 0.22s cubic-bezier(0.4, 0, 0.2, 1) both,
              pill-activate 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-  animation-delay: calc(0.04s + var(--pill-index, 0) * 0.03s), 0s;
+  animation-delay: calc(0.24s + var(--pill-index, 0) * 0.03s), 0s;
 }
 
 @keyframes pill-activate {

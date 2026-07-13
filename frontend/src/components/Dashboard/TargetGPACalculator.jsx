@@ -115,28 +115,35 @@ export default function TargetGPACalculator({ currentGPA, completedCredits, tota
   return (
     <div className={`target-gpa-calculator${compact ? ' target-gpa-calculator--compact' : ''}`}>
       <div className="calculator-header">
-        <h3 className="calculator-title">
-          <FaBullseye className="calculator-icon" /> {t('gpa.targetGpa')} {t('common.calculator')}
-        </h3>
+        {/* In compact mode the surrounding card's toggle already names this
+            section, so only the one-line subtitle is kept */}
+        {!compact && (
+          <h3 className="calculator-title">
+            <FaBullseye className="calculator-icon" /> {t('gpa.targetGpa')} {t('common.calculator')}
+          </h3>
+        )}
         <p className="calculator-subtitle">{t('gpa.calculatorSubtitle')}</p>
       </div>
 
       <div className="calculator-body">
-        {/* Current Stats */}
-        <div className="current-stats">
-          <div className="stat-box">
-            <span className="stat-label">{t('gpa.currentGpa')}</span>
-            <span className="stat-value">{currentGPA || '--'}</span>
+        {/* Current Stats — hidden in compact mode, where the surrounding
+            Academic Performance card already shows GPA and credit totals */}
+        {!compact && (
+          <div className="current-stats">
+            <div className="stat-box">
+              <span className="stat-label">{t('gpa.currentGpa')}</span>
+              <span className="stat-value">{currentGPA || '--'}</span>
+            </div>
+            <div className="stat-box">
+              <span className="stat-label">{t('gpa.creditsCompleted')}</span>
+              <span className="stat-value">{Math.round(completedCredits || 0)}</span>
+            </div>
+            <div className="stat-box">
+              <span className="stat-label">{t('gpa.creditsRemaining')}</span>
+              <span className="stat-value">{Math.max(0, totalCreditsRequired - Math.round(completedCredits || 0))}</span>
+            </div>
           </div>
-          <div className="stat-box">
-            <span className="stat-label">{t('gpa.creditsCompleted')}</span>
-            <span className="stat-value">{Math.round(completedCredits || 0)}</span>
-          </div>
-          <div className="stat-box">
-            <span className="stat-label">{t('gpa.creditsRemaining')}</span>
-            <span className="stat-value">{Math.max(0, totalCreditsRequired - Math.round(completedCredits || 0))}</span>
-          </div>
-        </div>
+        )}
 
         {/* Input Section */}
         <div className="input-section">
@@ -215,16 +222,18 @@ export default function TargetGPACalculator({ currentGPA, completedCredits, tota
                   </div>
                 </div>
 
-                <div className="tips-section">
-                  <h4 className="tips-title">
-                    <FaLightbulb className="tips-icon" /> {t('gpa.tipsToReach')}
-                  </h4>
-                  <ul className="tips-list">
-                    {getTips(parseFloat(calculation.requiredGPA)).map((tip, idx) => (
-                      <li key={idx}>{tip}</li>
-                    ))}
-                  </ul>
-                </div>
+                {!compact && (
+                  <div className="tips-section">
+                    <h4 className="tips-title">
+                      <FaLightbulb className="tips-icon" /> {t('gpa.tipsToReach')}
+                    </h4>
+                    <ul className="tips-list">
+                      {getTips(parseFloat(calculation.requiredGPA)).map((tip, idx) => (
+                        <li key={idx}>{tip}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
 
                 <button onClick={handleReset} className="reset-btn">
                   {t('gpa.calculateAnother')}
