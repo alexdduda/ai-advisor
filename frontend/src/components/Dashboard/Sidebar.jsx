@@ -24,20 +24,8 @@ const NAV_ITEMS = (t) => [
   { key: 'profile',   icon: <FaUser />,          label: t('nav.profile') },
 ]
 
-// One identity color per tab so the active nav item reads distinctly
-// instead of a uniform red for every section. Chat/Profile keep the
-// brand red, Degree Planning reuses the existing success-green identity
-// already used for "done" states in that tab.
-const NAV_ACCENT = {
-  home:      { accent: 'var(--tab-home-accent)',     light: 'var(--tab-home-accent-light)',     text: 'var(--tab-home-accent-text)' },
-  chat:      { accent: 'var(--accent-primary)',      light: 'var(--accent-light)',               text: 'var(--accent-text)' },
-  favorites: { accent: 'var(--success-primary)',     light: 'var(--success-light)',              text: 'var(--success-text)' },
-  courses:   { accent: 'var(--tab-courses-accent)',  light: 'var(--tab-courses-accent-light)',   text: 'var(--tab-courses-accent-text)' },
-  calendar:  { accent: 'var(--tab-calendar-accent)', light: 'var(--tab-calendar-accent-light)',  text: 'var(--tab-calendar-accent-text)' },
-  clubs:     { accent: 'var(--tab-clubs-accent)',    light: 'var(--tab-clubs-accent-light)',     text: 'var(--tab-clubs-accent-text)' },
-  forum:     { accent: 'var(--tab-forum-accent)',    light: 'var(--tab-forum-accent-light)',     text: 'var(--tab-forum-accent-text)' },
-  profile:   { accent: 'var(--accent-primary)',      light: 'var(--accent-light)',               text: 'var(--accent-text)' },
-}
+// Every tab highlights in brand red — the active styles in Sidebar.css
+// use the --accent-* tokens directly.
 
 export default function Sidebar({
   sidebarOpen, setSidebarOpen,
@@ -47,6 +35,7 @@ export default function Sidebar({
 }) {
   const [popupOpen, setPopupOpen] = useState(false)
   const [isMounted, setIsMounted] = useState(sidebarOpen)
+  const [railMounted, setRailMounted] = useState(!sidebarOpen)
   const [legalModal, setLegalModal] = useState(null) // 'privacy' | 'terms' | 'about'
   const popupRef   = useRef(null)
   const triggerRef = useRef(null)
@@ -64,6 +53,19 @@ export default function Sidebar({
       const timer = setTimeout(() => setIsMounted(false), 220)
       return () => clearTimeout(timer)
     }
+  }, [sidebarOpen])
+
+  // Mini rail mirrors the same pattern in the other direction: on expand it
+  // stays mounted briefly so its exit animation can play (instead of the
+  // pills vanishing the instant the sidebar starts to grow); on collapse it
+  // mounts immediately and its CSS enter animation is delayed until the
+  // sidebar has mostly finished shrinking.
+  useEffect(() => {
+    if (sidebarOpen) {
+      const timer = setTimeout(() => setRailMounted(false), 180)
+      return () => clearTimeout(timer)
+    }
+    setRailMounted(true)
   }, [sidebarOpen])
 
   useEffect(() => {
@@ -123,7 +125,6 @@ export default function Sidebar({
 
             <nav className="sidebar-nav">
               {navItems.map(({ key, icon, label }, index) => {
-                const accent = NAV_ACCENT[key] || NAV_ACCENT.chat
                 const badge = badges[key]
                 return (
                   <button
@@ -134,12 +135,7 @@ export default function Sidebar({
                     aria-label={label}
                     className={`nav-item ${activeTab === key ? 'active' : ''}`}
                     onClick={() => onTabChange(key)}
-                    style={{
-                      '--nav-index': index,
-                      '--nav-accent': accent.accent,
-                      '--nav-accent-light': accent.light,
-                      '--nav-accent-text': accent.text,
-                    }}
+                    style={{ '--nav-index': index }}
                   >
                     <span className="nav-icon">{icon}</span>
                     <span className="nav-label">{label}</span>
@@ -208,11 +204,10 @@ export default function Sidebar({
         )}
 
         {/* ── MINI: icon pills inside ONE shared capsule outline ── */}
-        {!sidebarOpen && !isMounted && (
-          <div className="mini-rail">
+        {railMounted && (
+          <div className={`mini-rail ${sidebarOpen ? 'mini-rail--exiting' : ''}`}>
             <div className="mini-capsule">
               {navItems.map(({ key, icon, label }, index) => {
-                const accent = NAV_ACCENT[key] || NAV_ACCENT.chat
                 const badge = badges[key]
                 return (
                   <button
@@ -220,7 +215,7 @@ export default function Sidebar({
                     className={`mini-pill ${activeTab === key ? 'mini-pill--active' : ''}`}
                     onClick={() => onTabChange(key)}
                     title={label}
-                    style={{ '--pill-index': index, '--nav-accent': accent.accent }}
+                    style={{ '--pill-index': index }}
                   >
                     {icon}
                     {badge ? <span className="mini-pill-badge">{badge > 9 ? '9+' : badge}</span> : null}

@@ -19,22 +19,29 @@
   box-shadow: var(--shadow-sm);
 }
 
-/* Degree Progress + Target GPA calculator side by side; GPA calc is the
-   smaller "companion" panel, stacks below on narrow screens. */
-.dp-progress-row {
+/* My Program Requirements + Academic Performance side by side. The GPA panel
+   is a sticky sidebar card: it keeps its natural height and follows the
+   scroll alongside the (much taller) requirements card, then the pair stacks
+   on narrow screens. */
+.dp-program-row {
   display: flex;
   align-items: flex-start;
   gap: 16px;
 }
-.dp-progress-row__main { flex: 1 1 auto; min-width: 0; }
-.dp-progress-row__gpa {
-  flex: 0 0 300px;
-  padding: 0;
-  overflow: hidden;
+.dp-program-row__main { flex: 1 1 auto; min-width: 0; }
+.dp-program-row__side {
+  flex: 0 0 340px;
+  min-width: 0;
+  position: sticky;
+  top: 16px;
 }
 @media (max-width: 900px) {
-  .dp-progress-row { flex-direction: column; }
-  .dp-progress-row__gpa { flex-basis: auto; width: 100%; }
+  .dp-program-row { flex-direction: column; }
+  .dp-program-row__side {
+    flex-basis: auto;
+    width: 100%;
+    position: static;
+  }
 }
 
 .dp-import-btn {
