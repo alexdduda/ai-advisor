@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react'
+import { FaCheck, FaEnvelope, FaGraduationCap } from 'react-icons/fa'
+import { HiMiniSparkles } from 'react-icons/hi2'
+import { useLanguage } from '../../contexts/PreferencesContext'
 import {
-  MAJORS, MINORS, FACULTIES, FACULTY_MAJORS,
+  MAJORS, MINORS, FACULTIES,
   getMajorsForFaculty, majorHasHonours,
   ARTS_MAJORS_BASC, SCIENCE_MAJORS_BASC,
   BASC_INTERFACULTY_PROGRAMS, BASC_STREAMS,
@@ -10,7 +13,22 @@ import './EnhancedProfileForm.css'
 const isBasc = (faculty) => faculty === 'Bachelor of Arts and Science'
 const bascIsMultiTrack = (c) => c === 'Multi-track' || c === 'Joint Honours'
 
-export default function EnhancedProfileForm({ profile, onSave, onCancel }) {
+/** Same row shape as the read view's InfoRow, with a control on the value side. */
+function EditRow({ label, hint, children }) {
+  return (
+    <div className="pic-row">
+      <span className="pic-row-label">{label}</span>
+      <span className="pic-row-value pef-value">
+        {children}
+        {hint && <span className="pef-hint">{hint}</span>}
+      </span>
+    </div>
+  )
+}
+
+export default function EnhancedProfileForm({ profile, user, onSave, onCancel }) {
+  const { t } = useLanguage()
+
   const [formData, setFormData] = useState({
     username: '',
     major: '',
@@ -28,7 +46,6 @@ export default function EnhancedProfileForm({ profile, onSave, onCancel }) {
 
   const [showMajorDropdown, setShowMajorDropdown] = useState(false)
   const [showMinorDropdown, setShowMinorDropdown] = useState(false)
-  const [showAdvancedStanding, setShowAdvancedStanding] = useState(false)
   const [newAdvancedCourse, setNewAdvancedCourse] = useState({
     course_code: '',
     course_title: '',
@@ -231,73 +248,40 @@ export default function EnhancedProfileForm({ profile, onSave, onCancel }) {
     onSave(cleanedData)
   }
 
+  const required = <span className="pef-req">*</span>
+
   return (
-    <form onSubmit={handleSubmit} className="enhanced-profile-form">
-      {/* Section 1: Basic Information */}
-      <div className="form-section">
-        <div className="section-number">1</div>
-        <div className="section-content-wrapper">
-          <div className="section-title-group">
-            <h3 className="section-title">Basic Information</h3>
-            <p className="section-subtitle">Enter Username</p>
-          </div>
-
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="username">
-                Username
-                <span className="optional-badge">Optional</span>
-              </label>
-              <input
-                type="text"
-                id="username"
-                name="username"
-                value={formData.username}
-                onChange={handleChange}
-                placeholder="Your display name"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Section 2: Academic Information */}
-      <div className="form-section">
-        <div className="section-number">2</div>
-        <div className="section-content-wrapper">
-          <div className="section-title-group">
-            <h3 className="section-title">Academic Information</h3>
-            <p className="section-subtitle">Your faculty, program, and year of study</p>
-          </div>
-
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="faculty">
-                Faculty <span className="required-star">*</span>
-              </label>
+    <form onSubmit={handleSubmit} className="pef">
+      <div className="pic-body">
+        {/* Academic */}
+        <section className="pic-group">
+          <h3 className="pic-group-label">
+            <FaGraduationCap className="pic-group-icon" /> {t('profile.academicInfo')}
+          </h3>
+          <div className="pic-rows">
+            <EditRow label={<>{t('profile.faculty')} {required}</>}>
               <select
-                id="faculty"
+                className="pef-control"
                 name="faculty"
                 value={formData.faculty}
                 onChange={handleFacultyChange}
                 required
               >
-                <option value="">Select your faculty</option>
+                <option value="">{t('profileForm.selectFaculty')}</option>
                 {FACULTIES.map(faculty => (
                   <option key={faculty} value={faculty}>{faculty}</option>
                 ))}
               </select>
-            </div>
+              {formData.faculty === 'Faculty of Arts' && (
+                <span className="pef-note">
+                  <strong>Faculty of Arts degree structure:</strong> A B.A. requires at least one major and one minor. You don't need to decide on your exact combination right away — you have until you apply to graduate.
+                </span>
+              )}
+            </EditRow>
 
-            <div className="form-group">
-              <label htmlFor="year">Academic Year</label>
-              <select
-                id="year"
-                name="year"
-                value={formData.year}
-                onChange={handleChange}
-              >
-                <option value="">Select year</option>
+            <EditRow label={t('profile.year')}>
+              <select className="pef-control pef-control--narrow" name="year" value={formData.year} onChange={handleChange}>
+                <option value="">{t('profileForm.selectYear')}</option>
                 <option value="0">U0 (Foundation)</option>
                 <option value="1">U1</option>
                 <option value="2">U2</option>
@@ -305,111 +289,68 @@ export default function EnhancedProfileForm({ profile, onSave, onCancel }) {
                 <option value="4">U4</option>
                 <option value="5+">U5+</option>
               </select>
-            </div>
-          </div>
+            </EditRow>
 
-          {/* Faculty of Arts info message */}
-          {formData.faculty === 'Faculty of Arts' && (
-            <div className="helper-text" style={{ background: 'var(--bg-secondary, #f3f4f6)', border: '1px solid var(--border-color, #e5e7eb)', borderRadius: '8px', padding: '10px 14px', marginBottom: '12px', fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
-              <strong>Faculty of Arts degree structure:</strong> A B.A. requires at least one major and one minor. You don't need to decide on your exact combination right away — you have until you apply to graduate. What matters most is accumulating the required credits for each program you choose.
-            </div>
-          )}
+            {isBasc(formData.faculty) ? (
+              <>
+                <EditRow label={<>Program Stream {required}</>}>
+                  <select
+                    className="pef-control"
+                    value={
+                      bascIsMultiTrack(formData.concentration)
+                        ? formData.concentration
+                        : 'Interfaculty'
+                    }
+                    onChange={(e) => {
+                      const stream = e.target.value
+                      setFormData(prev => ({
+                        ...prev,
+                        concentration: stream === 'Interfaculty' ? '' : stream,
+                        major: '',
+                        other_majors: [],
+                        is_honours: false,
+                      }))
+                    }}
+                  >
+                    {BASC_STREAMS.map(s => (
+                      <option key={s.value} value={s.value}>{s.label} — {s.description}</option>
+                    ))}
+                  </select>
+                </EditRow>
 
-          {/* B.A. & Sc. specific program selection */}
-          {isBasc(formData.faculty) ? (
-            <>
-              {/* Stream selector */}
-              <div className="form-group">
-                <label htmlFor="basc-stream">
-                  Program Stream <span className="required-star">*</span>
-                </label>
-                <select
-                  id="basc-stream"
-                  value={
-                    formData.concentration === 'Multi-track' || formData.concentration === 'Joint Honours'
-                      ? formData.concentration
-                      : 'Interfaculty'
-                  }
-                  onChange={(e) => {
-                    const stream = e.target.value
-                    setFormData(prev => ({
-                      ...prev,
-                      concentration: stream === 'Interfaculty' ? '' : stream,
-                      major: '',
-                      other_majors: [],
-                      is_honours: false,
-                    }))
-                  }}
-                >
-                  {BASC_STREAMS.map(s => (
-                    <option key={s.value} value={s.value}>{s.label} — {s.description}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Interfaculty/Honours stream */}
-              {(!formData.concentration || !bascIsMultiTrack(formData.concentration)) && (
-                <div className="form-row">
-                  <div className="form-group">
-                    <label htmlFor="major">
-                      Interfaculty Program <span className="required-star">*</span>
-                    </label>
-                    <select
-                      id="major"
-                      name="major"
-                      value={formData.major}
-                      onChange={handleChange}
-                    >
+                {!bascIsMultiTrack(formData.concentration) ? (
+                  <EditRow
+                    label={<>Interfaculty Program {required}</>}
+                    hint="The interfaculty concentration you are completing"
+                  >
+                    <select className="pef-control" name="major" value={formData.major} onChange={handleChange}>
                       <option value="">Select your program</option>
                       {BASC_INTERFACULTY_PROGRAMS.map(prog => (
                         <option key={prog} value={prog}>{prog}</option>
                       ))}
                     </select>
-                    <span className="helper-text">The interfaculty concentration you are completing</span>
-                  </div>
-                  {formData.major && (
-                    <div className="form-group">
-                      <label className="honours-toggle-label">
+                    {formData.major && (
+                      <label className="pef-check">
                         <input
                           type="checkbox"
                           checked={formData.is_honours}
                           onChange={(e) => setFormData(prev => ({ ...prev, is_honours: e.target.checked }))}
-                          className="honours-checkbox"
                         />
-                        <span>Honours Program</span>
+                        Honours Program
                       </label>
-                      <span className="helper-text">Select if you are in the Honours stream of this program</span>
-                    </div>
-                  )}
-                  <div className="form-group">
-                    <label htmlFor="minor">Minor (optional)</label>
-                    <select id="minor" name="minor" value={formData.minor} onChange={handleChange}>
-                      <option value="">Select a minor</option>
-                      {MINORS.map(m => <option key={m} value={m}>{m}</option>)}
-                    </select>
-                  </div>
-                </div>
-              )}
-
-              {/* Multi-track / Joint Honours stream */}
-              {bascIsMultiTrack(formData.concentration) && (
-                <>
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label htmlFor="major">
-                        Arts Concentration <span className="required-star">*</span>
-                      </label>
-                      <select id="major" name="major" value={formData.major} onChange={handleChange}>
+                    )}
+                  </EditRow>
+                ) : (
+                  <>
+                    <EditRow label={<>Arts Concentration {required}</>} hint="36-credit Arts major concentration">
+                      <select className="pef-control" name="major" value={formData.major} onChange={handleChange}>
                         <option value="">Select Arts program</option>
                         {ARTS_MAJORS_BASC.map(m => <option key={m} value={m}>{m}</option>)}
                       </select>
-                      <span className="helper-text">36-credit Arts major concentration</span>
-                    </div>
-                    <div className="form-group">
-                      <label>
-                        Science Concentration <span className="required-star">*</span>
-                      </label>
+                    </EditRow>
+                    <EditRow label={<>Science Concentration {required}</>} hint="36-credit Science major concentration">
                       <select
+                        className="pef-control"
                         value={formData.other_majors[0] || ''}
                         onChange={(e) => setFormData(prev => ({
                           ...prev,
@@ -419,313 +360,256 @@ export default function EnhancedProfileForm({ profile, onSave, onCancel }) {
                         <option value="">Select Science program</option>
                         {SCIENCE_MAJORS_BASC.map(m => <option key={m} value={m}>{m}</option>)}
                       </select>
-                      <span className="helper-text">36-credit Science major concentration</span>
-                    </div>
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="minor">Minor (optional)</label>
-                    <select id="minor" name="minor" value={formData.minor} onChange={handleChange}>
-                      <option value="">Select a minor</option>
-                      {MINORS.map(m => <option key={m} value={m}>{m}</option>)}
-                    </select>
-                  </div>
-                </>
-              )}
-            </>
-          ) : (
-            /* Non-BASC: standard major/minor/additional */
-            <>
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="major">
-                    Major <span className="required-star">*</span>
-                  </label>
+                    </EditRow>
+                  </>
+                )}
+
+                <EditRow label={t('profile.primaryMinor')}>
+                  <select className="pef-control" name="minor" value={formData.minor} onChange={handleChange}>
+                    <option value="">{t('profileForm.selectMinor')}</option>
+                    {MINORS.map(m => <option key={m} value={m}>{m}</option>)}
+                  </select>
+                </EditRow>
+              </>
+            ) : (
+              <>
+                <EditRow label={<>{t('profile.major')} {required}</>}>
                   <select
-                    id="major"
+                    className="pef-control"
                     name="major"
                     value={formData.major}
                     onChange={handleMajorChange}
                     required
                   >
-                    <option value="">Select your major</option>
+                    <option value="">{t('profileForm.selectMajor')}</option>
                     {primaryMajorOptions.map(major => (
                       <option key={major} value={major}>{major}</option>
                     ))}
                   </select>
-                  {formData.faculty && primaryMajorOptions.length === 0 && (
-                    <span className="helper-text" style={{ color: 'var(--warning)' }}>
-                      No majors configured for this faculty yet
-                    </span>
+                  {showHonoursToggle && (
+                    <label className="pef-check">
+                      <input
+                        type="checkbox"
+                        checked={formData.is_honours}
+                        onChange={(e) => setFormData(prev => ({ ...prev, is_honours: e.target.checked }))}
+                      />
+                      Honours Program
+                    </label>
                   )}
-                </div>
+                </EditRow>
 
-                <div className="form-group">
-                  <label htmlFor="minor">Minor</label>
-                  <select id="minor" name="minor" value={formData.minor} onChange={handleChange}>
-                    <option value="">Select a minor (optional)</option>
+                <EditRow label={t('profile.additionalMajors')} hint={t('profileForm.forDoubleMajors')}>
+                  <div className="pef-tags">
+                    {formData.other_majors.map(major => (
+                      <span key={major} className="pic-tag pic-tag--major">
+                        {major}
+                        <button type="button" className="pef-tag-x" onClick={() => handleRemoveMajor(major)} aria-label={t('profileForm.removeCourse')}>×</button>
+                      </span>
+                    ))}
+                    <button type="button" className="pef-add-tag" onClick={() => setShowMajorDropdown(!showMajorDropdown)}>
+                      +
+                    </button>
+                  </div>
+                  {showMajorDropdown && (
+                    <div className="pef-dropdown">
+                      {MAJORS.filter(m => m !== formData.major && !formData.other_majors.includes(m)).map(major => (
+                        <button key={major} type="button" className="pef-dropdown-item" onClick={() => handleAddMajor(major)}>{major}</button>
+                      ))}
+                    </div>
+                  )}
+                </EditRow>
+
+                <EditRow label={t('profile.primaryMinor')}>
+                  <select className="pef-control" name="minor" value={formData.minor} onChange={handleChange}>
+                    <option value="">{t('profileForm.selectMinor')}</option>
                     {MINORS.map(minor => (
                       <option key={minor} value={minor}>{minor}</option>
                     ))}
                   </select>
-                </div>
-              </div>
+                </EditRow>
 
-              {/* Honours toggle — only shown if the selected major supports it */}
-              {showHonoursToggle && (
-                <div className="form-group honours-toggle-group">
-                  <label className="honours-toggle-label">
-                    <input
-                      type="checkbox"
-                      checked={formData.is_honours}
-                      onChange={(e) => setFormData(prev => ({ ...prev, is_honours: e.target.checked }))}
-                      className="honours-checkbox"
-                    />
-                    <span>Honours Program</span>
-                  </label>
-                  <span className="helper-text">
-                    Select if you are enrolled in the Honours stream of {formData.major}
-                  </span>
-                </div>
-              )}
-
-              {/* Additional Majors */}
-              <div className="form-group">
-                <label>
-                  Additional Majors
-                  <span className="helper-text">For double/joint majors</span>
-                </label>
-                <div className="multi-select-container">
-                  {formData.other_majors.map(major => (
-                    <div key={major} className="selected-tag">
-                      <span>{major}</span>
-                      <button type="button" onClick={() => handleRemoveMajor(major)} className="remove-tag">×</button>
-                    </div>
-                  ))}
-                  <button type="button" onClick={() => setShowMajorDropdown(!showMajorDropdown)} className="add-more-btn">
-                    + Add Major
-                  </button>
-                </div>
-                {showMajorDropdown && (
-                  <div className="dropdown-list">
-                    {MAJORS.filter(m => m !== formData.major && !formData.other_majors.includes(m)).map(major => (
-                      <button key={major} type="button" onClick={() => handleAddMajor(major)} className="dropdown-item">{major}</button>
+                <EditRow label={t('profile.additionalMinors')} hint={t('profileForm.multipleMinors')}>
+                  <div className="pef-tags">
+                    {formData.other_minors.map(minor => (
+                      <span key={minor} className="pic-tag pic-tag--minor">
+                        {minor}
+                        <button type="button" className="pef-tag-x" onClick={() => handleRemoveMinor(minor)} aria-label={t('profileForm.removeCourse')}>×</button>
+                      </span>
                     ))}
+                    <button type="button" className="pef-add-tag" onClick={() => setShowMinorDropdown(!showMinorDropdown)}>
+                      +
+                    </button>
                   </div>
-                )}
-              </div>
-
-              {/* Additional Minors */}
-              <div className="form-group">
-                <label>
-                  Additional Minors
-                  <span className="helper-text">If you have multiple minors</span>
-                </label>
-                <div className="multi-select-container">
-                  {formData.other_minors.map(minor => (
-                    <div key={minor} className="selected-tag">
-                      <span>{minor}</span>
-                      <button type="button" onClick={() => handleRemoveMinor(minor)} className="remove-tag">×</button>
+                  {showMinorDropdown && (
+                    <div className="pef-dropdown">
+                      {MINORS.filter(m => m !== formData.minor && !formData.other_minors.includes(m)).map(minor => (
+                        <button key={minor} type="button" className="pef-dropdown-item" onClick={() => handleAddMinor(minor)}>{minor}</button>
+                      ))}
                     </div>
-                  ))}
-                  <button type="button" onClick={() => setShowMinorDropdown(!showMinorDropdown)} className="add-more-btn">
-                    + Add Minor
-                  </button>
-                </div>
-                {showMinorDropdown && (
-                  <div className="dropdown-list">
-                    {MINORS.filter(m => m !== formData.minor && !formData.other_minors.includes(m)).map(minor => (
-                      <button key={minor} type="button" onClick={() => handleAddMinor(minor)} className="dropdown-item">{minor}</button>
-                    ))}
-                  </div>
-                )}
-              </div>
+                  )}
+                </EditRow>
 
-              <div className="form-group">
-                <label htmlFor="concentration">
-                  Concentration / Specialization
-                  <span className="helper-text">e.g., AI/ML, Software Systems</span>
-                </label>
+                <EditRow label={t('profile.concentration')} hint="e.g., AI/ML, Software Systems">
+                  <input
+                    className="pef-control"
+                    type="text"
+                    name="concentration"
+                    value={formData.concentration}
+                    onChange={handleChange}
+                    placeholder="Your area of focus"
+                  />
+                </EditRow>
+              </>
+            )}
+          </div>
+        </section>
+
+        <div className="pic-col">
+          {/* Contact */}
+          <section className="pic-group">
+            <h3 className="pic-group-label">
+              <FaEnvelope className="pic-group-icon" /> {t('profile.contactInfo')}
+            </h3>
+            <div className="pic-rows">
+              <EditRow label={t('profile.username')}>
                 <input
+                  className="pef-control"
                   type="text"
-                  id="concentration"
-                  name="concentration"
-                  value={formData.concentration}
+                  name="username"
+                  value={formData.username}
                   onChange={handleChange}
-                  placeholder="Your area of focus"
+                  placeholder={t('profileForm.displayName')}
                 />
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Section 3: Academic Performance & Interests */}
-      <div className="form-section">
-        <div className="section-number">3</div>
-        <div className="section-content-wrapper">
-          <div className="section-title-group">
-            <h3 className="section-title">Performance & Interests</h3>
-            <p className="section-subtitle">Help us personalize your experience</p>
-          </div>
-
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="current_gpa">
-                Current GPA
-                <span className="helper-text">Scale of 0.0 - 4.0</span>
-              </label>
-              <input
-                type="number"
-                id="current_gpa"
-                name="current_gpa"
-                value={formData.current_gpa}
-                onChange={handleChange}
-                step="0.01"
-                min="0"
-                max="4.0"
-                placeholder="e.g., 3.75"
-              />
+              </EditRow>
+              {user?.email && (
+                <EditRow label={t('profile.email')}>
+                  <span className="pef-static">
+                    {user.email}
+                    <span className="pic-verified"><FaCheck /> {t('profileForm.verified')}</span>
+                  </span>
+                </EditRow>
+              )}
             </div>
-          </div>
+          </section>
 
-          <div className="form-group">
-            <label htmlFor="interests">
-              Academic Interests
-              <span className="helper-text">Separate with commas</span>
-            </label>
-            <textarea
-              id="interests"
-              name="interests"
-              value={formData.interests}
-              onChange={handleChange}
-              placeholder="e.g., Machine Learning, Web Development, Data Science"
-              rows={3}
-            />
-          </div>
-        </div>
-      </div>
+          {/* Additional */}
+          <section className="pic-group">
+            <h3 className="pic-group-label">
+              <HiMiniSparkles className="pic-group-icon" /> {t('profile.additionalInfo')}
+            </h3>
+            <div className="pic-rows">
+              <EditRow label={t('profile.currentGpa')} hint={t('profileForm.gpaScale')}>
+                <input
+                  className="pef-control pef-control--narrow"
+                  type="number"
+                  name="current_gpa"
+                  value={formData.current_gpa}
+                  onChange={handleChange}
+                  step="0.01"
+                  min="0"
+                  max="4.0"
+                  placeholder="e.g., 3.75"
+                />
+              </EditRow>
 
-      {/* Section 4: Advanced Standing */}
-      <div className="form-section advanced-standing-section">
-        <div className="section-number">4</div>
-        <div className="section-content-wrapper">
-          <div className="section-header">
-            <div className="section-title-group">
-              <h3 className="section-title">Advanced Standing</h3>
-              <p className="section-subtitle">AP, IB, or transfer credits</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setShowAdvancedStanding(!showAdvancedStanding)}
-              className="toggle-section-btn"
-            >
-              {showAdvancedStanding ? '− Hide' : (formData.advanced_standing.length > 0 ? 'Edit Credits' : '+ Add Credits')}
-            </button>
-          </div>
+              <EditRow label={t('profile.academicInterests')} hint={t('profileForm.separateCommas')}>
+                <textarea
+                  className="pef-control"
+                  name="interests"
+                  value={formData.interests}
+                  onChange={handleChange}
+                  placeholder="e.g., Machine Learning, Web Development, Data Science"
+                  rows={3}
+                />
+              </EditRow>
 
-          {formData.advanced_standing.length > 0 && (
-            <div className="credits-summary">
-              <strong>{formData.advanced_standing.length} course{formData.advanced_standing.length !== 1 ? 's' : ''}</strong> {'\u2022'}
-              <strong> {formData.advanced_standing.reduce((sum, c) => sum + (c.credits || 0), 0)} credits</strong> from AP/IB/transfer
-            </div>
-          )}
-
-          {showAdvancedStanding && (
-            <div className="advanced-standing-form">
-              <p className="section-description">
-                Add McGill courses you received credit for through AP, IB, A-Levels, or transfer credits
-              </p>
-
-              {/* List of existing advanced standing */}
-              {formData.advanced_standing.length > 0 && (
-                <div className="advanced-courses-list">
+              <EditRow label={t('profileForm.advancedStanding')} hint={t('profileForm.advancedStandingDesc')}>
+                <div className="pef-as">
                   {formData.advanced_standing.map((course, index) => (
-                    <div key={index} className="advanced-course-card">
-                      <div className="advanced-course-card-header">
-                        <span className="course-code">{course.course_code}</span>
-                        <span className="course-credits">{course.credits} cr</span>
+                    <div key={index} className="pef-as-item">
+                      <div className="pef-as-item-top">
+                        <span className="pef-as-code">{course.course_code}</span>
+                        {course.course_title && course.course_title !== 'None' && (
+                          <span className="pef-as-title">{course.course_title}</span>
+                        )}
+                        <span className="pef-as-credits">{course.credits} cr</span>
                         <button
                           type="button"
+                          className="pef-as-remove"
                           onClick={() => handleRemoveAdvancedCourse(index)}
-                          className="remove-chip-btn"
-                          title="Remove"
+                          aria-label={t('profileForm.removeCourse')}
                         >
                           ×
                         </button>
                       </div>
-                      {course.course_title && course.course_title !== 'None' && (
-                        <div className="course-title">{course.course_title}</div>
-                      )}
-                      <div className="advanced-course-flags">
-                        <label className="flag-label">
+                      <div className="pef-as-flags">
+                        <label className="pef-flag">
                           <input
                             type="checkbox"
                             checked={course.counts_toward_degree !== false}
                             onChange={() => handleToggleAdvancedFlag(index, 'counts_toward_degree')}
                           />
-                          <span>Counts toward degree</span>
+                          Counts toward degree
                         </label>
-                        <label className="flag-label">
+                        <label className="pef-flag">
                           <input
                             type="checkbox"
                             checked={!!course.counts_toward_major}
                             onChange={() => handleToggleAdvancedFlag(index, 'counts_toward_major')}
                           />
-                          <span>Counts toward major</span>
+                          Counts toward major
                         </label>
                       </div>
                     </div>
                   ))}
+                  <div className="pef-as-add">
+                    <input
+                      className="pef-control pef-control--code"
+                      type="text"
+                      placeholder="MATH 133"
+                      value={newAdvancedCourse.course_code}
+                      onChange={(e) => setNewAdvancedCourse(prev => ({ ...prev, course_code: e.target.value }))}
+                    />
+                    <input
+                      className="pef-control pef-control--title"
+                      type="text"
+                      placeholder="Course title (optional)"
+                      value={newAdvancedCourse.course_title}
+                      onChange={(e) => setNewAdvancedCourse(prev => ({ ...prev, course_title: e.target.value }))}
+                    />
+                    <input
+                      className="pef-control pef-control--credits"
+                      type="number"
+                      placeholder="cr"
+                      value={newAdvancedCourse.credits}
+                      onChange={(e) => setNewAdvancedCourse(prev => ({ ...prev, credits: parseInt(e.target.value) || 3 }))}
+                      min="1"
+                      max="12"
+                    />
+                    <button
+                      type="button"
+                      className="pef-add-btn"
+                      onClick={handleAddAdvancedCourse}
+                      disabled={!newAdvancedCourse.course_code.trim()}
+                    >
+                      {t('profileForm.addCourse')}
+                    </button>
+                  </div>
                 </div>
-              )}
-
-              {/* Add new course */}
-              <div className="add-course-row">
-                <input
-                  type="text"
-                  placeholder="Course code (e.g., MATH 133)"
-                  value={newAdvancedCourse.course_code}
-                  onChange={(e) => setNewAdvancedCourse(prev => ({ ...prev, course_code: e.target.value }))}
-                  className="course-code-input"
-                />
-                <input
-                  type="text"
-                  placeholder="Course title (optional)"
-                  value={newAdvancedCourse.course_title}
-                  onChange={(e) => setNewAdvancedCourse(prev => ({ ...prev, course_title: e.target.value }))}
-                  className="course-title-input"
-                />
-                <input
-                  type="number"
-                  placeholder="Credits"
-                  value={newAdvancedCourse.credits}
-                  onChange={(e) => setNewAdvancedCourse(prev => ({ ...prev, credits: parseInt(e.target.value) || 3 }))}
-                  min="1"
-                  max="12"
-                  className="course-credits-input"
-                />
-                <button
-                  type="button"
-                  onClick={handleAddAdvancedCourse}
-                  className="add-course-btn"
-                  disabled={!newAdvancedCourse.course_code.trim()}
-                >
-                  Add
-                </button>
-              </div>
+              </EditRow>
             </div>
-          )}
+          </section>
         </div>
       </div>
 
-      {/* Submit */}
-      <div className="form-actions">
+      {/* Actions */}
+      <div className="pef-actions">
         {onCancel && (
-          <button type="button" onClick={onCancel} className="btn-cancel">
+          <button type="button" onClick={onCancel} className="pef-btn pef-btn--ghost">
             Cancel
           </button>
         )}
-        <button type="submit" className="btn-primary">
+        <button type="submit" className="pef-btn pef-btn--primary">
           Save Profile
         </button>
       </div>

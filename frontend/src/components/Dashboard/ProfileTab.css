@@ -13,6 +13,10 @@
   background: linear-gradient(135deg, var(--accent-primary) 0%, #B01B2E 100%);
   padding: 3rem 2rem;
   margin: -2rem -2rem 2rem -2rem;
+  /* Slide in step with .sidebar's width and .content-area's padding
+     transitions (0.25s, same curve) when the sidebar toggles — any
+     mismatch makes the banner drift and snap back. */
+  transition: margin-left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* .content-area reserves an extra 36px of left padding in collapsed-sidebar
@@ -173,14 +177,12 @@
 
 .profile-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns: 1fr;
   gap: 1.5rem;
   align-items: start;
 }
 
-.profile-card-main  { grid-column: 1 / 2; }
-.profile-card-sidebar { grid-column: 2 / 3; }
-.card-full-width    { grid-column: 1 / -1; }
+.card-full-width { grid-column: 1 / -1; }
 
 /* ── Profile Section Cards ───────────────────── */
 
@@ -227,55 +229,6 @@
 }
 
 .card-content { padding: 1.5rem; }
-
-/* ── Stats Showcase ──────────────────────────── */
-
-.stat-showcase {
-  text-align: center;
-  padding: 1.5rem;
-  background: linear-gradient(135deg, var(--accent-primary) 0%, #B01B2E 100%);
-  border-radius: 12px;
-  color: white;
-}
-
-.stat-value-large {
-  font-size: 4rem;
-  font-weight: 700;
-  margin-bottom: 0.5rem;
-}
-
-.stat-label {
-  font-size: 1.1rem;
-  opacity: 0.95;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.performance-tips { margin-top: 1.5rem; }
-
-.tip-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  padding: 1rem;
-  background: var(--card-bg);
-  border-radius: 8px;
-  border-left: 3px solid var(--accent-primary);
-}
-
-.tip-icon { 
-  font-size: 1.25rem; 
-  color: #f59e0b;
-  flex-shrink: 0;
-}
-
-.tip-text {
-  color: var(--text-secondary);
-  font-size: 0.95rem;
-  margin: 0;
-  line-height: 1.5;
-}
 
 /* ── Interests ───────────────────────────────── */
 
@@ -349,7 +302,6 @@
 
 @media (max-width: 1024px) {
   .profile-grid { grid-template-columns: 1fr; }
-  .profile-card-main, .profile-card-sidebar { grid-column: 1 / -1; }
 }
 
 @media (max-width: 768px) {
@@ -378,7 +330,6 @@
   .profile-avatar-xl { width: 100px; height: 100px; font-size: 2.5rem; }
   .profile-display-name { font-size: 1.75rem; }
   .badge { font-size: 0.85rem; padding: 0.4rem 0.8rem; }
-  .stat-value-large { font-size: 3rem; }
   .card-header { padding: 1rem; }
   .card-content { padding: 1rem; }
 }
@@ -392,7 +343,6 @@
 
 @media (max-width: 360px) {
   .profile-display-name { font-size: 1.5rem; }
-  .stat-value-large { font-size: 2.5rem; }
 }
 
 .btn-import-transcript {

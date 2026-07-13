@@ -1,0 +1,121 @@
+/* Academic Performance card — GPA hero + toggled trend chart / target calculator.
+   Fills the full height of its card so it always lines up with Degree Progress. */
+
+.apc {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: 100%;
+}
+
+/* Current GPA hero — same accent gradient as the import buttons beside it */
+.apc-hero {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, var(--accent-primary), #B01B2E);
+  border-radius: 10px;
+  color: #fff;
+}
+
+.apc-hero-value {
+  font-size: 2.25rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.apc-hero-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.apc-hero-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.apc-hero-sub {
+  font-size: 0.75rem;
+  opacity: 0.85;
+}
+
+/* Segmented toggle between the trend chart and the target calculator */
+.apc-toggle {
+  display: flex;
+  gap: 4px;
+  margin-top: 14px;
+  padding: 3px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+}
+
+.apc-toggle-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 10px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-tertiary);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.apc-toggle-btn:hover {
+  color: var(--text-primary);
+}
+
+.apc-toggle-btn--active {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.apc-toggle-icon {
+  font-size: 0.75rem;
+  color: var(--accent-primary);
+}
+
+/* Body fills the remaining card height; the chart stretches to absorb any
+   height difference with the Degree Progress card next door. */
+.apc-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.apc-body .gpa-trend-chart {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.apc-body .gpa-trend-chart .chart-container {
+  flex: 1;
+  min-height: 180px;
+}
+
+.apc-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: auto 0 0;
+  padding-top: 12px;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--text-tertiary);
+}
+
+.apc-tip-icon {
+  color: #f59e0b;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
