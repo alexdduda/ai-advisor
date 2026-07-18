@@ -64,7 +64,7 @@ const EN_TRANSLATIONS = {
     'tour.homeTitle': 'Home',
     'tour.homeDesc': 'Your starting point: upcoming deadlines, degree progress, and highlights from your Brief. The setup checklist here gets your data in.',
     'tour.homeTip': 'Finish the three setup steps and everything else lights up.',
-    'tour.briefTitle': 'Academic Brief',
+    'tour.briefTitle': 'Brief',
     'tour.briefDesc': 'AI-generated cards with course recommendations, degree insights, and deadlines tailored to you. Ask follow-up questions on any card.',
     'tour.briefTip': 'Ask anything, "What courses should I take for a COMP major in U1?"',
     'tour.degreeTitle': 'Degree Planning',
@@ -863,7 +863,7 @@ const EN_TRANSLATIONS = {
     'rsb.nav.home.2':     "What's due in the next week?",
     'rsb.nav.home.3':     'How do I import my transcript?',
     'rsb.nav.default.1':  'How do I plan next semester?',
-    'rsb.nav.default.2':  "What's the academic brief?",
+    'rsb.nav.default.2':  "What's the brief?",
     'rsb.nav.default.3':  'Show me what Symbolos can do',
 
     // Tab labels used in greeting
@@ -1227,13 +1227,13 @@ const EN_TRANSLATIONS = {
     'dp.loadError': 'Could not load program details. Please try again.',
 
     // ── Academic Brief ────────────────────────────────────
-    'brief.title': 'Academic Brief',
+    'brief.title': 'Brief',
     'brief.updated': 'Updated {time}',
     'brief.refresh': 'Refresh cards',
     'brief.all': 'All',
     'brief.saved': 'Saved',
     'brief.history': 'History',
-    'brief.preparing': 'Your academic brief is being prepared.',
+    'brief.preparing': 'Your brief is being prepared.',
     'brief.generateNow': 'Generate Now',
     'brief.noHistory': 'No chat history yet. Start a conversation on any card.',
     'brief.noSaved': 'No saved cards yet. Bookmark cards to keep them here.',
