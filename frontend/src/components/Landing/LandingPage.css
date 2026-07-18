@@ -408,7 +408,12 @@ body:has(.landing-root),
    earlier dark gradient blended into the footer on phones,
    making the CTA look like one giant dark band with no edge. */
 .landing-cta {
-  background: linear-gradient(135deg, var(--land-accent) 0%, var(--land-accent-dk) 100%);
+  /* Background image + red-tint overlay set inline (see LandingPage.jsx);
+     this is just the fallback if the image fails to load. */
+  background-color: var(--land-accent-dk);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   color: #fff;
   /* Tiny darker stripe at the bottom edge so the boundary with the
      footer is unmistakable on small screens. */
@@ -423,13 +428,18 @@ body:has(.landing-root),
   line-height: 1.15;
   letter-spacing: -0.02em;
   margin: 0 0 18px;
+  /* index.css sets a global h1-h6 color that otherwise wins over the
+     inherited white from .landing-cta (explicit tag match beats inheritance
+     regardless of the parent selector's specificity). */
+  color: #fff;
   /* Subtle text shadow strengthens contrast over the saturated red */
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
 }
 .landing-cta__sub {
   font-size: clamp(1rem, 1.4vw, 1.2rem);
   color: rgba(255, 255, 255, 0.92);
   margin: 0 0 36px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
 }
 .landing-cta .landing-btn--primary {
   background: #fff;
