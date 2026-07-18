@@ -17,7 +17,9 @@
  * so the page never breaks if you haven't dropped them yet.
  */
 import { useEffect, useState } from 'react'
+import { HiChevronDown } from 'react-icons/hi'
 import logoMark from '../../assets/loading-logo.png'
+import mcgillSkyline from '../../assets/landing/mcgill-skyline.jpg'
 import PrivacyPolicy from '../Legal/PrivacyPolicy'
 import TermsOfService from '../Legal/TOS'
 import AboutUs from '../Legal/AboutUs'
@@ -129,6 +131,14 @@ export default function LandingPage({ onSignIn }) {
             {t('landing.heroHint')}
           </Reveal>
         </div>
+        <button
+          type="button"
+          className="landing-hero__scroll-btn"
+          onClick={() => document.getElementById('brief')?.scrollIntoView({ behavior: 'smooth' })}
+          aria-label={t('landing.scrollDown')}
+        >
+          <HiChevronDown />
+        </button>
       </section>
 
       {/* ── 2. Brief ─────────────────────────────────────────────── */}
@@ -136,10 +146,7 @@ export default function LandingPage({ onSignIn }) {
         <div className="landing-section__inner landing-feature">
           <Reveal className="landing-feature__copy">
             <span className="landing-eyebrow landing-eyebrow--chat">{t('landing.briefEyebrow')}</span>
-            <h2 className="landing-feature__title">{t('landing.briefTitle')}</h2>
-            <p className="landing-feature__text">
-              {t('landing.briefText')}
-            </p>
+            <p className="landing-feature__text">{t('landing.briefText')}</p>
             <ul className="landing-feature__bullets">
               <li>{t('landing.briefB1')}</li>
               <li>{t('landing.briefB2')}</li>
@@ -157,10 +164,7 @@ export default function LandingPage({ onSignIn }) {
         <div className="landing-section__inner landing-feature landing-feature--reverse">
           <Reveal className="landing-feature__copy">
             <span className="landing-eyebrow landing-eyebrow--degree">{t('landing.degreeEyebrow')}</span>
-            <h2 className="landing-feature__title">{t('landing.degreeTitle')}</h2>
-            <p className="landing-feature__text">
-              {t('landing.degreeText')}
-            </p>
+            <p className="landing-feature__text">{t('landing.degreeText')}</p>
             <ul className="landing-feature__bullets">
               <li>{t('landing.degreeB1')}</li>
               <li>{t('landing.degreeB2')}</li>
@@ -179,10 +183,7 @@ export default function LandingPage({ onSignIn }) {
         <div className="landing-section__inner landing-feature">
           <Reveal className="landing-feature__copy">
             <span className="landing-eyebrow landing-eyebrow--calendar">{t('landing.calEyebrow')}</span>
-            <h2 className="landing-feature__title">{t('landing.calTitle')}</h2>
-            <p className="landing-feature__text">
-              {t('landing.calText')}
-            </p>
+            <p className="landing-feature__text">{t('landing.calText')}</p>
             <ul className="landing-feature__bullets">
               <li>{t('landing.calB1')}</li>
               <li>{t('landing.calB2')}</li>
@@ -200,10 +201,7 @@ export default function LandingPage({ onSignIn }) {
         <div className="landing-section__inner landing-feature landing-feature--reverse">
           <Reveal className="landing-feature__copy">
             <span className="landing-eyebrow landing-eyebrow--clubs">{t('landing.clubsEyebrow')}</span>
-            <h2 className="landing-feature__title">{t('landing.clubsTitle')}</h2>
-            <p className="landing-feature__text">
-              {t('landing.clubsText')}
-            </p>
+            <p className="landing-feature__text">{t('landing.clubsText')}</p>
             <ul className="landing-feature__bullets">
               <li>{t('landing.clubsB1')}</li>
               <li>{t('landing.clubsB2')}</li>
@@ -222,10 +220,6 @@ export default function LandingPage({ onSignIn }) {
         <div className="landing-section__inner landing-forum">
           <Reveal>
             <span className="landing-eyebrow landing-eyebrow--forum">{t('landing.forumEyebrow')}</span>
-            <h2 className="landing-feature__title">{t('landing.forumTitle')}</h2>
-            <p className="landing-feature__text landing-forum__lead">
-              {t('landing.forumLead')}
-            </p>
           </Reveal>
           <div className="landing-forum__grid">
             <Reveal className="landing-forum__card" delay={80}>
@@ -275,7 +269,11 @@ export default function LandingPage({ onSignIn }) {
       </section>
 
       {/* ── 8. Big CTA ───────────────────────────────────────────── */}
-      <section className="landing-section landing-cta" id="cta">
+      <section
+        className="landing-section landing-cta"
+        id="cta"
+        style={{ backgroundImage: `url(${mcgillSkyline})` }}
+      >
         <div className="landing-section__inner landing-cta__inner">
           <Reveal as="h2" className="landing-cta__title">
             {t('landing.ctaTitle1')}<br />{t('landing.ctaTitle2')}
