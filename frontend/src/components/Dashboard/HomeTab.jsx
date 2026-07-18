@@ -24,22 +24,6 @@ import SectionHeader from '../ui/SectionHeader'
 import Badge from '../ui/Badge'
 import './HomeTab.css'
 
-// Per-course accent palette built on the existing per-tab accents so course
-// chips stay theme-aware (Canvas-style course color coding).
-const COURSE_ACCENTS = [
-  'var(--tab-courses-accent)',
-  'var(--tab-calendar-accent)',
-  'var(--tab-clubs-accent)',
-  'var(--tab-forum-accent)',
-  'var(--accent-primary)',
-]
-
-function courseAccent(code = '') {
-  let h = 0
-  for (let i = 0; i < code.length; i++) h = (h * 31 + code.charCodeAt(i)) >>> 0
-  return COURSE_ACCENTS[h % COURSE_ACCENTS.length]
-}
-
 // Invariant: no raw emojis in the UI — react-icons only.
 const EVENT_ICONS = {
   exam: <FaPenAlt />, midterm: <FaPenAlt />, assignment: <FaFileAlt />,
@@ -71,7 +55,7 @@ function currentTermKey() {
 
 export default function HomeTab({
   user, profile,
-  advisorCards = [], cardsLoading = false,
+  advisorCards = [], cardsLoading = false, cardsGenerating = false,
   currentCourses = [], completedCourses = [],
   events = [], eventsLoading = false, hasCourseEvents = false,
   onTabChange, onViewCurrentCourses, onOpenBriefCard, onImportTranscript, onImportSyllabus,
@@ -197,7 +181,7 @@ export default function HomeTab({
           <section className="home-card">
             <SectionHeader
               icon={<FaRegLightbulb />}
-              iconColor="#f59e0b"
+              iconColor="#ed1b2f"
               title={t('home.fromYourBrief')}
               action={
                 <button className="home-link" onClick={() => onTabChange('chat')}>
@@ -205,7 +189,7 @@ export default function HomeTab({
                 </button>
               }
             />
-            {cardsLoading && topCards.length === 0 ? (
+            {(cardsLoading && topCards.length === 0) || cardsGenerating ? (
               <div className="home-brief__list">
                 {[0, 1].map(i => (
                   <div key={i} className="home-brief__item">
@@ -247,7 +231,7 @@ export default function HomeTab({
           <section className="home-card">
             <SectionHeader
               icon={<FaBook />}
-              iconColor="#2563eb"
+              iconColor="#ed1b2f"
               title={t('home.currentCourses')}
               action={
                 <button className="home-link" onClick={() => onTabChange('courses')}>
@@ -261,7 +245,6 @@ export default function HomeTab({
                   <button
                     key={course.course_code}
                     className="home-course-chip"
-                    style={{ '--course-accent': courseAccent(course.course_code) }}
                     onClick={goToCurrentCourses}
                   >
                     <span className="home-course-chip__code">{course.course_code}</span>
@@ -308,7 +291,7 @@ export default function HomeTab({
           <section className="home-card">
             <SectionHeader
               icon={<FaCalendarAlt />}
-              iconColor="#059669"
+              iconColor="#ed1b2f"
               title={t('home.upNext')}
               action={
                 <button className="home-link" onClick={() => onTabChange('calendar')}>
@@ -355,7 +338,7 @@ export default function HomeTab({
           <section className="home-card">
             <SectionHeader
               icon={<FaChartLine />}
-              iconColor="#7c3aed"
+              iconColor="#ed1b2f"
               title={t('home.degreeProgress')}
               action={
                 <button className="home-link" onClick={() => onTabChange('favorites')}>

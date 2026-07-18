@@ -952,6 +952,7 @@ export default function Dashboard() {
               profile={profile}
               advisorCards={advisorCards}
               cardsLoading={cardsLoading}
+              cardsGenerating={cardsGenerating}
               currentCourses={currentCourses}
               completedCourses={completedCourses}
               events={upcomingEvents}
