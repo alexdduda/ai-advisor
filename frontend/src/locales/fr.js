@@ -64,7 +64,7 @@ const FR_TRANSLATIONS = {
     'tour.homeTitle': 'Accueil',
     'tour.homeDesc': 'Votre point de départ : échéances à venir, progression du diplôme et points saillants de votre briefing. La liste de configuration importe vos données.',
     'tour.homeTip': "Terminez les trois étapes de configuration et tout le reste s'active.",
-    'tour.briefTitle': 'Briefing',
+    'tour.briefTitle': 'Briefing académique',
     'tour.briefDesc': 'Des cartes générées par IA avec recommandations de cours, aperçus de votre diplôme et échéances personnalisées. Posez des questions sur chaque carte.',
     'tour.briefTip': "Demandez n'importe quoi, « Quels cours prendre pour une majeure COMP en U1 ? »",
     'tour.degreeTitle': 'Planification du diplôme',
@@ -1146,13 +1146,13 @@ const FR_TRANSLATIONS = {
     'dp.loadError': 'Impossible de charger les détails du programme. Veuillez réessayer.',
 
     // ── Academic Brief ────────────────────────────────────
-    'brief.title': 'Bilan',
+    'brief.title': 'Bilan académique',
     'brief.updated': 'Mis à jour {time}',
     'brief.refresh': 'Actualiser les fiches',
     'brief.all': 'Tout',
     'brief.saved': 'Sauvegardés',
     'brief.history': 'Historique',
-    'brief.preparing': 'Votre bilan est en cours de préparation.',
+    'brief.preparing': 'Votre bilan académique est en cours de préparation.',
     'brief.generateNow': 'Générer maintenant',
     'brief.noHistory': "Aucun historique de chat. Commencez une conversation sur n'importe quelle fiche.",
     'brief.noSaved': 'Aucune fiche sauvegardée. Marquez des fiches pour les retrouver ici.',
@@ -1246,7 +1246,7 @@ const FR_TRANSLATIONS = {
     'rsb.nav.home.2':     "Qu'est-ce qui est dû la semaine prochaine ?",
     'rsb.nav.home.3':     'Comment importer mon relevé de notes ?',
     'rsb.nav.default.1':  'Comment planifier le prochain semestre ?',
-    'rsb.nav.default.2':  'Qu\'est-ce que le briefing ?',
+    'rsb.nav.default.2':  'Qu\'est-ce que le briefing académique ?',
     'rsb.nav.default.3':  'Montre-moi ce que Symbolos peut faire',
 
     // Tab labels used in greeting (FR)

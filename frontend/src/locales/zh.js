@@ -64,7 +64,7 @@ const ZH_TRANSLATIONS = {
     'tour.homeTitle': '主页',
     'tour.homeDesc': '您每天的起点：即将到来的截止日期、学位进度和简报要点。设置清单帮您导入数据。',
     'tour.homeTip': '完成三个设置步骤，其他功能即可全面启用。',
-    'tour.briefTitle': '简报',
+    'tour.briefTitle': '学术简报',
     'tour.briefDesc': 'AI生成的卡片，包含课程推荐、学位洞察和为您定制的截止日期。可对任意卡片追问。',
     'tour.briefTip': '尽管提问，"COMP专业U1应该选哪些课？"',
     'tour.degreeTitle': '学位规划',
@@ -845,7 +845,7 @@ const ZH_TRANSLATIONS = {
     'rsb.nav.home.2':     '下周有什么要交的？',
     'rsb.nav.home.3':     '如何导入成绩单？',
     'rsb.nav.default.1':  '如何规划下学期？',
-    'rsb.nav.default.2':  '简报是什么？',
+    'rsb.nav.default.2':  '学术简报是什么？',
     'rsb.nav.default.3':  '展示Symbolos能做什么',
 
     // Tab labels used in greeting (ZH)
@@ -1208,13 +1208,13 @@ const ZH_TRANSLATIONS = {
     'dp.loadError': '无法加载专业详情，请重试。',
 
     // ── Academic Brief ────────────────────────────────────
-    'brief.title': '简报',
+    'brief.title': '学术简报',
     'brief.updated': '更新于{time}',
     'brief.refresh': '刷新卡片',
     'brief.all': '全部',
     'brief.saved': '已保存',
     'brief.history': '历史',
-    'brief.preparing': '您的简报正在准备中。',
+    'brief.preparing': '您的学术简报正在准备中。',
     'brief.generateNow': '立即生成',
     'brief.noHistory': '暂无对话历史。开始任意卡片的对话。',
     'brief.noSaved': '暂无已保存的卡片。给卡片添加书签以保存。',
