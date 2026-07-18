@@ -16,8 +16,11 @@
  * Missing screenshots gracefully render as a styled "Screenshot placeholder"
  * so the page never breaks if you haven't dropped them yet.
  */
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import logoMark from '../../assets/loading-logo.png'
+import PrivacyPolicy from '../Legal/PrivacyPolicy'
+import TermsOfService from '../Legal/TOS'
+import AboutUs from '../Legal/AboutUs'
 import { useLanguage } from '../../contexts/PreferencesContext'
 import useScrollReveal from './useScrollReveal'
 import './LandingPage.css'
@@ -75,6 +78,7 @@ function Reveal({ children, delay = 0, as: Tag = 'div', className = '', ...rest 
 
 export default function LandingPage({ onSignIn }) {
   const { t, language, setLanguage } = useLanguage()
+  const [legalModal, setLegalModal] = useState(null) // 'privacy' | 'terms' | 'about'
 
   // ── Force LIGHT theme while the landing is mounted ────────────────────
   // The landing page is designed around a cream/light palette and the dark
@@ -108,7 +112,6 @@ export default function LandingPage({ onSignIn }) {
 
       {/* ── 1. Hero ──────────────────────────────────────────────── */}
       <section className="landing-section landing-hero" id="top">
-        <div className="landing-hero__bg" aria-hidden />
         <div className="landing-section__inner landing-hero__inner">
           <Reveal as="h1" className="landing-hero__headline">
             {t('landing.heroHeadline1')}<br />
@@ -121,9 +124,6 @@ export default function LandingPage({ onSignIn }) {
             <button className="landing-btn landing-btn--primary" onClick={onSignIn}>
               {t('landing.ctaSignIn')}
             </button>
-            <a href="#brief" className="landing-btn landing-btn--ghost">
-              {t('landing.ctaSee')} ↓
-            </a>
           </Reveal>
           <Reveal delay={400} className="landing-hero__hint">
             {t('landing.heroHint')}
@@ -134,7 +134,7 @@ export default function LandingPage({ onSignIn }) {
       {/* ── 2. Brief ─────────────────────────────────────────────── */}
       <section className="landing-section landing-section--alt" id="brief">
         <div className="landing-section__inner landing-feature">
-          <Reveal className="landing-feature__copy" style={{'--section-color': '#ed1b2f'}}>
+          <Reveal className="landing-feature__copy">
             <span className="landing-eyebrow landing-eyebrow--chat">{t('landing.briefEyebrow')}</span>
             <h2 className="landing-feature__title">{t('landing.briefTitle')}</h2>
             <p className="landing-feature__text">
@@ -155,7 +155,7 @@ export default function LandingPage({ onSignIn }) {
       {/* ── 3. Courses & degree ──────────────────────────────────── */}
       <section className="landing-section" id="degree">
         <div className="landing-section__inner landing-feature landing-feature--reverse">
-          <Reveal className="landing-feature__copy" style={{'--section-color': '#059669'}}>
+          <Reveal className="landing-feature__copy">
             <span className="landing-eyebrow landing-eyebrow--degree">{t('landing.degreeEyebrow')}</span>
             <h2 className="landing-feature__title">{t('landing.degreeTitle')}</h2>
             <p className="landing-feature__text">
@@ -177,7 +177,7 @@ export default function LandingPage({ onSignIn }) {
       {/* ── 4. Calendar ──────────────────────────────────────────── */}
       <section className="landing-section landing-section--alt" id="calendar">
         <div className="landing-section__inner landing-feature">
-          <Reveal className="landing-feature__copy" style={{'--section-color': '#059669'}}>
+          <Reveal className="landing-feature__copy">
             <span className="landing-eyebrow landing-eyebrow--calendar">{t('landing.calEyebrow')}</span>
             <h2 className="landing-feature__title">{t('landing.calTitle')}</h2>
             <p className="landing-feature__text">
@@ -198,7 +198,7 @@ export default function LandingPage({ onSignIn }) {
       {/* ── 5. Clubs ─────────────────────────────────────────────── */}
       <section className="landing-section" id="clubs">
         <div className="landing-section__inner landing-feature landing-feature--reverse">
-          <Reveal className="landing-feature__copy" style={{'--section-color': '#7c3aed'}}>
+          <Reveal className="landing-feature__copy">
             <span className="landing-eyebrow landing-eyebrow--clubs">{t('landing.clubsEyebrow')}</span>
             <h2 className="landing-feature__title">{t('landing.clubsTitle')}</h2>
             <p className="landing-feature__text">
@@ -299,19 +299,19 @@ export default function LandingPage({ onSignIn }) {
             <span>{t('landing.footerBrand')}</span>
           </div>
           <div className="landing-footer__links">
-            <a href="#brief">{t('landing.footerBrief')}</a>
-            <a href="#degree">{t('landing.footerDegree')}</a>
-            <a href="#calendar">{t('landing.footerCalendar')}</a>
-            <a href="#clubs">{t('landing.footerClubs')}</a>
-            <a href="#forum">{t('landing.footerForum')}</a>
-            <a href="#privacy">{t('landing.footerPrivacy')}</a>
-            <button className="landing-footer__signin" onClick={onSignIn}>{t('landing.footerSignIn')}</button>
+            <button type="button" className="landing-footer__legal-btn" onClick={() => setLegalModal('privacy')}>{t('legal.navPrivacy')}</button>
+            <button type="button" className="landing-footer__legal-btn" onClick={() => setLegalModal('terms')}>{t('legal.navTerms')}</button>
+            <button type="button" className="landing-footer__legal-btn" onClick={() => setLegalModal('about')}>{t('legal.navAbout')}</button>
           </div>
         </div>
         <p className="landing-footer__copy">
           © {new Date().getFullYear()} Symbolos · {t('landing.footerCopy')}
         </p>
       </footer>
+
+      {legalModal === 'privacy' && <PrivacyPolicy onClose={() => setLegalModal(null)} />}
+      {legalModal === 'terms'   && <TermsOfService onClose={() => setLegalModal(null)} />}
+      {legalModal === 'about'   && <AboutUs onClose={() => setLegalModal(null)} />}
     </div>
   )
 }

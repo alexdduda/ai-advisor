@@ -166,23 +166,13 @@ body:has(.landing-root),
   .reveal { opacity: 1; transform: none; transition: none; }
 }
 
-/* ── 1. Hero ─────────────────────────────────────────────── */
+/* ── 1. Hero — fills the full viewport, flat solid background (no gradient) ── */
 .landing-hero {
-  min-height: 90vh;
+  min-height: 100vh;
   display: flex;
   align-items: center;
   text-align: center;
   position: relative;
-  isolation: isolate;
-}
-.landing-hero__bg {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: -1;
-  background:
-    radial-gradient(circle at 50% 25%, rgba(237, 27, 47, 0.10) 0%, transparent 50%),
-    radial-gradient(circle at 20% 80%, rgba(176, 27, 46, 0.06) 0%, transparent 45%);
 }
 .landing-hero__inner {
   max-width: 880px;
@@ -196,10 +186,7 @@ body:has(.landing-root),
   margin: 0 0 22px;
 }
 .landing-hero__accent {
-  background: linear-gradient(120deg, var(--land-accent) 0%, var(--land-accent-dk) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: var(--land-accent);
 }
 .landing-hero__sub {
   font-size: clamp(1.05rem, 1.6vw, 1.32rem);
@@ -292,12 +279,8 @@ body:has(.landing-root),
   color: var(--land-accent);
   margin-bottom: 14px;
 }
-.landing-eyebrow--chat     { color: #ed1b2f; }
-.landing-eyebrow--degree   { color: #059669; }
-.landing-eyebrow--calendar { color: #059669; }
-.landing-eyebrow--clubs    { color: #7c3aed; }
-.landing-eyebrow--forum    { color: #d97706; }
-.landing-eyebrow--courses  { color: #2563eb; }
+/* All eyebrows use the single brand red from the base .landing-eyebrow rule
+   above — no more one-color-per-section rainbow. */
 .landing-feature__title {
   font-size: clamp(1.8rem, 3vw, 2.6rem);
   font-weight: 700;
@@ -306,9 +289,9 @@ body:has(.landing-root),
   margin: 0 0 18px;
 }
 .landing-feature__text {
-  font-size: clamp(1rem, 1.3vw, 1.1rem);
+  font-size: 0.95rem;
   line-height: 1.6;
-  color: var(--land-fg-mute);
+  color: var(--land-fg);
   margin: 0 0 18px;
 }
 .landing-feature__bullets {
@@ -491,7 +474,7 @@ body:has(.landing-root),
   align-items: center;
 }
 .landing-footer__links a,
-.landing-footer__signin {
+.landing-footer__legal-btn {
   font-size: 0.875rem;
   color: #b5b5b5;
   text-decoration: none;
@@ -501,7 +484,7 @@ body:has(.landing-root),
   cursor: pointer;
 }
 .landing-footer__links a:hover,
-.landing-footer__signin:hover {
+.landing-footer__legal-btn:hover {
   color: #fff;
 }
 .landing-footer__copy {
@@ -515,7 +498,6 @@ body:has(.landing-root),
 /* ── Mobile ─────────────────────────────────────────────── */
 @media (max-width: 820px) {
   .landing-section { padding: 64px 20px; }
-  .landing-hero { min-height: 70vh; }
   .landing-feature { gap: 28px; }
   .landing-nav__inner { padding: 12px 18px; }
 }
@@ -523,7 +505,6 @@ body:has(.landing-root),
 /* Phones */
 @media (max-width: 560px) {
   .landing-section { padding: 56px 18px; }
-  .landing-hero { min-height: 80vh; }
   .landing-nav__name { font-size: 0.98rem; }
   .landing-nav__logo { width: 28px; height: 28px; }
   .landing-nav__cta { padding: 8px 14px; font-size: 0.82rem; }
