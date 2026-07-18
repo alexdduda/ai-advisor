@@ -91,6 +91,16 @@ htmlcov/
 # ── Deployment ───────────────────────────────────────────────────────────
 .vercel
 
+# ── Local-only dev clutter — kept on disk, never tracked/pushed ──────────
+/cheeky.py
+/grantguard
+/scripts/scrap_mcgill.py
+/HANDOFF_SECURITY.md
+/INCIDENT_RUNBOOK.md
+/SECRETS_ROTATION.md
+/SECURITY_DNS.md
+/PRELAUNCH_CHECKLIST.md
+
 # ── Temporary ────────────────────────────────────────────────────────────
 *.tmp
 *.temp
