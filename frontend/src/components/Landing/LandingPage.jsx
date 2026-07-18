@@ -18,6 +18,7 @@
  */
 import { useEffect, useState } from 'react'
 import logoMark from '../../assets/loading-logo.png'
+import mcgillSkyline from '../../assets/landing/mcgill-skyline.jpg'
 import PrivacyPolicy from '../Legal/PrivacyPolicy'
 import TermsOfService from '../Legal/TOS'
 import AboutUs from '../Legal/AboutUs'
@@ -272,7 +273,11 @@ export default function LandingPage({ onSignIn }) {
       </section>
 
       {/* ── 8. Big CTA ───────────────────────────────────────────── */}
-      <section className="landing-section landing-cta" id="cta">
+      <section
+        className="landing-section landing-cta"
+        id="cta"
+        style={{ backgroundImage: `linear-gradient(135deg, rgba(176,27,46,0.82) 0%, rgba(90,12,24,0.88) 100%), url(${mcgillSkyline})` }}
+      >
         <div className="landing-section__inner landing-cta__inner">
           <Reveal as="h2" className="landing-cta__title">
             {t('landing.ctaTitle1')}<br />{t('landing.ctaTitle2')}
