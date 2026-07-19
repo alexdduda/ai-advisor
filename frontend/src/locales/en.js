@@ -377,6 +377,7 @@ const EN_TRANSLATIONS = {
     'courses.detailEnrolled': 'Enrolled',
     'courses.recentGpa': 'Recent GPA',
     'courses.allTimeAvg': 'All-time Avg',
+    'courses.termAvgLabel': '{term} Avg',
     'courses.gradeHistory': 'Grade History',
     'courses.nTotal': '{n} total',
     'courses.nYears': '{n} years',
