@@ -197,6 +197,28 @@ describe('ClubsTab explore view', () => {
   })
 })
 
+// ── Non-creator manager (club_managers admin) sees Manage controls ───────────
+
+describe('non-creator manager privileges carry over to the Explore grid', () => {
+  it('shows the Manage button/crown on an admin-managed club card in Explore, not Subscribe/Join', async () => {
+    // The club is owned by someone else, but the current user manages it via
+    // an accepted manager invite — surfaced by getCreatedClubs() with
+    // _manage_role: 'admin'. It also shows up in the plain getClubs() list
+    // (which never carries _manage_role) because it's rendered in Explore too.
+    const club = makeClub({ id: 'club-1', created_by: 'owner-1' })
+    clubsAPI.getClubs.mockResolvedValue({ clubs: [club], count: 1 })
+    clubsAPI.getCreatedClubs.mockResolvedValue({ clubs: [{ ...club, _manage_role: 'admin' }], count: 1 })
+    renderTab()
+
+    await screen.findByText('HackMcGill')
+
+    expect(screen.getByText('clubs.manageBtnShort')).toBeInTheDocument()
+    expect(screen.getByText('clubs.adminBadge')).toBeInTheDocument()
+    expect(screen.queryByText('clubs.joinClub')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Subscribe for updates')).not.toBeInTheDocument()
+  })
+})
+
 // ── Dead join flow (characterization of current — unreachable — behavior) ────
 
 describe('the "join a club" flow is unreachable from the rendered UI', () => {
@@ -394,7 +416,11 @@ describe('detail drawer manager access', () => {
 
     const drawer = container.querySelector('.club-drawer')
     expect(drawer).toBeTruthy()
-    expect(within(drawer).getByText(/clubs\.manage\.owner/)).toBeInTheDocument()
+    // The drawer always gets an onManage handler now (added independently of
+    // this fix), so a manager sees the "Manage club" button rather than the
+    // static "Manager" badge that only renders when onManage isn't provided —
+    // either way, the point of this fix is that Join/Subscribe are hidden.
+    expect(within(drawer).getByText(/clubs\.manage\.manageBtn/)).toBeInTheDocument()
     expect(within(drawer).queryByText('clubs.joinClub')).not.toBeInTheDocument()
     expect(within(drawer).queryByText('clubs.subscribe')).not.toBeInTheDocument()
   })
