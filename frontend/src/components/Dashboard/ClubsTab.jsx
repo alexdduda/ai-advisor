@@ -688,13 +688,16 @@ function ClubDetailDrawer({ club, liveClub, joined, calSynced, onToggleCalendar,
   )
 }
 
-function ClubCard({ club, joined, calSynced, isSubscribed, onLeave, onToggleCalendar, onToggleSubscribe, onOpen, onDelete, onEdit, onManage, onLogoChanged, isAdmin, clubLoading, t, userId, isFeatured = false, isMcGill = false }) {
+function ClubCard({ club, joined, calSynced, isSubscribed, onLeave, onToggleCalendar, onToggleSubscribe, onOpen, onDelete, onEdit, onManage, onLogoChanged, isAdmin, clubLoading, t, userId, isFeatured = false, isMcGill = false, managedClubIds }) {
   const meta = getCat(club.category)
   const isLoading = clubLoading[club.id] ?? false
   // Owner or admin both get full manage privileges — invited managers are
   // surfaced via the _manage_role flag the /created endpoint now returns.
+  // Cards built from the plain `clubs` list (Explore/Trending/For You) never
+  // carry _manage_role, so fall back to the managedClubIds set (derived from
+  // /created, which includes admin-managed clubs too) for those.
   const isOwner   = userId && club.created_by === userId
-  const isManager = isOwner || club._manage_role === 'admin'
+  const isManager = isOwner || club._manage_role === 'admin' || !!managedClubIds?.has(club.id)
 
   // Logo quick-upload (owners only) — click the avatar to swap the picture
   const [logoOptimistic, setLogoOptimistic] = useState(null)
@@ -1835,6 +1838,10 @@ export default function ClubsTab({ user, authFlags, onClubEventsChange }) {
 
   const joinedIds    = useMemo(() => new Set(myClubs.map(m => m.club?.id ?? m.id)), [myClubs])
   const calSyncedIds = useMemo(() => new Set(myClubs.filter(m => m.calendar_synced).map(m => m.club?.id ?? m.id)), [myClubs])
+  // Clubs this user manages (owner or invited admin) — passed to cards/drawer
+  // so manage access carries over everywhere a club can be opened from, not
+  // just the "My Clubs" list.
+  const createdClubIds = useMemo(() => new Set(createdClubs.map(c => c.id)), [createdClubs])
 
   const fetchClubs = useCallback(async (pageNum = 1) => {
     if (pageNum === 1) { setLoading(true); setError(null) }
@@ -2273,6 +2280,7 @@ export default function ClubsTab({ user, authFlags, onClubEventsChange }) {
                     clubLoading={clubLoading}
                     userId={user?.id}
                     language={language}
+                    managedClubIds={createdClubIds}
                     t={t}
                   />
                 ))}
@@ -2309,6 +2317,7 @@ export default function ClubsTab({ user, authFlags, onClubEventsChange }) {
                     clubLoading={clubLoading}
                     userId={user?.id}
                     language={language}
+                    managedClubIds={createdClubIds}
                     t={t}
                   />
                 ))}
@@ -2380,6 +2389,7 @@ export default function ClubsTab({ user, authFlags, onClubEventsChange }) {
                     isMcGill={isMcGill}
                     clubLoading={clubLoading}
                     userId={user?.id}
+                    managedClubIds={createdClubIds}
                     t={t}
                   />
                 ))}
