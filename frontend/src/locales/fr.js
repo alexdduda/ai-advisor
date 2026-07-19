@@ -377,6 +377,7 @@ const FR_TRANSLATIONS = {
     'courses.detailEnrolled': 'Inscrit',
     'courses.recentGpa': 'MPC récente',
     'courses.allTimeAvg': 'Moyenne globale',
+    'courses.termAvgLabel': 'Moyenne {term}',
     'courses.gradeHistory': 'Historique des notes',
     'courses.nTotal': '{n} au total',
     'courses.nYears': '{n} ans',

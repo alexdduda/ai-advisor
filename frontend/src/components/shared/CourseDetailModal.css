@@ -221,6 +221,13 @@
 
 .cdm-stat-value.gpa-value { color: #16a34a; }
 
+.cdm-stat--term {
+  border-color: var(--accent-primary, #ed1b2f);
+  background: var(--accent-lighter, #fef2f2);
+}
+
+.cdm-stat--term .cdm-stat-icon { color: var(--accent-primary, #ed1b2f); }
+
 .cdm-stat-sub {
   color: var(--text-secondary, #6b7280);
   font-size: 0.78rem;

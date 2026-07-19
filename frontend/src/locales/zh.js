@@ -377,6 +377,7 @@ const ZH_TRANSLATIONS = {
     'courses.detailEnrolled': '在读中',
     'courses.recentGpa': '近期GPA',
     'courses.allTimeAvg': '历史平均',
+    'courses.termAvgLabel': '{term}平均分',
     'courses.gradeHistory': '成绩历史',
     'courses.nTotal': '共{n}个',
     'courses.nYears': '{n}年',
