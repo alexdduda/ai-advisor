@@ -372,6 +372,34 @@ describe('ClubManageDashboard manager invite flow', () => {
   })
 })
 
+// ── Detail drawer: non-creator managers ───────────────────────────────────────
+
+describe('detail drawer manager access', () => {
+  it('shows manager controls, not Subscribe/Join, for a club managed (but not created) by the current user', async () => {
+    // This user is a manager added via the invite flow (club_managers /
+    // manager-invite), not the club's creator. The /created endpoint surfaces
+    // that as _manage_role: 'admin' — see discovery.py's get_created_clubs.
+    const club = makeClub({ created_by: 'owner-1' })
+    clubsAPI.getClubs.mockResolvedValue({ clubs: [club], count: 1 })
+    clubsAPI.getCreatedClubs.mockResolvedValue({ clubs: [{ ...club, _manage_role: 'admin' }], count: 1 })
+    const { container } = renderTab()
+
+    await screen.findByText('HackMcGill')
+    await waitFor(() => expect(clubsAPI.getCreatedClubs).toHaveBeenCalled())
+
+    // Open the public detail drawer (Explore grid entry point), same as the
+    // repro: manager opens the drawer via the Explore grid or "My Clubs"
+    // chevron, not via the "Manage" button on the My Clubs list row.
+    await userEvent.click(screen.getByText('HackMcGill'))
+
+    const drawer = container.querySelector('.club-drawer')
+    expect(drawer).toBeTruthy()
+    expect(within(drawer).getByText(/clubs\.manage\.owner/)).toBeInTheDocument()
+    expect(within(drawer).queryByText('clubs.joinClub')).not.toBeInTheDocument()
+    expect(within(drawer).queryByText('clubs.subscribe')).not.toBeInTheDocument()
+  })
+})
+
 // ── Admin: delete club (typed confirmation) ───────────────────────────────────
 
 describe('admin delete club', () => {

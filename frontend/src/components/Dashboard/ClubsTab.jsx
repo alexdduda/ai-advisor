@@ -313,7 +313,7 @@ function MembersSection({ clubId, clubOwnerId, meta, refreshKey }) {
   )
 }
 
-function ClubDetailDrawer({ club, liveClub, joined, calSynced, hasPendingRequest, onJoin, onLeave, onToggleCalendar, onClose, clubLoading, t, isAdmin, userId, isSubscribed, onToggleSubscribe, onLogoChanged, isMcGill }) {
+function ClubDetailDrawer({ club, liveClub, joined, calSynced, hasPendingRequest, onJoin, onLeave, onToggleCalendar, onClose, clubLoading, t, isAdmin, userId, isSubscribed, onToggleSubscribe, onLogoChanged, isMcGill, managedClubIds }) {
   const [memberRefreshKey, setMemberRefreshKey] = useState(0)
   const [activity, setActivity] = useState(null)        // #11 — recent announcements/events
   const [facultyStats, setFacultyStats] = useState(null) // #12 — faculty social proof
@@ -333,7 +333,10 @@ function ClubDetailDrawer({ club, liveClub, joined, calSynced, hasPendingRequest
   const display = liveClub ? { ...club, ...liveClub } : club
   const meta = getCat(display.category)
   const isLoading = clubLoading[club.id] ?? false
-  const isOwnerOrAdmin = isAdmin || (userId && display.created_by === userId)
+  // Manager access covers the creator, app-level admins, and anyone added
+  // via the manager-invite flow (surfaced to us as managedClubIds, the same
+  // owned+admin club id set the "My Clubs" list uses to grant manage access).
+  const canManage = isAdmin || (userId && display.created_by === userId) || (managedClubIds?.has(display.id) ?? false)
   const displayLogo = logoOptimistic || display.logo_url
 
   const handleDrawerLogoPick = () => drawerLogoInputRef.current?.click()
@@ -353,7 +356,6 @@ function ClubDetailDrawer({ club, liveClub, joined, calSynced, hasPendingRequest
     }
   }
   const isPrivate = display.is_private ?? false
-  const canManage = isAdmin || display.created_by === userId
 
   return (
     <div className="club-drawer-overlay" onClick={onClose}>
@@ -375,10 +377,10 @@ function ClubDetailDrawer({ club, liveClub, joined, calSynced, hasPendingRequest
               // not-owned clubs.
               calSynced={calSynced && !(userId && display.created_by === userId)}
               logoUrl={displayLogo}
-              editable={isOwnerOrAdmin && !logoBusy}
+              editable={canManage && !logoBusy}
               onEditClick={handleDrawerLogoPick}
             />
-            {isOwnerOrAdmin && (
+            {canManage && (
               <input
                 ref={drawerLogoInputRef}
                 type="file"
@@ -2535,6 +2537,7 @@ export default function ClubsTab({ user, authFlags, onClubEventsChange }) {
           isAdmin={isAdmin}
           userId={user?.id}
           isMcGill={isMcGill}
+          managedClubIds={createdClubIds}
         />
       )}
 
