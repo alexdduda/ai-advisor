@@ -229,7 +229,7 @@ export default function SavedCoursesView({
             <div className="course-list">
               {completedCourses.map((course, idx) => (
                 <div key={idx} className="course-card completed-course-card">
-                  <div className="course-card-content" onClick={() => openCourse(course.subject, course.catalog)}>
+                  <div className="course-card-content" onClick={() => openCourse(course.subject, course.catalog, course.term && course.year ? `${course.term} ${course.year}` : undefined)}>
                     <div className="course-header">
                       <div className="course-code">{course.subject} {course.catalog}</div>
                       {course.grade && <div className="course-grade-badge">{course.grade}</div>}

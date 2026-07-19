@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import {
   FaHeart, FaRegHeart, FaCheckCircle, FaBook, FaUser, FaChartBar,
   FaStar, FaTrophy, FaLayerGroup, FaExclamationCircle, FaTimes, FaExternalLinkAlt,
-  FaFlag,
+  FaFlag, FaCalendarAlt,
 } from 'react-icons/fa'
 import { useCourseDetail } from '../../contexts/CourseDetailContext'
 import { useLanguage } from '../../contexts/PreferencesContext'
@@ -74,7 +74,13 @@ export default function CourseDetailModal({
     if (!byTerm[term]) byTerm[term] = []
     byTerm[term].push(s)
   }
-  const recentTerms = Object.keys(byTerm).sort((a, b) => b.localeCompare(a)).slice(0, 2)
+  const recentTerms = (() => {
+    const top2 = Object.keys(byTerm).sort((a, b) => b.localeCompare(a)).slice(0, 2)
+    if (course.term && byTerm[course.term] && !top2.includes(course.term)) {
+      return [course.term, ...top2]
+    }
+    return top2
+  })()
 
   const subj = course.subject
   const cat  = course.catalog
@@ -148,6 +154,14 @@ export default function CourseDetailModal({
               </div>
 
               <div className="cdm-stats">
+                {course.term_average != null && (
+                  <div className="cdm-stat cdm-stat--term">
+                    <FaCalendarAlt className="cdm-stat-icon" />
+                    <span className="cdm-stat-label">{t('courses.termAvgLabel').replace('{term}', course.term)}</span>
+                    <span className="cdm-stat-value gpa-value">{parseFloat(course.term_average).toFixed(2)}</span>
+                    <span className="cdm-stat-sub">({gpaToLetter(course.term_average)})</span>
+                  </div>
+                )}
                 {course.average && (
                   <div className="cdm-stat">
                     <FaTrophy className="cdm-stat-icon" />
