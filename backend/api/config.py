@@ -108,8 +108,18 @@ class Settings(BaseSettings):
     MAX_SEARCH_LIMIT: int = 200     # Absolute max to prevent huge queries
 
     # ── Security / CORS ──────────────────────────────────────────────────
+    # `capacitor://localhost` (iOS) and `https://localhost` (Android) are the
+    # origins the Capacitor WebView sends for the native app. Without them
+    # every in-app API call fails CORS preflight — and because
+    # allow_credentials=True, the "*" wildcard is not a legal shortcut.
     ALLOWED_ORIGINS: Union[str, List[str]] = Field(
-        default="http://localhost:5173,https://ai-advisor-pi.vercel.app,https://symbolos.ca"
+        default=(
+            "http://localhost:5173,"
+            "https://ai-advisor-pi.vercel.app,"
+            "https://symbolos.ca,"
+            "capacitor://localhost,"
+            "https://localhost"
+        )
     )
 
     @field_validator("ALLOWED_ORIGINS", mode="before")
@@ -126,11 +136,15 @@ class Settings(BaseSettings):
         elif isinstance(v, list):
             raw_origins = [str(o).strip() for o in v if str(o).strip()]
 
-        # Validate URL format
+        # Validate URL format. "capacitor" is permitted alongside http/https
+        # because the iOS Capacitor WebView identifies itself as
+        # capacitor://localhost; without it that origin would be silently
+        # dropped here and the native app would fail every request with an
+        # opaque CORS error.
         validated: List[str] = []
         for origin in raw_origins:
             parsed = urlparse(origin)
-            if parsed.scheme in ("http", "https") and parsed.netloc:
+            if parsed.scheme in ("http", "https", "capacitor") and parsed.netloc:
                 validated.append(origin)
             else:
                 logger.warning(f"Ignoring invalid CORS origin: {origin!r}")
