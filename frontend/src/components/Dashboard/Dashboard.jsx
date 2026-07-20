@@ -1,90 +1,44 @@
 import { useState, useEffect, lazy, Suspense } from 'react'
 import { DashboardDataProvider, useDashboardData } from '../../contexts/DashboardDataContext'
-import AdvisorCards from './chat/AdvisorCards'
-import HomeTab from './HomeTab'
-import RightSidebar from './RightSidebar'
-import CoursesView from './CoursesView'
-
-import Sidebar from './Sidebar'
-
-// Code-split everything that isn't on the default landing screen. Home is
-// the default tab and ships in the main bundle (Brief/Chat stays static too
-// since Home links straight into it); secondary tabs and modals only
-// download when the user navigates to them.
-const ClubsTab          = lazy(() => import('./ClubsTab'))
-const ProfileTab        = lazy(() => import('./ProfileTab'))
-const DegreePlanningView = lazy(() => import('./DegreePlanningView'))
-const Forum             = lazy(() => import('../Forum/Forum'))
-const CalendarTab       = lazy(() => import('./CalendarTab'))
-const TranscriptUpload  = lazy(() => import('./TranscriptUpload'))
-const FeedbackModal     = lazy(() => import('./FeedbackModal'))
-const MarkCompleteModal = lazy(() => import('./MarkCompleteModal'))
-const OnboardingTutorial = lazy(() => import('./OnboardingTutorial'))
-
 import { CourseDetailProvider } from '../../contexts/CourseDetailContext'
+import useViewport from '../../hooks/useViewport'
+import DashboardTabContent from './DashboardTabContent'
+import MobileLayout from './MobileLayout'
+import RightSidebar from './RightSidebar'
+import Sidebar from './Sidebar'
 import CourseDetailModal from '../shared/CourseDetailModal'
 import './Dashboard.css'
 
-// Tiny inline spinner used as Suspense fallback for lazy tabs
-function TabLoader() {
-  return (
-    <div style={{
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      minHeight: '40vh', color: 'var(--text-secondary)',
-    }}>
-      <div style={{
-        width: 28, height: 28, border: '3px solid var(--border-color)',
-        borderTopColor: 'var(--accent-primary, #ed1b2f)', borderRadius: '50%',
-        animation: 'spin 0.7s linear infinite',
-      }} />
-    </div>
-  )
-}
+const TranscriptUpload   = lazy(() => import('./TranscriptUpload'))
+const FeedbackModal      = lazy(() => import('./FeedbackModal'))
+const MarkCompleteModal  = lazy(() => import('./MarkCompleteModal'))
+const OnboardingTutorial = lazy(() => import('./OnboardingTutorial'))
 
 /**
  * Desktop dashboard view.
  *
  * Owns only what is specific to *this* shell: the collapsible left sidebar,
- * the pinned-card right sidebar, and the desktop onboarding tour (which
- * anchors its tour stops to Sidebar nav buttons via data-tour attributes —
- * mobile ships its own tutorial rather than reusing these anchors).
+ * the pinned-card right sidebar, and the onboarding tour (which anchors its
+ * stops to Sidebar nav buttons via data-tour attributes — mobile ships its
+ * own tutorial rather than reusing these anchors).
  *
- * All data and business logic comes from DashboardDataContext.
+ * All data and business logic comes from DashboardDataContext; the eight
+ * screens themselves come from DashboardTabContent, shared with MobileLayout.
  */
 function DesktopDashboard() {
   const {
-    user, profile, authFlags, updateProfile,
+    user, profile,
     activeTab, setActiveTab, handleTabChange: onTabChange,
-    coursesDeepLink, setCoursesDeepLink,
-    briefOpenCardId, setBriefOpenCardId,
-
-    advisorCards, cardsLoading, cardsGenerating, cardsGeneratedAt,
-    freeformInput, setFreeformInput, isAsking,
-    refreshAdvisorCards, handleCardSaveToggle, handleCardsReorder,
-    handleCardChipClick, handleDeleteCard, handleFreeformSubmit,
-
-    searchQuery, setSearchQuery, searchResults, isSearching, searchError,
-    searchCorrection, hasSearched, sortBy, setSortBy, searchTerm, setSearchTerm,
-    availableTerms, handleCourseSearch, sortCourses,
-
-    favorites, favoritesMap,
-    completedCourses, completedCoursesMap,
-    currentCourses, currentCoursesMap,
+    setCoursesDeepLink, setBriefOpenCardId,
+    handleCardChipClick,
+    favorites, profileImage,
     isFavorited, isCompleted, isCurrent,
     handleToggleFavorite, handleToggleCompleted, handleToggleCurrent,
-
-    upcomingEvents, upcomingEventsLoading, upcomingUrgentCount, hasUpcomingCourseEvents,
-
-    clubCalendarEvents, setClubCalendarEvents, managedClubs,
-
+    upcomingUrgentCount,
     showCompleteCourseModal, courseToComplete, handleConfirmComplete, cancelCompleteCourse,
-
     showTranscriptUpload, transcriptUploadTab, setShowTranscriptUpload,
-    openTranscriptUpload, openSyllabusUpload, handleTranscriptImportComplete,
-
-    profileImage, isUploadingImage, fileInputRef, handleImageUpload, handleAvatarClick,
-
-    gpaToLetterGrade, handleSignOut,
+    handleTranscriptImportComplete,
+    handleSignOut,
   } = useDashboardData()
 
   // ── Layout ─────────────────────────────────────────────
@@ -102,6 +56,10 @@ function DesktopDashboard() {
   useEffect(() => {
     try { localStorage.setItem('sidebar_open', String(sidebarOpen)) } catch { /* ignore */ }
   }, [sidebarOpen])
+
+  // Feedback modal is opened from the Sidebar, so its state lives with the
+  // shell that renders that trigger.
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
 
   // Desktop-only side effect on tab change: collapse the sidebar on narrow
   // viewports so the content isn't hidden behind it.
@@ -159,10 +117,6 @@ function DesktopDashboard() {
     window.addEventListener('restart-tour', handler)
     return () => window.removeEventListener('restart-tour', handler)
   }, [tourKey, setActiveTab])
-
-  // Feedback modal is opened from the Sidebar, so its state lives with the
-  // shell that renders that trigger.
-  const [feedbackOpen, setFeedbackOpen] = useState(false)
 
   // ── Right sidebar / pinned chat ─────────────────────────
   const [rightSidebarOpen, setRightSidebarOpen] = useState(false)
@@ -242,152 +196,13 @@ function DesktopDashboard() {
         >☰</button>
 
         <div className="content-area">
-
-          {activeTab === 'home' && (
-            <HomeTab
-              user={user}
-              profile={profile}
-              advisorCards={advisorCards}
-              cardsLoading={cardsLoading}
-              cardsGenerating={cardsGenerating}
-              currentCourses={currentCourses}
-              completedCourses={completedCourses}
-              events={upcomingEvents}
-              eventsLoading={upcomingEventsLoading}
-              hasCourseEvents={hasUpcomingCourseEvents}
-              onTabChange={handleTabChange}
-              onViewCurrentCourses={openCurrentCourses}
-              onOpenBriefCard={handleOpenBriefCard}
-              onImportTranscript={openTranscriptUpload}
-              onImportSyllabus={openSyllabusUpload}
-            />
-          )}
-
-          {activeTab === 'chat' && (
-            <AdvisorCards
-              userId={user?.id}
-              cards={advisorCards}
-              isLoading={cardsLoading}
-              isGenerating={cardsGenerating}
-              isAsking={isAsking}
-              generatedAt={cardsGeneratedAt}
-              onRefresh={() => refreshAdvisorCards(true)}
-              onSaveToggle={handleCardSaveToggle}
-              onPinToggle={handlePinToggle}
-              pinnedCardId={pinnedCard?.id || null}
-              onReorder={handleCardsReorder}
-              onChipClick={handleCardChipClick}
-              onFollowUp={handleCardChipClick}
-              onDeleteCard={handleDeleteCard}
-              freeformInput={freeformInput}
-              setFreeformInput={setFreeformInput}
-              onFreeformSubmit={handleFreeformSubmit}
-              openCardId={briefOpenCardId}
-              onOpenedCard={() => setBriefOpenCardId(null)}
-            />
-          )}
-
-          {activeTab === 'clubs' && (
-            <Suspense fallback={<TabLoader />}>
-              <ClubsTab
-                key="clubs-tab-v2"
-                user={user}
-                profile={profile}
-                authFlags={authFlags}
-                onClubEventsChange={setClubCalendarEvents}
-              />
-            </Suspense>
-          )}
-
-          {activeTab === 'courses' && (
-            <CoursesView
-              defaultSubTab={coursesDeepLink?.subTab ?? 'course_search'}
-              defaultSavedTab={coursesDeepLink?.savedTab ?? 'saved'}
-              favorites={favorites}
-              completedCourses={completedCourses}
-              completedCoursesMap={completedCoursesMap}
-              currentCourses={currentCourses}
-              currentCoursesMap={currentCoursesMap}
-              favoritesMap={favoritesMap}
-              onToggleFavorite={handleToggleFavorite}
-              onToggleCompleted={handleToggleCompleted}
-              onToggleCurrent={handleToggleCurrent}
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
-              searchResults={searchResults}
-              isSearching={isSearching}
-              searchError={searchError}
-              searchCorrection={searchCorrection}
-              hasSearched={hasSearched}
-              sortBy={sortBy}
-              setSortBy={setSortBy}
-              sortCourses={sortCourses}
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-              availableTerms={availableTerms}
-              isFavorited={isFavorited}
-              isCompleted={isCompleted}
-              isCurrent={isCurrent}
-              handleCourseSearch={handleCourseSearch}
-              handleToggleFavorite={handleToggleFavorite}
-              handleToggleCompleted={handleToggleCompleted}
-              handleToggleCurrent={handleToggleCurrent}
-              gpaToLetterGrade={gpaToLetterGrade}
-            />
-          )}
-
-          {activeTab === 'favorites' && (
-            <Suspense fallback={<TabLoader />}>
-              <DegreePlanningView
-                favorites={favorites}
-                completedCourses={completedCourses}
-                completedCoursesMap={completedCoursesMap}
-                currentCourses={currentCourses}
-                currentCoursesMap={currentCoursesMap}
-                favoritesMap={favoritesMap}
-                profile={profile}
-                authFlags={authFlags}
-                onToggleFavorite={handleToggleFavorite}
-                onToggleCompleted={handleToggleCompleted}
-                onToggleCurrent={handleToggleCurrent}
-                onImportTranscript={openTranscriptUpload}
-                onImportSyllabus={openSyllabusUpload}
-                onCourseClick={undefined}
-              />
-            </Suspense>
-          )}
-
-          {activeTab === 'forum' && (
-            <Suspense fallback={<TabLoader />}>
-              <Forum />
-            </Suspense>
-          )}
-
-          {activeTab === 'calendar' && (
-            <Suspense fallback={<TabLoader />}>
-              <CalendarTab user={user} authFlags={authFlags} clubEvents={clubCalendarEvents} managedClubs={managedClubs} />
-            </Suspense>
-          )}
-
-          {activeTab === 'profile' && (
-            <Suspense fallback={<TabLoader />}>
-              <ProfileTab
-                user={user}
-                profile={profile}
-                updateProfile={updateProfile}
-                signOut={handleSignOut}
-                profileImage={profileImage}
-                isUploadingImage={isUploadingImage}
-                fileInputRef={fileInputRef}
-                handleImageUpload={handleImageUpload}
-                handleAvatarClick={handleAvatarClick}
-                completedCourses={completedCourses}
-                favorites={favorites}
-                chatHistory={[]}
-                onImportTranscript={openTranscriptUpload}
-              />
-            </Suspense>
-          )}
+          <DashboardTabContent
+            onTabChange={handleTabChange}
+            onOpenBriefCard={handleOpenBriefCard}
+            onViewCurrentCourses={openCurrentCourses}
+            onPinToggle={handlePinToggle}
+            pinnedCardId={pinnedCard?.id || null}
+          />
         </div>
       </main>
 
@@ -453,14 +268,21 @@ function DesktopDashboard() {
 }
 
 /**
- * Composition root. Providers wrap the view so that a future <MobileLayout>
- * can be selected here, consuming the exact same data layer.
+ * Picks the layout shell by viewport width. Both shells sit inside the same
+ * providers, so switching between them (rotating a tablet, dragging a desktop
+ * window narrow) preserves all loaded data and the current tab — only the
+ * presentation swaps.
  */
+function DashboardShell() {
+  const { isMobile } = useViewport()
+  return isMobile ? <MobileLayout /> : <DesktopDashboard />
+}
+
 export default function Dashboard() {
   return (
     <DashboardDataProvider>
       <CourseDetailProvider>
-        <DesktopDashboard />
+        <DashboardShell />
       </CourseDetailProvider>
     </DashboardDataProvider>
   )

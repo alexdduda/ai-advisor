@@ -1,0 +1,319 @@
+/* ── Mobile layout shell ────────────────────────────────────────────────
+   Full-screen page + fixed bottom tab bar. All vertical sizing uses dvh so
+   the layout follows the mobile URL bar collapsing/expanding, and every edge
+   respects env(safe-area-inset-*) for notches and the iOS home indicator.
+   index.html already sets viewport-fit=cover, which those insets require. */
+
+.mobile-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  overflow: hidden;
+}
+
+/* ── Top bar ── */
+.mobile-topbar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 52px;
+  padding: 0 16px;
+  padding-top: env(safe-area-inset-top, 0px);
+  height: calc(52px + env(safe-area-inset-top, 0px));
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border-primary, #e5e7eb);
+  position: relative;
+  z-index: 20;
+}
+
+.mobile-topbar-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Scrolling page area ── */
+.mobile-content {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  padding: 1rem;
+  padding-left:  max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+  /* Clear the fixed tab bar so the last element is never trapped under it. */
+  padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 1rem);
+  min-width: 0;
+}
+
+/* ── Bottom tab bar ── */
+.mobile-tabbar {
+  flex: 0 0 auto;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  align-items: stretch;
+  background: var(--bg-primary);
+  border-top: 1px solid var(--border-primary, #e5e7eb);
+  box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.08);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left:   env(safe-area-inset-left, 0px);
+  padding-right:  env(safe-area-inset-right, 0px);
+}
+
+.mobile-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  /* 56px keeps the whole control above the 44px minimum touch target even
+     with the label included. */
+  min-height: 56px;
+  padding: 6px 2px;
+  border: none;
+  background: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s ease;
+}
+
+.mobile-tab-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.mobile-tab-label {
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mobile-tab--active {
+  color: var(--accent-primary, #ed1b2f);
+}
+
+.mobile-tab:active {
+  background: var(--bg-hover, rgba(0, 0, 0, 0.04));
+}
+
+.mobile-tab-badge {
+  position: absolute;
+  top: -5px;
+  right: -8px;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--accent-primary, #ed1b2f);
+  color: #fff;
+  font-size: 0.58rem;
+  font-weight: 700;
+  line-height: 15px;
+  text-align: center;
+}
+
+/* ── More sheet ── */
+.mobile-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  background: rgba(0, 0, 0, 0.45);
+  animation: mobile-sheet-fade 0.18s ease both;
+}
+
+.mobile-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 130;
+  max-height: 85dvh;
+  overflow-y: auto;
+  background: var(--bg-primary);
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.22);
+  padding: 8px 12px calc(16px + env(safe-area-inset-bottom, 0px));
+  animation: mobile-sheet-up 0.22s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes mobile-sheet-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+@keyframes mobile-sheet-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-sheet,
+  .mobile-sheet-overlay { animation: none; }
+}
+
+.mobile-sheet-handle {
+  width: 36px;
+  height: 4px;
+  margin: 4px auto 12px;
+  border-radius: 999px;
+  background: var(--border-primary, #d1d5db);
+}
+
+.mobile-sheet-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 8px 14px;
+}
+
+.mobile-sheet-avatar {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--accent-primary, #ed1b2f);
+  color: #fff;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.mobile-sheet-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mobile-sheet-userinfo { min-width: 0; }
+.mobile-sheet-username {
+  font-weight: 700;
+  font-size: 0.95rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mobile-sheet-useremail {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mobile-sheet-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.mobile-sheet-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 76px;
+  padding: 12px 6px;
+  border: 1px solid var(--border-primary, #e5e7eb);
+  border-radius: 12px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-sheet-item--active {
+  border-color: var(--accent-primary, #ed1b2f);
+  color: var(--accent-primary, #ed1b2f);
+}
+
+.mobile-sheet-item .mobile-sheet-icon { font-size: 1.25rem; }
+
+.mobile-sheet-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 46px;
+  padding: 10px 8px;
+  border: none;
+  border-radius: 10px;
+  background: none;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-sheet-row:active { background: var(--bg-hover, rgba(0, 0, 0, 0.05)); }
+.mobile-sheet-row--danger { color: var(--accent-primary, #ed1b2f); }
+
+.mobile-sheet-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  flex-shrink: 0;
+  color: inherit;
+}
+
+.mobile-sheet-divider {
+  height: 1px;
+  margin: 10px 4px;
+  background: var(--border-primary, #e5e7eb);
+}
+
+.mobile-sheet-footer {
+  padding: 12px 8px 4px;
+  text-align: center;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+}
+
+/* ── Dark theme ── */
+[data-theme="dark"] .mobile-topbar,
+[data-theme="dark"] .mobile-tabbar,
+[data-theme="dark"] .mobile-sheet {
+  background: var(--bg-primary);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+[data-theme="dark"] .mobile-tabbar { box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.5); }
+[data-theme="dark"] .mobile-sheet-item { border-color: rgba(255, 255, 255, 0.1); }
+[data-theme="dark"] .mobile-sheet-divider { background: rgba(255, 255, 255, 0.08); }
+[data-theme="dark"] .mobile-sheet-handle { background: rgba(255, 255, 255, 0.22); }
+[data-theme="dark"] .mobile-tab:active,
+[data-theme="dark"] .mobile-sheet-row:active { background: rgba(255, 255, 255, 0.06); }
+
+/* The desktop sidebar and its mobile bottom-rail variant must never render
+   alongside this shell — MobileLayout replaces them wholesale. */
+.mobile-shell ~ .sidebar,
+.mobile-shell ~ .mini-rail { display: none !important; }
