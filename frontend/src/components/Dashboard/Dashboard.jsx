@@ -109,7 +109,7 @@ export default function Dashboard() {
       forum:     'nav.forum',
       profile:   'nav.profile',
     }[activeTab]
-    document.title = tabNameKey ? `${t(tabNameKey)} — Symbolos` : 'Symbolos'
+    document.title = tabNameKey ? `${t(tabNameKey)} · Symbolos` : 'Symbolos'
     return () => { document.title = 'Symbolos' }
   }, [activeTab, t])
 
@@ -138,6 +138,18 @@ export default function Dashboard() {
   useEffect(() => {
     if (showTutorial) setSidebarOpen(true)
   }, [showTutorial])
+
+  // Listen for `restart-tour` (fired by the "Replay tour" button in Settings)
+  // — clear the completion flag and start the walkthrough over from Home.
+  useEffect(() => {
+    const handler = () => {
+      try { localStorage.removeItem(tourKey) } catch { /* ignore */ }
+      setActiveTab('home')
+      setShowTutorial(true)
+    }
+    window.addEventListener('restart-tour', handler)
+    return () => window.removeEventListener('restart-tour', handler)
+  }, [tourKey])
   const [profileImage, setProfileImage] = useState(profile?.profile_image || null)
   const [isUploadingImage, setIsUploadingImage] = useState(false)
   const fileInputRef = useRef(null)
@@ -250,10 +262,6 @@ export default function Dashboard() {
     switch (sortType) {
       case 'rating-high':   return sorted.sort((a, b) => (b.rmp_rating || 0) - (a.rmp_rating || 0))
       case 'rating-low':    return sorted.sort((a, b) => (a.rmp_rating || 0) - (b.rmp_rating || 0))
-      case 'name-az':       return sorted.sort((a, b) => `${a.subject} ${a.catalog}`.localeCompare(`${b.subject} ${b.catalog}`))
-      case 'name-za':       return sorted.sort((a, b) => `${b.subject} ${b.catalog}`.localeCompare(`${a.subject} ${a.catalog}`))
-      case 'instructor-az': return sorted.sort((a, b) => (a.instructor || 'ZZZ').localeCompare(b.instructor || 'ZZZ'))
-      case 'instructor-za': return sorted.sort((a, b) => (b.instructor || '').localeCompare(a.instructor || ''))
       case 'number':        return sorted.sort((a, b) => (parseInt(a.catalog, 10) || 0) - (parseInt(b.catalog, 10) || 0))
       // Highest average grade with the semester's specific professor,
       // historically. Courses where we know that prof's history rank first
@@ -956,6 +964,7 @@ export default function Dashboard() {
               profile={profile}
               advisorCards={advisorCards}
               cardsLoading={cardsLoading}
+              cardsGenerating={cardsGenerating}
               currentCourses={currentCourses}
               completedCourses={completedCourses}
               events={upcomingEvents}

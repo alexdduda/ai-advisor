@@ -1,5 +1,5 @@
 import React from 'react'
-import { FaTimes, FaBell, FaCalendarAlt, FaEdit, FaExternalLinkAlt } from 'react-icons/fa'
+import { FaTimes, FaBell, FaCalendarAlt, FaEdit, FaExternalLinkAlt, FaMapMarkerAlt } from 'react-icons/fa'
 import { L, daysUntil } from './calendarConstants'
 import { googleCalendarUrl } from './calendarUtils'
 import { EyeOffIcon } from './BulkDeleteModal'
@@ -32,7 +32,7 @@ export default function EventPopup({ event, onClose, onEdit, canEdit, onHide, t,
           </span>
         </div>
         {event.location && (
-          <div className="cal-event-popup-location">📍 {event.location}</div>
+          <div className="cal-event-popup-location"><FaMapMarkerAlt size={10} /> {event.location}</div>
         )}
         {event.join_link && (
           <div className="cal-event-popup-location">

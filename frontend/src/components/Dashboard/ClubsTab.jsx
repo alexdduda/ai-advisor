@@ -6,7 +6,7 @@ import {
   FaChevronDown, FaStar, FaCog, FaCrown,
   FaBook, FaPalette, FaGraduationCap,
   FaLock, FaGlobe, FaEdit, FaUserPlus, FaUserCheck, FaUserTimes,
-  FaExclamationTriangle, FaFire, FaGem, FaShare,
+  FaExclamationTriangle, FaFire, FaGem, FaShare, FaMapMarkerAlt,
 } from 'react-icons/fa'
 import { useLanguage } from '../../contexts/PreferencesContext'
 import { useAuth } from '../../contexts/AuthContext'
@@ -15,14 +15,13 @@ import { readCache, writeCache } from '../../lib/userDataCache'
 import Breadcrumb from '../ui/Breadcrumb'
 import './ClubsTab.css'
 
-// Colors come from theme.css --club-cat-* tokens (light + dark variants),
-// so category chips/badges render correctly in both themes. `var(...)`
-// strings are safe in inline styles — do NOT concatenate alpha suffixes
-// onto them (use the -bg token for tints instead).
-const catVars = (slug) => ({
-  color:  `var(--club-cat-${slug})`,
-  bg:     `var(--club-cat-${slug}-bg)`,
-  border: `var(--club-cat-${slug}-border)`,
+// Every category uses the same neutral gray — no per-category color, and no
+// red (red is reserved for active/hover states elsewhere in the UI). The
+// category is still distinguished by its icon + label.
+const catVars = () => ({
+  color:  'var(--text-secondary)',
+  bg:     'var(--bg-tertiary)',
+  border: 'var(--border-secondary)',
 })
 
 const CATEGORY_META = {
@@ -324,7 +323,7 @@ function MembersSection({ clubId, refreshKey }) {
   )
 }
 
-function ClubDetailDrawer({ club, liveClub, joined, calSynced, onToggleCalendar, onClose, clubLoading, t, isAdmin, userId, isSubscribed, onToggleSubscribe, onLogoChanged, isMcGill, onManage, managedClubIds }) {
+function ClubDetailDrawer({ club, liveClub, joined, calSynced, onToggleCalendar, onClose, clubLoading, t, isAdmin, userId, isSubscribed, onToggleSubscribe, onLogoChanged, isMcGill, onManage }) {
   const [memberRefreshKey, setMemberRefreshKey] = useState(0)
   const [activity, setActivity] = useState(null)        // #11 — recent announcements/events
   const [facultyStats, setFacultyStats] = useState(null) // #12 — faculty social proof
@@ -344,10 +343,7 @@ function ClubDetailDrawer({ club, liveClub, joined, calSynced, onToggleCalendar,
   const display = liveClub ? { ...club, ...liveClub } : club
   const meta = getCat(display.category)
   const isLoading = clubLoading[club.id] ?? false
-  // Manager access covers the creator, app-level admins, and anyone added
-  // via the manager-invite flow (surfaced to us as managedClubIds, the same
-  // owned+admin club id set the "My Clubs" list uses to grant manage access).
-  const canManage = isAdmin || (userId && display.created_by === userId) || (managedClubIds?.has(display.id) ?? false)
+  const isOwnerOrAdmin = isAdmin || (userId && display.created_by === userId)
   const displayLogo = logoOptimistic || display.logo_url
 
   const handleDrawerLogoPick = () => drawerLogoInputRef.current?.click()
@@ -367,6 +363,7 @@ function ClubDetailDrawer({ club, liveClub, joined, calSynced, onToggleCalendar,
     }
   }
   const isPrivate = display.is_private ?? false
+  const canManage = isAdmin || display.created_by === userId
 
   return (
     <div className="club-drawer-overlay" onClick={onClose}>
@@ -392,10 +389,10 @@ function ClubDetailDrawer({ club, liveClub, joined, calSynced, onToggleCalendar,
               // not-owned clubs.
               calSynced={calSynced && !(userId && display.created_by === userId)}
               logoUrl={displayLogo}
-              editable={canManage && !logoBusy}
+              editable={isOwnerOrAdmin && !logoBusy}
               onEditClick={handleDrawerLogoPick}
             />
-            {canManage && (
+            {isOwnerOrAdmin && (
               <input
                 ref={drawerLogoInputRef}
                 type="file"
@@ -688,16 +685,13 @@ function ClubDetailDrawer({ club, liveClub, joined, calSynced, onToggleCalendar,
   )
 }
 
-function ClubCard({ club, joined, calSynced, isSubscribed, onLeave, onToggleCalendar, onToggleSubscribe, onOpen, onDelete, onEdit, onManage, onLogoChanged, isAdmin, clubLoading, t, userId, isFeatured = false, isMcGill = false, managedClubIds }) {
+function ClubCard({ club, joined, calSynced, isSubscribed, onLeave, onToggleCalendar, onToggleSubscribe, onOpen, onDelete, onEdit, onManage, onLogoChanged, isAdmin, clubLoading, t, userId, isFeatured = false, isMcGill = false }) {
   const meta = getCat(club.category)
   const isLoading = clubLoading[club.id] ?? false
   // Owner or admin both get full manage privileges — invited managers are
   // surfaced via the _manage_role flag the /created endpoint now returns.
-  // Cards built from the plain `clubs` list (Explore/Trending/For You) never
-  // carry _manage_role, so fall back to the managedClubIds set (derived from
-  // /created, which includes admin-managed clubs too) for those.
   const isOwner   = userId && club.created_by === userId
-  const isManager = isOwner || club._manage_role === 'admin' || !!managedClubIds?.has(club.id)
+  const isManager = isOwner || club._manage_role === 'admin'
 
   // Logo quick-upload (owners only) — click the avatar to swap the picture
   const [logoOptimistic, setLogoOptimistic] = useState(null)
@@ -1110,7 +1104,7 @@ function ClubManageDashboard({ club, onClose, onSave, t }) {
       // their own Clubs tab. They become an admin only on accept.
       await clubsAPI.createManagerRequest(club.id, newManagerEmail.trim())
       setNewManagerEmail('')
-      setManagerSuccess(t('clubs.manage.managerInviteSent') || 'Invite sent — they will see it in their Clubs tab.')
+      setManagerSuccess(t('clubs.manage.managerInviteSent') || 'Invite sent, they will see it in their Clubs tab.')
       setTimeout(() => setManagerSuccess(''), 4000)
     } catch (e) {
       setManagerError(e.message)
@@ -1239,10 +1233,10 @@ function ClubManageDashboard({ club, onClose, onSave, t }) {
                 </div>
               </div>
               <div className="club-manage__quick-info">
-                <p><strong>{t('clubs.fieldCategory')}:</strong> {club.category || '—'}</p>
-                <p><strong>{t('clubs.fieldEmail')}:</strong> {club.contact_email || '—'}</p>
-                <p><strong>{t('clubs.fieldUrl')}:</strong> {club.website_url ? <a href={club.website_url} target="_blank" rel="noopener noreferrer">{club.website_url}</a> : '—'}</p>
-                <p><strong>{t('clubs.fieldSchedule')}:</strong> {club.meeting_schedule || '—'}</p>
+                <p><strong>{t('clubs.fieldCategory')}:</strong> {club.category || '-'}</p>
+                <p><strong>{t('clubs.fieldEmail')}:</strong> {club.contact_email || '-'}</p>
+                <p><strong>{t('clubs.fieldUrl')}:</strong> {club.website_url ? <a href={club.website_url} target="_blank" rel="noopener noreferrer">{club.website_url}</a> : '-'}</p>
+                <p><strong>{t('clubs.fieldSchedule')}:</strong> {club.meeting_schedule || '-'}</p>
                 <p><strong>{t('clubs.fieldVisibility')}:</strong> {club.is_private ? t('clubs.private') : t('clubs.visibilityPublic')}</p>
               </div>
             </div>
@@ -1488,7 +1482,7 @@ function ClubManageDashboard({ club, onClose, onSave, t }) {
                     </div>
                     <div className="club-manage__event-meta">
                       {ev.event_date && <span><FaCalendarAlt size={10} /> {new Date(ev.event_date).toLocaleString()}</span>}
-                      {ev.location && <span>📍 {ev.location}</span>}
+                      {ev.location && <span><FaMapMarkerAlt size={10} /> {ev.location}</span>}
                     </div>
                     {ev.description && <p>{ev.description}</p>}
                     {ev.join_link && <p><a href={ev.join_link} target="_blank" rel="noopener noreferrer" style={{ color: '#1d4ed8', fontSize: '13px' }}>Join Link</a></p>}
@@ -1792,15 +1786,14 @@ export default function ClubsTab({ user, authFlags, onClubEventsChange }) {
   const isMcGill  = authFlags?.is_mcgill_email ?? false
   const [activeView, setActiveView] = useState('explore')
   const [clubs, setClubs] = useState([])
-  const [categories, setCategories] = useState([])
   // SWR-style hydrate from cache for instant first paint
   const [myClubs, setMyClubs]         = useState(() => readCache('my_clubs', user?.id, []))
   const [createdClubs, setCreatedClubs] = useState(() => readCache('created_clubs', user?.id, []))
   const [pendingCounts, setPendingCounts] = useState({})
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState('')
   const [sortMode, setSortMode] = useState('default')
+  const [categoryFilter, setCategoryFilter] = useState('')
   const [loading, setLoading] = useState(false)
   const [myClubsLoading, setMyClubsLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -1838,10 +1831,6 @@ export default function ClubsTab({ user, authFlags, onClubEventsChange }) {
 
   const joinedIds    = useMemo(() => new Set(myClubs.map(m => m.club?.id ?? m.id)), [myClubs])
   const calSyncedIds = useMemo(() => new Set(myClubs.filter(m => m.calendar_synced).map(m => m.club?.id ?? m.id)), [myClubs])
-  // Clubs this user manages (owner or invited admin) — passed to cards/drawer
-  // so manage access carries over everywhere a club can be opened from, not
-  // just the "My Clubs" list.
-  const createdClubIds = useMemo(() => new Set(createdClubs.map(c => c.id)), [createdClubs])
 
   const fetchClubs = useCallback(async (pageNum = 1) => {
     if (pageNum === 1) { setLoading(true); setError(null) }
@@ -1849,7 +1838,7 @@ export default function ClubsTab({ user, authFlags, onClubEventsChange }) {
     try {
       const data = await clubsAPI.getClubs({
         search: debouncedSearch,
-        category: selectedCategory,
+        category: categoryFilter || undefined,
         limit: PAGE_SIZE,
         offset: (pageNum - 1) * PAGE_SIZE,
       })
@@ -1864,7 +1853,7 @@ export default function ClubsTab({ user, authFlags, onClubEventsChange }) {
     } finally {
       if (isMounted.current) { setLoading(false); setLoadingMore(false) }
     }
-  }, [debouncedSearch, selectedCategory])
+  }, [debouncedSearch, categoryFilter])
 
   const fetchMyClubs = useCallback(async () => {
     if (!user?.id) return
@@ -1911,13 +1900,6 @@ export default function ClubsTab({ user, authFlags, onClubEventsChange }) {
     } catch { /* silent */ }
   }, [user?.id, isAdmin])
 
-  const fetchCategories = useCallback(async () => {
-    try {
-      const data = await clubsAPI.getCategories()
-      if (isMounted.current) setCategories(Array.isArray(data) ? data : data.categories ?? [])
-    } catch { /* silent */ }
-  }, [])
-
   const fetchPendingRequests = useCallback(async () => {
     if (!user?.id) return
     try {
@@ -1954,7 +1936,6 @@ export default function ClubsTab({ user, authFlags, onClubEventsChange }) {
   useEffect(() => { setPage(1); fetchClubs(1) }, [fetchClubs])
   useEffect(() => { fetchMyClubs() }, [fetchMyClubs])
   useEffect(() => { fetchCreatedClubs() }, [fetchCreatedClubs])
-  useEffect(() => { fetchCategories() }, [fetchCategories])
   useEffect(() => { fetchPendingRequests() }, [fetchPendingRequests])
   useEffect(() => { fetchManagerInvites() }, [fetchManagerInvites])
 
@@ -2010,8 +1991,8 @@ export default function ClubsTab({ user, authFlags, onClubEventsChange }) {
     try {
       await clubsAPI.leaveClub(user.id, clubId)
       await fetchMyClubs()
-      setClubs(prev => prev.map(c => c.id === clubId ? { ...c, member_count: Math.max(0, (c.member_count ?? 1) - 1) } : c))
-      if (openClub?.id === clubId) setOpenClub(prev => prev ? { ...prev, member_count: Math.max(0, (prev.member_count ?? 1) - 1) } : prev)
+      setClubs(prev => prev.map(c => c.id === clubId ? { ...c, subscriber_count: Math.max(0, (c.subscriber_count ?? 1) - 1) } : c))
+      if (openClub?.id === clubId) setOpenClub(prev => prev ? { ...prev, subscriber_count: Math.max(0, (prev.subscriber_count ?? 1) - 1) } : prev)
     } catch (e) { setError(e.message) }
     finally { setClubBusy(clubId, false) }
   }
@@ -2088,19 +2069,19 @@ export default function ClubsTab({ user, authFlags, onClubEventsChange }) {
 
   const displayClubs = useMemo(() => {
     let list = [...clubs]
-    if (sortMode === 'members') list.sort((a, b) => (b.member_count ?? 0) - (a.member_count ?? 0))
+    if (sortMode === 'members') list.sort((a, b) => (b.subscriber_count ?? 0) - (a.subscriber_count ?? 0))
     if (sortMode === 'name') list.sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''))
     return list
   }, [clubs, sortMode])
 
   // #2/#3 — Curated rows computed from the loaded page of clubs.
-  // Trending = top 5 by member_count; For You = clubs in categories that
+  // Trending = top 5 by subscriber_count; For You = clubs in categories that
   // loosely match the user's major/faculty keywords.
   const trendingClubs = useMemo(() => {
     if (clubs.length < 4) return []
     return [...clubs]
-      .filter(c => c.member_count != null && c.member_count >= 1)
-      .sort((a, b) => (b.member_count ?? 0) - (a.member_count ?? 0))
+      .filter(c => c.subscriber_count != null && c.subscriber_count >= 1)
+      .sort((a, b) => (b.subscriber_count ?? 0) - (a.subscriber_count ?? 0))
       .slice(0, 5)
   }, [clubs])
 
@@ -2181,7 +2162,7 @@ export default function ClubsTab({ user, authFlags, onClubEventsChange }) {
         </button>
       </div>
 
-      <div className="clubs-tabs">
+      <div className="clubs-tabs" data-tour="clubs-tabs">
         <button className={`clubs-tab-btn ${activeView === 'explore' ? 'active' : ''}`} onClick={() => setActiveView('explore')}>
           <FaSearch size={15} /> {t('clubs.tabExplore')}
         </button>
@@ -2210,6 +2191,15 @@ export default function ClubsTab({ user, authFlags, onClubEventsChange }) {
             </div>
             <div className="clubs-sort-wrap">
               <FaChevronDown size={11} />
+              <select className="clubs-sort-select" value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)}>
+                <option value="">{t('clubs.filterTypeAll')}</option>
+                {Object.keys(CATEGORY_META).filter(k => k !== 'Default').map(c => (
+                  <option key={c} value={c}>{t(CATEGORY_I18N_KEY[c] || c) || c}</option>
+                ))}
+              </select>
+            </div>
+            <div className="clubs-sort-wrap">
+              <FaChevronDown size={11} />
               <select className="clubs-sort-select" value={sortMode} onChange={e => setSortMode(e.target.value)}>
                 <option value="default">{t('clubs.sortDefault')}</option>
                 <option value="members">{t('clubs.sortMembers')}</option>
@@ -2218,39 +2208,10 @@ export default function ClubsTab({ user, authFlags, onClubEventsChange }) {
             </div>
           </div>
 
-          {/* #1 — Category pills replace the dropdown. Horizontal-scroll on mobile. */}
-          {categories.length > 0 && (
-            <div className="clubs-cat-bar">
-              <button
-                className={`clubs-cat-pill ${!selectedCategory ? 'active' : ''}`}
-                onClick={() => setSelectedCategory('')}
-              >
-                {t('clubs.filterAll')}
-              </button>
-              {categories.map(cat => {
-                const label = t(CATEGORY_I18N_KEY[cat] || cat) || cat
-                const cmeta = getCat(cat)
-                return (
-                  <button
-                    key={cat}
-                    className={`clubs-cat-pill ${selectedCategory === cat ? 'active' : ''}`}
-                    style={selectedCategory === cat
-                      ? { background: cmeta.color, color: '#fff', borderColor: cmeta.color }
-                      : { borderColor: cmeta.border, color: cmeta.color }}
-                    onClick={() => setSelectedCategory(cat === selectedCategory ? '' : cat)}
-                  >
-                    <span className="clubs-cat-pill__icon">{cmeta.icon}</span>
-                    {label}
-                  </button>
-                )
-              })}
-            </div>
-          )}
-
           {error && <div className="clubs-error">{error}<button onClick={() => setError(null)}><FaTimes size={11} /></button></div>}
 
-          {/* #2/#3 — Curated rows visible only when not actively searching/filtering */}
-          {!loading && !debouncedSearch && !selectedCategory && trendingClubs.length > 0 && (
+          {/* #2/#3 — Curated rows visible only when not actively searching */}
+          {!loading && !debouncedSearch && trendingClubs.length > 0 && (
             <div className="clubs-curated-row">
               <div className="clubs-curated-row__header">
                 <h3 className="clubs-curated-row__title"><FaFire size={13} style={{ color: '#f59e0b' }} /> {t('clubs.trendingTitle') || 'Trending this week'}</h3>
@@ -2280,7 +2241,6 @@ export default function ClubsTab({ user, authFlags, onClubEventsChange }) {
                     clubLoading={clubLoading}
                     userId={user?.id}
                     language={language}
-                    managedClubIds={createdClubIds}
                     t={t}
                   />
                 ))}
@@ -2288,7 +2248,7 @@ export default function ClubsTab({ user, authFlags, onClubEventsChange }) {
             </div>
           )}
 
-          {!loading && !debouncedSearch && !selectedCategory && forYouClubs.length > 0 && (
+          {!loading && !debouncedSearch && forYouClubs.length > 0 && (
             <div className="clubs-curated-row">
               <div className="clubs-curated-row__header">
                 <h3 className="clubs-curated-row__title"><FaGem size={12} style={{ color: 'var(--accent-primary)' }} /> {t('clubs.forYouTitle') || 'For you'}</h3>
@@ -2317,7 +2277,6 @@ export default function ClubsTab({ user, authFlags, onClubEventsChange }) {
                     clubLoading={clubLoading}
                     userId={user?.id}
                     language={language}
-                    managedClubIds={createdClubIds}
                     t={t}
                   />
                 ))}
@@ -2334,21 +2293,17 @@ export default function ClubsTab({ user, authFlags, onClubEventsChange }) {
             // #14 Better empty state with actionable suggestions
             <div className="clubs-empty">
               <div className="clubs-empty__visual"><FaUsers size={52} /></div>
-              <h3>{debouncedSearch || selectedCategory ? (t('clubs.noClubsFound') || 'No clubs match those filters') : t('clubs.noClubsYet')}</h3>
+              <h3>{debouncedSearch ? (t('clubs.noClubsFound') || 'No clubs match those filters') : t('clubs.noClubsYet')}</h3>
               <p>
-                {debouncedSearch && selectedCategory
-                  ? (t('clubs.tryClearFilters') || 'Try a different search term or clear the category filter.')
-                  : debouncedSearch
-                    ? (t('clubs.tryClearSearch') || 'Try a different search term or browse by category above.')
-                    : selectedCategory
-                      ? (t('clubs.tryClearCategory') || 'No clubs in this category yet — clear the filter to see all clubs.')
-                      : t('clubs.noClubsYetDesc')}
+                {debouncedSearch
+                  ? (t('clubs.tryClearSearch') || 'Try a different search term.')
+                  : t('clubs.noClubsYetDesc')}
               </p>
               <div className="clubs-empty__actions">
-                {(debouncedSearch || selectedCategory) && (
+                {debouncedSearch && (
                   <button
                     className="club-action-btn club-action-btn--subscribe"
-                    onClick={() => { setSearch(''); setSelectedCategory('') }}
+                    onClick={() => setSearch('')}
                   >
                     <FaTimes size={11} /> {t('clubs.clearFilters') || 'Clear filters'}
                   </button>
@@ -2362,7 +2317,6 @@ export default function ClubsTab({ user, authFlags, onClubEventsChange }) {
             <>
               <p className="clubs-results-label">
                 <strong>{displayClubs.length}</strong> {displayClubs.length !== 1 ? t('clubs.results').replace('{count}','').trim() : t('clubs.result').replace('{count}','').trim()}
-                {selectedCategory && <> {t('clubs.inCategory')} <em>{t(CATEGORY_I18N_KEY[selectedCategory] || selectedCategory) || selectedCategory}</em></>}
                 {debouncedSearch && <> {t('clubs.matching')} "<em>{debouncedSearch}</em>"</>}
                 {hasMore && <> {t('clubs.showingFirst').replace('{count}', displayClubs.length)}</>}
               </p>
@@ -2389,7 +2343,6 @@ export default function ClubsTab({ user, authFlags, onClubEventsChange }) {
                     isMcGill={isMcGill}
                     clubLoading={clubLoading}
                     userId={user?.id}
-                    managedClubIds={createdClubIds}
                     t={t}
                   />
                 ))}
@@ -2552,7 +2505,6 @@ export default function ClubsTab({ user, authFlags, onClubEventsChange }) {
           userId={user?.id}
           isMcGill={isMcGill}
           onManage={(clubToManage) => { setOpenClub(null); setManagingClub(clubToManage) }}
-          managedClubIds={createdClubIds}
         />
       )}
 

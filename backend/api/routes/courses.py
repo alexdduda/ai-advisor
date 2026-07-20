@@ -350,6 +350,7 @@ async def get_course_details(
     subject: str,
     catalog: str,
     include_ratings: bool = Query(default=True),
+    term: Optional[str] = Query(None, max_length=20),
     _: str = Depends(get_current_user_id),
 ):
     """
@@ -357,6 +358,11 @@ async def get_course_details(
     Uses the get_course_details RPC to return 1 aggregated row instead of
     fetching every historical section row (75+ rows for popular courses).
     MUST be declared after /search and /subjects.
+
+    `term` (e.g. "Fall 2023") is optional and lets a caller ask for the class
+    average as it stood the term a specific student took the course, instead
+    of the RPC's aggregate recent/overall average — used by completed-course
+    detail views. Falls back to the aggregate values when no rows match.
     """
     try:
         supabase = get_supabase()
@@ -398,6 +404,25 @@ async def get_course_details(
             "corequisites":    row.get("corequisites") or None,
             "restrictions":    row.get("restrictions") or None,
         }
+
+        # ── Term-specific class average (e.g. for a completed course's
+        #    detail view, showing the average as it stood when the student
+        #    took it rather than the RPC's aggregate). Falls back silently
+        #    to `average`/`overall_average` above when no rows match. ──
+        clean_term = term.strip() if term else None
+        if clean_term:
+            try:
+                term_rows = (
+                    supabase.table("courses").select('"Class Ave.1"')
+                    .eq("Course", course_code).eq("Term Name", clean_term)
+                    .limit(50).execute().data or []
+                )
+                term_vals = [float(r["Class Ave.1"]) for r in term_rows if r.get("Class Ave.1") is not None]
+                if term_vals:
+                    course_obj["term"] = clean_term
+                    course_obj["term_average"] = round(sum(term_vals) / len(term_vals), 2)
+            except Exception as e:
+                logger.warning(f"term-specific average lookup failed for {course_code}/{clean_term}: {e}")
 
         if include_ratings:
             if row.get("rmp_rating"):

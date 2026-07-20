@@ -2,9 +2,10 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useLanguage } from '../../contexts/PreferencesContext'
 import forumAPI from '../../lib/forumAPI'
+import { coursesAPI } from '../../lib/api'
 import {
-  FaComments, FaThumbsUp, FaReply, FaSearch, FaFire,
-  FaClock, FaStar, FaRegStar, FaPlus, FaTimes, FaChevronDown,
+  FaComments, FaThumbsUp, FaReply, FaSearch,
+  FaStar, FaRegStar, FaBrain, FaPlus, FaTimes, FaChevronDown,
   FaChevronUp, FaBookOpen, FaUsers, FaChalkboardTeacher,
   FaBullhorn, FaCog, FaPaperPlane, FaSpinner,
   FaTag, FaTrash, FaFlag, FaLock,
@@ -28,22 +29,12 @@ const SECTIONS = [
   { key: 'app_feedback', label: 'App Feedback', icon: <FaCog />,              color: '#ed1b2f' },
 ]
 
-const REVIEW_SUBTABS = [
-  { key: 'course_review',    label: 'Courses',    icon: <FaBookOpen />,           color: '#3b82f6' },
-  { key: 'professor_review', label: 'Professors', icon: <FaChalkboardTeacher />, color: '#3b82f6' },
-]
-
-function getSortOptions(t) {
-  return [
-    { key: 'hot', label: t('forum.sortHot'), icon: <FaFire /> },
-    { key: 'new', label: t('forum.sortNew'), icon: <FaClock /> },
-    { key: 'top', label: t('forum.sortTop'), icon: <FaStar /> },
-  ]
-}
-
 // Map an API post category → the section key it belongs to.
+// "review" is the unified course+optional-professor review type (2026-07);
+// course_review/professor_review are the pre-merge categories, kept so
+// existing posts still show up in the Reviews section.
 function categoryToSection(cat) {
-  if (cat === 'course_review' || cat === 'professor_review') return 'reviews'
+  if (cat === 'review' || cat === 'course_review' || cat === 'professor_review') return 'reviews'
   if (cat === 'clubs') return 'clubs'
   if (cat === 'app_feedback') return 'app_feedback'
   return 'general'  // includes legacy: general/courses/study/advice/planning
@@ -73,47 +64,60 @@ function Avatar({ letter, color, size = 32 }) {
   )
 }
 
-// ── Star rating widget ───────────────────────────────────────────
-function StarPicker({ value, onChange, size = 22 }) {
+// ── Rating widgets ────────────────────────────────────────────────
+// Generic 1-5 picker/display parametrized by icon, so the two rating
+// dimensions (overall class rating vs. difficulty) read as visually
+// distinct: stars for class rating, a brain glyph for difficulty.
+function RatingPicker({ value, onChange, size = 22, OnIcon = FaStar, OffIcon = FaRegStar, activeColor }) {
   return (
     <div className="forum-stars forum-stars--picker" role="radiogroup">
-      {[1, 2, 3, 4, 5].map(n => (
-        <button
-          key={n}
-          type="button"
-          className={`forum-star ${n <= value ? 'forum-star--on' : ''}`}
-          onClick={() => onChange(n)}
-          aria-label={`${n} star${n === 1 ? '' : 's'}`}
-        >
-          {n <= value ? <FaStar size={size} /> : <FaRegStar size={size} />}
-        </button>
-      ))}
+      {[1, 2, 3, 4, 5].map(n => {
+        const isOn = n <= value
+        const Icon = isOn ? OnIcon : OffIcon
+        return (
+          <button
+            key={n}
+            type="button"
+            className={`forum-star ${isOn ? 'forum-star--on' : ''}`}
+            style={isOn && activeColor ? { color: activeColor } : undefined}
+            onClick={() => onChange(n)}
+            aria-label={`${n}`}
+          >
+            <Icon size={size} />
+          </button>
+        )
+      })}
     </div>
   )
 }
 
-function StarDisplay({ rating, size = 14 }) {
+function RatingDisplay({ rating, size = 14, OnIcon = FaStar, OffIcon = FaRegStar, activeColor }) {
   if (rating == null) return null
   return (
     <span className="forum-stars">
-      {[1, 2, 3, 4, 5].map(n => (
-        n <= rating
-          ? <FaStar key={n} size={size} className="forum-star forum-star--on" />
-          : <FaRegStar key={n} size={size} className="forum-star" />
-      ))}
+      {[1, 2, 3, 4, 5].map(n => {
+        const isOn = n <= rating
+        const Icon = isOn ? OnIcon : OffIcon
+        return (
+          <Icon key={n} size={size} className={`forum-star ${isOn ? 'forum-star--on' : ''}`}
+            style={isOn && activeColor ? { color: activeColor } : undefined} />
+        )
+      })}
     </span>
   )
 }
 
 // ── New Post Modal ───────────────────────────────────────────────
-function NewPostModal({ onClose, onSubmit, isSubmitting, initialSection, initialReviewSubtab }) {
+function NewPostModal({ onClose, onSubmit, isSubmitting, initialSection }) {
   const { t } = useLanguage()
   const [section, setSection] = useState(initialSection || 'general')
-  const [reviewKind, setReviewKind] = useState(initialReviewSubtab || 'course_review')
 
-  // Review-specific state
-  const [target, setTarget] = useState('')         // course code or professor name
-  const [rating, setRating] = useState(0)
+  // Review-specific state — a review is always a course, professor optional.
+  const [courseCode, setCourseCode] = useState('')
+  const [rating, setRating]         = useState(0)   // overall class rating
+  const [difficulty, setDifficulty] = useState(0)   // independent difficulty rating
+  const [profChoice, setProfChoice] = useState('')  // '' | '__custom__' | a professor name
+  const [customProf, setCustomProf] = useState('')
   const [instructors, setInstructors] = useState({ courses: [], professors: [] })
   const [instructorsLoaded, setInstructorsLoaded] = useState(false)
 
@@ -121,11 +125,8 @@ function NewPostModal({ onClose, onSubmit, isSubmitting, initialSection, initial
   const [title, setTitle] = useState('')
   const [body,  setBody]  = useState('')
   const [tags,  setTags]  = useState('')
-  // For free-typed professor (not in dropdown)
-  const [customProf, setCustomProf] = useState('')
 
   const isReview = section === 'reviews'
-  const reviewCategory = reviewKind  // 'course_review' | 'professor_review'
 
   // Fetch user's instructors when entering reviews tab
   useEffect(() => {
@@ -135,15 +136,19 @@ function NewPostModal({ onClose, onSubmit, isSubmitting, initialSection, initial
       .catch(() => setInstructorsLoaded(true))
   }, [isReview, instructorsLoaded])
 
-  const effectiveTarget = reviewCategory === 'professor_review'
-    ? (target === '__custom__' ? customProf.trim() : target)
-    : target
+  const selectedCourse = instructors.courses?.find(c => c.course_code === courseCode)
+  // Professors this student actually had FOR this course, deduped — a much
+  // tighter, more relevant list than "every professor across every course".
+  const courseProfessors = [...new Set(
+    (selectedCourse?.occurrences || []).map(o => o.professor).filter(Boolean)
+  )]
+  const professorName = profChoice === '__custom__' ? customProf.trim() : profChoice
 
   const canSubmit = (() => {
     if (!title.trim() || !body.trim() || isSubmitting) return false
     if (isReview) {
-      if (!rating) return false
-      if (!effectiveTarget) return false
+      if (!rating || !difficulty) return false
+      if (!courseCode) return false
     }
     return true
   })()
@@ -152,7 +157,7 @@ function NewPostModal({ onClose, onSubmit, isSubmitting, initialSection, initial
     e.preventDefault()
     if (!canSubmit) return
 
-    const category = isReview ? reviewCategory : section
+    const category = isReview ? 'review' : section
     const payload = {
       title: title.trim(),
       body: body.trim(),
@@ -161,24 +166,20 @@ function NewPostModal({ onClose, onSubmit, isSubmitting, initialSection, initial
     }
     if (isReview) {
       payload.rating = rating
-      payload.review_target_type = reviewCategory === 'course_review' ? 'course' : 'professor'
-      payload.review_target_value = effectiveTarget
+      payload.difficulty_rating = difficulty
+      payload.review_target_value = courseCode
+      payload.professor_name = professorName || undefined
     }
     onSubmit(payload)
   }
 
-  // Auto-fill title when reviewing a known target
+  // Auto-fill title when reviewing a known course
   useEffect(() => {
     if (!isReview) return
-    if (effectiveTarget && !title.trim()) {
-      if (reviewCategory === 'course_review') {
-        const c = instructors.courses?.find(x => x.course_code === effectiveTarget)
-        setTitle(c?.course_title ? `${effectiveTarget} — ${c.course_title}` : `${effectiveTarget} review`)
-      } else {
-        setTitle(`${effectiveTarget} review`)
-      }
+    if (courseCode && !title.trim()) {
+      setTitle(selectedCourse?.course_title ? `${courseCode} — ${selectedCourse.course_title}` : `${courseCode} review`)
     }
-  }, [effectiveTarget, isReview, reviewCategory])  // eslint-disable-line react-hooks/exhaustive-deps
+  }, [courseCode, isReview, selectedCourse])  // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="forum-modal-overlay" onClick={onClose}>
@@ -204,71 +205,52 @@ function NewPostModal({ onClose, onSubmit, isSubmitting, initialSection, initial
             </div>
           </div>
 
-          {/* Reviews: sub-tab + target picker + rating */}
+          {/* Reviews: course + optional professor + two rating dimensions */}
           {isReview && (
             <>
               <div className="forum-modal__field">
-                <label className="forum-modal__label">Review type</label>
-                <div className="forum-modal__cat-grid forum-modal__cat-grid--2">
-                  {REVIEW_SUBTABS.map(s => (
-                    <button key={s.key} type="button"
-                      className={`forum-modal__cat-btn ${reviewKind === s.key ? 'active' : ''}`}
-                      style={{ '--cat-color': s.color }}
-                      onClick={() => { setReviewKind(s.key); setTarget('') }}>
-                      {s.icon} {s.label}
-                    </button>
+                <label className="forum-modal__label">{t('forum.reviewCourseLabel')}</label>
+                <select className="forum-modal__input"
+                  value={courseCode} onChange={e => { setCourseCode(e.target.value); setProfChoice('') }}>
+                  <option value="">{t('forum.reviewCoursePlaceholder')}</option>
+                  {(instructors.courses || []).map(c => (
+                    <option key={c.course_code} value={c.course_code}>
+                      {c.course_code}{c.course_title ? ` — ${c.course_title}` : ''}
+                    </option>
                   ))}
-                </div>
+                </select>
+                {!instructorsLoaded && <span className="forum-modal__hint">{t('forum.reviewLoadingCourses')}</span>}
+                {instructorsLoaded && (instructors.courses || []).length === 0 && (
+                  <span className="forum-modal__hint">{t('forum.reviewNoCourses')}</span>
+                )}
               </div>
 
-              {reviewCategory === 'course_review' ? (
-                <div className="forum-modal__field">
-                  <label className="forum-modal__label">Pick a course from your transcript</label>
-                  <select className="forum-modal__input"
-                    value={target} onChange={e => setTarget(e.target.value)}>
-                    <option value="">— choose a course —</option>
-                    {(instructors.courses || []).map(c => (
-                      <option key={c.course_code} value={c.course_code}>
-                        {c.course_code}{c.course_title ? ` — ${c.course_title}` : ''}
-                      </option>
-                    ))}
-                  </select>
-                  {!instructorsLoaded && <span className="forum-modal__hint">Loading your courses…</span>}
-                  {instructorsLoaded && (instructors.courses || []).length === 0 && (
-                    <span className="forum-modal__hint">No courses yet — import your transcript to enable course reviews.</span>
-                  )}
-                </div>
-              ) : (
-                <div className="forum-modal__field">
-                  <label className="forum-modal__label">Pick a professor you've had</label>
-                  <select className="forum-modal__input"
-                    value={target} onChange={e => setTarget(e.target.value)}>
-                    <option value="">— choose a professor —</option>
-                    {(instructors.professors || []).map(p => (
-                      <option key={p.name} value={p.name}>
-                        {p.name}{p.courses?.length ? ` (${p.courses.map(c => c.course_code).join(', ')})` : ''}
-                      </option>
-                    ))}
-                    <option value="__custom__">+ Type a different name…</option>
-                  </select>
-                  {target === '__custom__' && (
-                    <input className="forum-modal__input" style={{ marginTop: 8 }}
-                      placeholder="Professor name (e.g. Joseph Vybihal)"
-                      value={customProf} onChange={e => setCustomProf(e.target.value)}
-                      maxLength={120} />
-                  )}
-                  {!instructorsLoaded && <span className="forum-modal__hint">Loading your professors…</span>}
-                  {instructorsLoaded && (instructors.professors || []).length === 0 && target !== '__custom__' && (
-                    <span className="forum-modal__hint">
-                      No professors saved yet — pick "Type a different name" above, or add professor names to your completed courses in Degree Planning.
-                    </span>
-                  )}
-                </div>
-              )}
+              <div className="forum-modal__field">
+                <label className="forum-modal__label">
+                  {t('forum.reviewProfessorLabel')} <span className="forum-modal__optional">({t('forum.optional')})</span>
+                </label>
+                <select className="forum-modal__input"
+                  value={profChoice} onChange={e => setProfChoice(e.target.value)}>
+                  <option value="">{t('forum.reviewProfessorNone')}</option>
+                  {courseProfessors.map(name => <option key={name} value={name}>{name}</option>)}
+                  <option value="__custom__">{t('forum.reviewProfessorCustom')}</option>
+                </select>
+                {profChoice === '__custom__' && (
+                  <input className="forum-modal__input" style={{ marginTop: 8 }}
+                    placeholder={t('forum.reviewProfessorPlaceholder')}
+                    value={customProf} onChange={e => setCustomProf(e.target.value)}
+                    maxLength={120} />
+                )}
+              </div>
 
               <div className="forum-modal__field">
-                <label className="forum-modal__label">Rating <span style={{ color: '#ef4444' }}>*</span></label>
-                <StarPicker value={rating} onChange={setRating} />
+                <label className="forum-modal__label">{t('forum.reviewClassRatingLabel')} <span style={{ color: '#ef4444' }}>*</span></label>
+                <RatingPicker value={rating} onChange={setRating} OnIcon={FaStar} OffIcon={FaRegStar} />
+              </div>
+
+              <div className="forum-modal__field">
+                <label className="forum-modal__label">{t('forum.reviewDifficultyLabel')} <span style={{ color: '#ef4444' }}>*</span></label>
+                <RatingPicker value={difficulty} onChange={setDifficulty} OnIcon={FaBrain} OffIcon={FaBrain} activeColor="#7c3aed" />
               </div>
             </>
           )}
@@ -354,12 +336,10 @@ function PostCard({ post, currentUserId, myName, myColor, myProgramInfo, onLike,
   const [liked, setLiked]                 = useState(post.liked ?? false)
 
   const isOwn = post.user_id === currentUserId
-  const isReview = post.category === 'course_review' || post.category === 'professor_review'
+  const isReview = post.category === 'review' || post.category === 'course_review' || post.category === 'professor_review'
 
   // Build a section badge for the post
-  const section = SECTIONS.find(s => s.key === categoryToSection(post.category)) || SECTIONS[2]
-  const reviewSub = isReview ? REVIEW_SUBTABS.find(r => r.key === post.category) : null
-  const badge = reviewSub || section
+  const badge = SECTIONS.find(s => s.key === categoryToSection(post.category)) || SECTIONS[2]
 
   const handleToggleExpand = async () => {
     const next = !expanded
@@ -466,10 +446,18 @@ function PostCard({ post, currentUserId, myName, myColor, myProgramInfo, onLike,
       {isReview && (
         <div className="forum-review-strip">
           <span className="forum-review-strip__target">
-            {post.category === 'course_review' ? <FaBookOpen /> : <FaChalkboardTeacher />}
+            {post.category === 'professor_review' ? <FaChalkboardTeacher /> : <FaBookOpen />}
             {post.review_target_value}
           </span>
-          <StarDisplay rating={post.rating} size={14} />
+          {post.professor_name && (
+            <span className="forum-review-strip__prof">
+              <FaChalkboardTeacher size={11} /> {post.professor_name}
+            </span>
+          )}
+          <RatingDisplay rating={post.rating} size={14} />
+          {post.difficulty_rating != null && (
+            <RatingDisplay rating={post.difficulty_rating} size={14} OnIcon={FaBrain} OffIcon={FaBrain} activeColor="#7c3aed" />
+          )}
         </div>
       )}
 
@@ -552,21 +540,23 @@ export default function Forum() {
   const { t } = useLanguage()
   const isMcGill = authFlags?.is_mcgill_email ?? false
 
-  const SORT_OPTIONS = getSortOptions(t)
-
   const [posts, setPosts]             = useState([])
   const [loading, setLoading]         = useState(true)
   const [error, setError]             = useState(null)
   // Top-level section: reviews | clubs | general | app_feedback
   const [activeSection, setActiveSection] = useState('reviews')
-  // Within Reviews: course_review | professor_review
-  const [reviewSubtab, setReviewSubtab] = useState('course_review')
-  const [sortMode, setSortMode]       = useState('hot')
   const [search, setSearch]           = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [subjectFilter, setSubjectFilter] = useState('')
+  const [subjects, setSubjects]       = useState([])
   const [showNewPost, setShowNewPost] = useState(false)
   const [isPosting, setIsPosting]     = useState(false)
   const debounceRef = useRef(null)
+
+  // Subject filter only applies to reviews — fetch the canonical list once.
+  useEffect(() => {
+    coursesAPI.getSubjects().then(data => setSubjects(data.subjects || [])).catch(() => {})
+  }, [])
 
   const myName   = profile?.username || user?.email?.split('@')[0] || 'student'
   const myColor  = '#ed1b2f'
@@ -595,15 +585,19 @@ export default function Forum() {
     return () => clearTimeout(debounceRef.current)
   }, [search])
 
-  // Which API category to request for the active section
-  const apiCategory = activeSection === 'reviews' ? reviewSubtab : activeSection
+  // Which API category to request for the active section. "review" fetches
+  // the merged reviews feed (unified posts + legacy course_review/
+  // professor_review posts) — see forum.py list_posts.
+  const apiCategory = activeSection === 'reviews' ? 'review' : activeSection
 
   const fetchPosts = useCallback(async () => {
     setLoading(true); setError(null)
     try {
+      // No sort param: the backend's default ranking (semester-aware
+      // upvotes) is the only option now — there's no user-facing toggle.
       const data = await forumAPI.getPosts({
         category: apiCategory,
-        sort: sortMode,
+        subject: activeSection === 'reviews' ? (subjectFilter || undefined) : undefined,
         search: debouncedSearch || undefined,
         limit: 50,
       })
@@ -614,7 +608,7 @@ export default function Forum() {
     } finally {
       setLoading(false)
     }
-  }, [apiCategory, sortMode, debouncedSearch, t])
+  }, [apiCategory, activeSection, subjectFilter, debouncedSearch, t])
 
   useEffect(() => { fetchPosts() }, [fetchPosts])
 
@@ -681,7 +675,7 @@ export default function Forum() {
       </div>
 
       {/* Section tabs */}
-      <div className="forum-section-bar">
+      <div className="forum-section-bar" data-tour="forum-sections">
         {SECTIONS.map(s => (
           <button key={s.key}
             className={`forum-section-btn ${activeSection === s.key ? 'active' : ''}`}
@@ -692,51 +686,36 @@ export default function Forum() {
         ))}
       </div>
 
-      {/* Reviews sub-tabs */}
+      {/* Reviews: link-out banner to mcgill.courses for broader review coverage */}
       {activeSection === 'reviews' && (
-        <>
-          <div className="forum-subtab-bar">
-            {REVIEW_SUBTABS.map(s => (
-              <button key={s.key}
-                className={`forum-subtab-btn ${reviewSubtab === s.key ? 'active' : ''}`}
-                style={{ '--cat-color': s.color }}
-                onClick={() => setReviewSubtab(s.key)}>
-                {s.icon} <span>{s.label}</span>
-              </button>
-            ))}
-          </div>
-
-          {/* Link-out banner: send users to mcgill.courses for broader review coverage */}
-          <a
-            className="forum-linkout-banner"
-            href="https://mcgill.courses"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <FaBookOpen className="forum-linkout-banner__icon" />
-            <span className="forum-linkout-banner__text">
-              <strong>Want more reviews?</strong> Browse student-written course & professor reviews on <u>mcgill.courses</u> ↗
-            </span>
-          </a>
-        </>
+        <a
+          className="forum-linkout-banner"
+          href="https://mcgill.courses"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <FaBookOpen className="forum-linkout-banner__icon" />
+          <span className="forum-linkout-banner__text">
+            <strong>Want more reviews?</strong> Browse student-written course & professor reviews on <u>mcgill.courses</u> ↗
+          </span>
+        </a>
       )}
 
       {/* Toolbar */}
       <div className="forum-toolbar">
         <div className="forum-search-wrap">
           <FaSearch className="forum-search-ico" />
-          <input className="forum-search" placeholder={t('forum.searchPlaceholder')}
+          <input className="forum-search"
+            placeholder={activeSection === 'reviews' ? t('forum.searchPlaceholderReviews') : t('forum.searchPlaceholder')}
             value={search} onChange={e => setSearch(e.target.value)} />
           {search && <button className="forum-search-clear" onClick={() => setSearch('')}><FaTimes size={11} /></button>}
         </div>
-        <div className="forum-sort">
-          {SORT_OPTIONS.map(s => (
-            <button key={s.key} className={`forum-sort-btn ${sortMode === s.key ? 'active' : ''}`}
-              onClick={() => setSortMode(s.key)}>
-              {s.icon} {s.label}
-            </button>
-          ))}
-        </div>
+        {activeSection === 'reviews' && subjects.length > 0 && (
+          <select className="forum-subject-filter" value={subjectFilter} onChange={e => setSubjectFilter(e.target.value)}>
+            <option value="">{t('forum.allSubjects')}</option>
+            {subjects.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
+        )}
       </div>
 
       {/* Content */}
@@ -754,11 +733,11 @@ export default function Forum() {
             {debouncedSearch
               ? t('forum.noPostsFiltered')
               : activeSection === 'reviews'
-                ? `No ${reviewSubtab === 'course_review' ? 'course' : 'professor'} reviews yet — be the first!`
+                ? t('forum.noReviewsYet')
                 : activeSection === 'clubs'
                   ? 'No club discussions yet.'
                   : activeSection === 'app_feedback'
-                    ? 'No app feedback yet — share what could be better.'
+                    ? 'No app feedback yet, share what could be better.'
                     : t('forum.noPostsYet')}
           </p>
           {isMcGill ? (
@@ -789,7 +768,6 @@ export default function Forum() {
           onSubmit={handleCreatePost}
           isSubmitting={isPosting}
           initialSection={activeSection}
-          initialReviewSubtab={reviewSubtab}
         />
       )}
     </div>

@@ -172,42 +172,21 @@
   color: var(--text-secondary);
 }
 
-/* ── Sort ────────────────────────────────────────────────────── */
-.forum-sort {
-  display: flex;
-  gap: 4px;
-  background: var(--bg-secondary);
+/* ── Subject filter (Reviews only) ──────────────────────────── */
+.forum-subject-filter {
+  padding: 9px 32px 9px 12px;
   border: 1.5px solid var(--border-primary);
   border-radius: 10px;
-  padding: 4px;
-}
-
-.forum-sort-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 6px 12px;
-  border: none;
-  border-radius: 7px;
-  background: transparent;
-  color: var(--text-secondary);
-  font-size: 0.82rem;
-  font-weight: 600;
-  cursor: pointer;
-  font-family: inherit;
-  transition: all 0.15s;
-  white-space: nowrap;
-}
-
-.forum-sort-btn:hover {
-  background: var(--bg-hover);
+  background: var(--bg-secondary);
   color: var(--text-primary);
+  font-size: 0.85rem;
+  font-family: inherit;
+  cursor: pointer;
 }
 
-.forum-sort-btn.active {
-  background: var(--bg-primary);
-  color: var(--accent-primary, #ed1b2f);
-  box-shadow: var(--shadow-sm);
+.forum-subject-filter:focus {
+  outline: none;
+  border-color: var(--accent-primary, #ed1b2f);
 }
 
 /* ── Category Chips ──────────────────────────────────────────── */
@@ -866,10 +845,6 @@
     align-items: stretch;
   }
 
-  .forum-sort {
-    align-self: flex-start;
-  }
-
   .forum-modal__cat-grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -941,38 +916,6 @@
 }
 .forum-section-btn.active svg { color: #fff; }
 
-/* ── Reviews sub-tab bar ───────────────────────────────────────── */
-.forum-subtab-bar {
-  display: flex;
-  gap: 4px;
-  padding: 4px;
-  margin: 0 0 10px;
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 10px;
-  max-width: 320px;
-}
-.forum-subtab-btn {
-  flex: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 7px 10px;
-  background: transparent;
-  color: var(--text-secondary);
-  border: none;
-  border-radius: 7px;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-}
-.forum-subtab-btn:hover { color: var(--text-primary); }
-.forum-subtab-btn.active {
-  background: var(--cat-color, var(--accent-primary));
-  color: #fff;
-}
 
 /* ── Star rating widget ─────────────────────────────────────────── */
 .forum-stars {
@@ -1003,8 +946,8 @@
 .forum-review-strip {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 10px 16px;
   padding: 8px 14px;
   margin: 0 0 6px;
   background: rgba(245, 158, 11, 0.08);
@@ -1021,9 +964,11 @@
 }
 .forum-review-strip__target svg { color: var(--tab-forum-accent); }
 
-/* ── 2-column grid for review sub-type ─────────────────────────── */
-.forum-modal__cat-grid--2 {
-  grid-template-columns: 1fr 1fr;
+.forum-review-strip__prof {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-secondary);
 }
 
 .forum-modal__hint {

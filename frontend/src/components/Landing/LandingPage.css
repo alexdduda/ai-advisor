@@ -5,9 +5,9 @@
    ────────────────────────────────────────────────────────────── */
 
 .landing-root {
-  /* Landing page is locked to a single LIGHT cream appearance regardless of
-     the user's dark/light theme preference. All landing styles use the
-     --land-* variables (hex values, not theme tokens) so they never shift. */
+  /* All landing styles use the --land-* variables (hex values, not theme
+     tokens) so the palette is self-contained. Light values here; the dark
+     variant is defined below under [data-theme="dark"] .landing-root. */
   --land-bg:        #f5f0e6;
   --land-bg-alt:    #ebe4d4;
   --land-fg:        #1a1a1a;
@@ -15,15 +15,31 @@
   --land-accent:    #ed1b2f;
   --land-accent-dk: #b01b2e;
   --land-border:    rgba(0, 0, 0, 0.08);
+  --land-shot-bg:   #ffffff;
+  --land-controls-bg: rgba(255, 255, 255, 0.85);
+  --land-controls-border: rgba(0, 0, 0, 0.12);
+  --land-controls-fg: #1a1a1a;
 
   position: relative;
   background: var(--land-bg);
   color: var(--land-fg);
   min-height: 100vh;
   overflow-x: hidden;
-  /* Force light color-scheme — this affects form controls, scrollbars, and
-     anything else the browser themes based on the page's stated scheme. */
   color-scheme: light;
+}
+[data-theme="dark"] .landing-root {
+  --land-bg:        #0a0c10;
+  --land-bg-alt:    #14171d;
+  --land-fg:        #e8eaed;
+  --land-fg-mute:   #b4bac4;
+  --land-accent:    #ed1b2f;
+  --land-accent-dk: #b01623;
+  --land-border:    rgba(255, 255, 255, 0.08);
+  --land-shot-bg:   #14171d;
+  --land-controls-bg: rgba(20, 23, 29, 0.85);
+  --land-controls-border: rgba(255, 255, 255, 0.14);
+  --land-controls-fg: #e8eaed;
+  color-scheme: dark;
 }
 .landing-root * { box-sizing: border-box; }
 
@@ -55,22 +71,30 @@ body:has(.landing-root),
   margin: 0 !important;
   padding: 0 !important;
 }
+html[data-theme="dark"][data-landing="true"],
+body[data-theme="dark"][data-landing="true"],
+html[data-theme="dark"]:has(.landing-root),
+body[data-theme="dark"]:has(.landing-root),
+html[data-theme="dark"] #root:has(.landing-root) {
+  background: #0a0c10 !important;
+  color-scheme: dark !important;
+}
 
-/* Hard-stop: even if the user's theme is "dark" anywhere up the tree,
-   nothing inside .landing-root should ever read a dark token. We force
-   the dashboard-era theme variables back to their light values just
-   inside the landing root, so any stray `var(--bg-primary)` etc.
-   referenced by a shared component resolves to the cream palette. */
+/* Nothing inside .landing-root should read the dashboard's ambient theme
+   tokens — it has its own self-contained --land-* palette above. Any
+   stray `var(--bg-primary)` etc. referenced by a shared component (e.g.
+   the legal modals rendered inside the landing page) resolves to the
+   matching light/dark landing tone instead. */
 .landing-root,
 .landing-root * {
-  --bg-primary:    #f5f0e6;
-  --bg-secondary:  #ebe4d4;
-  --bg-tertiary:   #ebe4d4;
-  --text-primary:  #1a1a1a;
-  --text-secondary:#5a5a5a;
-  --text-tertiary: #6f6f6f;
-  --border-primary: rgba(0, 0, 0, 0.08);
-  --accent-primary: #ed1b2f;
+  --bg-primary:    var(--land-bg);
+  --bg-secondary:  var(--land-bg-alt);
+  --bg-tertiary:   var(--land-bg-alt);
+  --text-primary:  var(--land-fg);
+  --text-secondary:var(--land-fg-mute);
+  --text-tertiary: var(--land-fg-mute);
+  --border-primary: var(--land-border);
+  --accent-primary: var(--land-accent);
 }
 
 /* Edge-to-edge: the landing itself fills the viewport width and grows
@@ -91,7 +115,7 @@ body:has(.landing-root),
   transition: background 0.25s ease, box-shadow 0.25s ease;
 }
 .landing-nav--scrolled {
-  background: rgba(245, 240, 230, 0.85);
+  background: var(--land-controls-bg);
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
   box-shadow: 0 1px 0 var(--land-border);
@@ -167,9 +191,21 @@ body:has(.landing-root),
   .landing-hero__scroll-btn { animation: none; }
 }
 
+/* The hero is the first thing every visitor sees — it should appear
+   near-instantly, not wait out the same scroll-triggered fade used by
+   sections further down the page. */
+.landing-hero .reveal {
+  transition-duration: 0.25s;
+  transition-delay: 0ms;
+}
+
 /* ── 1. Hero — fills the full viewport, flat solid background (no gradient) ── */
 .landing-hero {
   min-height: 100vh;
+  /* Small-viewport unit: excludes the space mobile browser URL/toolbars
+     reclaim, so the hero doesn't over-reserve height and push its own
+     content (headline, CTA) below the fold on short phones. */
+  min-height: 100svh;
   display: flex;
   align-items: center;
   text-align: center;
@@ -351,7 +387,7 @@ body:has(.landing-root),
   width: 100%;
   border-radius: 18px;
   overflow: hidden;
-  background: #fff;
+  background: var(--land-shot-bg);
   /* Larger / softer drop shadow now that screenshots are full-width */
   box-shadow:
     0 2px 4px rgba(0, 0, 0, 0.04),
@@ -675,24 +711,42 @@ body:has(.landing-root),
   .landing-forum__grid { grid-template-columns: 1fr; }
 }
 
-/* ── Language toggle (fixed, top-right) ─────────────────────── */
-.landing-lang-btn {
+/* ── Theme + language toggles (fixed, top-right) ─────────────── */
+.landing-controls {
   position: fixed;
   top: 16px;
   right: 16px;
   z-index: 50;
-  padding: 8px 14px;
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.85);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.landing-theme-btn,
+.landing-lang-btn {
+  border: 1px solid var(--land-controls-border);
+  background: var(--land-controls-bg);
   backdrop-filter: blur(8px);
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #1a1a1a;
+  color: var(--land-controls-fg);
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease;
 }
+.landing-theme-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  padding: 0;
+}
+.landing-lang-btn {
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.landing-theme-btn:hover,
 .landing-lang-btn:hover {
-  background: #fff;
-  border-color: rgba(0, 0, 0, 0.25);
+  border-color: var(--land-accent);
 }

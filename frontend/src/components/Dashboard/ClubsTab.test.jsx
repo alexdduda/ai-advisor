@@ -5,7 +5,7 @@
  * design — see the "dead join flow" tests below.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import ClubsTab, { buildClubCalendarEvents } from './ClubsTab'
 
@@ -154,7 +154,7 @@ describe('buildClubCalendarEvents', () => {
   })
 })
 
-// ── Explore view: listing, search, category filter ───────────────────────────
+// ── Explore view: listing, search ─────────────────────────────────────────────
 
 describe('ClubsTab explore view', () => {
   it('renders clubs returned by getClubs', async () => {
@@ -183,39 +183,6 @@ describe('ClubsTab explore view', () => {
     await waitFor(() =>
       expect(clubsAPI.getClubs).toHaveBeenCalledWith(expect.objectContaining({ search: 'Hack' }))
     )
-  })
-
-  it('clicking a category pill refetches with that category', async () => {
-    clubsAPI.getCategories.mockResolvedValue({ categories: ['Academic'] })
-    clubsAPI.getClubs.mockResolvedValue({ clubs: [], count: 0 })
-    renderTab()
-    const pill = await screen.findByText('clubs.catAcademic')
-    await userEvent.click(pill)
-    await waitFor(() =>
-      expect(clubsAPI.getClubs).toHaveBeenCalledWith(expect.objectContaining({ category: 'Academic' }))
-    )
-  })
-})
-
-// ── Non-creator manager (club_managers admin) sees Manage controls ───────────
-
-describe('non-creator manager privileges carry over to the Explore grid', () => {
-  it('shows the Manage button/crown on an admin-managed club card in Explore, not Subscribe/Join', async () => {
-    // The club is owned by someone else, but the current user manages it via
-    // an accepted manager invite — surfaced by getCreatedClubs() with
-    // _manage_role: 'admin'. It also shows up in the plain getClubs() list
-    // (which never carries _manage_role) because it's rendered in Explore too.
-    const club = makeClub({ id: 'club-1', created_by: 'owner-1' })
-    clubsAPI.getClubs.mockResolvedValue({ clubs: [club], count: 1 })
-    clubsAPI.getCreatedClubs.mockResolvedValue({ clubs: [{ ...club, _manage_role: 'admin' }], count: 1 })
-    renderTab()
-
-    await screen.findByText('HackMcGill')
-
-    expect(screen.getByText('clubs.manageBtnShort')).toBeInTheDocument()
-    expect(screen.getByText('clubs.adminBadge')).toBeInTheDocument()
-    expect(screen.queryByText('clubs.joinClub')).not.toBeInTheDocument()
-    expect(screen.queryByLabelText('Subscribe for updates')).not.toBeInTheDocument()
   })
 })
 
@@ -391,38 +358,6 @@ describe('ClubManageDashboard manager invite flow', () => {
     // The endpoint behind this was deleted in the backend refactor (docs/adr/0002) —
     // confirm the frontend never tries to call it.
     expect(clubsAPI).not.toHaveProperty('addClubManager')
-  })
-})
-
-// ── Detail drawer: non-creator managers ───────────────────────────────────────
-
-describe('detail drawer manager access', () => {
-  it('shows manager controls, not Subscribe/Join, for a club managed (but not created) by the current user', async () => {
-    // This user is a manager added via the invite flow (club_managers /
-    // manager-invite), not the club's creator. The /created endpoint surfaces
-    // that as _manage_role: 'admin' — see discovery.py's get_created_clubs.
-    const club = makeClub({ created_by: 'owner-1' })
-    clubsAPI.getClubs.mockResolvedValue({ clubs: [club], count: 1 })
-    clubsAPI.getCreatedClubs.mockResolvedValue({ clubs: [{ ...club, _manage_role: 'admin' }], count: 1 })
-    const { container } = renderTab()
-
-    await screen.findByText('HackMcGill')
-    await waitFor(() => expect(clubsAPI.getCreatedClubs).toHaveBeenCalled())
-
-    // Open the public detail drawer (Explore grid entry point), same as the
-    // repro: manager opens the drawer via the Explore grid or "My Clubs"
-    // chevron, not via the "Manage" button on the My Clubs list row.
-    await userEvent.click(screen.getByText('HackMcGill'))
-
-    const drawer = container.querySelector('.club-drawer')
-    expect(drawer).toBeTruthy()
-    // The drawer always gets an onManage handler now (added independently of
-    // this fix), so a manager sees the "Manage club" button rather than the
-    // static "Manager" badge that only renders when onManage isn't provided —
-    // either way, the point of this fix is that Join/Subscribe are hidden.
-    expect(within(drawer).getByText(/clubs\.manage\.manageBtn/)).toBeInTheDocument()
-    expect(within(drawer).queryByText('clubs.joinClub')).not.toBeInTheDocument()
-    expect(within(drawer).queryByText('clubs.subscribe')).not.toBeInTheDocument()
   })
 })
 

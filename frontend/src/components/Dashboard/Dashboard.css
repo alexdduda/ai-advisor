@@ -61,9 +61,13 @@ body {
 /* When the sidebar is collapsed, the nav rail becomes a fixed column of
    pills (.mini-rail) pinned to the left edge (~48px wide). Reserve left
    space on the content so those buttons don't overlap the content. When
-   the sidebar is open it's a 280px flex sibling, so no reservation needed. */
-.sidebar--mini ~ .main-content .content-area {
-  padding-left: calc(2rem + 36px);
+   the sidebar is open it's a 280px flex sibling, so no reservation needed.
+   Desktop only — below 769px the rail becomes a bottom tab bar instead
+   (Sidebar.css), so there's no left-edge rail to clear on mobile. */
+@media (min-width: 769px) {
+  .sidebar--mini ~ .main-content .content-area {
+    padding-left: calc(2rem + 36px);
+  }
 }
 
 /* ── Shared Buttons ───────────────────────────────────────── */
@@ -269,11 +273,10 @@ body {
     /* iOS safe areas (notch + home indicator) */
     padding-left:  max(1rem, env(safe-area-inset-left));
     padding-right: max(1rem, env(safe-area-inset-right));
-    padding-bottom: max(1rem, env(safe-area-inset-bottom));
-  }
-  /* Keep clearance for the collapsed nav rail on small screens too. */
-  .sidebar--mini ~ .main-content .content-area {
-    padding-left: max(calc(1rem + 44px), calc(env(safe-area-inset-left) + 44px));
+    /* Bottom nav bar (.mini-rail, Sidebar.css) is ~44px pills + 6px top/
+       bottom padding, fixed over the content — reserve enough space that
+       scrolled-to-the-bottom content and buttons never end up under it. */
+    padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px) + 1rem);
   }
   .notification-banner {
     top: max(20px, env(safe-area-inset-top, 0));

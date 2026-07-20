@@ -35,16 +35,32 @@ logger = logging.getLogger(__name__)
 # New top-level sections after the 2026-04 forum redesign.
 # Legacy categories kept for backwards compatibility with existing posts.
 VALID_CATEGORIES = {
-    # Reviews
-    "course_review", "professor_review",
+    # Reviews — "review" is the unified course+optional-professor review type
+    # (2026-07). course_review/professor_review are kept read-only for
+    # existing posts created before the merge.
+    "review", "course_review", "professor_review",
     # Other sections
     "clubs", "general", "app_feedback",
     # Legacy
     "courses", "study", "advice", "planning",
 }
-REVIEW_CATEGORIES = {"course_review", "professor_review"}
+REVIEW_CATEGORIES = {"review", "course_review", "professor_review"}
 REVIEW_TARGET_TYPES = {"course", "professor"}
 VALID_SORTS = {"hot", "new", "top"}
+
+# ── Semester-aware ranking (replaces the old like_count*2 + 48h-decay "hot"
+# score) ─────────────────────────────────────────────────────────────────
+# McGill term windows, padded to hold year-over-year without an annual data
+# update — mirrors frontend/src/lib/termDates.js so both agree on where a
+# semester starts/ends:
+#   Fall:   Aug 25 – Dec 31      Winter: Jan 1 – Apr 30      Summer: May 1 – Aug 24
+_TERM_END_MONTH_DAY = {"Winter": (4, 30), "Summer": (8, 24), "Fall": (12, 31)}
+# A post whose semester has ended keeps its full lifetime like_count mixed
+# in with live posts as long as it's still gaining at least this many likes
+# per day, averaged over the last 14 days — i.e. still getting a like every
+# couple of days months later. Otherwise it ranks by upvotes-since-semester-end
+# only. Conservative starting point; recalibrate once there's real like volume.
+_VELOCITY_KEEP_THRESHOLD = 0.5
 
 
 # ── Pydantic models ────────────────────────────────────────────────────────────
@@ -60,8 +76,15 @@ class PostCreate(BaseModel):
 
     # Review-only fields. Required when category ∈ REVIEW_CATEGORIES.
     rating:              Optional[int] = Field(None, ge=1, le=5)
+    difficulty_rating:   Optional[int] = Field(None, ge=1, le=5)
     review_target_type:  Optional[str] = Field(None, max_length=20)
     review_target_value: Optional[str] = Field(None, max_length=120)
+    # Unified "review" category only: the course is review_target_value,
+    # the professor (if the reviewer named one) is separate and optional.
+    professor_name:      Optional[str] = Field(None, max_length=120)
+    # Derived, not client-supplied: subject prefix (e.g. "COMP") extracted
+    # from review_target_value for course reviews, powers the subject filter.
+    subject:             Optional[str] = Field(None, max_length=10)
 
     @field_validator("category")
     @classmethod
@@ -87,22 +110,47 @@ class PostCreate(BaseModel):
 
     def enforce_review_consistency(self) -> None:
         """Ensure review posts have required review fields, and non-reviews don't."""
-        is_review = self.category in REVIEW_CATEGORIES
-        if is_review:
+        if self.category == "review":
+            # Unified review type: always a course review, professor optional.
+            if self.rating is None:
+                raise ValueError("rating (1–5) is required for review posts")
+            if self.difficulty_rating is None:
+                raise ValueError("difficulty_rating (1–5) is required for review posts")
+            if not self.review_target_value:
+                raise ValueError("review_target_value (course code) is required for review posts")
+            self.review_target_type = "course"
+            self.professor_name = (self.professor_name or "").strip()[:120] or None
+            import re
+            m = re.match(r"^([A-Za-z]+)", self.review_target_value)
+            self.subject = m.group(1).upper() if m else None
+        elif self.category in REVIEW_CATEGORIES:
+            # Legacy course_review/professor_review — kept read/write-compatible
+            # for any client still on the old shape, but no longer created by
+            # the current UI.
             if self.rating is None:
                 raise ValueError("rating (1–5) is required for review posts")
             if not self.review_target_value:
                 raise ValueError("review_target_value is required for review posts")
-            # Auto-infer target_type from category if not provided
             if not self.review_target_type:
                 self.review_target_type = (
                     "course" if self.category == "course_review" else "professor"
                 )
+            self.difficulty_rating = None
+            self.professor_name = None
+            if self.review_target_type == "course":
+                import re
+                m = re.match(r"^([A-Za-z]+)", self.review_target_value)
+                self.subject = m.group(1).upper() if m else None
+            else:
+                self.subject = None
         else:
             # Clear review fields on non-review posts for data cleanliness
             self.rating = None
+            self.difficulty_rating = None
             self.review_target_type = None
             self.review_target_value = None
+            self.professor_name = None
+            self.subject = None
 
 
 class ReplyCreate(BaseModel):
@@ -146,6 +194,81 @@ def _get_liked_reply_ids(supabase, user_id: str, reply_ids: List[str]) -> set:
         return set()
 
 
+# ── Semester-aware ranking helpers ─────────────────────────────────────────────
+
+def _get_active_term(dt) -> tuple:
+    """(term, year) for a given datetime — mirrors termDates.js getActiveTerm()."""
+    m, d, y = dt.month, dt.day, dt.year
+    if m <= 4:
+        return ("Winter", y)
+    if m < 8 or (m == 8 and d < 25):
+        return ("Summer", y)
+    return ("Fall", y)
+
+
+def _term_end_date(term: str, year: int):
+    from datetime import datetime, timezone
+    month, day = _TERM_END_MONTH_DAY[term]
+    return datetime(year, month, day, 23, 59, 59, tzinfo=timezone.utc)
+
+
+def _get_post_like_timestamps(supabase, post_ids: List[str]) -> dict:
+    """{post_id: [like created_at datetimes]} for the given posts."""
+    if not post_ids:
+        return {}
+    from datetime import datetime
+    try:
+        rows = (
+            supabase.table("forum_post_likes")
+            .select("post_id, created_at")
+            .in_("post_id", post_ids)
+            .execute().data or []
+        )
+    except Exception:
+        return {}
+    out: dict = {}
+    for r in rows:
+        try:
+            ts = datetime.fromisoformat(r["created_at"].replace("Z", "+00:00"))
+        except Exception:
+            continue
+        out.setdefault(r["post_id"], []).append(ts)
+    return out
+
+
+def _semester_aware_score(post: dict, like_timestamps: List, now) -> float:
+    """
+    Ranks posts made during the current semester by raw upvotes (like the
+    old "Top"). Once a post's semester has ended, it ranks by upvotes
+    earned SINCE the semester ended — UNLESS it's still gaining upvotes at
+    a healthy clip (>= _VELOCITY_KEEP_THRESHOLD/day over the trailing 14
+    days), in which case it keeps its full lifetime like_count so a review
+    that's still actively useful doesn't get buried just because the
+    semester it was written in is over.
+    """
+    from datetime import datetime, timedelta
+    like_count = post.get("like_count") or 0
+    try:
+        created = datetime.fromisoformat(post["created_at"].replace("Z", "+00:00"))
+    except Exception:
+        return float(like_count)
+
+    term, year = _get_active_term(created)
+    semester_end = _term_end_date(term, year)
+    if now <= semester_end:
+        return float(like_count)
+
+    likes_since_end = sum(1 for ts in like_timestamps if ts > semester_end)
+    recent_cutoff = now - timedelta(days=14)
+    recent_likes = sum(1 for ts in like_timestamps if ts > recent_cutoff)
+    recent_velocity = recent_likes / 14
+
+    score = float(likes_since_end)
+    if recent_velocity >= _VELOCITY_KEEP_THRESHOLD:
+        score += like_count
+    return score
+
+
 # ── Report rate-limit helper ───────────────────────────────────────────────────
 def _check_report_rate_limit(user_id: str) -> None:
     """
@@ -173,6 +296,7 @@ def _check_report_rate_limit(user_id: str) -> None:
 async def list_posts(
     req:      Request,
     category: Optional[str] = Query(None),
+    subject:  Optional[str] = Query(None, max_length=10),
     sort:     str            = Query("hot"),
     search:   Optional[str] = Query(None),
     limit:    int            = Query(30, ge=1, le=100),
@@ -184,8 +308,11 @@ async def list_posts(
     List forum posts.
 
     - category: filter by category slug
-    - sort: hot | new | top
-    - search: full-text filter on title + body
+    - subject: filter reviews by subject prefix (e.g. "COMP")
+    - sort: hot (default; semester-aware upvote ranking, see _semester_aware_score) | new | top
+    - search: matches title, body, and — for reviews — the course/professor
+      name (review_target_value) and subject, so "COMP" or "Vybihal" finds
+      relevant reviews even if those words never appear in the post body.
     - limit/offset: pagination
     """
     if sort not in VALID_SORTS:
@@ -194,15 +321,28 @@ async def list_posts(
     def _run():
         q = user_sb.table("forum_posts").select(
             "id, user_id, author, avatar_color, category, title, body, tags, program_info, "
-            "rating, review_target_type, review_target_value, like_count, created_at"
+            "rating, difficulty_rating, review_target_type, review_target_value, professor_name, subject, "
+            "like_count, created_at"
         )
 
-        if category and category != "all" and category in VALID_CATEGORIES:
+        if category == "review":
+            # The unified reviews feed also shows legacy course_review/
+            # professor_review posts created before the 2026-07 merge —
+            # they're the same kind of content, just under the old category
+            # strings, and hiding them would make existing reviews vanish.
+            q = q.in_("category", list(REVIEW_CATEGORIES))
+        elif category and category != "all" and category in VALID_CATEGORIES:
             q = q.eq("category", category)
+
+        if subject:
+            q = q.eq("subject", subject.strip().upper())
 
         if search:
             safe = search.strip()[:100].replace("\\", "\\\\").replace("%", r"\%").replace("_", r"\_")
-            q = q.or_(f"title.ilike.%{safe}%,body.ilike.%{safe}%")
+            q = q.or_(
+                f"title.ilike.%{safe}%,body.ilike.%{safe}%,"
+                f"review_target_value.ilike.%{safe}%,subject.ilike.%{safe}%"
+            )
 
         if sort == "new":
             q = q.order("created_at", desc=True)
@@ -220,19 +360,13 @@ async def list_posts(
         logger.error(f"forum list_posts error: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch posts")
 
-    # Hot sort: score = like_count * 2 + recency_bonus (Python-side for simplicity)
+    # Default ranking: semester-aware upvotes, replacing the old
+    # like_count*2 + 48h-decay "hot" score. See _semester_aware_score.
     if sort == "hot":
-        import time
-        now = time.time()
-        def _hot_score(p):
-            try:
-                from datetime import datetime, timezone
-                ts = datetime.fromisoformat(p["created_at"].replace("Z", "+00:00"))
-                age_hours = (now - ts.timestamp()) / 3600
-                return p["like_count"] * 2 + max(0, 48 - age_hours)
-            except Exception:
-                return p["like_count"]
-        posts.sort(key=_hot_score, reverse=True)
+        from datetime import datetime, timezone
+        now = datetime.now(timezone.utc)
+        like_timestamps = _get_post_like_timestamps(user_sb, [p["id"] for p in posts])
+        posts.sort(key=lambda p: _semester_aware_score(p, like_timestamps.get(p["id"], []), now), reverse=True)
 
     posts = posts[offset:offset + limit]
 
@@ -298,6 +432,8 @@ async def create_post(
     payload.body  = escape(payload.body or "")
     if payload.author:
         payload.author = escape(payload.author)
+    if payload.professor_name:
+        payload.professor_name = escape(payload.professor_name)
 
     def _run():
         data = {
@@ -310,8 +446,11 @@ async def create_post(
             "tags":                payload.tags,
             "program_info":        payload.program_info,
             "rating":              payload.rating,
+            "difficulty_rating":   payload.difficulty_rating,
             "review_target_type":  payload.review_target_type,
             "review_target_value": payload.review_target_value,
+            "professor_name":      payload.professor_name,
+            "subject":             payload.subject,
         }
         res = user_sb.table("forum_posts").insert(data).execute()
         if not res.data:
@@ -759,21 +898,35 @@ async def reviews_summary(
     Returns avg_rating, rating_count, and a per-star histogram.
     """
     try:
-        # Case-insensitive match for professor names; exact match for course codes
+        # Case-insensitive match for professor names; exact match for course codes.
+        # A course lookup matches every review naming that course, whether it's a
+        # unified "review" post or a legacy course_review post (both set
+        # review_target_type="course"). A professor lookup has to check two
+        # shapes: legacy professor_review posts (the professor WAS the review
+        # target) and unified review posts (the professor is the separate,
+        # optional professor_name field on a course review).
         if target_type == "course":
             normalized = target_value.strip().upper()
-            q = user_sb.table("forum_posts") \
-                .select("rating") \
+            rows = user_sb.table("forum_posts") \
+                .select("rating, difficulty_rating") \
                 .eq("review_target_type", "course") \
-                .eq("review_target_value", normalized)
+                .eq("review_target_value", normalized) \
+                .execute().data or []
         else:
-            q = user_sb.table("forum_posts") \
-                .select("rating") \
+            normalized = target_value.strip()
+            legacy_rows = user_sb.table("forum_posts") \
+                .select("rating, difficulty_rating") \
                 .eq("review_target_type", "professor") \
-                .ilike("review_target_value", target_value.strip())
+                .ilike("review_target_value", normalized) \
+                .execute().data or []
+            named_rows = user_sb.table("forum_posts") \
+                .select("rating, difficulty_rating") \
+                .ilike("professor_name", normalized) \
+                .execute().data or []
+            rows = legacy_rows + named_rows
 
-        rows = q.execute().data or []
         ratings = [r["rating"] for r in rows if r.get("rating") is not None]
+        difficulties = [r["difficulty_rating"] for r in rows if r.get("difficulty_rating") is not None]
 
         histogram = {str(i): 0 for i in range(1, 6)}
         for r in ratings:
@@ -781,12 +934,14 @@ async def reviews_summary(
                 histogram[str(r)] += 1
 
         avg = round(sum(ratings) / len(ratings), 2) if ratings else None
+        avg_difficulty = round(sum(difficulties) / len(difficulties), 2) if difficulties else None
         return {
-            "target_type":  target_type,
-            "target_value": target_value,
-            "avg_rating":   avg,
-            "rating_count": len(ratings),
-            "histogram":    histogram,
+            "target_type":     target_type,
+            "target_value":    target_value,
+            "avg_rating":      avg,
+            "avg_difficulty":  avg_difficulty,
+            "rating_count":    len(ratings),
+            "histogram":       histogram,
         }
     except Exception as e:
         logger.exception(f"reviews_summary error: {e}")
