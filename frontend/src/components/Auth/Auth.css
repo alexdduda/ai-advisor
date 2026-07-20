@@ -13,16 +13,35 @@
 }
 
 /* ── Left branding panel ──────────────────────── */
+/* Background photo (set inline via JS import, see Login.jsx) sits behind
+   everything; falls back to the plain gradient if no image loads. */
 .auth-branding {
   width: 420px;
   flex-shrink: 0;
   background: linear-gradient(145deg, var(--accent-primary) 0%, var(--accent-active) 100%);
+  background-size: cover;
+  background-position: center;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 3rem 2.5rem;
   position: relative;
   overflow: hidden;
+}
+
+/* Red-tint overlay over the photo — fades out when the sign-in button is
+   hovered so the photo shows through, mirroring the landing page's CTA
+   photo reveal. */
+.auth-branding-tint {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(145deg, rgba(237,27,47,0.88) 0%, rgba(176,27,46,0.9) 100%);
+  transition: opacity 0.45s ease;
+  pointer-events: none;
+}
+.auth-page:has(.auth-signin-btn:hover) .auth-branding-tint {
+  opacity: 0.18;
 }
 
 /* Subtle radial highlight */
@@ -33,6 +52,7 @@
   left: -20%;
   width: 160%;
   height: 100%;
+  z-index: 2;
   background: radial-gradient(ellipse at 40% 30%, rgba(255,255,255,0.12) 0%, transparent 65%);
   pointer-events: none;
 }
@@ -45,6 +65,7 @@
   right: -80px;
   width: 300px;
   height: 300px;
+  z-index: 2;
   border: 40px solid rgba(255,255,255,0.05);
   border-radius: 50%;
   pointer-events: none;
@@ -52,7 +73,7 @@
 
 .auth-branding-inner {
   position: relative;
-  z-index: 1;
+  z-index: 3;
   color: #fff;
   display: flex;
   flex-direction: column;

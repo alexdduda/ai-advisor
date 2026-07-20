@@ -750,8 +750,8 @@
 .clubs-visibility-option:first-child { border-right: 1.5px solid var(--border-secondary, #e5e7eb); }
 .clubs-visibility-option:hover { background: var(--bg-hover, #f9fafb); }
 .clubs-visibility-option.active {
-  background: var(--accent-lighter, #fee2e2);
-  color: var(--accent-primary, #dc2626);
+  background: var(--accent-primary, #dc2626);
+  color: #fff;
   font-weight: 700;
 }
 .clubs-field-hint {
@@ -1162,6 +1162,31 @@
   display: flex;
   align-items: center;
   gap: 14px;
+}
+
+.club-manage__header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.club-manage__delete-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border: 1.5px solid var(--error-primary, #ef4444);
+  border-radius: 8px;
+  background: none;
+  color: var(--error-primary, #ef4444);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.club-manage__delete-btn:hover {
+  background: var(--error-primary, #ef4444);
+  color: #fff;
 }
 
 .club-manage__title {

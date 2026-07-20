@@ -33,7 +33,10 @@ def test_list_clubs_requires_auth(client):
     assert resp.status_code == 401
 
 
-def test_list_clubs_hides_private_and_strips_pii(client, fake_supabase):
+def test_list_clubs_shows_private_but_hides_unverified_and_strips_pii(client, fake_supabase):
+    # "Private" means join-by-application only, not hidden — verified
+    # private clubs should be just as discoverable as public ones. Only
+    # unverified (not-yet-approved) clubs are excluded.
     fake_supabase.set_table("clubs", [
         {"id": "c1", "name": "Public Club", "is_verified": True, "is_private": False,
          "contact_email": "secret@mcgill.ca", "category": "Social"},
@@ -44,9 +47,11 @@ def test_list_clubs_hides_private_and_strips_pii(client, fake_supabase):
     resp = client.get("/api/clubs", headers=auth("user-1"))
     assert resp.status_code == 200
     body = resp.json()
-    names = [c["name"] for c in body["clubs"]]
-    assert names == ["Public Club"]
-    assert "contact_email" not in body["clubs"][0]
+    names = {c["name"] for c in body["clubs"]}
+    assert names == {"Public Club", "Private Club"}
+    assert all("contact_email" not in c for c in body["clubs"])
+    private_club = next(c for c in body["clubs"] if c["name"] == "Private Club")
+    assert private_club["is_private"] is True
     assert body["clubs"][0]["subscriber_count"] == 0
 
 
