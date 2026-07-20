@@ -634,6 +634,7 @@ const EN_TRANSLATIONS = {
     'clubs.manage.dashboardTitle': 'Club Management Dashboard',
     'clubs.manage.overview': 'Overview',
     'clubs.manage.editInfo': 'Edit Info',
+    'clubs.manage.execs': 'Execs',
     'clubs.manage.managers': 'Managers',
     'clubs.manage.announcements': 'Announcements',
     'clubs.manage.events': 'Events',

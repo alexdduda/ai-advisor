@@ -634,6 +634,7 @@ const FR_TRANSLATIONS = {
     'clubs.manage.dashboardTitle': 'Tableau de bord du club',
     'clubs.manage.overview': 'Aperçu',
     'clubs.manage.editInfo': 'Modifier',
+    'clubs.manage.execs': 'Exécutif',
     'clubs.manage.managers': 'Gestionnaires',
     'clubs.manage.announcements': 'Annonces',
     'clubs.manage.events': 'Événements',

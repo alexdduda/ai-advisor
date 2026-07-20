@@ -1038,7 +1038,7 @@ function JoinRequestsModal({ club, onClose, onAction, t }) {
 }
 
 // ── Club Management Dashboard ─────────────────────────────────────────────────
-function ClubManageDashboard({ club, onClose, onSave, t }) {
+function ClubManageDashboard({ club, onClose, onSave, onDelete, isAdmin, t }) {
   const [activeSection, setActiveSection] = useState('overview')
   const [managers, setManagers] = useState([])
   const [subscribers, setSubscribers] = useState({ count: 0 })
@@ -1174,7 +1174,7 @@ function ClubManageDashboard({ club, onClose, onSave, t }) {
     { key: 'edit', icon: <FaEdit size={13} />, label: t('clubs.manage.editInfo') },
     // Execs tab — clubs have an owner and admins (no regular members on this
     // site, which is discovery-only).
-    { key: 'members', icon: <FaUsers size={13} />, label: t('clubs.manage.execs') || 'Execs' },
+    { key: 'members', icon: <FaUsers size={13} />, label: t('clubs.manage.execs') },
     { key: 'announcements', icon: <FaBullhorn size={13} />, label: t('clubs.manage.announcements') },
     { key: 'events', icon: <FaCalendarAlt size={13} />, label: t('clubs.manage.events') },
   ]
@@ -1193,7 +1193,21 @@ function ClubManageDashboard({ club, onClose, onSave, t }) {
               <p className="club-manage__subtitle">{t('clubs.manage.dashboardTitle')}</p>
             </div>
           </div>
-          <button className="clubs-modal__close" onClick={onClose}><FaTimes /></button>
+          <div className="club-manage__header-right">
+            {isAdmin && (
+              <button
+                className="club-manage__delete-btn"
+                onClick={() => {
+                  const v = window.prompt(`${t('clubs.confirmDeleteClub')} "${club.name}"`)
+                  if (v && v.toLowerCase().trim() === 'delete') { onDelete(club.id); onClose() }
+                }}
+                title={t('clubs.deleteClub')}
+              >
+                <FaTrash size={11} /> {t('clubs.deleteClub')}
+              </button>
+            )}
+            <button className="clubs-modal__close" onClick={onClose}><FaTimes /></button>
+          </div>
         </div>
 
         {/* Section tabs */}
@@ -2530,6 +2544,7 @@ export default function ClubsTab({ user, authFlags, onClubEventsChange }) {
           club={managingClub}
           onClose={() => setManagingClub(null)}
           onSave={handleEditClub}
+          onDelete={handleDeleteClub}
           t={t}
           isAdmin={isAdmin}
         />

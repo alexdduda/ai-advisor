@@ -24,6 +24,8 @@ Run these in the Supabase SQL Editor, in order.
 | `2026_07_19_forum_unified_reviews.sql` | Adds `difficulty_rating` + `professor_name` to `forum_posts` — merges course_review/professor_review into one review type (course + optional professor + two independent rating dimensions). Legacy rows unaffected. |
 | `2026_07_19_forum_post_likes_timestamp.sql` | Adds `created_at` to `forum_post_likes` — the semester-aware ranking algorithm needs to know when each like landed, not just that it exists. Existing rows backfill to `now()`. |
 | `2026_07_19_forum_subject_filter.sql` | Adds `subject` to `forum_posts` (e.g. "COMP" extracted from a course review's `review_target_value`) + backfills existing course reviews, so the forum can filter/search by subject without re-parsing course codes on every query. |
+| `2026_07_20_profile_images_bucket.sql` | Creates the public `profile-images` storage bucket + per-user RLS (upload/update/delete scoped to `{user_id}/...`), so profile photo uploads actually persist — the frontend previously sent a raw base64 data URI which the `profile_image` https-only validator always rejected. |
+| `2026_07_20_clubs_private_visible.sql` | **Product change**: private clubs are now discoverable in Explore/Trending like public ones — "private" means join-by-application only, not hidden. Updates the `2026_06_01_sec_rls_clubs_pii.sql` RLS to drop the `is_private = false` condition, keeping only `is_verified = true`. |
 
 All migrations are idempotent (`IF NOT EXISTS`, `ON CONFLICT DO NOTHING`, `DO $$ ... END $$` guards) so re-running them is a no-op.
 

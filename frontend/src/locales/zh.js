@@ -617,6 +617,7 @@ const ZH_TRANSLATIONS = {
     'clubs.manage.dashboardTitle': '社团管理面板',
     'clubs.manage.overview': '概览',
     'clubs.manage.editInfo': '编辑信息',
+    'clubs.manage.execs': '干事',
     'clubs.manage.managers': '管理员',
     'clubs.manage.announcements': '公告',
     'clubs.manage.events': '活动',
