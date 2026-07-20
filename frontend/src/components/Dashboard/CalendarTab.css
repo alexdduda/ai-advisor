@@ -1061,6 +1061,13 @@
 
 @media (max-width: 640px) {
   .cal-header { padding: 10px 12px 8px; flex-wrap: wrap; gap: 6px; }
+  /* Icon-only view toggle — three full labels ("Calendar"/"Announcements"/
+     "Newsletters") plus the export/add buttons don't fit one row on a
+     phone; the group was overflowing its own row and sitting on top of
+     the calendar grid below it instead of wrapping cleanly. */
+  .cal-view-toggle button span { display: none; }
+  .cal-view-toggle button { padding: 8px 10px; }
+  .cal-add-btn span { display: none; }
   .cal-filter-bar { padding: 6px 12px; gap: 5px; }
   .cal-filter-chip { font-size: 0.7rem; padding: 4px 8px; }
   .cal-body, .cal-announcements { padding: 8px 10px 16px; }
@@ -1103,7 +1110,6 @@
   }
 
   .cal-type-grid { grid-template-columns: 1fr 1fr; }
-  .cal-add-btn span { display: none; }
   .cal-announce-card { flex-direction: column; }
   .cal-announce-card-right { flex-direction: row; align-items: center; }
   .cal-legend { gap: 8px; }

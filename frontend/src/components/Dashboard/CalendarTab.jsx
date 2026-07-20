@@ -724,14 +724,14 @@ export default function CalendarTab({ user, authFlags, clubEvents = [], managedC
           )}
           <div className="cal-view-toggle">
             <button className={view === 'calendar' ? 'active' : ''} onClick={() => setView('calendar')}>
-              <FaCalendarAlt /> {t('calendar.calendarView')}
+              <FaCalendarAlt /> <span>{t('calendar.calendarView')}</span>
             </button>
             <button className={view === 'announcements' ? 'active' : ''} onClick={() => setView('announcements')}>
-              <FaBullhorn /> {t('calendar.announcements')}
+              <FaBullhorn /> <span>{t('calendar.announcements')}</span>
               {urgentEvents.length > 0 && <span className="cal-badge">{urgentEvents.length}</span>}
             </button>
             <button className={view === 'newsletters' ? 'active' : ''} onClick={() => setView('newsletters')}>
-              <FaNewspaper /> {L(language, 'Newsletters', 'Infolettres', '通讯')}
+              <FaNewspaper /> <span>{L(language, 'Newsletters', 'Infolettres', '通讯')}</span>
             </button>
           </div>
           <div className="cal-export-wrap">
@@ -767,7 +767,7 @@ export default function CalendarTab({ user, authFlags, clubEvents = [], managedC
             )}
           </div>
           <button className="cal-add-btn" data-tour="calendar-add" onClick={() => { setPreselectedDate(null); setEditEvent(null); setShowModal(true) }}>
-            <FaPlus /> {t('calendar.addEventBtn')}
+            <FaPlus /> <span>{t('calendar.addEventBtn')}</span>
           </button>
         </div>
       </div>

@@ -95,22 +95,26 @@
   justify-content: center;
   opacity: 0;
   transition: opacity 0.3s ease;
-  gap: 8px;
+  gap: 4px;
+  padding: 0 12px;
+  text-align: center;
 }
 
 .profile-avatar-xl-wrapper:hover .avatar-xl-overlay { opacity: 1; }
 
-.camera-xl-icon { 
-  font-size: 32px; 
-  color: white; 
+.camera-xl-icon {
+  font-size: 20px;
+  color: white;
 }
 
 .overlay-xl-text {
   color: white;
-  font-size: 14px;
+  font-size: 9px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
+  line-height: 1.2;
+  max-width: 76px;
 }
 
 .avatar-xl-loading {
