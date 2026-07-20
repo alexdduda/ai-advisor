@@ -476,10 +476,16 @@
   to   { opacity: 1; transform: scale(1); }
 }
 
-.mini-pill:hover {
-  background: rgba(237, 27, 47, 0.1);
-  color: var(--accent-primary, #ED1B2F);
-  transform: scale(1.18);
+/* hover: hover — without this gate, tapping a pill on a touch device (no
+   real mouse) leaves it visually "stuck" with the hover background until
+   the next tap elsewhere, which looks like an unselected tab keeping a
+   backdrop it shouldn't have. Desktop mouse users still get the hover. */
+@media (hover: hover) {
+  .mini-pill:hover {
+    background: rgba(237, 27, 47, 0.1);
+    color: var(--accent-primary, #ED1B2F);
+    transform: scale(1.18);
+  }
 }
 
 .mini-pill:active {
@@ -517,10 +523,12 @@
   font-size: 0.75rem;
 }
 
-.mini-pill--expand:hover {
-  color: var(--accent-primary, #ED1B2F);
-  background: rgba(237, 27, 47, 0.1);
-  transform: scale(1.18) rotate(45deg);
+@media (hover: hover) {
+  .mini-pill--expand:hover {
+    color: var(--accent-primary, #ED1B2F);
+    background: rgba(237, 27, 47, 0.1);
+    transform: scale(1.18) rotate(45deg);
+  }
 }
 
 /* ── Popup menu ── */
@@ -671,10 +679,12 @@
 
 /* Mini pills — hover and active animations inherit from base, fix colors */
 [data-theme="dark"] .mini-pill { color: rgba(255,255,255,0.45); }
-[data-theme="dark"] .mini-pill:hover {
-  background: rgba(237,27,47,0.15);
-  color: #ed1b2f;
-  /* scale(1.18) from base still applies */
+@media (hover: hover) {
+  [data-theme="dark"] .mini-pill:hover {
+    background: rgba(237,27,47,0.15);
+    color: #ed1b2f;
+    /* scale(1.18) from base still applies */
+  }
 }
 [data-theme="dark"] .mini-pill:active {
   /* scale(0.88) from base still applies */
@@ -682,10 +692,12 @@
 }
 
 [data-theme="dark"] .mini-pill--expand { color: rgba(255,255,255,0.25); }
-[data-theme="dark"] .mini-pill--expand:hover {
-  color: #ed1b2f;
-  background: rgba(237,27,47,0.15);
-  /* rotate(45deg) from base still applies */
+@media (hover: hover) {
+  [data-theme="dark"] .mini-pill--expand:hover {
+    color: #ed1b2f;
+    background: rgba(237,27,47,0.15);
+    /* rotate(45deg) from base still applies */
+  }
 }
 
 /* Popup — animation (popup-in) is color-agnostic, just fix surface colors */

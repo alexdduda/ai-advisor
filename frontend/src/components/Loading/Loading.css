@@ -16,6 +16,9 @@ html, body, #root {
   /* Solid cream — matches the logo's background, no animation */
   background: #d6cfc1;
 }
+[data-theme="dark"] .loading-container {
+  background: #0a0c10;
+}
 
 .loading-content {
   display: flex;
@@ -39,6 +42,10 @@ html, body, #root {
   /* Subtle ring so the circle is visible against the cream background */
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05),
               0 0 0 1px rgba(0, 0, 0, 0.04);
+}
+[data-theme="dark"] .loading-logo {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3),
+              0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
 /* Pulse — masked to the sigma body so it only touches the red/green shape.

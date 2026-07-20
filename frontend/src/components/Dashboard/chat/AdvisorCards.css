@@ -206,13 +206,11 @@
 
 /* ── Card ── */
 .advisor-card {
-  --card-accent: var(--accent-primary);
   position: relative;
   background: var(--bg-primary);
   border: 1px solid var(--card-border, var(--border-primary));
-  border-left: 3px solid var(--card-accent);
   border-radius: 12px;
-  padding: 16px 18px 14px 22px;
+  padding: 16px 18px 14px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -222,7 +220,7 @@
 
 .advisor-card:hover {
   box-shadow: var(--shadow-md);
-  border-color: var(--card-accent);
+  border-color: var(--accent-primary);
 }
 
 .advisor-card--user {
@@ -237,7 +235,6 @@
 }
 
 .advisor-card--saved {
-  border-left-color: var(--accent-primary) !important;
   background: rgba(237, 27, 47, 0.02);
 }
 
@@ -822,7 +819,6 @@
 
 /* ── Skeletons ── */
 .advisor-card--skeleton {
-  border-left-color: var(--border-primary);
   gap: 12px;
   pointer-events: none;
 }

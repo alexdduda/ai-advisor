@@ -79,6 +79,7 @@ class FakeTable:
         return self
     def order(self, *args, **kwargs): return self
     def limit(self, n): return self
+    def range(self, start, end): return self
     def in_(self, col, vals):
         self._filters.append(("in", col, list(vals)))
         return self

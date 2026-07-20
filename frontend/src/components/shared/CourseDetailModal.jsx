@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import {
   FaHeart, FaRegHeart, FaCheckCircle, FaBook, FaUser, FaChartBar,
   FaStar, FaTrophy, FaLayerGroup, FaExclamationCircle, FaTimes, FaExternalLinkAlt,
-  FaFlag, FaCalendarAlt,
+  FaFlag, FaCalendarAlt, FaMapMarkerAlt,
 } from 'react-icons/fa'
 import { useCourseDetail } from '../../contexts/CourseDetailContext'
 import { useLanguage } from '../../contexts/PreferencesContext'
@@ -224,7 +224,8 @@ export default function CourseDetailModal({
                               )}
                               {s.location && (
                                 <div className="cdm-schedule-row">
-                                  <span>📍 {s.location}</span>
+                                  <FaMapMarkerAlt className="cdm-schedule-icon" />
+                                  <span>{s.location}</span>
                                 </div>
                               )}
                             </div>

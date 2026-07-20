@@ -13,6 +13,7 @@ import TermsOfService from '../Legal/TOS'
 import AboutUs from '../Legal/AboutUs'
 import { authAPI } from '../../lib/api'
 import logoMark from '../../assets/loading-logo.png'
+import signInPhoto from '../../assets/sign-in.jpg'
 import './Auth.css'
 
 function Login({ forceVerify = false, email: propEmail = '', userId: propUserId = '', onBack = null }) {
@@ -270,7 +271,8 @@ function Login({ forceVerify = false, email: propEmail = '', userId: propUserId 
       </div>
 
       {/* ── Left branding panel ── */}
-      <aside className="auth-branding">
+      <aside className="auth-branding" style={{ backgroundImage: `url(${signInPhoto})` }}>
+        <div className="auth-branding-tint" />
         <div className="auth-branding-inner">
           <div className="auth-logo">
             <div className="auth-logo-mark">
@@ -534,7 +536,7 @@ function Login({ forceVerify = false, email: propEmail = '', userId: propUserId 
                   </p>
                 )}
 
-                <button type="submit" className="btn btn-primary btn-full" disabled={loading}>
+                <button type="submit" className="btn btn-primary btn-full auth-signin-btn" disabled={loading}>
                   {loading ? (
                     <span className="btn-loading">
                       <span className="spinner" />

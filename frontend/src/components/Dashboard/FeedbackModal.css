@@ -300,10 +300,18 @@
 
 
 /* ── Mobile ──────────────────────────────────────────────── */
+/* The bottom tab bar (.mini-rail, Sidebar.css) is fixed at the bottom of
+   the screen below 769px — float the trigger above it instead of at a
+   fixed 16-24px, which used to sit right on top of the tab bar's icons. */
+@media (max-width: 768px) {
+  .feedback-trigger-btn {
+    bottom: calc(56px + env(safe-area-inset-bottom, 0) + 12px);
+    right: 16px;
+  }
+}
+
 @media (max-width: 480px) {
   .feedback-trigger-btn {
-    bottom: calc(16px + env(safe-area-inset-bottom, 0));
-    right: calc(16px + var(--rsb-width, 0px));
     padding: 8px 12px;
     font-size: 0.8rem;
   }

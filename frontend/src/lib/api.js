@@ -263,6 +263,28 @@ export const usersAPI = {
     }
   },
 
+  // ── Profile photo — direct to Supabase Storage (mirrors
+  // clubsAPI.uploadClubLogo). Returns the public URL; the caller persists
+  // it via updateUser/updateProfile. profile_image only accepts an
+  // https:// URL in our own profile-images bucket (see users.py
+  // validate_profile_image) — a raw base64 data: URI is always rejected.
+  uploadProfileImage: async (userId, file) => {
+    const { supabase } = await import('./supabase')
+    if (!file) throw new Error('No file selected')
+    if (!file.type?.startsWith('image/')) throw new Error('File must be an image')
+    if (file.size > 5 * 1024 * 1024) throw new Error('Image must be under 5 MB')
+
+    const ext = (file.name.split('.').pop() || 'png').toLowerCase().replace(/[^a-z0-9]/g, '')
+    const path = `${userId}/avatar.${ext || 'png'}`
+    const { error: upErr } = await supabase.storage
+      .from('profile-images')
+      .upload(path, file, { upsert: true, contentType: file.type })
+    if (upErr) throw new Error(upErr.message || 'Upload failed')
+
+    const { data: urlData } = supabase.storage.from('profile-images').getPublicUrl(path)
+    return { profile_image: `${urlData.publicUrl}?v=${Date.now()}` }
+  },
+
   /**
    * Quebec Law 25 / GDPR data portability.
    * Returns the full personal-data dump for the authenticated user.

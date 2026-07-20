@@ -6,7 +6,7 @@ import {
   FaChevronDown, FaStar, FaCog, FaCrown,
   FaBook, FaPalette, FaGraduationCap,
   FaLock, FaGlobe, FaEdit, FaUserPlus, FaUserCheck, FaUserTimes,
-  FaExclamationTriangle, FaFire, FaGem, FaShare,
+  FaExclamationTriangle, FaFire, FaGem, FaShare, FaMapMarkerAlt,
 } from 'react-icons/fa'
 import { useLanguage } from '../../contexts/PreferencesContext'
 import { useAuth } from '../../contexts/AuthContext'
@@ -15,12 +15,13 @@ import { readCache, writeCache } from '../../lib/userDataCache'
 import Breadcrumb from '../ui/Breadcrumb'
 import './ClubsTab.css'
 
-// Every category uses the same McGill red — no more one-color-per-category
-// rainbow. The category is still distinguished by its icon + label.
+// Every category uses the same neutral gray — no per-category color, and no
+// red (red is reserved for active/hover states elsewhere in the UI). The
+// category is still distinguished by its icon + label.
 const catVars = () => ({
-  color:  'var(--accent-primary)',
-  bg:     'var(--accent-light)',
-  border: 'var(--accent-primary)',
+  color:  'var(--text-secondary)',
+  bg:     'var(--bg-tertiary)',
+  border: 'var(--border-secondary)',
 })
 
 const CATEGORY_META = {
@@ -1037,7 +1038,7 @@ function JoinRequestsModal({ club, onClose, onAction, t }) {
 }
 
 // ── Club Management Dashboard ─────────────────────────────────────────────────
-function ClubManageDashboard({ club, onClose, onSave, t }) {
+function ClubManageDashboard({ club, onClose, onSave, onDelete, isAdmin, t }) {
   const [activeSection, setActiveSection] = useState('overview')
   const [managers, setManagers] = useState([])
   const [subscribers, setSubscribers] = useState({ count: 0 })
@@ -1173,7 +1174,7 @@ function ClubManageDashboard({ club, onClose, onSave, t }) {
     { key: 'edit', icon: <FaEdit size={13} />, label: t('clubs.manage.editInfo') },
     // Execs tab — clubs have an owner and admins (no regular members on this
     // site, which is discovery-only).
-    { key: 'members', icon: <FaUsers size={13} />, label: t('clubs.manage.execs') || 'Execs' },
+    { key: 'members', icon: <FaUsers size={13} />, label: t('clubs.manage.execs') },
     { key: 'announcements', icon: <FaBullhorn size={13} />, label: t('clubs.manage.announcements') },
     { key: 'events', icon: <FaCalendarAlt size={13} />, label: t('clubs.manage.events') },
   ]
@@ -1192,7 +1193,21 @@ function ClubManageDashboard({ club, onClose, onSave, t }) {
               <p className="club-manage__subtitle">{t('clubs.manage.dashboardTitle')}</p>
             </div>
           </div>
-          <button className="clubs-modal__close" onClick={onClose}><FaTimes /></button>
+          <div className="club-manage__header-right">
+            {isAdmin && (
+              <button
+                className="club-manage__delete-btn"
+                onClick={() => {
+                  const v = window.prompt(`${t('clubs.confirmDeleteClub')} "${club.name}"`)
+                  if (v && v.toLowerCase().trim() === 'delete') { onDelete(club.id); onClose() }
+                }}
+                title={t('clubs.deleteClub')}
+              >
+                <FaTrash size={11} /> {t('clubs.deleteClub')}
+              </button>
+            )}
+            <button className="clubs-modal__close" onClick={onClose}><FaTimes /></button>
+          </div>
         </div>
 
         {/* Section tabs */}
@@ -1481,7 +1496,7 @@ function ClubManageDashboard({ club, onClose, onSave, t }) {
                     </div>
                     <div className="club-manage__event-meta">
                       {ev.event_date && <span><FaCalendarAlt size={10} /> {new Date(ev.event_date).toLocaleString()}</span>}
-                      {ev.location && <span>📍 {ev.location}</span>}
+                      {ev.location && <span><FaMapMarkerAlt size={10} /> {ev.location}</span>}
                     </div>
                     {ev.description && <p>{ev.description}</p>}
                     {ev.join_link && <p><a href={ev.join_link} target="_blank" rel="noopener noreferrer" style={{ color: '#1d4ed8', fontSize: '13px' }}>Join Link</a></p>}
@@ -1792,6 +1807,7 @@ export default function ClubsTab({ user, authFlags, onClubEventsChange }) {
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [sortMode, setSortMode] = useState('default')
+  const [categoryFilter, setCategoryFilter] = useState('')
   const [loading, setLoading] = useState(false)
   const [myClubsLoading, setMyClubsLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -1836,6 +1852,7 @@ export default function ClubsTab({ user, authFlags, onClubEventsChange }) {
     try {
       const data = await clubsAPI.getClubs({
         search: debouncedSearch,
+        category: categoryFilter || undefined,
         limit: PAGE_SIZE,
         offset: (pageNum - 1) * PAGE_SIZE,
       })
@@ -1850,7 +1867,7 @@ export default function ClubsTab({ user, authFlags, onClubEventsChange }) {
     } finally {
       if (isMounted.current) { setLoading(false); setLoadingMore(false) }
     }
-  }, [debouncedSearch])
+  }, [debouncedSearch, categoryFilter])
 
   const fetchMyClubs = useCallback(async () => {
     if (!user?.id) return
@@ -1988,8 +2005,8 @@ export default function ClubsTab({ user, authFlags, onClubEventsChange }) {
     try {
       await clubsAPI.leaveClub(user.id, clubId)
       await fetchMyClubs()
-      setClubs(prev => prev.map(c => c.id === clubId ? { ...c, member_count: Math.max(0, (c.member_count ?? 1) - 1) } : c))
-      if (openClub?.id === clubId) setOpenClub(prev => prev ? { ...prev, member_count: Math.max(0, (prev.member_count ?? 1) - 1) } : prev)
+      setClubs(prev => prev.map(c => c.id === clubId ? { ...c, subscriber_count: Math.max(0, (c.subscriber_count ?? 1) - 1) } : c))
+      if (openClub?.id === clubId) setOpenClub(prev => prev ? { ...prev, subscriber_count: Math.max(0, (prev.subscriber_count ?? 1) - 1) } : prev)
     } catch (e) { setError(e.message) }
     finally { setClubBusy(clubId, false) }
   }
@@ -2072,13 +2089,13 @@ export default function ClubsTab({ user, authFlags, onClubEventsChange }) {
   }, [clubs, sortMode])
 
   // #2/#3 — Curated rows computed from the loaded page of clubs.
-  // Trending = top 5 by member_count; For You = clubs in categories that
+  // Trending = top 5 by subscriber_count; For You = clubs in categories that
   // loosely match the user's major/faculty keywords.
   const trendingClubs = useMemo(() => {
     if (clubs.length < 4) return []
     return [...clubs]
-      .filter(c => c.member_count != null && c.member_count >= 1)
-      .sort((a, b) => (b.member_count ?? 0) - (a.member_count ?? 0))
+      .filter(c => c.subscriber_count != null && c.subscriber_count >= 1)
+      .sort((a, b) => (b.subscriber_count ?? 0) - (a.subscriber_count ?? 0))
       .slice(0, 5)
   }, [clubs])
 
@@ -2185,6 +2202,15 @@ export default function ClubsTab({ user, authFlags, onClubEventsChange }) {
                 onChange={e => setSearch(e.target.value)}
               />
               {search && <button className="clubs-search-clear" onClick={() => setSearch('')}><FaTimes size={11} /></button>}
+            </div>
+            <div className="clubs-sort-wrap">
+              <FaChevronDown size={11} />
+              <select className="clubs-sort-select" value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)}>
+                <option value="">{t('clubs.filterTypeAll')}</option>
+                {Object.keys(CATEGORY_META).filter(k => k !== 'Default').map(c => (
+                  <option key={c} value={c}>{t(CATEGORY_I18N_KEY[c] || c) || c}</option>
+                ))}
+              </select>
             </div>
             <div className="clubs-sort-wrap">
               <FaChevronDown size={11} />
@@ -2518,6 +2544,7 @@ export default function ClubsTab({ user, authFlags, onClubEventsChange }) {
           club={managingClub}
           onClose={() => setManagingClub(null)}
           onSave={handleEditClub}
+          onDelete={handleDeleteClub}
           t={t}
           isAdmin={isAdmin}
         />
