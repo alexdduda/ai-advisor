@@ -210,6 +210,11 @@
   flex-shrink: 0;
 }
 .clubs-sort-select {
+  /* Hide the native select arrow — the FaChevronDown icon placed beside it
+     in .clubs-sort-wrap is the only arrow; without this both rendered. */
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
   background: none;
   border: none;
   color: var(--text-primary, #0a0c10);
@@ -1493,7 +1498,12 @@
 @media (max-width: 640px) {
   .club-manage-dashboard {
     width: 100vw;
-    max-height: 100vh;
+    /* 100vh on mobile Safari is measured against the largest viewport
+       (address bar hidden) — when the bar is showing, a modal capped at
+       100vh can render taller than what's actually visible, with no
+       scroll region able to reach the clipped part. 100dvh tracks the
+       real, currently-visible viewport instead. */
+    max-height: 100dvh;
     border-radius: 0;
   }
   .club-manage__stats-grid {

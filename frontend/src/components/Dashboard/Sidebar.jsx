@@ -3,7 +3,7 @@ import {
   FaChevronRight, FaComments, FaBook, FaHome, FaRegLightbulb,
   FaUser, FaCog, FaPalette, FaSignOutAlt, FaCalendarAlt,
   FaGraduationCap, FaUsers, FaExpandAlt, FaInfoCircle, FaShieldAlt, FaFileAlt,
-  FaSun, FaMoon
+  FaSun, FaMoon, FaFlag
 } from 'react-icons/fa'
 import { MdLanguage } from 'react-icons/md'
 import { useTheme, useLanguage } from '../../contexts/PreferencesContext'
@@ -32,6 +32,7 @@ export default function Sidebar({
   activeTab, onTabChange,
   user, profile, profileImage, onSignOut,
   badges = {},
+  onOpenFeedback,
 }) {
   const [popupOpen, setPopupOpen] = useState(false)
   const [isMounted, setIsMounted] = useState(sidebarOpen)
@@ -156,6 +157,10 @@ export default function Sidebar({
                     <span className="sidebar-popup-icon"><MdLanguage /></span>
                     <span className="sidebar-popup-label">{language === 'en' ? 'Français' : language === 'fr' ? '中文' : 'English'}</span>
                   </button>
+                  <button className="sidebar-popup-item" onClick={() => { setPopupOpen(false); onOpenFeedback?.() }}>
+                    <span className="sidebar-popup-icon"><FaFlag /></span>
+                    <span className="sidebar-popup-label">{t('fb.button')}</span>
+                  </button>
                   <button className="sidebar-popup-item" onClick={cycleTheme}>
                     <span className="sidebar-popup-icon"><FaPalette /></span>
                     <span className="sidebar-popup-label">{t('sidebar.colorTheme')}: {themeLabel}</span>
@@ -238,6 +243,13 @@ export default function Sidebar({
                 <span style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '-0.5px' }}>
                   {language === 'en' ? 'FR' : language === 'fr' ? '中' : 'EN'}
                 </span>
+              </button>
+              <button
+                className="mini-pill mini-pill--feedback"
+                onClick={onOpenFeedback}
+                title={t('fb.button')}
+              >
+                <FaFlag size={13} />
               </button>
             </div>
             <button

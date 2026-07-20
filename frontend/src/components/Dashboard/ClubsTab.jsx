@@ -6,7 +6,7 @@ import {
   FaChevronDown, FaStar, FaCog, FaCrown,
   FaBook, FaPalette, FaGraduationCap,
   FaLock, FaGlobe, FaEdit, FaUserPlus, FaUserCheck, FaUserTimes,
-  FaExclamationTriangle, FaFire, FaGem, FaShare, FaMapMarkerAlt,
+  FaExclamationTriangle, FaFire, FaGem, FaMapMarkerAlt,
 } from 'react-icons/fa'
 import { useLanguage } from '../../contexts/PreferencesContext'
 import { useAuth } from '../../contexts/AuthContext'
@@ -326,7 +326,6 @@ function MembersSection({ clubId, refreshKey }) {
 function ClubDetailDrawer({ club, liveClub, joined, calSynced, onToggleCalendar, onClose, clubLoading, t, isAdmin, userId, isSubscribed, onToggleSubscribe, onLogoChanged, isMcGill, onManage }) {
   const [memberRefreshKey, setMemberRefreshKey] = useState(0)
   const [activity, setActivity] = useState(null)        // #11 — recent announcements/events
-  const [facultyStats, setFacultyStats] = useState(null) // #12 — faculty social proof
   const [logoOptimistic, setLogoOptimistic] = useState(null)
   const [logoBusy, setLogoBusy] = useState(false)
   const drawerLogoInputRef = useRef(null)
@@ -336,7 +335,6 @@ function ClubDetailDrawer({ club, liveClub, joined, calSynced, onToggleCalendar,
     if (!club?.id) return
     setLogoOptimistic(null)
     clubsAPI.getClubActivity(club.id, { limit: 4 }).then(setActivity).catch(() => setActivity({ items: [] }))
-    clubsAPI.getClubFacultyStats(club.id).then(setFacultyStats).catch(() => setFacultyStats(null))
   }, [club?.id])
 
   if (!club) return null
@@ -519,24 +517,6 @@ function ClubDetailDrawer({ club, liveClub, joined, calSynced, onToggleCalendar,
                 <FaLock size={11} /> McGill email required to join or subscribe
               </span>
             )}
-            <button
-              className="club-drawer__chip"
-              onClick={async () => {
-                const url = `${window.location.origin}/clubs/${display.id}`
-                try {
-                  if (navigator.share) {
-                    await navigator.share({ title: display.name, url })
-                  } else {
-                    await navigator.clipboard.writeText(url)
-                    // Lightweight toast — reuse alert for now; could swap for joinToast pattern
-                    alert(t('clubs.linkCopied') || 'Link copied to clipboard')
-                  }
-                } catch { /* user cancelled / blocked */ }
-              }}
-              title={t('clubs.share') || 'Share'}
-            >
-              <FaShare size={11} /> {t('clubs.share') || 'Share'}
-            </button>
           </div>
 
           <div className="club-drawer__stats">
@@ -562,16 +542,6 @@ function ClubDetailDrawer({ club, liveClub, joined, calSynced, onToggleCalendar,
               </div>
             )}
           </div>
-
-          {/* #12 Faculty social proof — only show if there's a meaningful overlap */}
-          {facultyStats && facultyStats.your_faculty && facultyStats.your_faculty_count > 0 && (
-            <div className="club-drawer__faculty-proof">
-              <FaUsers size={14} style={{ color: meta.color }} />
-              <span>
-                <strong>{facultyStats.your_faculty_count}</strong> {facultyStats.your_faculty_count === 1 ? (t('clubs.studentFrom') || 'student from') : (t('clubs.studentsFrom') || 'students from')} <strong>{facultyStats.your_faculty}</strong> {t('clubs.areMembers') || (facultyStats.your_faculty_count === 1 ? 'is a member' : 'are members')}
-              </span>
-            </div>
-          )}
 
           {/* #11 Recent activity — shows the club is alive */}
           {activity && activity.items && activity.items.length > 0 && (

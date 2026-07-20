@@ -165,6 +165,8 @@ const FR_TRANSLATIONS = {
     'settings.languageDesc': 'Langue de l\'interface',
     'settings.timezone': 'Fuseau horaire',
     'settings.timezoneDesc': 'Votre fuseau horaire local',
+    'settings.replayTour': 'Revoir la visite',
+    'settings.replayTourDesc': 'Regardez à nouveau la visite guidée',
 
     // ── Danger zone ─────────────────────────────────────
     'settings.dangerZone': 'Zone de danger',
