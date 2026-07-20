@@ -245,6 +245,11 @@
 
 @media (max-width: 600px) {
   .cdm-body { grid-template-columns: 1fr; }
+  /* Force the action row (Save/Done/Enroll/VSB) onto its own line below the
+     title instead of wrapping beside it — at some widths it wrapped close
+     enough to the top to collide with the floating close (X) button. */
+  .cdm-hero-top { flex-direction: column; }
+  .cdm-actions { width: 100%; }
 }
 
 .cdm-col {

@@ -1,17 +1,17 @@
 /**
  * FeedbackModal.jsx
  *
- * A feedback button + modal styled to match the existing ProfSuggestionPopover.
+ * A feedback modal styled to match the existing ProfSuggestionPopover.
  * Two modes:
  *   - General feedback (free text, submitted to your backend or mailto)
  *   - Missing course (course code + optional note)
  *
- * USAGE — add to Dashboard.jsx:
+ * Controlled by the parent — the trigger lives in Sidebar.jsx (mini-rail
+ * pill + full-sidebar popup item), not in this component:
  *
- *   import FeedbackModal from './FeedbackModal'
- *
- *   // In the return, just before the closing </div> of .dashboard:
- *   <FeedbackModal userId={user?.id} userEmail={user?.email} />
+ *   const [feedbackOpen, setFeedbackOpen] = useState(false)
+ *   <Sidebar onOpenFeedback={() => setFeedbackOpen(true)} ... />
+ *   <FeedbackModal open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
  */
 
 import { useState, useRef, useEffect } from 'react'
@@ -21,10 +21,9 @@ import { useLanguage } from '../../contexts/PreferencesContext'
 import Modal from '../ui/Modal'
 import './FeedbackModal.css'
 
-export default function FeedbackModal() {
+export default function FeedbackModal({ open, onClose }) {
   const { user } = useAuth()
   const { t } = useLanguage()
-  const [open, setOpen]     = useState(false)
   const [mode, setMode]     = useState(null) // null | 'general' | 'missing-course'
   const [text, setText]     = useState('')
   const [course, setCourse] = useState('')
@@ -38,7 +37,7 @@ export default function FeedbackModal() {
   }, [mode])
 
   const close = () => {
-    setOpen(false)
+    onClose()
     setMode(null)
     setText('')
     setCourse('')
@@ -90,12 +89,6 @@ export default function FeedbackModal() {
 
   return (
     <>
-      {/* Trigger button — bottom right corner */}
-      <button className="feedback-trigger-btn" onClick={() => setOpen(true)} title={t('fb.button')}>
-        <FaCommentAlt />
-        <span>{t('fb.button')}</span>
-      </button>
-
       {/* Overlay + Modal */}
       {open && (
         <Modal onClose={close} title={t('fb.title')} icon={<FaFlag />} size="sm">

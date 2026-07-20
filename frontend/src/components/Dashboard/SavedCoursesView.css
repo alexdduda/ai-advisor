@@ -312,10 +312,18 @@
     margin-bottom: 16px;
   }
 
+  /* Fixed auto-width tabs could overflow the viewport combined (3 tabs x
+     padding + icon + label + count badge) — split the row evenly instead
+     so it always fits, however long the translated label is. */
   .saved-tab {
-    padding: 10px 16px;
-    font-size: 14px;
+    flex: 1;
+    justify-content: center;
+    padding: 10px 8px;
+    font-size: 13px;
+    gap: 4px;
   }
+
+  .tab-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 
   .tab-icon {
     font-size: 16px;

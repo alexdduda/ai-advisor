@@ -367,6 +367,7 @@
   margin: 0 0 8px;
   line-height: 1.35;
   letter-spacing: -0.1px;
+  overflow-wrap: break-word;
 }
 
 .forum-post-card__text {
@@ -374,6 +375,7 @@
   color: var(--text-secondary);
   margin: 0 0 10px;
   line-height: 1.65;
+  overflow-wrap: break-word;
 }
 
 .forum-post-card__tags {
@@ -530,6 +532,7 @@
   color: var(--text-secondary);
   margin: 0 0 6px;
   line-height: 1.6;
+  overflow-wrap: break-word;
 }
 
 /* ── Reply Box ───────────────────────────────────────────────── */

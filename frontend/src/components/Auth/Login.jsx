@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react'
-import { HiLightBulb } from 'react-icons/hi'
 import { useAuth } from '../../contexts/AuthContext'
 import { useLanguage, useTheme } from '../../contexts/PreferencesContext'
 import { supabase } from '../../lib/supabase'
@@ -400,9 +399,6 @@ function Login({ forceVerify = false, email: propEmail = '', userId: propUserId 
                 <p className="auth-card-subtitle">
                   {isForgot ? t('auth.subForgot') : isLogin ? t('auth.subLogin') : t('auth.subSignup')}
                 </p>
-                {isLogin && (
-                  <p className="auth-card-tip"><HiLightBulb />{t('auth.mcgillTip')}</p>
-                )}
               </div>
 
               {formError && (

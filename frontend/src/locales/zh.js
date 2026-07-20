@@ -165,6 +165,8 @@ const ZH_TRANSLATIONS = {
     'settings.languageDesc': '界面语言',
     'settings.timezone': '时区',
     'settings.timezoneDesc': '您的本地时区',
+    'settings.replayTour': '重新观看导览',
+    'settings.replayTourDesc': '再次观看新手引导',
 
     // ── Danger zone ─────────────────────────────────────
     'settings.dangerZone': '危险区域',
