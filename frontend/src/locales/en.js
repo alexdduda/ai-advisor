@@ -12,6 +12,7 @@ const EN_TRANSLATIONS = {
     'nav.forum': 'Forum',
     'nav.profile': 'Profile',
     'nav.degreePlanning': 'Degree Planning',
+    'nav.more': 'More',
 
     // ── Home tab ──────────────────────────────────────────
     'home.greeting': 'Welcome back, {name}',

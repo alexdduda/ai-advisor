@@ -12,6 +12,7 @@ const ZH_TRANSLATIONS = {
     'nav.forum': '论坛',
     'nav.profile': '个人资料',
     'nav.degreePlanning': '学位规划',
+    'nav.more': '更多',
 
     // ── Home tab ──────────────────────────────────────────
     'home.greeting': '欢迎回来，{name}',
