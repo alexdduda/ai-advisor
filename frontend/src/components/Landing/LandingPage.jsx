@@ -18,12 +18,13 @@
  */
 import { useEffect, useState } from 'react'
 import { HiChevronDown } from 'react-icons/hi'
+import { FaSun, FaMoon, FaPalette } from 'react-icons/fa'
 import logoMark from '../../assets/loading-logo.png'
 import mcgillSkyline from '../../assets/landing/mcgill-skyline.jpg'
 import PrivacyPolicy from '../Legal/PrivacyPolicy'
 import TermsOfService from '../Legal/TOS'
 import AboutUs from '../Legal/AboutUs'
-import { useLanguage } from '../../contexts/PreferencesContext'
+import { useLanguage, useTheme } from '../../contexts/PreferencesContext'
 import useScrollReveal from './useScrollReveal'
 import './LandingPage.css'
 
@@ -80,37 +81,39 @@ function Reveal({ children, delay = 0, as: Tag = 'div', className = '', ...rest 
 
 export default function LandingPage({ onSignIn }) {
   const { t, language, setLanguage } = useLanguage()
+  const { theme, setTheme } = useTheme()
   const [legalModal, setLegalModal] = useState(null) // 'privacy' | 'terms' | 'about'
+  const cycleTheme = () => setTheme(theme === 'light' ? 'dark' : theme === 'dark' ? 'auto' : 'light')
 
-  // ── Force LIGHT theme while the landing is mounted ────────────────────
-  // The landing page is designed around a cream/light palette and the dark
-  // variant looks broken (low contrast, wrong accents, dark scrollbars).
-  // Override the user's theme preference on <html> for the duration of the
-  // page, then restore it on unmount so the rest of the app still respects
-  // whatever the user picked in Settings.
+  // Mark the element so [data-landing] CSS hooks (full-bleed scroll layout,
+  // dark-mode overrides) can target it. The landing page follows whatever
+  // theme the visitor has picked (or their system preference), same as the
+  // rest of the app — it no longer forces light mode.
   useEffect(() => {
     const html = document.documentElement
-    const previous = html.getAttribute('data-theme')
-    html.setAttribute('data-theme', 'light')
-    // Also mark the element so any [data-landing] CSS hooks can target it
     html.setAttribute('data-landing', 'true')
-    return () => {
-      if (previous) html.setAttribute('data-theme', previous)
-      else html.removeAttribute('data-theme')
-      html.removeAttribute('data-landing')
-    }
+    return () => html.removeAttribute('data-landing')
   }, [])
 
 
   return (
     <div className="landing-root">
-      <button
-        className="landing-lang-btn"
-        onClick={() => setLanguage(language === 'en' ? 'fr' : language === 'fr' ? 'zh' : 'en')}
-        title={t('auth.langToggle')}
-      >
-        {language === 'en' ? 'FR' : language === 'fr' ? '中' : 'EN'}
-      </button>
+      <div className="landing-controls">
+        <button
+          className="landing-theme-btn"
+          onClick={cycleTheme}
+          title={t('sidebar.colorTheme')}
+        >
+          {theme === 'dark' ? <FaMoon /> : theme === 'auto' ? <FaPalette /> : <FaSun />}
+        </button>
+        <button
+          className="landing-lang-btn"
+          onClick={() => setLanguage(language === 'en' ? 'fr' : language === 'fr' ? 'zh' : 'en')}
+          title={t('auth.langToggle')}
+        >
+          {language === 'en' ? 'FR' : language === 'fr' ? '中' : 'EN'}
+        </button>
+      </div>
 
       {/* ── 1. Hero ──────────────────────────────────────────────── */}
       <section className="landing-section landing-hero" id="top">

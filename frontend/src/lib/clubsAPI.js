@@ -26,6 +26,7 @@ const clubsAPI = {
       if (search) params.set('search', search)
       if (category) params.set('category', category)
       if (limit) params.set('limit', String(limit))
+      if (offset) params.set('offset', String(offset))
       const res = await fetch(`${BASE_URL}/api/clubs?${params}`, { headers: await authHeaders() })
       if (!res.ok) throw new Error('Failed to fetch clubs')
       return await res.json()
@@ -44,7 +45,7 @@ const clubsAPI = {
         const data = await res.json()
         if (data.starter_clubs && data.starter_clubs.length > 0) return data
       }
-    } catch (_) {}
+    } catch { /* ignore */ }
     return { starter_clubs: [] }
   },
 
@@ -52,7 +53,7 @@ const clubsAPI = {
     try {
       const res = await fetch(`${BASE_URL}/api/clubs/user/${userId}`, { headers: await authHeaders() })
       if (res.ok) return res.json()
-    } catch (_) {}
+    } catch { /* ignore */ }
     return { clubs: [], count: 0 }
   },
 
@@ -60,7 +61,7 @@ const clubsAPI = {
     try {
       const res = await fetch(`${BASE_URL}/api/clubs/created/${userId}`, { headers: await authHeaders() })
       if (res.ok) return res.json()
-    } catch (_) {}
+    } catch { /* ignore */ }
     return { clubs: [], count: 0 }
   },
 
@@ -86,7 +87,7 @@ const clubsAPI = {
     try {
       const res = await fetch(`${BASE_URL}/api/clubs/user/${userId}/leave/${clubId}`, { method: 'DELETE', headers: await authHeaders() })
       if (res.ok) return res.json()
-    } catch (_) {}
+    } catch { /* ignore */ }
     return { success: true }
   },
 
@@ -94,7 +95,7 @@ const clubsAPI = {
     try {
       const res = await fetch(`${BASE_URL}/api/clubs/user/${userId}/pending-requests`, { headers: await authHeaders() })
       if (res.ok) return res.json()
-    } catch (_) {}
+    } catch { /* ignore */ }
     return { pending_club_ids: [] }
   },
 
@@ -102,7 +103,7 @@ const clubsAPI = {
     try {
       const res = await fetch(`${BASE_URL}/api/clubs/user/${userId}/calendar/${clubId}?synced=${synced}`, { method: 'PATCH', headers: await authHeaders() })
       if (res.ok) return res.json()
-    } catch (_) {}
+    } catch { /* ignore */ }
     return { success: true, calendar_synced: synced }
   },
 
@@ -136,7 +137,7 @@ const clubsAPI = {
     try {
       const res = await fetch(`${BASE_URL}/api/clubs/join-requests/${clubId}`, { headers: await authHeaders() })
       if (res.ok) return res.json()
-    } catch (_) {}
+    } catch { /* ignore */ }
     return { requests: [], count: 0 }
   },
 
@@ -170,7 +171,7 @@ const clubsAPI = {
     try {
       const res = await fetch(`${BASE_URL}/api/clubs/${clubId}/members`, { headers: await authHeaders() })
       if (res.ok) return res.json()
-    } catch (_) {}
+    } catch { /* ignore */ }
     return { members: [], count: 0 }
   },
 
@@ -196,7 +197,7 @@ const clubsAPI = {
     try {
       const res = await fetch(`${BASE_URL}/api/clubs/events/subscribed`, { headers: await authHeaders() })
       if (res.ok) return res.json()
-    } catch (_) {}
+    } catch { /* ignore */ }
     return { events: [] }
   },
 
@@ -221,7 +222,7 @@ const clubsAPI = {
     try {
       const res = await fetch(`${BASE_URL}/api/clubs/announcements/subscribed`, { headers: await authHeaders() })
       if (res.ok) return res.json()
-    } catch (_) {}
+    } catch { /* ignore */ }
     return { announcements: [] }
   },
 
@@ -265,7 +266,7 @@ const clubsAPI = {
     try {
       const res = await fetch(`${BASE_URL}/api/clubs/user/${userId}/subscriptions`, { headers: await authHeaders() })
       if (res.ok) return res.json()
-    } catch (_) {}
+    } catch { /* ignore */ }
     return { subscribed_club_ids: [] }
   },
 
@@ -289,7 +290,7 @@ const clubsAPI = {
         headers: await authHeaders(),
       })
       if (res.ok) return res.json()
-    } catch (_) {}
+    } catch { /* ignore */ }
     return { requests: [], count: 0 }
   },
 
@@ -311,7 +312,7 @@ const clubsAPI = {
     try {
       const res = await fetch(`${BASE_URL}/api/clubs/${clubId}/activity?limit=${limit}`, { headers: await authHeaders() })
       if (res.ok) return res.json()
-    } catch (_) {}
+    } catch { /* ignore */ }
     return { items: [], count: 0 }
   },
 
@@ -319,7 +320,7 @@ const clubsAPI = {
     try {
       const res = await fetch(`${BASE_URL}/api/clubs/${clubId}/faculty-stats`, { headers: await authHeaders() })
       if (res.ok) return res.json()
-    } catch (_) {}
+    } catch { /* ignore */ }
     return { your_faculty: null, your_faculty_count: 0, by_faculty: [], total: 0 }
   },
 
@@ -353,7 +354,7 @@ const clubsAPI = {
     try {
       const res = await fetch(`${BASE_URL}/api/clubs/${clubId}/managers`, { headers: await authHeaders() })
       if (res.ok) return res.json()
-    } catch (_) {}
+    } catch { /* ignore */ }
     return { managers: [], count: 0 }
   },
 

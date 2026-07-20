@@ -18,9 +18,10 @@ async function authHeaders() {
 const forumAPI = {
   // ── Posts ────────────────────────────────────────────────────────
 
-  async getPosts({ category, sort = 'hot', search, limit = 30, offset = 0 } = {}) {
+  async getPosts({ category, subject, sort = 'hot', search, limit = 30, offset = 0 } = {}) {
     const params = new URLSearchParams()
     if (category && category !== 'all') params.set('category', category)
+    if (subject) params.set('subject', subject)
     if (sort)   params.set('sort', sort)
     if (search) params.set('search', search)
     params.set('limit', limit)
@@ -35,14 +36,14 @@ const forumAPI = {
 
   async createPost({
     author, avatar_color, category, title, body, tags, program_info,
-    rating, review_target_type, review_target_value,
+    rating, difficulty_rating, review_target_type, review_target_value, professor_name,
   }) {
     const res = await fetch(`${BASE_URL}/api/forum/posts`, {
       method: 'POST',
       headers: await authHeaders(),
       body: JSON.stringify({
         author, avatar_color, category, title, body, tags, program_info,
-        rating, review_target_type, review_target_value,
+        rating, difficulty_rating, review_target_type, review_target_value, professor_name,
       }),
     })
     if (!res.ok) {

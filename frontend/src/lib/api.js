@@ -208,9 +208,9 @@ export const coursesAPI = {
     }
   },
 
-  getDetails: async (subject, catalog) => {
+  getDetails: async (subject, catalog, term) => {
     try {
-      const response = await api.get(`/courses/${subject}/${catalog}`)
+      const response = await api.get(`/courses/${subject}/${catalog}`, { params: term ? { term } : undefined })
       return response.data
     } catch (error) {
       console.error('Course details error:', error)

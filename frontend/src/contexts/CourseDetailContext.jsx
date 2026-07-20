@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useCallback } from 'react'
 import { coursesAPI } from '../lib/api'
 
@@ -8,13 +9,13 @@ export function CourseDetailProvider({ children }) {
   const [loading,   setLoading]   = useState(false)
   const [error,     setError]     = useState(null)
 
-  const openCourse = useCallback(async (subject, catalog) => {
+  const openCourse = useCallback(async (subject, catalog, term) => {
     if (!subject || !catalog) return
     setLoading(true)
     setError(null)
     setCourse({ subject, catalog, _loading: true })   // open modal immediately with skeleton
     try {
-      const data = await coursesAPI.getDetails(subject, catalog)
+      const data = await coursesAPI.getDetails(subject, catalog, term)
       setCourse(data.course || data)
     } catch (err) {
       console.error('CourseDetailModal fetch error:', err)
