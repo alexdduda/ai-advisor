@@ -12,6 +12,8 @@ import PrivacyPolicy from '../Legal/PrivacyPolicy'
 import TermsOfService from '../Legal/TOS'
 import AboutUs from '../Legal/AboutUs'
 import { authAPI } from '../../lib/api'
+import useViewport from '../../hooks/useViewport'
+import MobileAuth from './MobileAuth'
 import logoMark from '../../assets/loading-logo.png'
 import signInPhoto from '../../assets/sign-in.jpg'
 import './Auth.css'
@@ -52,6 +54,9 @@ function Login({ forceVerify = false, email: propEmail = '', userId: propUserId 
   const { t, language, setLanguage } = useLanguage()
   const { resolvedTheme, setTheme } = useTheme()
   const cycleTheme = () => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')
+  // Switches on viewport, not platform: mobile *web* visitors get these
+  // screens too, and a 500px browser window on a laptop should as well.
+  const { isMobile } = useViewport()
 
   const isLogin  = mode === 'login'
   const isSignup = mode === 'signup'
@@ -187,6 +192,16 @@ function Login({ forceVerify = false, email: propEmail = '', userId: propUserId 
     }
   }
 
+  // Hoisted verbatim from the desktop verify screen's inline onClick so the
+  // mobile screen can call the identical handler. Behaviour is unchanged.
+  const handleResend = async () => {
+    setResendLoading(true)
+    const { error } = await resendVerificationEmail(pendingEmail)
+    setResendLoading(false)
+    if (error) setErrors({ form: error.message })
+    else { setMessage('Verification email resent!'); setResendCooldown(60) }
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setMessage('')
@@ -238,6 +253,39 @@ function Login({ forceVerify = false, email: propEmail = '', userId: propUserId 
 
   const strength   = isSignup ? passwordStrength(password) : null
   const formError  = errors.form || authError?.message
+
+  // Mobile gets a separate presentation component rather than a pile of
+  // conditional classNames inside the desktop tree. All state and handlers
+  // stay here; MobileAuth only renders. Keeping the two trees disjoint is
+  // what guarantees the desktop layout cannot regress.
+  if (isMobile) {
+    return (
+      <MobileAuth
+        mode={mode}
+        email={email} setEmail={setEmail}
+        password={password} setPassword={setPassword}
+        username={username} setUsername={setUsername}
+        showPassword={showPassword} setShowPassword={setShowPassword}
+        errors={errors}
+        loading={loading}
+        message={message}
+        formError={formError}
+        strength={strength}
+        handleSubmit={handleSubmit}
+        switchMode={switchMode}
+        animating={animating}
+        verifyCode={verifyCode} setVerifyCode={setVerifyCode}
+        handleVerifyCode={handleVerifyCode}
+        verifyingCode={verifyingCode}
+        pendingEmail={pendingEmail}
+        resendCooldown={resendCooldown}
+        resendLoading={resendLoading}
+        handleResend={handleResend}
+        legalModal={legalModal} setLegalModal={setLegalModal}
+        onBack={onBack}
+      />
+    )
+  }
 
   return (
     <div className="auth-page">
@@ -351,13 +399,7 @@ function Login({ forceVerify = false, email: propEmail = '', userId: propUserId 
                 className="btn btn-primary btn-full"
                 style={{ marginTop: '20px' }}
                 disabled={resendCooldown > 0 || resendLoading}
-                onClick={async () => {
-                  setResendLoading(true)
-                  const { error } = await resendVerificationEmail(pendingEmail)
-                  setResendLoading(false)
-                  if (error) setErrors({ form: error.message })
-                  else { setMessage('Verification email resent!'); setResendCooldown(60) }
-                }}
+                onClick={handleResend}
               >
                 {resendLoading ? 'Sending…' : resendCooldown > 0 ? `Resend email (${resendCooldown}s)` : 'Resend verification email'}
               </button>
