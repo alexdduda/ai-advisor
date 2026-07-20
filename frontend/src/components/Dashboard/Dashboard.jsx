@@ -153,6 +153,7 @@ export default function Dashboard() {
   const [profileImage, setProfileImage] = useState(profile?.profile_image || null)
   const [isUploadingImage, setIsUploadingImage] = useState(false)
   const fileInputRef = useRef(null)
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
 
   // ── Right sidebar / pinned chat ─────────────────────────
   const [rightSidebarOpen, setRightSidebarOpen] = useState(false)
@@ -947,6 +948,7 @@ export default function Dashboard() {
         profile={profile}
         onSignOut={handleSignOut}
         badges={{ calendar: upcomingUrgentCount > 0 ? upcomingUrgentCount : null }}
+        onOpenFeedback={() => setFeedbackOpen(true)}
       />
 
       <main className="main-content">
@@ -1150,7 +1152,7 @@ export default function Dashboard() {
       />
 
       <Suspense fallback={null}>
-        <FeedbackModal userId={user?.id} userEmail={user?.email} />
+        <FeedbackModal userId={user?.id} userEmail={user?.email} open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
       </Suspense>
 
       {showTutorial && (

@@ -165,6 +165,8 @@ const EN_TRANSLATIONS = {
     'settings.languageDesc': 'Interface language',
     'settings.timezone': 'Timezone',
     'settings.timezoneDesc': 'Your local timezone',
+    'settings.replayTour': 'Replay Tour',
+    'settings.replayTourDesc': 'Watch the onboarding walkthrough again',
 
     // ── Danger zone ─────────────────────────────────────
     'settings.dangerZone': 'Danger Zone',
