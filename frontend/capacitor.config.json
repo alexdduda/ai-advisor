@@ -1,0 +1,19 @@
+{
+  "appId": "ca.symbolos.app",
+  "appName": "Symbolos",
+  "webDir": "dist",
+  "android": {
+    "allowMixedContent": false
+  },
+  "ios": {
+    "contentInset": "always"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchAutoHide": true,
+      "launchShowDuration": 500,
+      "backgroundColor": "#ffffff",
+      "showSpinner": false
+    }
+  }
+}
