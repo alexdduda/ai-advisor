@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { HiLightBulb } from 'react-icons/hi'
+import { FaSun, FaMoon } from 'react-icons/fa'
 import { useAuth } from '../../contexts/AuthContext'
 import { useLanguage, useTheme } from '../../contexts/PreferencesContext'
 import { supabase } from '../../lib/supabase'
@@ -13,6 +13,7 @@ import TermsOfService from '../Legal/TOS'
 import AboutUs from '../Legal/AboutUs'
 import { authAPI } from '../../lib/api'
 import logoMark from '../../assets/loading-logo.png'
+import signInPhoto from '../../assets/sign-in.jpg'
 import './Auth.css'
 
 function Login({ forceVerify = false, email: propEmail = '', userId: propUserId = '', onBack = null }) {
@@ -265,12 +266,13 @@ function Login({ forceVerify = false, email: propEmail = '', userId: propUserId 
           onClick={cycleTheme}
           title={resolvedTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
         >
-          {resolvedTheme === 'dark' ? '☀' : '☽'}
+          {resolvedTheme === 'dark' ? <FaSun /> : <FaMoon />}
         </button>
       </div>
 
       {/* ── Left branding panel ── */}
-      <aside className="auth-branding">
+      <aside className="auth-branding" style={{ backgroundImage: `url(${signInPhoto})` }}>
+        <div className="auth-branding-tint" />
         <div className="auth-branding-inner">
           <div className="auth-logo">
             <div className="auth-logo-mark">
@@ -398,9 +400,6 @@ function Login({ forceVerify = false, email: propEmail = '', userId: propUserId 
                 <p className="auth-card-subtitle">
                   {isForgot ? t('auth.subForgot') : isLogin ? t('auth.subLogin') : t('auth.subSignup')}
                 </p>
-                {isLogin && (
-                  <p className="auth-card-tip"><HiLightBulb />{t('auth.mcgillTip')}</p>
-                )}
               </div>
 
               {formError && (
@@ -534,7 +533,7 @@ function Login({ forceVerify = false, email: propEmail = '', userId: propUserId 
                   </p>
                 )}
 
-                <button type="submit" className="btn btn-primary btn-full" disabled={loading}>
+                <button type="submit" className="btn btn-primary btn-full auth-signin-btn" disabled={loading}>
                   {loading ? (
                     <span className="btn-loading">
                       <span className="spinner" />

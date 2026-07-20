@@ -497,12 +497,12 @@
 
 .drv-block-header:hover { background: var(--bg-secondary); }
 
-.drv-block-header-left  { display: flex; align-items: center; gap: 10px; }
+.drv-block-header-left  { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
 .drv-block-header-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 
 .drv-chevron       { color: var(--text-muted); font-size: 12px; flex-shrink: 0; }
-.drv-block-title   { font-size: 14px; font-weight: 600; color: var(--text-primary); }
-.drv-block-credits { font-size: 11px; color: var(--text-muted); margin-left: 6px; font-weight: 400; }
+.drv-block-title   { font-size: 14px; font-weight: 600; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.drv-block-credits { font-size: 11px; color: var(--text-muted); margin-left: 6px; font-weight: 400; flex-shrink: 0; }
 
 .drv-block-count {
   font-size: 11px;
@@ -816,9 +816,12 @@
   /* On mobile the off-canvas sidebar keeps its width even when collapsed —
      it's hidden by the left:-100% transform, not by zero width. */
   .drv-sidebar--collapsed { width: 85%; min-width: 0; max-width: 320px; }
-  .drv-main            { padding: 16px; }
+  /* .drv-main scrolls internally (independent of .content-area), so it
+     needs its own bottom clearance to not hide the last block behind the
+     fixed bottom-nav rail. */
+  .drv-main            { padding: 16px; padding-bottom: calc(16px + 56px + env(safe-area-inset-bottom, 0px)); }
   .drv-detail-header   { flex-direction: column; }
-  .drv-detail-meta     { flex-direction: row; align-items: center; }
+  .drv-detail-meta     { flex-direction: row; flex-wrap: wrap; align-items: center; width: 100%; }
 }
 /* ─── Foundation Year Waived Banner ───────────────────────── */
 .drv-foundation-waived-banner {

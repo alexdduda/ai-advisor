@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react'
 import {
   FaHeart, FaRegHeart, FaCheckCircle, FaBook, FaUser, FaChartBar,
   FaStar, FaTrophy, FaLayerGroup, FaExclamationCircle, FaTimes, FaExternalLinkAlt,
-  FaFlag, FaCalendarAlt,
+  FaFlag, FaCalendarAlt, FaMapMarkerAlt,
 } from 'react-icons/fa'
 import { useCourseDetail } from '../../contexts/CourseDetailContext'
 import { useLanguage } from '../../contexts/PreferencesContext'
-import { getBestRating, getTotalReviews } from '../../utils/courseRatings'
+import { getBestRating } from '../../utils/courseRatings'
 import ProfSuggestionPopover from '../ProfSuggestion/ProfSuggestionPopover'
 import './CourseDetailModal.css'
 
@@ -66,7 +66,6 @@ export default function CourseDetailModal({
 
   const isLoading = course._loading || loading
   const rating  = getBestRating(course)
-  const reviews = getTotalReviews(course)
 
   const byTerm = {}
   for (const s of course.schedule || []) {
@@ -224,7 +223,8 @@ export default function CourseDetailModal({
                               )}
                               {s.location && (
                                 <div className="cdm-schedule-row">
-                                  <span>📍 {s.location}</span>
+                                  <FaMapMarkerAlt className="cdm-schedule-icon" />
+                                  <span>{s.location}</span>
                                 </div>
                               )}
                             </div>
@@ -271,9 +271,6 @@ export default function CourseDetailModal({
                     <div className="cdm-section-header">
                       <FaStar />
                       <h3>{t('courses.professorRating')}</h3>
-                      {reviews && (
-                        <span className="cdm-section-count">{t('courses.ratingsCount').replace('{n}', reviews)}</span>
-                      )}
                     </div>
                     <div className="cdm-rating-grid">
                       <div className="cdm-rating-card">

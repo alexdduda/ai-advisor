@@ -21,13 +21,6 @@ const CATEGORY_ICON_COMPONENTS = {
   other:         FaComments,
 }
 
-const CARD_CONFIG = {
-  urgent:   { accent: 'var(--card-urgent,   #ED1B2F)' },
-  warning:  { accent: 'var(--card-warning,  #F59E0B)' },
-  insight:  { accent: 'var(--card-insight,  #3B82F6)' },
-  progress: { accent: 'var(--card-progress, #10B981)' },
-}
-
 // ── Thread messages scroller ──────────────────────────────────
 function ThreadMessages({ thread, isThinking }) {
   const scrollRef = useRef(null)
@@ -155,7 +148,6 @@ function AdvisorCard({
   const [panelOpen, setPanelOpen] = useState(false)
   const cardRef = useRef(null)
 
-  const config   = CARD_CONFIG[card.card_type || card.type] || CARD_CONFIG.insight
   const CardIcon = CATEGORY_ICON_COMPONENTS[card.category || 'other'] || FaComments
   const isSaved  = card.is_saved || false
   const isUser   = card.source === 'user'
@@ -163,6 +155,7 @@ function AdvisorCard({
   useEffect(() => {
     if (!isExpanded) return
     const handleClickOutside = (e) => {
+      if (e.target.closest('.sidebar')) return
       if (cardRef.current && !cardRef.current.contains(e.target)) {
         onCollapse(card.id)
       }
@@ -233,7 +226,6 @@ function AdvisorCard({
         isPinned   ? 'advisor-card--pinned' : '',
       ].filter(Boolean).join(' ')}
       style={{
-        '--card-accent': config.accent,
         // During streaming, each card gets an explicit stagger delay so they
         // visually appear one by one. After persisted (id present), clear it.
         ...(card._streamIdx !== undefined && !card.id

@@ -327,8 +327,8 @@
 
 .notif-method-btn.active {
   border-color: var(--accent-primary);
-  background: var(--accent-lighter);
-  color: var(--accent-primary);
+  background: var(--accent-primary);
+  color: #fff;
   font-weight: 700;
   box-shadow: 0 0 0 3px rgba(237,27,47,0.08);
 }
@@ -377,8 +377,8 @@
 
 .notif-timing-chip.active {
   border-color: var(--accent-primary);
-  background: var(--accent-lighter);
-  color: var(--accent-primary);
+  background: var(--accent-primary);
+  color: #fff;
   font-weight: 700;
 }
 
@@ -414,8 +414,8 @@
 .notif-type-chip.active {
   font-weight: 700;
   border-color: var(--accent-primary);
-  background: var(--accent-lighter);
-  color: var(--accent-primary);
+  background: var(--accent-primary);
+  color: #fff;
 }
 
 /* ── Save button ───────────────────────────────────────────── */
@@ -751,7 +751,7 @@
 .clubs-visibility-option:first-child { border-right: 1.5px solid var(--border-secondary, #e5e7eb); }
 .clubs-visibility-option:hover { background: var(--bg-hover, #f9fafb); }
 .clubs-visibility-option.active {
-  background: var(--accent-lighter, #fee2e2);
-  color: var(--accent-primary, #dc2626);
+  background: var(--accent-primary, #dc2626);
+  color: #fff;
   font-weight: 700;
 }
