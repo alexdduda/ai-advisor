@@ -28,7 +28,47 @@ import { Capacitor } from '@capacitor/core'
  * Value is fixed for the lifetime of the page, so this is a plain function
  * rather than a hook — there is no state to subscribe to.
  */
+/**
+ * Preview-only escape hatch.
+ *
+ * The native-only screens are invisible in a browser, which makes them
+ * untestable until someone has Xcode or Android Studio running. `?native=1`
+ * on a preview deployment forces the native code path so they can be reviewed
+ * from a phone browser.
+ *
+ * Hard-gated on hostname: this returns false on symbolos.ca no matter what is
+ * in the URL. Without that gate it would be a live way for anyone to skip the
+ * marketing landing page, and a crawler following such a link could index the
+ * wrong entry point. Preview hosts are *.vercel.app and localhost.
+ *
+ * Persisted for the session so the flag survives navigation and reloads;
+ * `?native=0` clears it.
+ */
+function nativePreviewOverride() {
+  if (typeof window === 'undefined') return false
+
+  const host = window.location.hostname
+  const isProductionHost = host === 'symbolos.ca' || host.endsWith('.symbolos.ca')
+  if (isProductionHost) return false
+
+  try {
+    const param = new URLSearchParams(window.location.search).get('native')
+    if (param === '1') {
+      sessionStorage.setItem('symbolos_force_native', '1')
+      return true
+    }
+    if (param === '0') {
+      sessionStorage.removeItem('symbolos_force_native')
+      return false
+    }
+    return sessionStorage.getItem('symbolos_force_native') === '1'
+  } catch {
+    return false
+  }
+}
+
 export function isNativeApp() {
+  if (nativePreviewOverride()) return true
   try {
     return Capacitor.isNativePlatform()
   } catch {
