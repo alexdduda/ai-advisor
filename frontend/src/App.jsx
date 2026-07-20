@@ -2,7 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { PreferencesProvider } from './contexts/PreferencesContext'
 import Login from './components/Auth/Login'
+import MobileWelcome from './components/Auth/MobileWelcome'
 import LandingPage from './components/Landing/LandingPage'
+import { isNativeApp } from './lib/platform'
 import PrivacyPolicy from './components/Legal/PrivacyPolicy'
 import TermsOfService from './components/Legal/TOS'
 import AboutUs from './components/Legal/AboutUs'
@@ -60,6 +62,11 @@ function AppContent() {
     }
   })()
   const [showLogin, setShowLogin] = useState(_initialShowLogin)
+
+  // Which auth screen the user asked for. Only meaningful alongside
+  // showLogin; the in-app welcome's two CTAs set it so "Get started" opens
+  // signup rather than dropping the user on a login form.
+  const [authIntent, setAuthIntent] = useState('login')
 
   // Brief flash-prevention only — render as soon as auth resolves (no
   // artificial 2s minimum, that was costing every user 2s on first paint).
@@ -221,10 +228,25 @@ function AppContent() {
     } catch { /* URL manipulation is best-effort */ }
   }
 
-  // Unauthenticated: show landing first; click "Sign in" → show Login.
+  // Unauthenticated entry point.
+  //
+  // In the installed app we skip the marketing landing entirely: someone who
+  // went to the App Store and waited for a download has already been sold, and
+  // re-pitching them just puts a scroll between them and signing up. They get
+  // a short branded welcome that only routes to signup or login.
+  //
+  // On the web — including mobile web — the landing page stays. A phone
+  // visitor arriving from a link has NOT been sold, and that page is the whole
+  // conversion surface. This is a platform check, deliberately not a viewport
+  // check; see lib/platform.js.
   const main = showLogin
-    ? <Login onBack={() => setShowLogin(false)} />
-    : <LandingPage onSignIn={() => setShowLogin(true)} />
+    ? <Login onBack={() => setShowLogin(false)} initialMode={authIntent} />
+    : isNativeApp()
+      ? <MobileWelcome
+          onSignUp={() => { setAuthIntent('signup'); setShowLogin(true) }}
+          onSignIn={() => { setAuthIntent('login');  setShowLogin(true) }}
+        />
+      : <LandingPage onSignIn={() => { setAuthIntent('login'); setShowLogin(true) }} />
 
   return (
     <>
