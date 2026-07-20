@@ -145,18 +145,28 @@ class UserUpdate(BaseModel):
     notification_prefs: Optional[NotificationPrefs] = None
     advanced_standing: Optional[List[AdvancedStandingItem]] = None
 
-    # FIX F-06: Validate profile_image must be a valid https:// URL
+    # FIX F-06: profile_image must be one of our own Supabase Storage public
+    # URLs (profile-images bucket) — not an arbitrary https URL or a raw
+    # data: URI. Without this, a client could point profile_image at any
+    # URL (tracking pixel, XSS via SVG) or store an unbounded base64 blob
+    # directly in the row.
     @field_validator('profile_image', mode='before')
     @classmethod
     def validate_profile_image(cls, v):
         if v is None:
             return v
-        parsed = urlparse(str(v))
+        v = str(v).strip()
+        if not v:
+            return None
+        parsed = urlparse(v)
         if parsed.scheme != 'https':
             raise ValueError('profile_image must be a valid https:// URL')
-        if not parsed.netloc:
-            raise ValueError('profile_image must be a valid https:// URL')
-        return str(v)
+        expected_host = urlparse(settings.SUPABASE_URL).netloc
+        if not expected_host or expected_host not in parsed.netloc:
+            raise ValueError('profile_image must point to our Supabase Storage')
+        if '/storage/v1/object/public/profile-images/' not in parsed.path:
+            raise ValueError('profile_image must reference the profile-images bucket')
+        return v
 
     @field_validator('username', mode='before')
     @classmethod

@@ -20,20 +20,23 @@ async def list_clubs(
     search: Optional[str] = None,
     category: Optional[str] = None,
     limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
     current_user_id: str = Depends(get_current_user_id),
 ):
-    """Return the public discovery view of verified, non-private clubs.
+    """Return the public discovery view of verified clubs (public + private).
 
-    SEC FIX #4 (HIGH):
+    "Private" means join-by-application only — it does NOT mean hidden.
+    Private clubs are fully discoverable here so students can find and
+    apply to them; the join endpoint (membership.py) is what enforces
+    the application/approval gate instead of an instant join. Only
+    unverified (not-yet-approved) clubs are excluded.
+
+    SEC FIX #4 (HIGH), still enforced:
       * Endpoint requires authentication (the McGill-only gate).
-      * Private clubs are filtered out — there is NO branch in this
-        response that exposes them. Managers see their private clubs
-        via the dedicated /api/clubs/created/{user_id} endpoint, which
-        is per-user and never edge-cached.
       * Per-club PII (contact_email, executive_emails, created_by,
-        admin emails) is always stripped. Managers needing those fields
-        for clubs they own use /api/clubs/created/{user_id} or
-        /api/clubs/{club_id}/managers.
+        admin emails) is always stripped, for public and private clubs
+        alike. Managers needing those fields for clubs they own use
+        /api/clubs/created/{user_id} or /api/clubs/{club_id}/managers.
 
     PERF: because the response is now *identical for every authenticated
     user* (no per-user manager carve-out), we can safely public-cache it
@@ -43,20 +46,20 @@ async def list_clubs(
     up to an hour (a longer window here previously made an admin-approved
     club appear "missing" for anyone who'd already warmed the cache).
 
-    Supabase RLS still mirrors this in case the anon key in the bundle
-    is used to query the table directly — see
-    backend/migrations/2026_06_01_sec_rls_clubs_pii.sql.
+    Supabase RLS mirrors this same verified-only (not private-only) rule
+    in case the anon key in the bundle is used to query the table
+    directly — see backend/migrations/2026_06_01_sec_rls_clubs_pii.sql
+    and 2026_07_20_clubs_private_visible.sql.
 
     !! IMPORTANT for future maintainers !!
     Vercel's edge cache ignores the Authorization header on cache keys,
     so once warm, this endpoint effectively serves to anyone, including
     requests with no auth header. The audit (finding #4) explicitly OK'd
-    this once PII and private clubs were stripped at the data layer —
-    they are. DO NOT add ANY of the following to this response, because
-    the cache will leak it to non-McGill callers:
+    this once PII was stripped at the data layer — it is, for every row.
+    DO NOT add ANY of the following to this response, because the cache
+    will leak it to non-McGill callers:
       * personal email addresses (contact_email, executive_emails, ...)
       * any field that could differ per-caller
-      * private-club rows
       * draft / unverified clubs
       * anything you wouldn't write on a public flyer.
     """
@@ -66,11 +69,8 @@ async def list_clubs(
             supabase.table("clubs")
             .select("*")
             .eq("is_verified", True)
-            # SEC: hard filter at the query level — private clubs MUST NOT
-            # appear in the discovery response under any circumstance.
-            .or_("is_private.is.null,is_private.eq.false")
             .order("name")
-            .limit(limit)
+            .range(offset, offset + limit - 1)
         )
         if category:
             query = query.eq("category", category)
@@ -79,12 +79,6 @@ async def list_clubs(
             query = query.ilike("name", f"%{safe_search}%")
         result = query.execute()
         clubs = result.data or []
-
-        # Defense-in-depth: even if the .or_() filter is dropped in a
-        # future refactor, we re-filter private clubs in Python before
-        # serialising. The smoke test (test_private_clubs_hidden) covers
-        # this path specifically.
-        clubs = [c for c in clubs if not c.get("is_private")]
 
         # Strip PII uniformly. Same response for everyone, so the edge can
         # cache one copy and serve it to every signed-in caller.

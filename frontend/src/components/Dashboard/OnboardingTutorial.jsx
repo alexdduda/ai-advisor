@@ -147,14 +147,17 @@ const buildSteps = (t) => [
 
 const PAD = 10
 const TOOLTIP_W = 300
+const MOBILE_BREAKPOINT = 640
 
 export default function OnboardingTutorial({ onComplete, onTabChange }) {
   const { t } = useLanguage()
   const [step, setStep] = useState(0)
   const [rect, setRect] = useState(null)
   const [visible, setVisible] = useState(false)
-  const [arrowOffset, setArrowOffset] = useState(50)
-  const [tooltipTop, setTooltipTop] = useState(null)
+  const [viewport, setViewport] = useState(() => ({ w: window.innerWidth, h: window.innerHeight }))
+  // Unified layout: which side of the target the card docks to, its
+  // position, width, and where the arrow (if any) points.
+  const [layout, setLayout] = useState({ side: 'center', top: null, left: null, width: TOOLTIP_W, arrowOffset: 50 })
   const tooltipRef = useRef(null)
 
   const STEPS = useMemo(() => buildSteps(t), [t])
@@ -182,8 +185,12 @@ export default function OnboardingTutorial({ onComplete, onTabChange }) {
   }, [measure, step])
 
   useEffect(() => {
-    window.addEventListener('resize', measure)
-    return () => window.removeEventListener('resize', measure)
+    const onResize = () => {
+      measure()
+      setViewport({ w: window.innerWidth, h: window.innerHeight })
+    }
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
   }, [measure])
 
   useEffect(() => {
@@ -191,19 +198,54 @@ export default function OnboardingTutorial({ onComplete, onTabChange }) {
     return () => clearTimeout(t)
   }, [])
 
-  // Compute tooltip position and arrow offset after layout (reads ref safely in effect)
+  // Compute where the tooltip card docks relative to the target, and
+  // clamp it inside the viewport. Prefers docking to the right of the
+  // target (matches the original design), falls back to the left, and
+  // finally to below/above — the fallback (and the only option on
+  // mobile, where most targets span close to the full width) keeps the
+  // card fully on-screen instead of overflowing past the viewport edge.
   useEffect(() => {
     if (!tooltipRef.current) return
     const tipH = tooltipRef.current.offsetHeight || 240
-    if (rect) {
-      const targetCenterY = rect.top + rect.height / 2
-      const top = Math.max(16, Math.min(targetCenterY - tipH / 2, window.innerHeight - tipH - 16))
-      setTooltipTop(top)
-      setArrowOffset(Math.max(10, Math.min(targetCenterY - top, tipH - 10)))
-    } else {
-      setTooltipTop(null)
+    const isMobile = viewport.w < MOBILE_BREAKPOINT
+    const width = Math.min(TOOLTIP_W, viewport.w - 32)
+
+    if (!rect) {
+      setLayout({ side: 'center', top: null, left: null, width: Math.min(420, viewport.w - 32), arrowOffset: 50 })
+      return
     }
-  }, [rect, step])
+
+    const targetCenterY = rect.top + rect.height / 2
+    const targetCenterX = rect.left + rect.width / 2
+
+    if (!isMobile) {
+      const roomRight = viewport.w - rect.right - PAD - 18
+      const roomLeft = rect.left - PAD - 18
+      if (roomRight >= width) {
+        const top = Math.max(16, Math.min(targetCenterY - tipH / 2, viewport.h - tipH - 16))
+        setLayout({ side: 'right', top, left: rect.right + PAD + 18, width, arrowOffset: Math.max(10, Math.min(targetCenterY - top, tipH - 10)) })
+        return
+      }
+      if (roomLeft >= width) {
+        const top = Math.max(16, Math.min(targetCenterY - tipH / 2, viewport.h - tipH - 16))
+        setLayout({ side: 'left', top, left: rect.left - PAD - 18 - width, width, arrowOffset: Math.max(10, Math.min(targetCenterY - top, tipH - 10)) })
+        return
+      }
+    }
+
+    // Below (or above, if there's more room that way), centered under
+    // the target and clamped horizontally to the viewport.
+    const roomBelow = viewport.h - rect.bottom - PAD - 18
+    const roomAbove = rect.top - PAD - 18
+    const left = Math.max(16, Math.min(targetCenterX - width / 2, viewport.w - width - 16))
+    if (roomBelow >= tipH || roomBelow >= roomAbove) {
+      const top = Math.min(rect.bottom + PAD + 18, Math.max(16, viewport.h - tipH - 16))
+      setLayout({ side: 'below', top, left, width, arrowOffset: Math.max(10, Math.min(targetCenterX - left, width - 10)) })
+    } else {
+      const top = Math.max(16, rect.top - PAD - 18 - tipH)
+      setLayout({ side: 'above', top, left, width, arrowOffset: Math.max(10, Math.min(targetCenterX - left, width - 10)) })
+    }
+  }, [rect, step, viewport])
 
   const advance = (dir) => {
     const nextIdx = step + (dir === 'fwd' ? 1 : -1)
@@ -256,10 +298,11 @@ export default function OnboardingTutorial({ onComplete, onTabChange }) {
         ref={tooltipRef}
         style={{
           position: 'fixed',
-          ...(hasTarget && tooltipTop !== null
-            ? { top: tooltipTop, left: rect.right + PAD + 18, width: TOOLTIP_W }
-            : { top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 420, maxWidth: 'calc(100vw - 32px)' }
+          ...(layout.side === 'center'
+            ? { top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: layout.width }
+            : { top: layout.top, left: layout.left, width: layout.width }
           ),
+          maxWidth: 'calc(100vw - 32px)',
           background: 'var(--tour-bg)',
           border: '1px solid rgba(237,27,47,0.22)',
           borderRadius: 14,
@@ -267,23 +310,29 @@ export default function OnboardingTutorial({ onComplete, onTabChange }) {
           boxShadow: '0 12px 48px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.03)',
         }}
       >
-        {/* Arrow (only for spotlight steps) */}
-        {hasTarget && (
+        {/* Arrow — points back toward the target from whichever edge the card docked to */}
+        {layout.side === 'right' && (
           <>
-            <div style={{
-              position: 'absolute', left: -8, top: arrowOffset,
-              width: 0, height: 0,
-              borderTop: '8px solid transparent', borderBottom: '8px solid transparent',
-              borderRight: '8px solid rgba(237,27,47,0.22)',
-              transform: 'translateY(-50%)',
-            }} />
-            <div style={{
-              position: 'absolute', left: -6, top: arrowOffset,
-              width: 0, height: 0,
-              borderTop: '7px solid transparent', borderBottom: '7px solid transparent',
-              borderRight: '7px solid var(--tour-bg)',
-              transform: 'translateY(-50%)',
-            }} />
+            <div style={{ position: 'absolute', left: -8, top: layout.arrowOffset, width: 0, height: 0, borderTop: '8px solid transparent', borderBottom: '8px solid transparent', borderRight: '8px solid rgba(237,27,47,0.22)', transform: 'translateY(-50%)' }} />
+            <div style={{ position: 'absolute', left: -6, top: layout.arrowOffset, width: 0, height: 0, borderTop: '7px solid transparent', borderBottom: '7px solid transparent', borderRight: '7px solid var(--tour-bg)', transform: 'translateY(-50%)' }} />
+          </>
+        )}
+        {layout.side === 'left' && (
+          <>
+            <div style={{ position: 'absolute', right: -8, top: layout.arrowOffset, width: 0, height: 0, borderTop: '8px solid transparent', borderBottom: '8px solid transparent', borderLeft: '8px solid rgba(237,27,47,0.22)', transform: 'translateY(-50%)' }} />
+            <div style={{ position: 'absolute', right: -6, top: layout.arrowOffset, width: 0, height: 0, borderTop: '7px solid transparent', borderBottom: '7px solid transparent', borderLeft: '7px solid var(--tour-bg)', transform: 'translateY(-50%)' }} />
+          </>
+        )}
+        {layout.side === 'below' && (
+          <>
+            <div style={{ position: 'absolute', top: -8, left: layout.arrowOffset, width: 0, height: 0, borderLeft: '8px solid transparent', borderRight: '8px solid transparent', borderBottom: '8px solid rgba(237,27,47,0.22)', transform: 'translateX(-50%)' }} />
+            <div style={{ position: 'absolute', top: -6, left: layout.arrowOffset, width: 0, height: 0, borderLeft: '7px solid transparent', borderRight: '7px solid transparent', borderBottom: '7px solid var(--tour-bg)', transform: 'translateX(-50%)' }} />
+          </>
+        )}
+        {layout.side === 'above' && (
+          <>
+            <div style={{ position: 'absolute', bottom: -8, left: layout.arrowOffset, width: 0, height: 0, borderLeft: '8px solid transparent', borderRight: '8px solid transparent', borderTop: '8px solid rgba(237,27,47,0.22)', transform: 'translateX(-50%)' }} />
+            <div style={{ position: 'absolute', bottom: -6, left: layout.arrowOffset, width: 0, height: 0, borderLeft: '7px solid transparent', borderRight: '7px solid transparent', borderTop: '7px solid var(--tour-bg)', transform: 'translateX(-50%)' }} />
           </>
         )}
 
