@@ -16,11 +16,14 @@ import logoMark from '../../assets/loading-logo.png'
 import signInPhoto from '../../assets/sign-in.jpg'
 import './Auth.css'
 
-function Login({ forceVerify = false, email: propEmail = '', userId: propUserId = '', onBack = null }) {
+function Login({ forceVerify = false, email: propEmail = '', userId: propUserId = '', onBack = null, initialMode = 'login' }) {
   // Restore verify screen if the component remounts mid-verification
   const storedVerify = (() => { try { return JSON.parse(sessionStorage.getItem('symbolos_verify') || 'null') } catch { return null } })()
 
-  const [mode, setMode] = useState(forceVerify || storedVerify ? 'verify' : 'login') // 'login' | 'signup' | 'forgot' | 'reset' | 'verify'
+  // `initialMode` lets a caller open straight on signup — the in-app welcome
+  // screen's "Get started" should not land on a login form. An in-progress
+  // verification still wins, so a remount mid-signup resumes correctly.
+  const [mode, setMode] = useState(forceVerify || storedVerify ? 'verify' : initialMode) // 'login' | 'signup' | 'forgot' | 'reset' | 'verify'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [username, setUsername] = useState('')
