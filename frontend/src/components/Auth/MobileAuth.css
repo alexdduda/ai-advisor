@@ -1,0 +1,517 @@
+/* ── Mobile auth screens ────────────────────────────────────────────────
+   Rendered only by MobileAuth.jsx, which Login.jsx mounts only when
+   useViewport() reports isMobile. Every selector is `ma-`-prefixed and
+   nothing here touches an `auth-*` class, so the desktop stylesheet is
+   untouched by construction rather than by breakpoint discipline.
+
+   Auth renders OUTSIDE .mobile-shell (that's the dashboard shell), so the
+   --m-* native surface tokens do not resolve here. The values below are
+   copied from MobileLayout.css's "Native surface tokens" block on purpose:
+   the two surfaces must agree, and the alternative — hoisting the tokens to
+   :root — would leak them into desktop. */
+
+.ma-root {
+  --ma-font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI',
+             Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --ma-radius: 12px;
+  --ma-control-height: 50px;
+  --ma-gutter: 1.5rem;
+  --ma-hairline: 0.5px solid var(--border-primary, #e5e7eb);
+
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  width: 100%;
+  max-width: 100vw;
+  overflow: hidden;
+  box-sizing: border-box;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--ma-font);
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@supports not (border: 0.5px solid black) {
+  .ma-root { --ma-hairline: 1px solid var(--border-primary, #e5e7eb); }
+}
+
+[data-theme="dark"] .ma-root {
+  --ma-hairline: 0.5px solid rgba(255, 255, 255, 0.12);
+}
+
+.ma-root *,
+.ma-root *::before,
+.ma-root *::after { box-sizing: border-box; }
+
+/* ── Navigation strip ──────────────────────────────────────────────────
+   Not a title bar: it holds only the leading chevron and the two global
+   toggles. The screen title is large type in the content below, which is
+   what makes the screen read as an app screen rather than a web page. */
+.ma-nav {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 44px;
+  padding: 4px max(0.75rem, env(safe-area-inset-right))
+           4px max(0.75rem, env(safe-area-inset-left));
+  margin-top: env(safe-area-inset-top, 0px);
+}
+
+.ma-nav-spacer { width: 44px; }
+
+.ma-nav-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* 44px is the minimum comfortable touch target; the icon is much smaller
+     than the button so the target is honest without looking heavy. */
+  width: 44px;
+  height: 44px;
+  margin-left: -10px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ma-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ma-nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  height: 34px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 17px;
+  background: var(--bg-secondary, rgba(0, 0, 0, 0.05));
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+[data-theme="dark"] .ma-nav-btn {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* ── Scroller ──────────────────────────────────────────────────────────
+   The one scroll container on the screen. The submit button lives in
+   normal flow at the end of the form — never position:fixed, because a
+   fixed footer on iOS sits *behind* the keyboard rather than above it.
+
+   Reaching the button with the keyboard up is handled two ways:
+     1. scroll-padding-bottom, so the browser's own "scroll the focused
+        field into view" leaves room underneath the field instead of
+        parking it flush against the keyboard;
+     2. the :focus-within rule below, which adds half a viewport of
+        scrollable slack for exactly as long as a field is focused. Without
+        it a short form (forgot-password is one field) is shorter than the
+        viewport, so there is nothing to scroll and the button stays buried.
+        Making the slack conditional means it disappears the moment the
+        keyboard closes, instead of leaving a permanent dead zone. */
+.ma-scroll {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  scroll-padding-bottom: 96px;
+}
+
+.ma-content {
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem max(var(--ma-gutter), env(safe-area-inset-right))
+           calc(env(safe-area-inset-bottom, 0px) + 2rem)
+           max(var(--ma-gutter), env(safe-area-inset-left));
+  transition: opacity 0.16s ease, transform 0.16s ease;
+}
+
+/* switchMode() holds the old mode on screen for 180ms before swapping. That
+   pause exists whether or not anything moves, so give it a short crossfade —
+   otherwise a mode switch reads as a stall. */
+.ma-content--in  { animation: ma-fade-in 0.22s ease both; }
+.ma-content--out { opacity: 0; transform: translateY(4px); }
+
+@keyframes ma-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ma-content--in  { animation: none; }
+  .ma-content--out { opacity: 1; transform: none; }
+}
+
+.ma-scroll:focus-within .ma-content {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 50vh);
+}
+
+/* ── Header ── */
+.ma-header {
+  margin: 0.5rem 0 1.75rem;
+}
+
+.ma-logo {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  display: block;
+  margin-bottom: 1rem;
+}
+
+/* Large screen title in content — there is no top bar to carry it. */
+.ma-title {
+  margin: 0 0 0.5rem;
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+.ma-subtitle {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+.ma-verify-email {
+  color: var(--text-primary);
+  font-weight: 600;
+  word-break: break-all;
+}
+
+/* ── Form ── */
+.ma-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.ma-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ma-label {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* 16px is a hard floor, not a preference: below it iOS Safari zooms the
+   whole page on focus and the user has to pinch back out. */
+.ma-input {
+  width: 100%;
+  min-height: var(--ma-control-height);
+  padding: 0.875rem 1rem;
+  border: 1.5px solid var(--input-border, #e5e7eb);
+  border-radius: var(--ma-radius);
+  background: var(--input-bg, var(--bg-secondary));
+  color: var(--input-text, var(--text-primary));
+  font-family: inherit;
+  font-size: 16px;
+  line-height: 1.25;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ma-input::placeholder { color: var(--input-placeholder, var(--text-muted)); }
+
+.ma-input:focus {
+  border-color: var(--accent-primary, #ed1b2f);
+  box-shadow: 0 0 0 3px rgba(237, 27, 47, 0.14);
+}
+
+.ma-input--error {
+  border-color: var(--error-primary, #ef4444);
+}
+.ma-input--error:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.16);
+}
+
+.ma-input--has-icon { padding-right: 3rem; }
+
+.ma-input-wrap { position: relative; }
+
+.ma-pw-toggle {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  color: var(--text-muted, #9ca3af);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 6-digit OTP. Full-width and oversized rather than the desktop's
+   input-plus-button row: a side-by-side row on a phone squeezes both halves,
+   and this field is the primary email-verification path so it gets the
+   whole line. Still >=16px by a wide margin. */
+.ma-code-input {
+  text-align: center;
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: 0.35em;
+  /* letter-spacing adds trailing space after the last glyph, which throws
+     centred text left; half the tracking back corrects it optically. */
+  text-indent: 0.35em;
+  padding: 0.75rem 1rem;
+  min-height: 60px;
+}
+
+.ma-error {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--error-primary, #ef4444);
+}
+
+.ma-hint {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: var(--text-muted, #9ca3af);
+}
+
+/* ── Password strength ── */
+.ma-strength {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin-top: 0.25rem;
+}
+
+.ma-strength-bar {
+  flex: 1;
+  display: flex;
+  gap: 3px;
+}
+
+.ma-strength-seg {
+  height: 4px;
+  flex: 1;
+  border-radius: 2px;
+  transition: background 0.3s ease;
+}
+
+.ma-strength-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  min-width: 46px;
+  text-align: right;
+}
+
+/* ── Buttons ───────────────────────────────────────────────────────────
+   Geometry matched to MobileWelcome's .mw-btn (50px min-height, 12px
+   radius, 1rem/600) so the welcome screen and the form it opens read as
+   one flow. */
+.ma-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: var(--ma-control-height);
+  padding: 0 1rem;
+  border: none;
+  border-radius: var(--ma-radius);
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.15s ease, transform 0.1s ease;
+}
+
+.ma-btn--primary {
+  background: var(--accent-primary, #ed1b2f);
+  color: #fff;
+}
+
+.ma-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Press feedback. Hover is guarded because a :hover applied by a tap sticks
+   until you touch elsewhere, leaving the last-tapped control looking stuck. */
+.ma-btn:active:not(:disabled) {
+  opacity: 0.85;
+  transform: scale(0.99);
+}
+
+@media (hover: hover) {
+  .ma-btn--primary:hover:not(:disabled) { opacity: 0.92; }
+  .ma-textbtn:hover:not(:disabled)      { color: var(--accent-primary, #ed1b2f); }
+  .ma-nav-back:hover                    { opacity: 0.7; }
+  .ma-legal-link:hover                  { color: var(--accent-primary, #ed1b2f); }
+}
+
+/* Secondary actions are plain text buttons — no outline, no fill. */
+.ma-textbtn {
+  border: none;
+  background: none;
+  padding: 10px 2px;
+  font-family: inherit;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.15s ease, color 0.15s ease;
+}
+
+.ma-textbtn--accent { color: var(--accent-primary, #ed1b2f); }
+
+.ma-textbtn:active:not(:disabled) { opacity: 0.6; }
+.ma-textbtn:disabled { opacity: 0.45; cursor: default; }
+
+.ma-forgot-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -0.5rem;
+}
+
+.ma-secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 1.5rem;
+}
+
+.ma-secondary-label {
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+}
+
+/* ── Alerts / notes ── */
+.ma-alert {
+  margin: 0 0 1.25rem;
+  padding: 0.875rem 1rem;
+  border-radius: var(--ma-radius);
+  font-size: 0.9375rem;
+  line-height: 1.45;
+}
+
+.ma-alert--error {
+  background: var(--error-light, rgba(239, 68, 68, 0.1));
+  color: var(--error-text, #b91c1c);
+}
+
+.ma-alert--success {
+  background: var(--success-light, rgba(16, 185, 129, 0.1));
+  color: var(--success-text, #047857);
+}
+
+.ma-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 1.25rem 0 0;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--text-tertiary, #9ca3af);
+}
+
+.ma-note svg { flex-shrink: 0; margin-top: 3px; }
+
+/* ── Clickwrap + legal ── */
+.ma-clickwrap {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--text-tertiary, #9ca3af);
+}
+
+.ma-inline-link {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: var(--accent-primary, #ed1b2f);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.ma-legal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  /* margin-top:auto would fight the scroller; a fixed rhythm keeps the links
+     just below the content wherever it ends. */
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: var(--ma-hairline);
+}
+
+.ma-legal-link {
+  border: none;
+  background: none;
+  padding: 6px 4px;
+  font-family: inherit;
+  font-size: 0.75rem;
+  color: var(--text-tertiary, #9ca3af);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ma-legal-link:active { opacity: 0.6; }
+
+.ma-legal-sep {
+  font-size: 0.75rem;
+  color: var(--text-tertiary, #9ca3af);
+  user-select: none;
+}
+
+/* ── Spinner ── */
+.ma-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: ma-spin 0.65s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes ma-spin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .ma-spinner { animation-duration: 1.5s; }
+  .ma-btn { transition: none; }
+}
+
+/* Very small phones (SE-class): trim the header, never the controls. */
+@media (max-height: 700px) {
+  .ma-header { margin-bottom: 1.25rem; }
+  .ma-logo { width: 36px; height: 36px; margin-bottom: 0.75rem; }
+  .ma-title { font-size: 1.5rem; }
+}
