@@ -252,12 +252,12 @@ def _build_base_context(user: dict, user_sb=None) -> str:
             .execute().data or [])
 
         completed = (supabase.table("completed_courses")
-            .select("course_code, course_title, subject, catalog, term, year, grade, credits")
+            .select("course_code, course_title, subject, catalog, term, year, grade, credits, professor")
             .eq("user_id", user_id).order("year", desc=True).limit(60)
             .execute().data or [])
 
         current = (supabase.table("current_courses")
-            .select("course_code, course_title, subject, catalog, credits, term, year")
+            .select("course_code, course_title, subject, catalog, credits, term, year, professor")
             .eq("user_id", user_id).execute().data or [])
 
         today = datetime.now(timezone.utc).date().isoformat()
@@ -277,20 +277,25 @@ def _build_base_context(user: dict, user_sb=None) -> str:
         def fmt_completed():
             # Compact format: "COMP 202 (A-) F2023, MATH 222 (B+) W2024"
             # Saves ~700 tokens vs verbose format for a 60-course history.
+            # Professor suffix (·Name) is the student's own recorded instructor
+            # for that course — real data, not a rating — appended only when known.
             parts = []
             for c in completed:
                 code = c['course_code']
                 grade = c.get('grade') or '?'
                 term = (c.get('term') or '?')[0].upper() if c.get('term') else '?'
                 year = str(c.get('year') or '')[2:] if c.get('year') else '??'
-                parts.append(f"{code}({grade}){term}{year}")
+                prof = f"·{sanitise_context_field(c['professor'])}" if c.get('professor') else ""
+                parts.append(f"{code}({grade}){term}{year}{prof}")
             return ", ".join(parts) if parts else "None recorded"
 
-        def fmt_list(items, code_key="course_code", title_key="course_title"):
-            return "\n".join(
-                f"  - {i[code_key]} ({sanitise_context_field(i.get(title_key,''))})"
-                for i in items
-            ) or "  None recorded"
+        def fmt_list(items, code_key="course_code", title_key="course_title", show_professor=False):
+            def line(i):
+                base = f"  - {i[code_key]} ({sanitise_context_field(i.get(title_key,''))})"
+                if show_professor and i.get("professor"):
+                    base += f" — Prof. {sanitise_context_field(i['professor'])}"
+                return base
+            return "\n".join(line(i) for i in items) or "  None recorded"
 
         # Term-aware enrollment: don't tell the model the student is
         # "currently taking" courses that only start next semester.
@@ -300,6 +305,7 @@ def _build_base_context(user: dict, user_sb=None) -> str:
         upcoming_str = "\n".join(
             f"  {term} {year}:\n" + "\n".join(
                 f"    - {c['course_code']} ({sanitise_context_field(c.get('course_title',''))})"
+                + (f" — Prof. {sanitise_context_field(c['professor'])}" if c.get('professor') else "")
                 for c in cs
             )
             for (term, year), cs in upcoming_terms
@@ -375,7 +381,7 @@ STUDENT PROFILE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 COURSES THIS TERM ({active_term} {active_year})
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-{fmt_list(taking_now)}
+{fmt_list(taking_now, show_professor=True)}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 REGISTERED FOR UPCOMING TERMS (not yet started — say "registered for", never "currently taking")
@@ -403,7 +409,12 @@ ADVISOR GUIDELINES
 - Be friendly, specific, and actionable. Reference real McGill course codes.
 - Always consider the student's completed courses before recommending prerequisites.
 - Reference their GPA, year, and interests when making recommendations.
-- Mention professor ratings and grade averages when relevant to recommendations.
+- Course entries above show "Prof. X" when the student's own record has an instructor
+  for that course — that's real, factual data (who actually taught THEM), never a
+  guess. Use it freely (e.g. "email Prof. X, who taught you COMP 251"). You do NOT
+  have professor ratings or grade-average data — never state a rating, "difficulty",
+  or class average as fact. If asked, say you don't have that data and point to
+  McGill's course/professor review pages or RateMyProfessor.
 - Keep responses concise (2–4 paragraphs). Use bullets for lists.
 - When answering questions about prerequisites, registration, international student issues, financial aid, or student services, use the McGill Advising Knowledge section elsewhere in this prompt. Provide specific links when helpful.
 - If asked about something outside your knowledge, say so and suggest mcgill.ca or their departmental advisor.
