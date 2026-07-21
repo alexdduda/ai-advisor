@@ -5,6 +5,7 @@ import favoritesAPI from '../../lib/favoritesAPI'
 import completedCoursesAPI from '../../lib/completedCoursesAPI'
 import currentCoursesAPI from '../../lib/currentCoursesAPI'
 import { getCourseCredits as _getCourseCredits } from '../../utils/courseCredits'
+import { getCreditsRequired } from '../../utils/mcgillData'
 import { normalizeQuery, buildCorrectionCandidates } from '../../utils/fuzzySearch'
 import { useLanguage } from '../../contexts/PreferencesContext'
 import cardsAPI from '../../lib/cardsAPI'
@@ -155,13 +156,15 @@ export default function Dashboard() {
   const fileInputRef = useRef(null)
   const [feedbackOpen, setFeedbackOpen] = useState(false)
 
-  // Self-reported degree-progress summary (computed by DegreePlanningView from
-  // the same numbers it renders — see requirementMatch.js), attached to chat
-  // and card-thread requests so the AI is grounded in actual requirement
-  // progress instead of just the raw course list. A ref, not state: it's
-  // write-often/read-at-send-time, doesn't need to trigger re-renders, and
-  // is only populated once the student has visited Degree Planning this
-  // session (best-effort context, same as card_context today).
+  // Self-reported degree-progress summary attached to chat/card requests so
+  // the AI is grounded in actual requirement progress instead of just the
+  // raw course list. A ref, not state: write-often/read-at-send-time,
+  // doesn't need to trigger re-renders. Populated from two sources of
+  // increasing detail: (1) the baseline total-credit effect below, which
+  // runs as soon as profile/courses are loaded — always available; (2) if
+  // the student visits Degree Planning this session, DegreePlanningView's
+  // onProgressSummaryChange overwrites it with the fuller per-requirement-
+  // block breakdown (same numbers it renders — see requirementMatch.js).
   const degreeProgressRef = useRef('')
 
   // ── Right sidebar / pinned chat ─────────────────────────
@@ -238,6 +241,26 @@ export default function Dashboard() {
   const [currentCoursesMap, setCurrentCoursesMap] = useState(
     new Set((_hydratedCurrent || []).map(c => c.course_code))
   )
+
+  // Baseline total-credit progress, always available (no network fetch —
+  // mirrors the same arithmetic DegreeProgressTracker shows on Home), so the
+  // AI has SOME degree-progress signal even if the student never opens
+  // Degree Planning this session. Skipped while Degree Planning ("favorites"
+  // tab) is actually mounted — its onProgressSummaryChange callback is the
+  // richer, per-requirement-block source of truth then, and since child
+  // effects fire before parent effects in the same commit, running this
+  // unconditionally could clobber that richer value with the coarser total.
+  useEffect(() => {
+    if (!profile || activeTab === 'favorites') return
+    const completedCredits = completedCourses.reduce((sum, c) => sum + (c.credits || 3), 0)
+    const advancedStandingCredits = (profile.advanced_standing || []).reduce(
+      (sum, c) => (c.counts_toward_degree === false ? sum : sum + (c.credits || 0)), 0
+    )
+    const earned = completedCredits + advancedStandingCredits
+    const total = getCreditsRequired(profile.faculty, profile.major, profile.is_honours)
+    const pct = Math.min(100, Math.round((earned / total) * 100))
+    degreeProgressRef.current = `Overall degree: ${pct}% complete (${earned}/${total} credits)`
+  }, [profile, completedCourses, activeTab])
 
   // Computed once here (not inside HomeTab) because the Sidebar's Calendar
   // badge needs the same urgentCount — avoids a second fetch of the feed.
