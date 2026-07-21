@@ -148,12 +148,12 @@ def fetch_student_context(user_id: str, user_sb=None) -> dict:
         .execute().data or [])
 
     completed = (sb.table("completed_courses")
-        .select("course_code, course_title, subject, catalog, term, year, grade, credits")
+        .select("course_code, course_title, subject, catalog, term, year, grade, credits, professor")
         .eq("user_id", user_id).order("year", desc=True).limit(50)
         .execute().data or [])
 
     current = (sb.table("current_courses")
-        .select("course_code, course_title, subject, catalog, credits, term, year")
+        .select("course_code, course_title, subject, catalog, credits, term, year, professor")
         .eq("user_id", user_id).execute().data or [])
 
     today = datetime.now(timezone.utc).date().isoformat()
@@ -462,15 +462,21 @@ def build_rich_context(ctx: dict, saved_cards: list = None, recent_titles: list[
     adv_summary = ", ".join(f"{a['course_code']} ({a.get('credits') or 0} cr)" for a in adv) or "None"
 
     def fmt_completed():
+        # "Prof: X" is the student's own recorded instructor for that course —
+        # real data, not a rating — shown only when known.
         return "\n".join(
             f"  - {c['course_code']} ({sanitise_context_field(c.get('course_title',''))}) | "
             f"Grade: {c.get('grade') or 'N/A'} | Term: {c.get('term','?')} {c.get('year','')}"
+            + (f" | Prof: {sanitise_context_field(c['professor'])}" if c.get('professor') else "")
             for c in completed) or "  None recorded"
 
-    def fmt_list(items, code_key="course_code", title_key="course_title"):
-        return "\n".join(
-            f"  - {i[code_key]} ({sanitise_context_field(i.get(title_key,''))})" for i in items
-        ) or "  None recorded"
+    def fmt_list(items, code_key="course_code", title_key="course_title", show_professor=False):
+        def line(i):
+            base = f"  - {i[code_key]} ({sanitise_context_field(i.get(title_key,''))})"
+            if show_professor and i.get("professor"):
+                base += f" — Prof. {sanitise_context_field(i['professor'])}"
+            return base
+        return "\n".join(line(i) for i in items) or "  None recorded"
 
     # Term-aware enrollment (mirrors chat.py): upcoming-term registrations
     # must not be described as courses the student is taking right now.
@@ -480,6 +486,7 @@ def build_rich_context(ctx: dict, saved_cards: list = None, recent_titles: list[
     _upcoming_str = "\n".join(
         f"  {term} {year}:\n" + "\n".join(
             f"    - {c['course_code']} ({sanitise_context_field(c.get('course_title',''))})"
+            + (f" — Prof. {sanitise_context_field(c['professor'])}" if c.get('professor') else "")
             for c in cs
         )
         for (term, year), cs in _upcoming_terms
@@ -559,7 +566,7 @@ COMPLETED COURSES
 {fmt_completed()}
 
 COURSES THIS TERM ({_active_term} {_active_year})
-{fmt_list(_taking_now)}
+{fmt_list(_taking_now, show_professor=True)}
 
 REGISTERED FOR UPCOMING TERMS (not yet started — say "registered for", never "currently taking" or "this term")
 {_upcoming_str}
@@ -753,13 +760,13 @@ async def _fetch_student_context_parallel(user_id: str, user_sb=None) -> dict:
 
     def q_completed():
         return (sb.table("completed_courses")
-            .select("course_code, course_title, subject, catalog, term, year, grade, credits")
+            .select("course_code, course_title, subject, catalog, term, year, grade, credits, professor")
             .eq("user_id", user_id).order("year", desc=True).limit(50)
             .execute().data or [])
 
     def q_current():
         return (sb.table("current_courses")
-            .select("course_code, course_title, subject, catalog, credits, term, year")
+            .select("course_code, course_title, subject, catalog, credits, term, year, professor")
             .eq("user_id", user_id).execute().data or [])
 
     def q_calendar():
