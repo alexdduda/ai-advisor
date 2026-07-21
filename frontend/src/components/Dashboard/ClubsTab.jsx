@@ -774,7 +774,7 @@ function ClubCard({ club, joined, calSynced, isSubscribed, onLeave, onToggleCale
             })()}
             {club.location && (
               <>
-                <span className="club-card__meta-sep">\u00b7</span>
+                <span className="club-card__meta-sep">{'\u00b7'}</span>
                 <span><FaStar size={9} /> {club.location}</span>
               </>
             )}
