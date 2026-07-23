@@ -35,6 +35,7 @@ from api.exceptions import UserNotFoundException
 from api.auth import get_current_user_id, require_self, get_user_db
 from api.utils.sanitise import sanitise_user_message, sanitise_context_field
 from api.utils.lang import lang_instruction as _lang_instruction
+from api.utils.degree_progress import compute_degree_progress_summary
 from api.routes.chat import _MILESTONES
 from api.routes.courses import build_course_grounding_block
 
@@ -96,13 +97,15 @@ class ThreadRequest(BaseModel):
     card_context: str = Field(..., max_length=4000)
     language: str = "en"
     thread_history: Optional[List[dict]] = Field(default=None, max_length=20)
-    # Client-computed degree-requirement progress — see build_system_context()
-    # in chat.py for how it's sanitized and framed in the prompt.
+    # DEPRECATED — no longer read; degree progress is computed server-side
+    # (see compute_degree_progress_summary). Field kept only so older cached
+    # frontend bundles don't 422 on this key.
     degree_progress: Optional[str] = Field(None, max_length=3000)
 
 class GenerateRequest(BaseModel):
     force: bool = False
     language: str = "en"
+    # DEPRECATED — no longer read; see ThreadRequest.degree_progress above.
     degree_progress: Optional[str] = Field(None, max_length=3000)
 
 class AskRequest(BaseModel):
@@ -452,12 +455,20 @@ def _deduplicate_completed(completed: list) -> list:
     return result
 
 
-def build_rich_context(ctx: dict, saved_cards: list = None, recent_titles: list[str] | None = None, degree_progress: str | None = None) -> str:
+def build_rich_context(ctx: dict, saved_cards: list = None, recent_titles: list[str] | None = None) -> str:
     user = ctx["user"]
     completed, current, favorites, calendar = (ctx["completed"], ctx["current"], ctx["favorites"], ctx["calendar"])
     # Deduplicate: remove withdrawn/failed entries when course was later passed
     completed = _deduplicate_completed(completed)
     total_credits = sum(c.get("credits") or 3 for c in completed)
+    # Computed here (not trusted from the client) — see compute_degree_progress_summary's
+    # docstring for why: it used to depend on the frontend having rendered the
+    # Degree Planning tab this session, which produced wrong/missing numbers
+    # whenever cards generated before that (the common case, from Home).
+    try:
+        degree_progress = compute_degree_progress_summary(user, completed, user.get("id", ""))
+    except Exception:
+        degree_progress = ""
     adv = user.get("advanced_standing") or []
     adv_credits = sum((a.get("credits") or 0) for a in adv)
     adv_summary = ", ".join(f"{a['course_code']} ({a.get('credits') or 0} cr)" for a in adv) or "None"
@@ -544,9 +555,11 @@ def build_rich_context(ctx: dict, saved_cards: list = None, recent_titles: list[
     if degree_progress:
         safe_progress = sanitise_context_field(degree_progress, max_length=3000)
         progress_section = (
-            "\nDEGREE PROGRESS (self-reported by the app, not an official record — "
-            "a helpful signal for milestone triggers, never state these numbers as "
-            "verified fact to the student):\n"
+            "\nDEGREE PROGRESS (computed from the student's own completed-course "
+            "data against program requirements — not an official McGill record). "
+            "Use these numbers directly and exactly as given; do not recompute, "
+            "round differently, or blend them with your own estimate from the "
+            "COMPLETED COURSES list below:\n"
             f"{safe_progress}\n"
         )
 
@@ -704,7 +717,7 @@ async def generate_cards(user_id: str, request: GenerateRequest, req: Request, c
         # Only pass recent titles when the user is forcing a refresh — on a
         # first generation there's nothing to diversify against.
         recent_titles = fetch_recent_card_titles(user_id, user_sb=user_sb) if request.force else []
-        prompt = build_rich_context(ctx, saved_cards=saved, recent_titles=recent_titles, degree_progress=request.degree_progress) + _lang_instruction(request.language)
+        prompt = build_rich_context(ctx, saved_cards=saved, recent_titles=recent_titles) + _lang_instruction(request.language)
 
         client = get_anthropic_client()
         message = client.messages.create(
@@ -805,9 +818,9 @@ async def _fetch_student_context_parallel(user_id: str, user_sb=None) -> dict:
             "joined_clubs": joined_clubs, "created_clubs": created_clubs}
 
 
-def _build_ndjson_context(ctx: dict, saved_cards: list = None, recent_titles: list[str] | None = None, degree_progress: str | None = None) -> str:
+def _build_ndjson_context(ctx: dict, saved_cards: list = None, recent_titles: list[str] | None = None) -> str:
     """Like build_rich_context but asks for NDJSON output (one card per line) for streaming."""
-    base = build_rich_context(ctx, saved_cards=saved_cards, recent_titles=recent_titles, degree_progress=degree_progress)
+    base = build_rich_context(ctx, saved_cards=saved_cards, recent_titles=recent_titles)
     # Replace the final return instruction with NDJSON variant
     return base.replace(
         "Return ONLY the JSON array — no markdown, no commentary.",
@@ -884,7 +897,7 @@ async def stream_cards(
             ctx, saved = results[0], results[1]
             recent_titles = results[2] if len(results) > 2 else []
 
-            prompt = _build_ndjson_context(ctx, saved_cards=saved, recent_titles=recent_titles, degree_progress=request.degree_progress) + _lang_instruction(language)
+            prompt = _build_ndjson_context(ctx, saved_cards=saved, recent_titles=recent_titles) + _lang_instruction(language)
             async_client = get_async_anthropic_client()
 
             collected_cards: list = []
@@ -1132,7 +1145,6 @@ async def thread_message(
             current_tab=None,
             language=reply_language,
             card_context=sanitise_context_field(request.card_context, max_length=800),
-            degree_progress=request.degree_progress,
         )
 
         # Real catalogue data for any course code mentioned in THIS message —
