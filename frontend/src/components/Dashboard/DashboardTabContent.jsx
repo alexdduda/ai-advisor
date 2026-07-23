@@ -62,6 +62,7 @@ export default function DashboardTabContent({
     currentCourses, currentCoursesMap,
     isFavorited, isCompleted, isCurrent,
     handleToggleFavorite, handleToggleCompleted, handleToggleCurrent,
+    degreeProgressRef,
 
     upcomingEvents, upcomingEventsLoading, hasUpcomingCourseEvents,
 
@@ -185,6 +186,7 @@ export default function DashboardTabContent({
             onToggleCurrent={handleToggleCurrent}
             onImportTranscript={openTranscriptUpload}
             onImportSyllabus={openSyllabusUpload}
+            onProgressSummaryChange={(text) => { degreeProgressRef.current = text }}
             onCourseClick={undefined}
           />
         </Suspense>

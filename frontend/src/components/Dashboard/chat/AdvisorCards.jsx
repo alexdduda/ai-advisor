@@ -7,7 +7,7 @@ import {
   FaClipboardList, FaComments, FaCalendarAlt,
   FaChartBar, FaMapMarkedAlt, FaLightbulb,
   FaBookmark, FaRegBookmark, FaThumbtack,
-  FaGripVertical, FaTrash, FaMapPin,
+  FaGripVertical, FaTrash, FaMapPin, FaCompass,
 } from 'react-icons/fa'
 import { CARD_CATEGORIES, CATEGORY_LABELS } from '../../../lib/cardsAPI'
 import useViewport from '../../../hooks/useViewport'
@@ -20,6 +20,7 @@ const CATEGORY_ICON_COMPONENTS = {
   grades:        FaChartBar,
   planning:      FaMapMarkedAlt,
   opportunities: FaLightbulb,
+  advice:        FaCompass,
   other:         FaComments,
 }
 
@@ -169,6 +170,7 @@ function catLabel(cat, t) {
     grades:        'brief.catGrades',
     planning:      'brief.catPlanning',
     opportunities: 'brief.catOpportunities',
+    advice:        'brief.catAdvice',
     other:         'brief.catOther',
   }
   return t(map[cat] || 'brief.catOther')

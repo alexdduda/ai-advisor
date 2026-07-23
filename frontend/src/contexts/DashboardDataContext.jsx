@@ -26,6 +26,7 @@ import completedCoursesAPI from '../lib/completedCoursesAPI'
 import currentCoursesAPI from '../lib/currentCoursesAPI'
 import cardsAPI from '../lib/cardsAPI'
 import clubsAPI from '../lib/clubsAPI'
+import { getCreditsRequired } from '../utils/mcgillData'
 import { normalizeQuery, buildCorrectionCandidates } from '../utils/fuzzySearch'
 import useUpcomingEvents from '../hooks/useUpcomingEvents'
 import { readCache, writeCache, clearAllForUser } from '../lib/userDataCache'
@@ -181,6 +182,37 @@ export function DashboardDataProvider({ children }) {
     new Set((_hydratedCurrent || []).map(c => c.course_code))
   )
 
+  // Self-reported degree-progress summary attached to chat/card requests so
+  // the AI is grounded in actual requirement progress instead of just the
+  // raw course list. A ref, not state: write-often/read-at-send-time,
+  // doesn't need to trigger re-renders. Populated from two sources of
+  // increasing detail: (1) the baseline total-credit effect below, which
+  // runs as soon as profile/courses are loaded — always available; (2) if
+  // the student visits Degree Planning this session, DegreePlanningView's
+  // onProgressSummaryChange overwrites it with the fuller per-requirement-
+  // block breakdown (same numbers it renders — see requirementMatch.js).
+  const degreeProgressRef = useRef('')
+
+  // Baseline total-credit progress, always available (no network fetch —
+  // mirrors the same arithmetic DegreeProgressTracker shows on Home), so the
+  // AI has SOME degree-progress signal even if the student never opens
+  // Degree Planning this session. Skipped while Degree Planning ("favorites"
+  // tab) is actually mounted — its onProgressSummaryChange callback is the
+  // richer, per-requirement-block source of truth then, and since child
+  // effects fire before parent effects in the same commit, running this
+  // unconditionally could clobber that richer value with the coarser total.
+  useEffect(() => {
+    if (!profile || activeTab === 'favorites') return
+    const completedCredits = completedCourses.reduce((sum, c) => sum + (c.credits || 3), 0)
+    const advancedStandingCredits = (profile.advanced_standing || []).reduce(
+      (sum, c) => (c.counts_toward_degree === false ? sum : sum + (c.credits || 0)), 0
+    )
+    const earned = completedCredits + advancedStandingCredits
+    const total = getCreditsRequired(profile.faculty, profile.major, profile.is_honours)
+    const pct = Math.min(100, Math.round((earned / total) * 100))
+    degreeProgressRef.current = `Overall degree: ${pct}% complete (${earned}/${total} credits)`
+  }, [profile, completedCourses, activeTab])
+
   // Computed here (not inside HomeTab) because the Sidebar's Calendar
   // badge needs the same urgentCount — avoids a second fetch of the feed.
   const {
@@ -317,7 +349,7 @@ export function DashboardDataProvider({ children }) {
         onError: (detail) => {
           console.error('Card stream error:', detail)
         },
-      })
+      }, degreeProgressRef.current)
     } catch (error) {
       console.error('Error generating advisor cards:', error)
     } finally {
@@ -424,7 +456,7 @@ export function DashboardDataProvider({ children }) {
   const handleCardChipClick = useCallback(async (cardId, message, cardTitle, cardBody) => {
     if (!user?.id) return ''
     try {
-      return await cardsAPI.sendThreadMessage(cardId, user.id, message, `${cardTitle}: ${cardBody}`, languageRef.current)
+      return await cardsAPI.sendThreadMessage(cardId, user.id, message, `${cardTitle}: ${cardBody}`, languageRef.current, degreeProgressRef.current)
     } catch (error) {
       console.error('Error in card thread:', error)
       return 'Something went wrong. Please try again.'
@@ -864,6 +896,9 @@ export function DashboardDataProvider({ children }) {
     currentCourses, currentCoursesMap,
     isFavorited, isCompleted, isCurrent,
     handleToggleFavorite, handleToggleCompleted, handleToggleCurrent,
+
+    // degree-progress summary (grounds AI card/chat requests)
+    degreeProgressRef,
 
     // upcoming events
     upcomingEvents, upcomingEventsLoading, upcomingUrgentCount, hasUpcomingCourseEvents,

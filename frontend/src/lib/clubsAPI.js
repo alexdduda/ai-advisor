@@ -20,13 +20,14 @@ async function authHeaders(json = true) {
 
 
 const clubsAPI = {
-  async getClubs({ search, category, limit = 50, offset = 0 } = {}) {
+  async getClubs({ search, category, limit = 50, offset = 0, lang } = {}) {
     try {
       const params = new URLSearchParams()
       if (search) params.set('search', search)
       if (category) params.set('category', category)
       if (limit) params.set('limit', String(limit))
       if (offset) params.set('offset', String(offset))
+      if (lang) params.set('lang', lang)
       const res = await fetch(`${BASE_URL}/api/clubs?${params}`, { headers: await authHeaders() })
       if (!res.ok) throw new Error('Failed to fetch clubs')
       return await res.json()
@@ -36,10 +37,11 @@ const clubsAPI = {
     }
   },
 
-  async getStarterClubs(userId, major) {
+  async getStarterClubs(userId, major, lang) {
     try {
       const params = new URLSearchParams({ user_id: userId })
       if (major) params.set('major', major)
+      if (lang) params.set('lang', lang)
       const res = await fetch(`${BASE_URL}/api/clubs/starter?${params}`, { headers: await authHeaders() })
       if (res.ok) {
         const data = await res.json()
@@ -49,9 +51,10 @@ const clubsAPI = {
     return { starter_clubs: [] }
   },
 
-  async getUserClubs(userId) {
+  async getUserClubs(userId, lang) {
     try {
-      const res = await fetch(`${BASE_URL}/api/clubs/user/${userId}`, { headers: await authHeaders() })
+      const params = lang ? `?lang=${encodeURIComponent(lang)}` : ''
+      const res = await fetch(`${BASE_URL}/api/clubs/user/${userId}${params}`, { headers: await authHeaders() })
       if (res.ok) return res.json()
     } catch { /* ignore */ }
     return { clubs: [], count: 0 }
@@ -314,6 +317,18 @@ const clubsAPI = {
       if (res.ok) return res.json()
     } catch { /* ignore */ }
     return { items: [], count: 0 }
+  },
+
+  // AI-translated detail fields (description / meeting_schedule /
+  // join_instructions) for a non-English viewer. Cached server-side, so this
+  // is one Haiku call per club per language, ever. Returns {} on any failure
+  // so the caller just falls back to the original (English) text.
+  async getClubTranslation(clubId, lang) {
+    try {
+      const res = await fetch(`${BASE_URL}/api/clubs/${clubId}/translation?lang=${encodeURIComponent(lang)}`, { headers: await authHeaders() })
+      if (res.ok) return res.json()
+    } catch { /* ignore */ }
+    return {}
   },
 
   async getClubFacultyStats(clubId) {
