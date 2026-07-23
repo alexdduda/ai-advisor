@@ -1,0 +1,183 @@
+/* ── In-app welcome screen ──────────────────────────────────────────────
+   Native-only (see MobileWelcome.jsx). Deliberately one screen with no
+   scroll: everything sits between the safe-area insets so the buttons are
+   always reachable with a thumb, on the smallest phone we support. */
+
+.mw-root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: calc(env(safe-area-inset-top, 0px) + 2.5rem)
+           max(1.5rem, env(safe-area-inset-right))
+           calc(env(safe-area-inset-bottom, 0px) + 1.5rem)
+           max(1.5rem, env(safe-area-inset-left));
+  box-sizing: border-box;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI',
+               Roboto, 'Helvetica Neue', Arial, sans-serif;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── Hero ── */
+.mw-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  /* Pushes the hero toward optical centre while leaving the actions pinned
+     low. flex-grow on both sides rather than a fixed margin so it adapts
+     from an SE to a Pro Max without a breakpoint. */
+  flex: 1 1 auto;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.mw-logo {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  margin-bottom: 0.25rem;
+}
+
+.mw-wordmark {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.mw-tagline {
+  margin: 0;
+  max-width: 22ch;
+  font-size: 1rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+/* ── Value points ── */
+.mw-points {
+  flex: 0 0 auto;
+  list-style: none;
+  margin: 0 0 2rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.mw-point {
+  position: relative;
+  padding-left: 1.25rem;
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+/* Marker drawn in CSS rather than a bullet character or an icon component —
+   no emoji, and nothing to translate. */
+.mw-point::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-primary, #ed1b2f);
+}
+
+/* ── Actions ── */
+.mw-actions {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.mw-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 50px;
+  border: none;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.15s ease, transform 0.1s ease;
+}
+
+.mw-btn--primary {
+  background: var(--accent-primary, #ed1b2f);
+  color: #fff;
+}
+
+.mw-btn--ghost {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border-primary, #e5e7eb);
+}
+
+/* Press feedback, not hover — a :hover state applied by a tap sticks until
+   you touch something else. */
+.mw-btn:active {
+  opacity: 0.85;
+  transform: scale(0.99);
+}
+
+@media (hover: hover) {
+  .mw-btn--primary:hover { opacity: 0.92; }
+  .mw-btn--ghost:hover   { background: var(--bg-hover, rgba(0, 0, 0, 0.04)); }
+}
+
+/* ── Footer ── */
+.mw-footer {
+  flex: 0 0 auto;
+  margin-top: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.375rem;
+  text-align: center;
+}
+
+.mw-disclaimer,
+.mw-legal-link,
+.mw-legal-sep {
+  font-size: 0.6875rem;
+  color: var(--text-secondary);
+}
+
+.mw-legal-link {
+  border: none;
+  background: none;
+  padding: 4px 2px;
+  font-family: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+  color: inherit;
+}
+
+.mw-legal-sep { margin: 0 4px; }
+
+[data-theme="dark"] .mw-btn--ghost {
+  border-color: rgba(255, 255, 255, 0.14);
+}
+[data-theme="dark"] .mw-btn--ghost:active {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* Very small phones (SE-class): tighten so nothing is pushed off-screen. */
+@media (max-height: 700px) {
+  .mw-logo { width: 56px; height: 56px; }
+  .mw-wordmark { font-size: 1.75rem; }
+  .mw-points { margin-bottom: 1.25rem; gap: 0.5rem; }
+  .mw-root { padding-top: calc(env(safe-area-inset-top, 0px) + 1.5rem); }
+}

@@ -65,10 +65,14 @@ export default function CoursesTab({
         </button>
       </form>
 
-      {/* ── Filters (always visible) ────────────────────────── */}
-      <div className="courses-filter-bar">
+      {/* ── Filters (always visible) ─────────────────────────────
+          `m-group` / `m-row` are the mobile grouped-list primitives from
+          MobileLayout.css. They are scoped to `.mobile-shell`, which only
+          ever renders below 768px, so the class names are inert on desktop
+          and the filter bar keeps its existing inline shape there. */}
+      <div className="courses-filter-bar m-group">
         {availableTerms.length > 0 && setSearchTerm && (
-          <div className="filter-group">
+          <div className="filter-group m-row">
             <label htmlFor="term-select" className="sort-label">{t('courses.semester')}</label>
             <select
               id="term-select"
@@ -81,7 +85,7 @@ export default function CoursesTab({
             </select>
           </div>
         )}
-        <div className="filter-group">
+        <div className="filter-group m-row">
           <label htmlFor="sort-select" className="sort-label">{t('courses.sortBy')}</label>
           <select id="sort-select" className="sort-select" value={sortBy} onChange={(e) => handleSortChange(e.target.value)}>
             <option value="relevance">{t('courses.relevance')}</option>
@@ -98,7 +102,7 @@ export default function CoursesTab({
         href={`https://vsb.mcgill.ca/criteria.jsp?access=0&lang=${language === 'fr' ? 'fr' : 'en'}&tip=2&page=criteria&scratch=0&advice=0&legend=1&term=202601&sort=none&filters=iiiiiiiiii&bbs=&ds=&cams=OFF-CAMPUS_DISTANCE_DOWNTOWN_MACDONALD&locs=any&isrts=any&ses=any&pl=&pac=1`}
         target="_blank"
         rel="noopener noreferrer"
-        className="vsb-banner"
+        className="vsb-banner m-group m-row m-row--tappable"
       >
         <div className="vsb-banner__left">
           <FaCalendarAlt className="vsb-banner__icon" />
@@ -114,9 +118,9 @@ export default function CoursesTab({
 
       {/* ── Loading skeletons ───────────────────────────────── */}
       {isSearching && (
-        <div className="course-list">
+        <div className="course-list m-group">
           {[0, 1, 2, 3].map(i => (
-            <div key={i} className="course-card course-card--skeleton">
+            <div key={i} className="course-card course-card--skeleton m-row">
               <Skeleton width="8rem" height="1.1rem" />
               <Skeleton width="60%" height="1rem" />
               <Skeleton width="40%" height="0.85rem" />
@@ -147,12 +151,14 @@ export default function CoursesTab({
                 ? t('courses.foundResults').replace('{count}', searchResults.length)
                 : t('courses.foundResultsPlural').replace('{count}', searchResults.length)}
               {totalPages > 1 && (
-                <span className="results-page-info">, page {currentPage} of {totalPages}</span>
+                <span className="results-page-info">
+                  {t('courses.pageInfo').replace('{current}', currentPage).replace('{total}', totalPages)}
+                </span>
               )}
             </h3>
           </div>
 
-          <div className="course-list">
+          <div className="course-list m-group">
             {pageResults.map((course) => {
               const cardKey     = `${course.subject}-${course.catalog}`
               const rating      = getBestRating(course)
@@ -161,7 +167,7 @@ export default function CoursesTab({
               const diffColor   = getDifficultyColor(course.rmp_difficulty)
 
               return (
-                <div key={cardKey} className="course-card">
+                <div key={cardKey} className="course-card m-row m-row--tappable">
                   <div className="course-card-content" onClick={() => openCourse(course.subject, course.catalog)}>
                     <div className="course-header">
                       <div className="course-code">{course.subject} {course.catalog}</div>
@@ -214,13 +220,13 @@ export default function CoursesTab({
                   </div>
 
                   <div className="course-card-actions">
-                    <button className={`favorite-btn ${isFavorited(course.subject, course.catalog) ? 'favorited' : ''}`} onClick={(e) => { e.stopPropagation(); handleToggleFavorite(course) }} data-tooltip={isFavorited(course.subject, course.catalog) ? 'Remove saved' : 'Save course'}>
+                    <button className={`favorite-btn ${isFavorited(course.subject, course.catalog) ? 'favorited' : ''}`} onClick={(e) => { e.stopPropagation(); handleToggleFavorite(course) }} data-tooltip={isFavorited(course.subject, course.catalog) ? t('courses.tipRemoveSaved') : t('courses.tipSaveCourse')}>
                       {isFavorited(course.subject, course.catalog) ? <FaHeart className="favorite-icon" /> : <FaRegHeart className="favorite-icon" />}
                     </button>
-                    <button className={`completed-btn ${isCompleted(course.subject, course.catalog) ? 'completed' : ''}`} onClick={(e) => { e.stopPropagation(); handleToggleCompleted(course) }} data-tooltip={isCompleted(course.subject, course.catalog) ? 'Mark incomplete' : 'Mark complete'}>
+                    <button className={`completed-btn ${isCompleted(course.subject, course.catalog) ? 'completed' : ''}`} onClick={(e) => { e.stopPropagation(); handleToggleCompleted(course) }} data-tooltip={isCompleted(course.subject, course.catalog) ? t('courses.tipMarkIncomplete') : t('courses.tipMarkComplete')}>
                       <FaCheckCircle className="completed-icon" />
                     </button>
-                    <button className={`current-btn ${isCurrent(course.subject, course.catalog) ? 'current' : ''}`} onClick={(e) => { e.stopPropagation(); handleToggleCurrent(course) }} data-tooltip={isCurrent(course.subject, course.catalog) ? 'Remove from current' : 'Add to current'}>
+                    <button className={`current-btn ${isCurrent(course.subject, course.catalog) ? 'current' : ''}`} onClick={(e) => { e.stopPropagation(); handleToggleCurrent(course) }} data-tooltip={isCurrent(course.subject, course.catalog) ? t('courses.tipRemoveCurrent') : t('courses.tipAddCurrent')}>
                       <FaBook className="current-icon" />
                     </button>
                   </div>
@@ -231,7 +237,7 @@ export default function CoursesTab({
 
           {totalPages > 1 && (
             <div className="pagination">
-              <button className="pagination-btn" onClick={() => goToPage(currentPage - 1)} disabled={currentPage === 1} aria-label="Previous page"><FaChevronLeft /></button>
+              <button className="pagination-btn" onClick={() => goToPage(currentPage - 1)} disabled={currentPage === 1} aria-label={t('courses.prevPage')}><FaChevronLeft /></button>
               <div className="pagination-pages">
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => {
                   const isNear = Math.abs(page - currentPage) <= 1
@@ -243,7 +249,7 @@ export default function CoursesTab({
                   return <button key={page} className={`pagination-page ${page === currentPage ? 'active' : ''}`} onClick={() => goToPage(page)}>{page}</button>
                 })}
               </div>
-              <button className="pagination-btn" onClick={() => goToPage(currentPage + 1)} disabled={currentPage === totalPages} aria-label="Next page"><FaChevronRight /></button>
+              <button className="pagination-btn" onClick={() => goToPage(currentPage + 1)} disabled={currentPage === totalPages} aria-label={t('courses.nextPage')}><FaChevronRight /></button>
             </div>
           )}
         </div>
