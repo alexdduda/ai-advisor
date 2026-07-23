@@ -35,6 +35,8 @@ from api.exceptions import UserNotFoundException
 from api.auth import get_current_user_id, require_self, get_user_db
 from api.utils.sanitise import sanitise_user_message, sanitise_context_field
 from api.utils.lang import lang_instruction as _lang_instruction
+from api.routes.chat import _MILESTONES
+from api.routes.courses import build_course_grounding_block
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -59,7 +61,7 @@ def get_async_anthropic_client() -> anthropic.AsyncAnthropic:
     return _async_anthropic_client
 
 
-CARD_CATEGORIES = ["deadlines", "degree", "courses", "grades", "planning", "opportunities"]
+CARD_CATEGORIES = ["deadlines", "degree", "courses", "grades", "planning", "opportunities", "advice"]
 CATEGORIES_PROMPT_LIST = "\n".join(f'  - "{c}"' for c in CARD_CATEGORIES)
 
 
@@ -94,10 +96,14 @@ class ThreadRequest(BaseModel):
     card_context: str = Field(..., max_length=4000)
     language: str = "en"
     thread_history: Optional[List[dict]] = Field(default=None, max_length=20)
+    # Client-computed degree-requirement progress — see build_system_context()
+    # in chat.py for how it's sanitized and framed in the prompt.
+    degree_progress: Optional[str] = Field(None, max_length=3000)
 
 class GenerateRequest(BaseModel):
     force: bool = False
     language: str = "en"
+    degree_progress: Optional[str] = Field(None, max_length=3000)
 
 class AskRequest(BaseModel):
     user_id: str
@@ -143,12 +149,12 @@ def fetch_student_context(user_id: str, user_sb=None) -> dict:
         .execute().data or [])
 
     completed = (sb.table("completed_courses")
-        .select("course_code, course_title, subject, catalog, term, year, grade, credits")
+        .select("course_code, course_title, subject, catalog, term, year, grade, credits, professor")
         .eq("user_id", user_id).order("year", desc=True).limit(50)
         .execute().data or [])
 
     current = (sb.table("current_courses")
-        .select("course_code, course_title, subject, catalog, credits, term, year")
+        .select("course_code, course_title, subject, catalog, credits, term, year, professor")
         .eq("user_id", user_id).execute().data or [])
 
     today = datetime.now(timezone.utc).date().isoformat()
@@ -399,6 +405,20 @@ Include:
   - Add a disclaimer at the end of the card body: "Verify professor details on McGill's department website."
 At least 1 of the 8 cards should be an "opportunities" card with a professor
 recommendation if the student's profile has a declared major.
+
+PROACTIVE MILESTONES → "advice" CATEGORY
+The MILESTONES reference below lists situations with a stated trigger
+condition and a confirmed (or "verify at X") procedure. Check the student's
+DEGREE PROGRESS and profile data against each trigger. If one clearly
+matches — e.g. a program's progress is at/near 100%, or their GPA falls in
+a probation/unsatisfactory band — include ONE card with "category": "advice"
+surfacing that specific milestone, using the procedure from MILESTONES
+almost verbatim (don't paraphrase deadlines or numbers into something
+vaguer). If nothing matches, don't force an "advice" card — it's fine for a
+generation to have zero. Never invent a milestone that isn't in the
+reference list below.
+
+{_MILESTONES}
 """
 
 
@@ -432,7 +452,7 @@ def _deduplicate_completed(completed: list) -> list:
     return result
 
 
-def build_rich_context(ctx: dict, saved_cards: list = None, recent_titles: list[str] | None = None) -> str:
+def build_rich_context(ctx: dict, saved_cards: list = None, recent_titles: list[str] | None = None, degree_progress: str | None = None) -> str:
     user = ctx["user"]
     completed, current, favorites, calendar = (ctx["completed"], ctx["current"], ctx["favorites"], ctx["calendar"])
     # Deduplicate: remove withdrawn/failed entries when course was later passed
@@ -443,15 +463,21 @@ def build_rich_context(ctx: dict, saved_cards: list = None, recent_titles: list[
     adv_summary = ", ".join(f"{a['course_code']} ({a.get('credits') or 0} cr)" for a in adv) or "None"
 
     def fmt_completed():
+        # "Prof: X" is the student's own recorded instructor for that course —
+        # real data, not a rating — shown only when known.
         return "\n".join(
             f"  - {c['course_code']} ({sanitise_context_field(c.get('course_title',''))}) | "
             f"Grade: {c.get('grade') or 'N/A'} | Term: {c.get('term','?')} {c.get('year','')}"
+            + (f" | Prof: {sanitise_context_field(c['professor'])}" if c.get('professor') else "")
             for c in completed) or "  None recorded"
 
-    def fmt_list(items, code_key="course_code", title_key="course_title"):
-        return "\n".join(
-            f"  - {i[code_key]} ({sanitise_context_field(i.get(title_key,''))})" for i in items
-        ) or "  None recorded"
+    def fmt_list(items, code_key="course_code", title_key="course_title", show_professor=False):
+        def line(i):
+            base = f"  - {i[code_key]} ({sanitise_context_field(i.get(title_key,''))})"
+            if show_professor and i.get("professor"):
+                base += f" — Prof. {sanitise_context_field(i['professor'])}"
+            return base
+        return "\n".join(line(i) for i in items) or "  None recorded"
 
     # Term-aware enrollment (mirrors chat.py): upcoming-term registrations
     # must not be described as courses the student is taking right now.
@@ -461,6 +487,7 @@ def build_rich_context(ctx: dict, saved_cards: list = None, recent_titles: list[
     _upcoming_str = "\n".join(
         f"  {term} {year}:\n" + "\n".join(
             f"    - {c['course_code']} ({sanitise_context_field(c.get('course_title',''))})"
+            + (f" — Prof. {sanitise_context_field(c['professor'])}" if c.get('professor') else "")
             for c in cs
         )
         for (term, year), cs in _upcoming_terms
@@ -513,6 +540,16 @@ def build_rich_context(ctx: dict, saved_cards: list = None, recent_titles: list[
     safe_minors        = sanitise_context_field(minors_str)
     safe_concentration = sanitise_context_field(str(user.get('concentration') or 'None'))
 
+    progress_section = ""
+    if degree_progress:
+        safe_progress = sanitise_context_field(degree_progress, max_length=3000)
+        progress_section = (
+            "\nDEGREE PROGRESS (self-reported by the app, not an official record — "
+            "a helpful signal for milestone triggers, never state these numbers as "
+            "verified fact to the student):\n"
+            f"{safe_progress}\n"
+        )
+
     # The stable header + instructions + professor guide are now in
     # _CARDS_SYSTEM_PROMPT (cacheable). This returns ONLY the per-user
     # data + return-format instruction for the user message.
@@ -525,12 +562,12 @@ STUDENT PROFILE
   Concentration: {safe_concentration}
   Year         : U{user.get('year') or '?'}
   Credits done : {total_credits} (+ {adv_credits} advanced standing: {adv_summary})
-
+{progress_section}
 COMPLETED COURSES
 {fmt_completed()}
 
 COURSES THIS TERM ({_active_term} {_active_year})
-{fmt_list(_taking_now)}
+{fmt_list(_taking_now, show_professor=True)}
 
 REGISTERED FOR UPCOMING TERMS (not yet started — say "registered for", never "currently taking" or "this term")
 {_upcoming_str}
@@ -549,14 +586,15 @@ Generate exactly 8 cards based on the schema in the system prompt.
 Return ONLY the JSON array — no markdown, no commentary."""
 
 
-def _build_single_card_prompt(question: str, ctx: dict, language: str) -> str:
+def _build_single_card_prompt(question: str, ctx: dict, language: str, course_grounding: str | None = None) -> str:
+    grounding_section = f"\n{course_grounding}\n" if course_grounding else ""
     return f"""You are a proactive AI academic advisor for McGill University.
 A student has asked: "{question}"
 
 Based on their profile below, generate a single helpful advisor card that directly answers their question.
 
 {build_rich_context(ctx)}
-
+{grounding_section}
 Return a single JSON object (not an array) with these fields:
   "type"     : one of "urgent" | "warning" | "insight" | "progress"
   "icon"     : single emoji relevant to the answer
@@ -666,7 +704,7 @@ async def generate_cards(user_id: str, request: GenerateRequest, req: Request, c
         # Only pass recent titles when the user is forcing a refresh — on a
         # first generation there's nothing to diversify against.
         recent_titles = fetch_recent_card_titles(user_id, user_sb=user_sb) if request.force else []
-        prompt = build_rich_context(ctx, saved_cards=saved, recent_titles=recent_titles) + _lang_instruction(request.language)
+        prompt = build_rich_context(ctx, saved_cards=saved, recent_titles=recent_titles, degree_progress=request.degree_progress) + _lang_instruction(request.language)
 
         client = get_anthropic_client()
         message = client.messages.create(
@@ -724,13 +762,13 @@ async def _fetch_student_context_parallel(user_id: str, user_sb=None) -> dict:
 
     def q_completed():
         return (sb.table("completed_courses")
-            .select("course_code, course_title, subject, catalog, term, year, grade, credits")
+            .select("course_code, course_title, subject, catalog, term, year, grade, credits, professor")
             .eq("user_id", user_id).order("year", desc=True).limit(50)
             .execute().data or [])
 
     def q_current():
         return (sb.table("current_courses")
-            .select("course_code, course_title, subject, catalog, credits, term, year")
+            .select("course_code, course_title, subject, catalog, credits, term, year, professor")
             .eq("user_id", user_id).execute().data or [])
 
     def q_calendar():
@@ -767,9 +805,9 @@ async def _fetch_student_context_parallel(user_id: str, user_sb=None) -> dict:
             "joined_clubs": joined_clubs, "created_clubs": created_clubs}
 
 
-def _build_ndjson_context(ctx: dict, saved_cards: list = None, recent_titles: list[str] | None = None) -> str:
+def _build_ndjson_context(ctx: dict, saved_cards: list = None, recent_titles: list[str] | None = None, degree_progress: str | None = None) -> str:
     """Like build_rich_context but asks for NDJSON output (one card per line) for streaming."""
-    base = build_rich_context(ctx, saved_cards=saved_cards, recent_titles=recent_titles)
+    base = build_rich_context(ctx, saved_cards=saved_cards, recent_titles=recent_titles, degree_progress=degree_progress)
     # Replace the final return instruction with NDJSON variant
     return base.replace(
         "Return ONLY the JSON array — no markdown, no commentary.",
@@ -846,7 +884,7 @@ async def stream_cards(
             ctx, saved = results[0], results[1]
             recent_titles = results[2] if len(results) > 2 else []
 
-            prompt = _build_ndjson_context(ctx, saved_cards=saved, recent_titles=recent_titles) + _lang_instruction(language)
+            prompt = _build_ndjson_context(ctx, saved_cards=saved, recent_titles=recent_titles, degree_progress=request.degree_progress) + _lang_instruction(language)
             async_client = get_async_anthropic_client()
 
             collected_cards: list = []
@@ -1031,7 +1069,8 @@ async def ask_card(user_id: str, request: AskRequest, req: Request, current_user
     try:
         get_user_by_id(user_id)
         ctx = fetch_student_context(user_id, user_sb=user_sb)
-        prompt = _build_single_card_prompt(request.question, ctx, request.language)
+        course_grounding = build_course_grounding_block(request.question)
+        prompt = _build_single_card_prompt(request.question, ctx, request.language, course_grounding)
 
         client = get_anthropic_client()
         message = client.messages.create(model=settings.CLAUDE_MODEL, max_tokens=1024,
@@ -1093,7 +1132,16 @@ async def thread_message(
             current_tab=None,
             language=reply_language,
             card_context=sanitise_context_field(request.card_context, max_length=800),
+            degree_progress=request.degree_progress,
         )
+
+        # Real catalogue data for any course code mentioned in THIS message —
+        # see build_course_grounding_block's docstring / chat.py's send_message
+        # for why this exists. No cache_control is used on this endpoint's
+        # system param, so it's safe to just concatenate.
+        course_grounding = build_course_grounding_block(request.message)
+        if course_grounding:
+            system_context = f"{system_context}\n\n{course_grounding}"
 
         # Build messages array: prior thread turns + current message
         messages = []

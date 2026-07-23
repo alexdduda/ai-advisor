@@ -34,6 +34,7 @@ function DesktopDashboard() {
     favorites, profileImage,
     isFavorited, isCompleted, isCurrent,
     handleToggleFavorite, handleToggleCompleted, handleToggleCurrent,
+    degreeProgressRef,
     upcomingUrgentCount,
     showCompleteCourseModal, courseToComplete, handleConfirmComplete, cancelCompleteCourse,
     showTranscriptUpload, transcriptUploadTab, setShowTranscriptUpload,
@@ -236,6 +237,7 @@ function DesktopDashboard() {
         onSend={handlePinnedSend}
         onUnpin={() => handlePinToggle(null, [])}
         activeTab={activeTab}
+        degreeProgressRef={degreeProgressRef}
       />
 
       <Suspense fallback={null}>
