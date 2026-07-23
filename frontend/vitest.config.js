@@ -11,5 +11,14 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.js'],
+    // Dummy Supabase creds so `createClient()` in src/lib/supabase.js (reached
+    // transitively via AuthContext, e.g. from FeedbackModal) doesn't throw
+    // "supabaseUrl is required" under CI, which has no VITE_SUPABASE_* vars.
+    // The app still errors loudly on missing env in real runs — this only
+    // affects the test environment.
+    env: {
+      VITE_SUPABASE_URL: 'http://localhost:54321',
+      VITE_SUPABASE_ANON_KEY: 'test-anon-key',
+    },
   },
 })

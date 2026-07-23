@@ -167,56 +167,6 @@
   overflow: hidden;
 }
 
-/* Phones — 2×2 grid so the four tabs stay readable.
-   The old approach shrank to flex:1 + 11px font and hid icons, but the
-   longer labels ("Degree Requirements", "Advising Resources") still
-   overflowed and got clipped under the parent's overflow:hidden. A
-   2-column grid gives each tab ~50% width, plenty of room for the
-   full label at a comfortable size. */
-@media (max-width: 600px) {
-  .dp-subtab-bar {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4px;
-    padding: 4px;
-    border-radius: 12px;
-    overflow: visible;
-  }
-  .dp-subtab-btn {
-    flex: initial;        /* override flex:1 from the desktop rule */
-    padding: 10px 8px;
-    font-size: 12.5px;
-    gap: 6px;
-    border-radius: 9px;
-    min-width: 0;
-    /* Allow the label to wrap onto a 2nd line if a translation is
-       extra-long (FR/ZH) so it never truncates. */
-    white-space: normal;
-    text-align: center;
-    line-height: 1.2;
-  }
-  .dp-subtab-btn span {
-    /* The label sits inside a span — make it shrink properly */
-    min-width: 0;
-    overflow-wrap: anywhere;
-  }
-  .dp-subtab-icon {
-    font-size: 13px;
-    flex-shrink: 0;
-  }
-  .dp-subtab-count {
-    font-size: 10px;
-    padding: 1px 5px;
-    min-width: 16px;
-  }
-}
-
-/* Very small phones — drop the icons to claw back space for the label */
-@media (max-width: 360px) {
-  .dp-subtab-btn { gap: 4px; padding: 9px 6px; font-size: 12px; }
-  .dp-subtab-icon { display: none; }
-}
-
 .dp-subtab-btn {
   flex: 1;
   display: flex;
@@ -268,6 +218,65 @@
 .dp-subtab-btn:not(.dp-subtab-btn--active) .dp-subtab-count {
   background: var(--text-secondary);
   opacity: 0.6;
+}
+
+/* Phones — 2×2 grid so all four tabs stay readable and, crucially, all
+   four stay *visible*. A horizontally-scrolling strip was the other
+   option, but it hides half the destinations behind a swipe, and on a
+   primary bottom-tab section that costs real discoverability. Two rows
+   of two shows every tab at ~50% width with room for the full label.
+
+   These rules must live *after* the .dp-subtab-btn base block: they are
+   the same specificity, so source order is what decides. (They used to
+   sit above it, which silently lost flex/white-space/font-size back to
+   the desktop values and let the long labels overflow the grid cell.)
+
+   Breakpoint is 768px to match useViewport()/MOBILE_BREAKPOINT; at the
+   old 600px the 601-768px band still flexed four nowrap labels into one
+   row and clipped them under the bar's overflow:hidden. */
+@media (max-width: 768px) {
+  .dp-subtab-bar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    padding: 4px;
+    border-radius: 12px;
+    overflow: visible;
+  }
+  .dp-subtab-btn {
+    flex: initial;        /* override flex:1 from the desktop rule */
+    min-height: 44px;     /* comfortable touch target */
+    padding: 10px 8px;
+    font-size: 12.5px;
+    gap: 6px;
+    border-radius: 9px;
+    min-width: 0;
+    /* Allow the label to wrap onto a 2nd line if a translation is
+       extra-long (FR/ZH) so it never truncates. */
+    white-space: normal;
+    text-align: center;
+    line-height: 1.2;
+  }
+  .dp-subtab-btn span {
+    /* The label sits inside a span — make it shrink properly */
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .dp-subtab-icon {
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+  .dp-subtab-count {
+    font-size: 10px;
+    padding: 1px 5px;
+    min-width: 16px;
+  }
+}
+
+/* Very small phones — drop the icons to claw back space for the label */
+@media (max-width: 360px) {
+  .dp-subtab-btn { gap: 4px; padding: 9px 6px; font-size: 12px; }
+  .dp-subtab-icon { display: none; }
 }
 
 /* Degree requirements tab wrapper */
@@ -1341,15 +1350,66 @@
 }
 
 /* ── Responsive ─────────────────────────────────────── */
-@media (max-width: 640px) {
-  .dp-view { padding: 12px; gap: 12px; }
-  .dp-section-card { padding: 16px; }
+@media (max-width: 768px) {
+  /* On mobile this view renders inside <main class="mobile-content">,
+     which already supplies 1rem of padding — .dp-view adding 20px more
+     on each side cost ~13% of a 390px screen. */
+  .dp-view { padding: 0; gap: 12px; }
+  .dp-section-card { padding: 14px; }
   .dp-accordion-header { padding: 14px 16px; }
   .dp-course-row { padding: 10px 16px; flex-wrap: wrap; }
   .dp-course-info { flex-wrap: nowrap; }
   .dp-course-title { font-size: 0.85rem; }
   .dp-action-btn { width: 30px; height: 30px; font-size: 0.75rem; }
-  .dp-import-btn { font-size: 0.75rem; padding: 5px 10px; }
+  .dp-import-btn { font-size: 0.75rem; padding: 7px 12px; }
+
+  /* The sub-tab panels are fixed-height (620px) internally-scrolling
+     boxes on desktop. Inside .mobile-content — which is itself the
+     scroller — that nests two scroll areas, so a swipe that starts on a
+     requirement block scrolls the inner box while the page appears
+     frozen. Let the panels size to their content and hand scrolling
+     back to the page. */
+  .dp-req-tab-wrap,
+  .dp-sa-tab-wrap {
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    padding: 0;
+  }
+
+  /* Program switcher (major / minor / extra programs / Electives /
+     Recommendations). Unlike the four fixed sub-tabs above, this list is
+     unbounded — a double-major with two minors produces six tabs — so a
+     grid can't be sized ahead of time. A scrolling strip is the right
+     shape here. Sizing tabs to their label (rather than flex:1 + ellipsis)
+     means an overflowing strip always cuts the last tab mid-word, which
+     is the affordance — and when the tabs do fit there is no artificial
+     fade to explain away. */
+  .dp-prog-tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .dp-prog-tabs::-webkit-scrollbar { display: none; }
+  .dp-prog-tab {
+    flex: 0 0 auto;
+    max-width: 60vw;
+    min-height: 40px;
+    scroll-snap-align: start;
+  }
+
+  .dp-req-card-header { padding: 14px 14px 12px; gap: 10px; }
+  .dp-req-progress-row { gap: 10px 16px; }
+  .dp-electives-header { flex-wrap: wrap; }
+  /* Native select + assignment dropdowns need a full-width tap target
+     and 16px text so iOS Safari doesn't zoom the page on focus. */
+  .dp-elective-assign-select,
+  .dp-req-overlap-select { width: 100%; font-size: 16px; }
 }
 
 /* ── Import button group ──────────────────────────────── */
@@ -1410,3 +1470,333 @@
 }
 .dp-banner-close:hover { opacity: 1; background: rgba(0,0,0,0.08); }
 [data-theme="dark"] .dp-banner-close:hover { background: rgba(255,255,255,0.12); }
+
+/* ── Responsive, part 2 ───────────────────────────────────────
+   These rules must live at the *end* of the file: several of the
+   declarations below override base rules that are themselves declared
+   after the first @media block (`.dp-import-btns`, `.dp-import-btn--*`).
+   Media queries add no specificity, so at equal specificity source order
+   decides — putting them earlier would silently lose.
+
+   Everything here is a mobile-only overflow fix. Measurements assume the
+   worst realistic case: a 390px viewport, minus .mobile-content's 2rem of
+   side padding (358px), minus .dp-section-card's 14px mobile padding on
+   each side — i.e. ~330px of usable width, and only ~300px on a 360px
+   phone. */
+@media (max-width: 768px) {
+
+  /* ── Degree Progress card header ──────────────────────────
+     THE main overflow. SectionHeader is `title | action` with
+     justify-content: space-between; .ui-section-header__action is
+     flex-shrink: 0, .dp-import-btns is flex-shrink: 0, and both import
+     buttons are white-space: nowrap. Nothing in that chain can give, so
+     the row's width is fixed at (title min-content + gap + buttons):
+
+       EN  ~93 + 12 + 207 = 312px   → overflows a 360px phone
+       FR  ~85 + 12 + 288 = 385px   → overflows every phone by ~55px
+           ("Relevé de notes" + "Plans de cours" are far wider than
+            "Transcript" + "Syllabi")
+
+     .dp-section-card has no overflow guard, so the excess ran out past
+     .dp-view and got cut off by .mobile-content's overflow-x: clip —
+     exactly the reported "too wide / content cut off".
+
+     Fix the constraint rather than the symptom: let the header wrap, so
+     the button group drops to its own full-width line when the two
+     cannot share one. Scoped to .dp-view so no other SectionHeader
+     changes. */
+  .dp-view .ui-section-header { flex-wrap: wrap; }
+  .dp-view .ui-section-header__title { min-width: 0; }
+  .dp-import-btns { flex-wrap: wrap; flex-shrink: 1; min-width: 0; }
+
+  /* ── Native <select> intrinsic width ──────────────────────
+     A <select>'s min-content width is the width of its widest <option>,
+     and mobile bumps these to 16px (iOS zoom guard). The options are
+     program names — "Count toward Gender, Sexuality, Feminist and Social
+     Justice Studies only" is ~450px at 16px.
+
+     .dp-req-overlap-select is a flex item, so its automatic minimum size
+     (min-width: auto) pinned it to that intrinsic width and width: 100%
+     could not pull it back down. min-width: 0 lets it shrink; the select
+     clips its own label natively, so nothing is lost. */
+  .dp-req-overlap-select,
+  .dp-elective-assign-select { min-width: 0; max-width: 100%; }
+
+  /* Same root cause one level up: .dp-elective-card is a grid item in
+     .dp-electives-grid, and a `1fr` track is minmax(auto, 1fr) — the auto
+     minimum is the item's min-content size, which includes the assign
+     select's widest option. The track therefore grew past the container.
+     min-width: 0 makes the track viewport-derived again. */
+  .dp-elective-card { min-width: 0; }
+
+  /* ── Program credit bar ───────────────────────────────────
+     .dp-prog-bar-label is white-space: nowrap with no shrink, next to a
+     flex: 1 (basis 0) track. The track collapses to nothing before the
+     label gives an inch, so a long label ("12 crédits sur 96 · +9 en
+     cours") sets the row width. Stack them instead — the bar gets the
+     full width and the label sits under it. */
+  .dp-prog-bar-wrap { flex-direction: column; align-items: stretch; gap: 6px; }
+  /* The track's desktop `flex: 1` means `flex: 1 1 0%`, and once the wrap
+     is a column that 0% basis applies to its *height* — overriding
+     height: 6px and collapsing the bar to nothing (the container has no
+     free space to grow into). Hand the main-axis size back to height. */
+  .dp-prog-bar-track { flex: none; width: 100%; }
+  .dp-prog-bar-label { white-space: normal; }
+
+  /* ── Long unbroken strings ────────────────────────────────
+     Program/course titles come from seed data and the model; a single
+     long token (a hyphen-free program name, a code, a URL) would
+     otherwise set an unshrinkable min-content floor. */
+  .dp-req-card-sub,
+  .dp-req-prog-name,
+  .dp-req-prog-detail,
+  .dp-req-rec-title,
+  .dp-req-block-note,
+  .dp-electives-title,
+  .dp-electives-sub,
+  .dp-elective-title,
+  .dp-elective-why { overflow-wrap: anywhere; }
+
+  /* .dp-req-course-main is min-width: 0, but the rows inside it are
+     nested flex containers that were not. */
+  .dp-req-course-row,
+  .dp-req-overlap-assign { min-width: 0; }
+
+  /* .dp-electives-title-row / its text column had no min-width: 0, so the
+     header row was sized by the heading's content rather than the card. */
+  .dp-electives-title-row { min-width: 0; }
+  .dp-electives-title-row > div { min-width: 0; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   MOBILE — NATIVE GRAMMAR  (must stay LAST in this file)
+   ══════════════════════════════════════════════════════════════
+   Every rule is scoped to `.mobile-shell`, the wrapper MobileLayout
+   renders only under 768px, and wrapped in the 768px media query — so
+   desktop can match none of it.
+
+   Last in the file for the same reason the "Responsive, part 2" block
+   above is: several base rules these override are declared after the
+   first @media block, and media queries add no specificity, so source
+   order decides ties. */
+@media (max-width: 768px) {
+
+  /* ── Sub-tabs → segmented control ───────────────────────────
+     Same language as the Courses screen's control (see CoursesView.css
+     for the reasoning). Four destinations, so the 2x2 grid stays — a
+     scrolling strip would hide half of a top-level section behind a
+     swipe — but the tray, the pill radius, the active-surface treatment
+     and the type are now identical to every other tab control in these
+     two screens. */
+  .mobile-shell .dp-view .dp-subtab-bar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    padding: 2px;
+    border: none;
+    border-radius: 9px;
+    background: var(--bg-tertiary, rgba(120, 120, 128, 0.12));
+    overflow: hidden;
+  }
+  .mobile-shell .dp-view .dp-subtab-btn {
+    min-height: 40px;
+    padding: 7px 8px;
+    border-radius: 7px;
+    background: transparent;
+    box-shadow: none;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+  .mobile-shell .dp-view .dp-subtab-btn--active {
+    background: var(--m-bg-surface);
+    color: var(--text-primary);
+    font-weight: 600;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  }
+  .mobile-shell .dp-view .dp-subtab-btn:hover:not(.dp-subtab-btn--active) {
+    background: transparent;
+    color: var(--text-secondary);
+  }
+  @media (hover: hover) {
+    .mobile-shell .dp-view .dp-subtab-btn:hover:not(.dp-subtab-btn--active) {
+      background: var(--bg-hover, rgba(0, 0, 0, 0.04));
+      color: var(--text-primary);
+    }
+  }
+  .mobile-shell .dp-view .dp-subtab-btn:active { opacity: 0.6; }
+  .mobile-shell .dp-view .dp-subtab-count {
+    background: var(--text-secondary);
+    color: var(--m-bg-surface);
+    opacity: 0.55;
+  }
+  .mobile-shell .dp-view .dp-subtab-btn--active .dp-subtab-count {
+    background: var(--accent-primary);
+    color: #fff;
+    opacity: 1;
+  }
+
+  /* ── Page = recessed, content = raised ──────────────────────
+     The figure/ground relationship replaces per-card borders and
+     shadows. The two top-level cards keep their own surface (they are
+     genuine cards — a progress hero and a requirements panel — not list
+     items), but lose the border and drop shadow that made them read as
+     web cards floating on a page. */
+  .mobile-shell .dp-view .dp-section-card,
+  .mobile-shell .dp-view .dp-req-card {
+    background: var(--m-bg-surface);
+    border: none;
+    border-radius: var(--m-group-radius);
+    box-shadow: none;
+  }
+
+  /* ── Program switcher → same pill language ──────────────────
+     Stays a scrolling strip (the list is unbounded — a double major with
+     two minors makes six tabs) but adopts the segmented control's tray
+     and active pill so it is recognisably the same control. */
+  .mobile-shell .dp-view .dp-prog-tabs {
+    gap: 2px;
+    padding: 2px;
+    border: none;
+    border-radius: 9px;
+    background: var(--bg-tertiary, rgba(120, 120, 128, 0.12));
+  }
+  .mobile-shell .dp-view .dp-prog-tab {
+    min-height: 34px;
+    border-radius: 7px;
+    font-size: 12.5px;
+  }
+  .mobile-shell .dp-view .dp-prog-tab--active {
+    background: var(--m-bg-surface);
+    color: var(--text-primary);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  }
+  .mobile-shell .dp-view .dp-prog-tab:hover:not(.dp-prog-tab--active) {
+    background: transparent;
+    color: var(--text-secondary);
+  }
+  @media (hover: hover) {
+    .mobile-shell .dp-view .dp-prog-tab:hover:not(.dp-prog-tab--active) {
+      background: var(--bg-hover, rgba(0, 0, 0, 0.04));
+      color: var(--text-primary);
+    }
+  }
+  .mobile-shell .dp-view .dp-prog-tab:active { opacity: 0.6; }
+
+  /* ── Requirement blocks → grouped lists ─────────────────────
+     Each block was a bordered, tinted, radiused box containing another
+     bordered list. It becomes one group: a header row, then its course
+     rows separated by hairlines, all on the requirements card's own
+     surface. The block body runs to the card edges; the non-list
+     children of the body keep the card's inset. */
+  .mobile-shell .dp-view .dp-req-body {
+    padding: var(--m-row-pad-y) 0 var(--m-row-pad-x);
+    gap: var(--m-row-pad-y);
+  }
+  .mobile-shell .dp-view .dp-req-progress-row,
+  .mobile-shell .dp-view .dp-prog-tabs,
+  .mobile-shell .dp-view .drv-foundation-waived-banner,
+  .mobile-shell .dp-view .dp-prog-bar-wrap,
+  .mobile-shell .dp-view .dp-electives-header,
+  .mobile-shell .dp-view .dp-electives-recs-header,
+  .mobile-shell .dp-view .dp-electives-theme,
+  .mobile-shell .dp-view .dp-electives-recs-prompt,
+  .mobile-shell .dp-view .dp-electives-loading,
+  .mobile-shell .dp-view .dp-electives-error,
+  .mobile-shell .dp-view .dp-electives-empty,
+  .mobile-shell .dp-view .rsb-disclaimer {
+    margin-left: var(--m-row-pad-x);
+    margin-right: var(--m-row-pad-x);
+  }
+
+  .mobile-shell .dp-view .dp-req-block.m-group {
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    margin-bottom: 0;
+  }
+  /* Done / in-progress no longer tint a whole box — the status pill in
+     the header already says it, and a column of pastel fills down a
+     phone screen is exactly the card chrome being removed. */
+  .mobile-shell .dp-view .dp-req-block--done,
+  .mobile-shell .dp-view .dp-req-block--progress { background: transparent; }
+  .mobile-shell .dp-view .dp-req-block--manual {
+    border: none;
+    border-style: none;
+  }
+
+  .mobile-shell .dp-view .dp-req-block-header.m-row {
+    justify-content: space-between;
+    border-bottom: var(--m-hairline);
+  }
+  .mobile-shell .dp-view .dp-req-block-header:hover { background: none; }
+  @media (hover: hover) {
+    .mobile-shell .dp-view .dp-req-block-header:hover {
+      background: var(--bg-hover, rgba(0, 0, 0, 0.03));
+    }
+  }
+  .mobile-shell .dp-view .dp-req-block-name { white-space: normal; }
+
+  .mobile-shell .dp-view .dp-req-block-courses {
+    padding: 0;
+    border-top: none;
+    gap: 0;
+  }
+  .mobile-shell .dp-view .dp-req-course.m-row {
+    align-items: flex-start;
+    border-radius: 0;
+    border-bottom: var(--m-hairline);
+  }
+  .mobile-shell .dp-view .dp-req-block-courses > .dp-req-course:last-child {
+    border-bottom: none;
+  }
+  .mobile-shell .dp-view .dp-req-course:hover { background: transparent; }
+  @media (hover: hover) {
+    .mobile-shell .dp-view .dp-req-course:hover {
+      background: var(--bg-hover, rgba(0, 0, 0, 0.03));
+    }
+  }
+  .mobile-shell .dp-view .dp-req-course:active {
+    background: var(--bg-hover, rgba(0, 0, 0, 0.06));
+  }
+  .mobile-shell .dp-view .dp-req-course-title { white-space: normal; }
+  .mobile-shell .dp-view .dp-req-block-note {
+    margin: 0;
+    padding: var(--m-row-pad-y) var(--m-row-pad-x);
+    border-radius: 0;
+    border-bottom: var(--m-hairline);
+  }
+
+  /* ── Electives / recommendations → grouped list ─────────────
+     Same move: a one-column grid of bordered cards becomes one surface
+     with hairline-separated rows. The rows stay stacked internally
+     (code, title, reason, assign control), so only the axis is
+     overridden — padding and separator come from .m-row. */
+  .mobile-shell .dp-view .dp-electives-grid.m-group {
+    display: block;
+    background: transparent;
+    margin-bottom: 0;
+  }
+  .mobile-shell .dp-view .dp-elective-card.m-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 5px;
+    border: none;
+    border-bottom: var(--m-hairline);
+    border-radius: 0;
+    background: transparent;
+  }
+  .mobile-shell .dp-view .dp-electives-grid > .dp-elective-card:last-child {
+    border-bottom: none;
+  }
+  .mobile-shell .dp-view .dp-elective-card:hover { border-color: transparent; }
+  .mobile-shell .dp-view .dp-elective-assign { border-top: none; }
+
+  /* Import buttons: the hover translate is applied on tap and then stays
+     until you touch something else. */
+  .mobile-shell .dp-view .dp-import-btn:hover,
+  .mobile-shell .dp-view .dp-import-btn--secondary:hover {
+    transform: none;
+    box-shadow: none;
+  }
+}

@@ -28,12 +28,14 @@
   margin-left: calc(-2rem - 36px);
 }
 
-/* The base (non-mini) 768px/480px header margins are already handled
-   further down (see the existing @media blocks below) and already match
-   .content-area's padding correctly. Only the collapsed-sidebar mini-rail
-   case was missing a mobile override: Dashboard.css bumps the rail
-   reserve from 36px to 44px at <=768px and never redefines it again at
-   <=480px, so this single override covers both. */
+/* NOTE (mobile shell): at <=768px the app now renders MobileLayout, whose
+   tab content lives in <main class="mobile-content"> — there is no .sidebar
+   and no .content-area — so this override can no longer match and is kept
+   only as a safety net if the desktop shell is ever shown below 768px.
+   The rule that actually governs the header banner on phones is the
+   `.profile-page-header { margin: -1rem -1rem 1rem }` in the plain
+   @media (max-width: 768px) block below, which is scoped to the element
+   itself (no .content-area ancestor) and therefore still applies. */
 @media (max-width: 768px) {
   .sidebar--mini ~ .main-content .content-area .profile-page-header {
     margin-left: calc(-1rem - 44px);
@@ -62,7 +64,12 @@
   transition: all 0.3s ease;
 }
 
-.profile-avatar-xl-wrapper:hover { transform: scale(1.05); }
+/* Hover-guarded: on touch the scale/overlay latches after the tap that opens
+   the file picker, so the avatar stays dimmed behind the sheet. Desktop
+   pointers report `hover: hover`, so this is a no-op above 768px. */
+@media (hover: hover) {
+  .profile-avatar-xl-wrapper:hover { transform: scale(1.05); }
+}
 
 .profile-avatar-xl {
   width: 100%;
@@ -100,7 +107,9 @@
   text-align: center;
 }
 
-.profile-avatar-xl-wrapper:hover .avatar-xl-overlay { opacity: 1; }
+@media (hover: hover) {
+  .profile-avatar-xl-wrapper:hover .avatar-xl-overlay { opacity: 1; }
+}
 
 .camera-xl-icon {
   font-size: 20px;
@@ -198,9 +207,11 @@
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.profile-section-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+@media (hover: hover) {
+  .profile-section-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  }
 }
 
 .card-header {
@@ -255,9 +266,11 @@
   transition: transform 0.2s ease;
 }
 
-.interest-tag:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(237, 27, 47, 0.3);
+@media (hover: hover) {
+  .interest-tag:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(237, 27, 47, 0.3);
+  }
 }
 
 .empty-state {
@@ -319,8 +332,17 @@
   }
   .profile-display-name { font-size: 2rem; }
   .profile-badges { justify-content: center; }
-  .profile-content { padding: 0 1rem 1rem 1rem; }
+  /* <main class="mobile-content"> already supplies the 1rem side gutter.
+     Keeping it here too stacked three levels of padding on this screen
+     (mobile-content + profile-content + the cards' own 16px), leaving only
+     ~264px of usable width at 360px. The header banner's -1rem bleed still
+     measures against mobile-content, so it is unaffected. */
+  .profile-content { padding: 0 0 1rem; }
   .profile-grid { grid-template-columns: 1fr; }
+  .btn-import-transcript { min-height: 44px; }
+  /* Card headers pair a title with an action button; at 360px they need to
+     be allowed to stack rather than squeeze the title to nothing. */
+  .card-header { flex-wrap: wrap; gap: 10px; }
   .sign-out-section {
     flex-direction: column;
     align-items: flex-start;
@@ -364,7 +386,57 @@
   transition: opacity 0.15s, transform 0.15s;
 }
 
-.btn-import-transcript:hover {
-  opacity: 0.9;
-  transform: translateY(-1px);
+@media (hover: hover) {
+  .btn-import-transcript:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   NATIVE SURFACES (<= 768px)
+
+   The page becomes the recessed background and the content groups inside
+   it become the raised surfaces. That means the section *wrappers* stop
+   being cards: PersonalInfoCard and Settings draw their own grouped lists
+   directly on the page, so a card around them would be a second, larger
+   box drawn around a box.
+
+   Last block in the file so it wins over the 768/480 patches above.
+   ══════════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .mobile-shell .profile-page { background: var(--m-bg-grouped); }
+
+  /* Wrapper only — no surface of its own. */
+  .mobile-shell .profile-section-card {
+    background: transparent;
+    border-radius: 0;
+    box-shadow: none;
+    overflow: visible;
+  }
+
+  /* Groups carry their own bottom margin; the grid gap would double it. */
+  .mobile-shell .profile-grid { gap: 0; }
+
+  /* ── Sign out: a single destructive grouped row ── */
+  .mobile-shell .profile-signout-group { margin-bottom: 0.5rem; }
+
+  .mobile-shell .profile-signout-row {
+    width: 100%;
+    border: none;
+    background: none;
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+    color: var(--accent-primary, #ed1b2f);
+  }
+
+  .mobile-shell .profile-signout-icon { flex-shrink: 0; }
+  .mobile-shell .profile-signout-label { flex: 1; min-width: 0; }
+  .mobile-shell .profile-signout-chev {
+    flex-shrink: 0;
+    color: var(--text-tertiary);
+  }
 }

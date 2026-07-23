@@ -959,25 +959,179 @@
   cursor: default;
 }
 
-/* ── Responsive ── */
+/* ── Responsive ─────────────────────────────────────────────────
+   On mobile the Brief renders inside MobileLayout's <main class="mobile-content">,
+   which is itself the scroll container and already supplies 1rem gutters plus
+   bottom padding clearing the fixed tab bar. Two consequences drive this block:
+
+   1. The root stops being a fixed-height, inner-scrolling card. Nesting a
+      scroller inside .mobile-content produced the classic two-scrollbar trap
+      where a flick could land on either one; here the feed flows and
+      .mobile-content owns all vertical scrolling.
+   2. Nothing re-adds horizontal padding or bottom-nav clearance — the shell
+      owns both. The old rules did both and double-counted them.            */
 @media (max-width: 768px) {
-  .advisor-cards-feed,
-  .advisor-cards-header,
-  .advisor-cards-freeform { padding-left: 16px; padding-right: 16px; }
-  .category-bar           { padding-left: 16px; padding-right: 16px; }
-  /* The freeform bar sits at the bottom of a height:100% card, which on
-     mobile lands right under the fixed bottom-nav rail + Feedback button —
-     reserve enough bottom padding to clear both instead of being covered. */
-  .advisor-cards-freeform {
-    padding-bottom: calc(18px + 56px + env(safe-area-inset-bottom, 0px));
+  .advisor-cards-root {
+    height: auto;
+    /* overflow:visible is load-bearing: an overflow:hidden ancestor would make
+       the sticky composer below inert. */
+    overflow: visible;
+    max-width: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent;
   }
+
+  .advisor-cards-header {
+    padding: 0 0 14px;
+    align-items: flex-start;
+    border-bottom: none;
+    background: transparent;
+  }
+
+  /* MobileLayout renders no top bar, so this heading IS the screen title.
+     Sized like a native large title and left in flow so it scrolls away with
+     the content — which is the behaviour a persistent header cannot give.
+     (It used to be visually hidden, from when the shell still had a top bar.) */
+  .advisor-cards-header__title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+
+  .advisor-cards-header__left {
+    flex: 1;
+    min-width: 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+
+  .advisor-cards-header__timestamp { margin-left: 0; }
+
+  .advisor-cards-refresh {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border-radius: 999px;
+  }
+
+  /* ── Category filter ──
+     A row of underlined tabs is web navigation chrome. On the phone this is a
+     filter, so it becomes a scrolling row of pills: each one sized to its own
+     label, selected state filled rather than underlined. */
+  .category-bar {
+    padding: 2px 0;
+    margin-bottom: 16px;
+    background: transparent;
+    gap: 8px;
+    border-bottom: none;
+  }
+
+  .category-tab {
+    flex: 0 0 auto;
+    min-height: 44px;
+    padding: 0 14px;
+    border: none;
+    border-bottom: none;
+    border-radius: 999px;
+    background: var(--m-bg-surface, var(--bg-primary));
+    color: var(--text-secondary);
+    font-size: 0.82rem;
+    font-weight: 500;
+    margin-bottom: 0;
+    transition: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .category-tab.active {
+    background: var(--accent-primary);
+    border-bottom-color: transparent;
+    color: #fff;
+  }
+
+  .category-tab.active .category-tab__icon { color: #fff; opacity: 1; }
+
+  .category-tab.active .category-tab__count,
+  .category-tab--saved.active .category-tab__count {
+    background: rgba(255, 255, 255, 0.24);
+    color: #fff;
+  }
+
+  .category-tab:active { opacity: 0.65; }
+
+  .advisor-cards-feed {
+    padding: 0;
+    overflow: visible;
+    gap: 12px;
+  }
+
+  /* Reordering is hidden on mobile (see MobileFeed in AdvisorCards.jsx). */
+  .advisor-card__drag-handle { display: none; }
+
+  /* Reading order on mobile is feed -> disclaimer -> composer, so the sticky
+     composer is genuinely the last thing on the page and nothing slides
+     underneath it. `order` only moves the boxes; DOM/tab order is unchanged. */
+  .rsb-disclaimer          { order: 1; }
+  .advisor-cards-freeform  { order: 2; }
+
+  /* Pinned above the fixed tab bar (56px tall + its safe-area padding) so the
+     ask box is reachable at any scroll position without a keyboard plugin. */
+  .advisor-cards-freeform {
+    position: sticky;
+    bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+    z-index: 30;
+    margin-top: 12px;
+    padding: 8px;
+    gap: 8px;
+    border: 1px solid var(--card-border, var(--border-primary));
+    border-radius: 999px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.14);
+    background: var(--card-bg, var(--bg-primary));
+  }
+
+  .freeform-input {
+    padding: 11px 16px;
+    /* 16px exactly: anything smaller makes iOS Safari zoom on focus. */
+    font-size: 16px;
+  }
+
+  .freeform-send {
+    width: 42px;
+    height: 42px;
+  }
+
+  /* ── Touch feedback ──
+     Hover sticks after a tap on touch, so the last control you pressed stays
+     lit until you press something else. Below the breakpoint every one of
+     these controls is touch-driven, so their hover states are cancelled and
+     replaced with :active press feedback. Each rule matches the specificity of
+     the desktop rule it cancels and sits later in the file, so it wins without
+     !important — and none of it exists above 768px. */
+  .advisor-cards-refresh:hover:not(:disabled) {
+    border-color: var(--border-primary);
+    color: var(--text-secondary);
+    background: var(--btn-secondary-bg, transparent);
+  }
+  .advisor-cards-refresh:active:not(:disabled) {
+    background: var(--bg-hover, rgba(0, 0, 0, 0.06));
+  }
+
+  .category-tab:hover        { color: var(--text-secondary); }
+  .category-tab.active:hover { color: #fff; }
+
+  .freeform-send:hover:not(:disabled) {
+    transform: none;
+    background: linear-gradient(135deg, var(--accent-primary) 0%, #B01B2E 100%);
+  }
+  .freeform-send:active:not(:disabled) { transform: scale(0.94); }
 }
 
 @media (max-width: 480px) {
-  .advisor-cards-root  { border-radius: 8px; }
-  .advisor-card        { padding: 14px 14px 12px 20px; }
+  .advisor-card        { padding: 14px 14px 12px; }
   .advisor-card__title { font-size: 0.88rem; }
-  .freeform-input      { font-size: 16px; }
 }
 
 /* ── Drag handle ── */
@@ -1152,3 +1306,293 @@
   background: #000 !important;
   color: var(--text-primary) !important;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE (<= 768px) — list card + full-screen thread push view
+
+   These classes are only ever emitted by the mobile components in
+   AdvisorCards.jsx, so they need no media query to stay off desktop.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Mobile list card ──
+   An advisor card is a headline plus a paragraph of prose, so unlike Up Next
+   or Quick Actions it is genuinely card-shaped content and stays a card rather
+   than being squeezed into an .m-row. What it drops is the *web* card chrome:
+   no 1px border, no shadow, no hover lift. It becomes a flat raised surface
+   (--m-bg-surface) on the shell's recessed page (--m-bg-grouped), with the
+   same corner radius as the grouped lists on Home so the two screens read as
+   one system. Padding is more generous than desktop's, which is what makes it
+   feel like an app card rather than a dense listing. */
+.advisor-card--mobile {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  gap: 10px;
+  padding: 16px var(--m-row-pad-x, 16px) 12px;
+  border: none;
+  border-radius: var(--m-group-radius, 12px);
+  background: var(--m-bg-surface, var(--bg-primary));
+  box-shadow: none;
+  transition: background 0.12s ease;
+}
+
+/* Press state replaces hover. Kept subtle — the whole card is the target, so a
+   strong flash across that much area reads as an error, not a tap. */
+.advisor-card--mobile:active {
+  background: var(--bg-hover, rgba(0, 0, 0, 0.05));
+}
+
+/* ── Touch feedback guards ──
+   These neutralise the shared desktop :hover rules for the mobile card only.
+   They are unconditional rather than wrapped in @media (hover: none) because
+   .advisor-card--mobile is emitted solely by the mobile components, so there
+   is no desktop rendering to preserve — and a hover-capable touch device
+   (iPad + trackpad, Android + mouse) would otherwise still get sticky states.
+   Each selector matches the specificity of the desktop rule it cancels and
+   sits later in the file, so it wins without !important. */
+.advisor-card--mobile:hover {
+  box-shadow: none;
+  border-color: transparent;
+}
+
+.advisor-card--mobile .advisor-card__save:hover:not(:disabled) {
+  color: var(--text-muted, var(--text-tertiary));
+  transform: none;
+}
+
+.advisor-card--mobile .advisor-card__save--active:hover:not(:disabled) {
+  color: var(--accent-primary);
+}
+
+.advisor-card--mobile .advisor-card__delete:hover { color: var(--text-muted, var(--text-tertiary)); }
+
+.advisor-card--mobile .advisor-card__save:active,
+.advisor-card--mobile .advisor-card__delete:active { opacity: 0.5; }
+
+/* Hover-reveal is meaningless on touch — the delete control is always shown,
+   just quietly. Doubled class only to out-specify `.advisor-card:hover
+   .advisor-card__delete`, which would otherwise light it up and leave it lit. */
+.advisor-card--mobile.advisor-card--mobile .advisor-card__delete { opacity: 0.55; }
+
+/* Header controls need real 44px targets, and must not be clipped by the
+   card's own tap handler being the whole article. */
+.advisor-card--mobile .advisor-card__save,
+.advisor-card--mobile .advisor-card__delete {
+  min-width: 40px;
+  min-height: 40px;
+  justify-content: center;
+  margin-top: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.advisor-card--mobile .advisor-card__header-actions { gap: 0; }
+
+/* Body is a summary here; the full text lives in the thread view. */
+.advisor-card--mobile .advisor-card__body {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ── "open thread" affordance row ── */
+.advisor-card__mobile-open {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 0 0;
+  border: none;
+  border-top: var(--m-hairline, 1px solid var(--border-primary));
+  border-radius: 0;
+  background: none;
+  font-family: inherit;
+  font-size: 0.8rem;
+  text-align: left;
+  color: var(--text-muted, var(--text-tertiary));
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.advisor-card__mobile-open:active { opacity: 0.6; }
+
+.advisor-card__mobile-open-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.advisor-card__mobile-count {
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+}
+
+.advisor-card__mobile-chevron {
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  opacity: 0.5;
+}
+
+/* ── Full-screen thread ──
+   z-index clears MobileLayout's fixed tab bar (100) and More sheet (130): this
+   view deliberately covers the tab bar, and the back control is the way out.
+
+   Motion is NOT defined here. The element carries .m-push-enter / .m-push-exit
+   from MobileLayout.css so the card -> thread navigation uses the app's one
+   shared push gesture: a full slide in from the trailing edge, and a slide
+   back out the same way on the pop. The old local keyframe only faded in from
+   6% — a hint of a transition rather than a direction, which reads as a page
+   load. prefers-reduced-motion is handled by the primitive; AdvisorCards.jsx
+   checks the same query so the unmount timer does not leave the view stranded
+   when the animation is suppressed. */
+.mobile-card-thread {
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-primary);
+}
+
+.mobile-card-thread__bar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  padding-top: calc(6px + env(safe-area-inset-top, 0px));
+  padding-left:  max(10px, env(safe-area-inset-left));
+  padding-right: max(10px, env(safe-area-inset-right));
+  border-bottom: 1px solid var(--border-primary);
+  background: var(--bg-primary);
+}
+
+.mobile-card-thread__back {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 10px;
+  background: none;
+  color: var(--text-primary);
+  font-size: 1rem;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-card-thread__back:active { background: var(--bg-secondary); }
+
+.mobile-card-thread__heading {
+  flex: 1;
+  min-width: 0;
+}
+
+.mobile-card-thread__title {
+  margin: 1px 0 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.mobile-card-thread__bar .advisor-card__save {
+  min-width: 44px;
+  min-height: 44px;
+  justify-content: center;
+  margin-top: 0;
+  font-size: 0.95rem;
+}
+
+/* The transcript is this view's only scroller, so it takes the free space and
+   drops the desktop card's max-height cap. */
+.thread-messages--fill {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+  padding: 14px 16px;
+  padding-left:  max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
+  overscroll-behavior: contain;
+}
+
+.mobile-card-thread__intro {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-bottom: 14px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--border-primary);
+}
+
+.mobile-card-thread__intro .advisor-card__body { font-size: 0.9rem; }
+
+.mobile-card-thread__intro .advisor-card__chip {
+  min-height: 36px;
+  font-size: 0.8rem;
+}
+
+.mobile-card-thread .thread-text { max-width: 92%; }
+
+/* Composer. No tab-bar clearance is needed because this view covers the tab
+   bar; only the home-indicator inset applies. */
+.mobile-card-thread__composer {
+  flex: 0 0 auto;
+  padding: 10px 16px;
+  padding-left:   max(16px, env(safe-area-inset-left));
+  padding-right:  max(16px, env(safe-area-inset-right));
+  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--border-primary);
+  background: var(--bg-primary);
+}
+
+.mobile-card-thread__composer .card-chat-bar__input {
+  /* 16px exactly: anything smaller makes iOS Safari zoom on focus. */
+  font-size: 16px;
+  padding: 8px 0 10px;
+}
+
+.mobile-card-thread__composer .card-chat-bar__send {
+  width: 40px;
+  height: 40px;
+  font-size: 0.85rem;
+}
+
+/* ── Thread view touch feedback ──
+   Same rationale as the mobile card's guards: .mobile-card-thread is emitted
+   only by the mobile component, so cancelling hover here cannot reach
+   desktop. Press states take over. */
+.mobile-card-thread .advisor-card__chip:hover:not(:disabled) {
+  border-color: var(--border-primary);
+  color: var(--text-secondary);
+  background: var(--btn-secondary-bg, transparent);
+}
+
+.mobile-card-thread .advisor-card__chip:active:not(:disabled) {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+  background: rgba(237, 27, 47, 0.08);
+}
+
+.mobile-card-thread .advisor-card__save:hover:not(:disabled) { transform: none; }
+
+.mobile-card-thread .card-chat-bar__send:hover:not(:disabled) {
+  transform: none;
+  background: linear-gradient(135deg, var(--accent-primary) 0%, #B01B2E 100%);
+}
+
+.mobile-card-thread .card-chat-bar__send:active:not(:disabled) { transform: scale(0.94); }

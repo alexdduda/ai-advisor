@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import {
   FaSearch, FaUsers, FaHeart, FaCalendarAlt,
-  FaPlus, FaTimes, FaExternalLinkAlt, FaChevronRight,
+  FaPlus, FaTimes, FaExternalLinkAlt, FaChevronRight, FaChevronLeft,
   FaEnvelope, FaCheck, FaBell, FaBullhorn, FaTrash,
   FaChevronDown, FaStar, FaCog, FaCrown,
   FaBook, FaPalette, FaGraduationCap,
@@ -10,6 +10,7 @@ import {
 } from 'react-icons/fa'
 import { useLanguage } from '../../contexts/PreferencesContext'
 import { useAuth } from '../../contexts/AuthContext'
+import useViewport from '../../hooks/useViewport'
 import clubsAPI from '../../lib/clubsAPI'
 import { readCache, writeCache } from '../../lib/userDataCache'
 import Breadcrumb from '../ui/Breadcrumb'
@@ -329,7 +330,24 @@ function ClubDetailDrawer({ club, liveClub, joined, calSynced, onToggleCalendar,
   const [logoBusy, setLogoBusy] = useState(false)
   const drawerLogoInputRef = useRef(null)
   const instructionsRef = useRef(null)
+  const { isMobile } = useViewport()
   const { language } = useLanguage()
+
+  // On mobile this drawer is a full-screen detail view pushed on top of the
+  // browse list, so it should slide in from the trailing edge and back out
+  // the same way — direction is what makes "deeper" and "back" legible
+  // without a breadcrumb. Popping needs the exit animation to finish before
+  // the parent unmounts us, hence the local closing state; desktop keeps its
+  // existing instant close and its own drawer-slide animation.
+  const POP_MS = 200
+  const [closing, setClosing] = useState(false)
+  const handleClose = useCallback(() => {
+    if (!isMobile) { onClose(); return }
+    if (closing) return
+    setClosing(true)
+    setTimeout(onClose, POP_MS)
+  }, [isMobile, closing, onClose])
+
   // AI-translated detail fields for FR/ZH viewers, fetched on open and merged
   // over the English source below. Keyed on club + language so switching
   // language while a club is open refetches.
@@ -392,19 +410,44 @@ function ClubDetailDrawer({ club, liveClub, joined, calSynced, onToggleCalendar,
   const canManage = isAdmin || display.created_by === userId
 
   return (
-    <div className="club-drawer-overlay" onClick={onClose}>
-      <aside className="club-drawer" onClick={e => e.stopPropagation()}>
+    <div
+      className={`club-drawer-overlay${closing ? ' club-drawer-overlay--closing' : ''}`}
+      onClick={handleClose}
+    >
+      <aside
+        className={`club-drawer${isMobile ? (closing ? ' m-push-exit' : ' m-push-enter') : ''}`}
+        onClick={e => e.stopPropagation()}
+      >
         <div className="club-drawer__strip" style={{
           background: `linear-gradient(135deg, ${meta.bg}, transparent)`,
           borderBottom: `3px solid ${meta.color}`
         }}>
-          <Breadcrumb
-            className="club-drawer__breadcrumb"
-            items={[
-              { key: 'clubs', label: t('nav.clubs'), onClick: onClose },
-              { key: 'club', label: display.name },
-            ]}
-          />
+          {/* On mobile the drawer becomes a full-screen sheet, so no overlay
+              is left to tap — the close button beside the breadcrumb is the
+              way out. On desktop the wrapper is `display: contents` and the
+              button `display: none`, so the breadcrumb stays the direct flex
+              child it has always been and nothing about the layout changes. */}
+          <div className="club-drawer__strip-top">
+            <Breadcrumb
+              className="club-drawer__breadcrumb"
+              items={[
+                { key: 'clubs', label: t('nav.clubs'), onClick: handleClose },
+                { key: 'club', label: display.name },
+              ]}
+            />
+            <button
+              type="button"
+              className="club-drawer__mobile-close"
+              onClick={handleClose}
+              aria-label={t('clubs.back')}
+              title={t('clubs.back')}
+            >
+              {/* A back-chevron, not an X: this view was pushed, so the way
+                  out is "back", and the icon should agree with the direction
+                  the sheet animates. */}
+              <FaChevronLeft size={16} />
+            </button>
+          </div>
           <div className="club-drawer__strip-main">
             <ClubAvatar
               name={display.name}
@@ -1345,7 +1388,7 @@ function ClubManageDashboard({ club, onClose, onSave, onDelete, isAdmin, t }) {
                 <input value={editForm.website_url} onChange={e => setEditForm(f => ({ ...f, website_url: e.target.value }))} placeholder="https://..." />
               </div>
               <div className="clubs-join-required-note">
-                <strong>⚠ Required:</strong> Fill in at least one of the two fields below. When a student clicks "Join Club", they'll be sent to the Application URL first, or shown the How to Join instructions if no URL is set.
+                <FaExclamationTriangle style={{ marginRight: '4px', verticalAlign: 'middle', flexShrink: 0 }} /><strong>{t('clubs.joinRequiredLabel')}</strong> {t('clubs.joinRequiredNote')}
               </div>
               <div className="clubs-field">
                 <label>{t('clubs.fieldApplicationUrl')}</label>
@@ -1742,7 +1785,7 @@ function SubmitClubModal({ onClose, onSubmit, t }) {
               <input type="url" value={form.website_url} onChange={e => set('website_url')(e.target.value)} placeholder="https://..." />
             </div>
             <div className="clubs-join-required-note">
-              <strong>⚠ Required:</strong> Fill in at least one of the two fields below. When a student clicks "Join Club", they'll be sent to the Application URL first, or shown the How to Join instructions if no URL is set.
+              <FaExclamationTriangle style={{ marginRight: '4px', verticalAlign: 'middle', flexShrink: 0 }} /><strong>{t('clubs.joinRequiredLabel')}</strong> {t('clubs.joinRequiredNote')}
             </div>
             {errors.joinMethod && (
               <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '8px', padding: '10px 14px', fontSize: '13px', color: '#b91c1c', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>

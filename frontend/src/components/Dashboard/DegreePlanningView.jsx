@@ -270,6 +270,7 @@ function CourseRow({ course, onClick, actions }) {
 
 // ── Electives Panel ────────────────────────────────────────────────────────────
 function ElectivesPanel({ profile, completedCourses, currentCourses, allProgramData, courseAllocations, assignCourse }) {
+  const { t } = useLanguage()
   const { openCourse } = useCourseDetail()
   const [assignedNote, setAssignedNote] = useState(null)
 
@@ -326,7 +327,7 @@ function ElectivesPanel({ profile, completedCourses, currentCourses, allProgramD
     })
   }, [completedCourses, currentCourses, profile, requiredCodes, wildcardAllBlocks, courseAllocations])
 
-  const SOURCE_LABELS = { completed: 'Done', current: 'Taking', transfer: 'Transfer' }
+  const SOURCE_LABELS = { completed: t('dp.statusDone'), current: t('dp.statusTaking'), transfer: t('dp.statusTransfer') }
   const SOURCE_COLORS = {
     completed: { bg: '#f0fdf4', color: '#15803d' },
     current:   { bg: '#eff6ff', color: '#1d4ed8' },
@@ -339,11 +340,11 @@ function ElectivesPanel({ profile, completedCourses, currentCourses, allProgramD
         <div className="dp-electives-title-row">
           <span className="dp-electives-spark"><FaBook /></span>
           <div>
-            <h3 className="dp-electives-title">My Elective Courses</h3>
+            <h3 className="dp-electives-title">{t('dp.myElectiveCourses')}</h3>
             <p className="dp-electives-sub">
-              Courses you've taken that don't count toward{' '}
-              {[profile?.major, profile?.minor].filter(Boolean).join(' or ') || 'your program'}
-              {(profile?.major || profile?.minor) && ' Majors/Minors'}
+              {t('dp.electivesSubPrefix')}{' '}
+              {[profile?.major, profile?.minor].filter(Boolean).join(' or ') || t('dp.yourProgram')}
+              {(profile?.major || profile?.minor) && ` ${t('dp.majorsMinors')}`}
             </p>
           </div>
         </div>
@@ -353,21 +354,21 @@ function ElectivesPanel({ profile, completedCourses, currentCourses, allProgramD
       {electiveCourses.length === 0 ? (
         <div className="dp-electives-empty">
           <span style={{ fontSize: '2rem', opacity: 0.3 }}><FaGraduationCap /></span>
-          <p>No elective courses found yet.</p>
+          <p>{t('dp.noElectivesYet')}</p>
           <p style={{ fontSize: '0.8rem', opacity: 0.6 }}>
-            Courses you complete outside your major &amp; minor requirements will appear here.
+            {t('dp.noElectivesHint')}
           </p>
         </div>
       ) : (
-        <div className="dp-electives-grid">
+        <div className="dp-electives-grid m-group">
           {electiveCourses.map((c, i) => {
             const srcStyle = SOURCE_COLORS[c._source] || SOURCE_COLORS.completed
             return (
-              <div key={i} className="dp-elective-card dp-elective-card--taken" onClick={() => openCourse(c.subject, c.catalog)} style={{ cursor: 'pointer' }}>
+              <div key={i} className="dp-elective-card dp-elective-card--taken m-row m-row--tappable" onClick={() => openCourse(c.subject, c.catalog)} style={{ cursor: 'pointer' }}>
                 <div className="dp-elective-top">
                   <span className="dp-elective-code">{c.subject} {c.catalog}</span>
                   <span className="dp-elective-cat" style={{ background: srcStyle.bg, color: srcStyle.color }}>
-                    {SOURCE_LABELS[c._source] || 'Done'}
+                    {SOURCE_LABELS[c._source] || t('dp.statusDone')}
                   </span>
                 </div>
                 <p className="dp-elective-title">{c.course_title || c.title || '-'}</p>
@@ -377,7 +378,7 @@ function ElectivesPanel({ profile, completedCourses, currentCourses, allProgramD
                     value={courseAllocations[`${c.subject} ${c.catalog}`.toUpperCase()] || ''}
                     onChange={e => handleAssign(`${c.subject} ${c.catalog}`.toUpperCase(), e.target.value)}
                   >
-                    <option value="">Count toward...</option>
+                    <option value="">{t('dp.countToward')}</option>
                     {allProgramData.map(prog => prog && (
                       <option key={prog.program_key} value={prog.program_key}>
                         {prog.name?.replace(/\s*[–-]\s*(Major|Minor|Honours|Concentration).*/, '') || prog.program_key}
@@ -385,7 +386,7 @@ function ElectivesPanel({ profile, completedCourses, currentCourses, allProgramD
                     ))}
                   </select>
                   {assignedNote === `${c.subject} ${c.catalog}`.toUpperCase() && (
-                    <p className="dp-elective-assign-note"><FaExclamationTriangle style={{ marginRight: '4px', verticalAlign: 'middle' }} />Double-check with your academic advisor whether this course actually counts toward this program.</p>
+                    <p className="dp-elective-assign-note"><FaExclamationTriangle style={{ marginRight: '4px', verticalAlign: 'middle' }} />{t('dp.assignAdvisorNote')}</p>
                   )}
                 </div>
                 {c.credits && <span className="dp-elective-credits">{c.credits} cr</span>}
@@ -562,9 +563,9 @@ function RecommendationsPanel({ profile, completedCourses, currentCourses, allPr
         <div className="dp-electives-recs-header">
           <span className="dp-electives-spark">✦</span>
           <div>
-            <h3 className="dp-electives-title">Course Recommendations</h3>
+            <h3 className="dp-electives-title">{t('dp.courseRecommendations')}</h3>
             <p className="dp-electives-sub">
-              AI picks for {[profile?.major, profile?.minor].filter(Boolean).join(' + ')}
+              {t('dp.aiPicksFor').replace('{programs}', [profile?.major, profile?.minor].filter(Boolean).join(' + '))}
               {profile?.interests ? ` · ${profile.interests}` : ''}
             </p>
           </div>
@@ -574,7 +575,7 @@ function RecommendationsPanel({ profile, completedCourses, currentCourses, allPr
             </button>
           ) : (
             <button className="dp-electives-refresh dp-electives-refresh--generate" onClick={handleShowRecs}>
-              Generate ✦
+              {t('dp.generate')}
             </button>
           )}
         </div>
@@ -590,14 +591,14 @@ function RecommendationsPanel({ profile, completedCourses, currentCourses, allPr
             {recs.theme && (
               <p className="dp-electives-theme"><FaLightbulb style={{ marginRight: '5px', verticalAlign: 'middle' }} />{recs.theme}</p>
             )}
-            <div className="dp-electives-grid">
+            <div className="dp-electives-grid m-group">
               {recs.recommendations?.map((c, i) => {
                 const alreadyTaken = [...completedCourses, ...currentCourses].some(uc =>
                   `${uc.subject} ${uc.catalog}`.toUpperCase() === `${c.subject} ${c.catalog}`.toUpperCase()
                 )
                 const catStyle = CATEGORY_COLORS[c.category] || CATEGORY_COLORS['Breadth']
                 return (
-                  <div key={i} className={`dp-elective-card ${alreadyTaken ? 'dp-elective-card--taken' : ''}`} onClick={() => openCourse(c.subject, c.catalog)} style={{ cursor: 'pointer' }}>
+                  <div key={i} className={`dp-elective-card m-row m-row--tappable ${alreadyTaken ? 'dp-elective-card--taken' : ''}`} onClick={() => openCourse(c.subject, c.catalog)} style={{ cursor: 'pointer' }}>
                     <div className="dp-elective-top">
                       <span className="dp-elective-code">{c.subject} {c.catalog}</span>
                       <span className="dp-elective-cat" style={{ background: catStyle.bg, color: catStyle.color }}>{c.category}</span>
@@ -615,7 +616,7 @@ function RecommendationsPanel({ profile, completedCourses, currentCourses, allPr
         )}
         {!showRecs && (
           <div className="dp-electives-recs-prompt">
-            <p>Get personalized course suggestions based on your program and interests.</p>
+            <p>{t('dp.recsPrompt')}</p>
           </div>
         )}
       </div>
@@ -812,9 +813,9 @@ function ProgramSection({ prog, completedCourses, currentCourses, advStanding, o
         const pillMod = blockDone ? 'dp-req-pill--done' : blockInProgress ? 'dp-req-pill--progress' : 'dp-req-pill--none'
 
         return (
-          <div key={block.id} className={`dp-req-block ${blockDone ? 'dp-req-block--done' : blockInProgress ? 'dp-req-block--progress' : ''}`}>
+          <div key={block.id} className={`dp-req-block m-group ${blockDone ? 'dp-req-block--done' : blockInProgress ? 'dp-req-block--progress' : ''}`}>
             <button
-              className="dp-req-block-header"
+              className="dp-req-block-header m-row m-row--tappable"
               onClick={() => setOpenBlocks(p => ({ ...p, [block.id]: !p[block.id] }))}
             >
               <div className="dp-req-block-left">
@@ -849,7 +850,7 @@ function ProgramSection({ prog, completedCourses, currentCourses, advStanding, o
                     ? (allProgramData.find(p => p?.program_key === allocatedTo)?.name?.replace(/\s*[–-]\s*(Major|Minor|Honours|Concentration).*/, '') || allocatedTo)
                     : null
                   return (
-                    <div key={c.id} className={`dp-req-course ${done && !allocatedElsewhere ? 'dp-req-course--done' : ''} ${taking && !allocatedElsewhere ? 'dp-req-course--taking' : ''} ${allocatedElsewhere ? 'dp-req-course--conflict' : ''}`}>
+                    <div key={c.id} className={`dp-req-course m-row ${done && !allocatedElsewhere ? 'dp-req-course--done' : ''} ${taking && !allocatedElsewhere ? 'dp-req-course--taking' : ''} ${allocatedElsewhere ? 'dp-req-course--conflict' : ''}`}>
                       {done && !allocatedElsewhere
                         ? <FaCheckCircle className="dp-req-course-icon dp-req-course-icon--done" />
                         : taking && !allocatedElsewhere
@@ -867,20 +868,20 @@ function ProgramSection({ prog, completedCourses, currentCourses, advStanding, o
                           {done && isTransfer  && <span className="dp-req-transfer-tag">{t('dp.statusTransfer')} · {t('dp.transferExempt')}</span>}
                           {done && !isTransfer && !allocatedElsewhere && <span className="dp-req-done-tag">{t('dp.statusDone')}</span>}
                           {taking && !allocatedElsewhere && <span className="dp-req-taking-tag">{t('dp.statusTaking')}</span>}
-                          {allocatedElsewhere && <span className="dp-req-conflict-tag">Counted toward {otherProgName}</span>}
+                          {allocatedElsewhere && <span className="dp-req-conflict-tag">{t('dp.countedToward').replace('{program}', otherProgName)}</span>}
                         </div>
                         {isOverlap && assignCourse && (
                           <div className="dp-req-overlap-assign">
-                            <span className="dp-req-overlap-label"><FaExclamationTriangle style={{ marginRight: '4px', verticalAlign: 'middle' }} />Overlaps with another program:</span>
+                            <span className="dp-req-overlap-label"><FaExclamationTriangle style={{ marginRight: '4px', verticalAlign: 'middle' }} />{t('dp.overlapsWith')}</span>
                             <select
                               className="dp-req-overlap-select"
                               value={allocatedTo || ''}
                               onChange={e => assignCourse(key, e.target.value || null)}
                             >
-                              <option value="">Count toward all (unassigned)</option>
+                              <option value="">{t('dp.countTowardAll')}</option>
                               {allProgramData.filter(Boolean).map(p => (
                                 <option key={p.program_key} value={p.program_key}>
-                                  Count toward {p.name?.replace(/\s*[–-]\s*(Major|Minor|Honours|Concentration).*/, '') || p.program_key} only
+                                  {t('dp.countTowardOnly').replace('{program}', p.name?.replace(/\s*[–-]\s*(Major|Minor|Honours|Concentration).*/, '') || p.program_key)}
                                 </option>
                               ))}
                             </select>
@@ -899,9 +900,9 @@ function ProgramSection({ prog, completedCourses, currentCourses, advStanding, o
       {/* Other Courses (Added by you) — electives the user manually counted
           toward this program. Collapsible like a requirement block. */}
       {manuallyAdded.length > 0 && (
-        <div className="dp-req-block dp-req-block--manual">
+        <div className="dp-req-block dp-req-block--manual m-group">
           <button
-            className="dp-req-block-header"
+            className="dp-req-block-header m-row m-row--tappable"
             onClick={() => setOpenBlocks(p => ({ ...p, [`__manual_${progKey}`]: !p[`__manual_${progKey}`] }))}
           >
             <div className="dp-req-block-left">
@@ -921,7 +922,7 @@ function ProgramSection({ prog, completedCourses, currentCourses, advStanding, o
               {manuallyAdded.map(uc => {
                 const key = `${uc.subject} ${uc.catalog}`.toUpperCase()
                 return (
-                  <div key={key} className="dp-req-course dp-req-course--done">
+                  <div key={key} className="dp-req-course dp-req-course--done m-row">
                     <FaCheckCircle className="dp-req-course-icon dp-req-course-icon--done" />
                     <div className="dp-req-course-main">
                       <div
@@ -1616,13 +1617,13 @@ function MyProgramCard({ profile, completedCourses, currentCourses, onProgressSu
               className={`dp-prog-tab ${activeTab === 'electives' ? 'dp-prog-tab--active dp-prog-tab--electives' : ''}`}
               onClick={() => setActiveTab('electives')}
             >
-              ✦ Electives
+              {t('dp.electives')}
             </button>
             <button
               className={`dp-prog-tab ${activeTab === 'recommendations' ? 'dp-prog-tab--active dp-prog-tab--electives' : ''}`}
               onClick={() => setActiveTab('recommendations')}
             >
-              ✦ Recommendations
+              {t('dp.recommendations')}
             </button>
           </div>
 
@@ -1634,7 +1635,7 @@ function MyProgramCard({ profile, completedCourses, currentCourses, onProgressSu
                 <strong style={{ color: 'var(--text-primary)' }}>{t('dp.foundationWaived')}</strong>, {t('dp.foundationWaivedDesc').replace('{count}', transferCredits)}
                 {transferCredits < 30 ? t('dp.foundationWaivedNote') : ''}.
               </span>
-              <button className="dp-banner-close" onClick={dismissFoundation} aria-label="Dismiss" title="Dismiss">
+              <button className="dp-banner-close" onClick={dismissFoundation} aria-label={t('dp.dismiss')} title={t('dp.dismiss')}>
                 <FaTimes />
               </button>
             </div>
