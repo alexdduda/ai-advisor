@@ -129,9 +129,12 @@ class ChatRequest(BaseModel):
     # Populated when the user initiates chat from an advisor card action chip.
     # Gives Claude full context on which card triggered the conversation.
     card_context: Optional[str] = Field(None, max_length=1000)
-    # Client-computed degree-requirement progress (DegreePlanningView's own
-    # numbers, serialized) — self-reported context, not an authoritative
-    # record. See build_system_context() for how it's framed in the prompt.
+    # DEPRECATED — no longer read. Degree progress is now computed
+    # server-side in build_system_context() (see compute_degree_progress_summary)
+    # rather than trusted from the client, since this value was only ever
+    # populated once the student had rendered the Degree Planning tab in the
+    # current session — often never, by the time chat/cards actually ran.
+    # Field kept only so older cached frontend bundles don't 422 on this key.
     degree_progress: Optional[str] = Field(None, max_length=3000)
 
     @field_validator('message', mode='before')
@@ -170,15 +173,24 @@ def build_system_context(
     current_tab: str | None = None,
     language: str = "en",
     card_context: str | None = None,
-    degree_progress: str | None = None,
 ) -> str:
     """
     Build a rich system context for Claude.
     The base (student data) is cached per user for 5 minutes.
     Static sections (site knowledge, tab guidance, McGill advising) are loaded
     once at module startup from backend/api/prompts/*.md.
-    card_context, degree_progress, and lang instruction are appended fresh
-    each call.
+    card_context and lang instruction are appended fresh each call.
+
+    Degree progress is computed server-side (see compute_degree_progress_summary)
+    rather than trusted from the client — it used to be a `degree_progress`
+    string the frontend only populated once the student had rendered the
+    Degree Planning tab in the current session. If they hadn't (the common
+    case — chat and Brief cards are reachable from Home), the model had zero
+    grounding for completed-vs-total credits and would estimate from the raw
+    course list, producing self-contradictory numbers (see the Anthropology
+    minor incident: "18/30 credits, completed 18" for a student who'd
+    actually completed 3/18). Computing it here means it's always available,
+    always fresh, and can't depend on frontend session state.
     """
     # ── Base context: cached per user ─────────────────────────────────────────
     user_id = user.get("id", "")
@@ -204,18 +216,28 @@ def build_system_context(
         )
 
     progress_section = ""
+    try:
+        from ..utils.degree_progress import compute_degree_progress_summary
+        from ..utils.supabase_client import get_supabase
+        completed = (get_supabase()
+            .table("completed_courses")
+            .select("course_code, subject, catalog, credits")
+            .eq("user_id", user_id).limit(60).execute().data or [])
+        degree_progress = compute_degree_progress_summary(user, completed, user_id)
+    except Exception as exc:
+        logger.warning("degree progress computation failed for %s: %s", user_id, type(exc).__name__)
+        degree_progress = ""
     if degree_progress:
         safe_progress = sanitise_context_field(degree_progress, max_length=3000)
         progress_section = (
             "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-            "DEGREE PROGRESS (self-reported, not an official record)\n"
-            "Computed client-side by the app from the student's own transcript\n"
-            "data against program requirements. Treat it as a helpful signal,\n"
-            "not ground truth — it can be stale or reflect a bug in the app's\n"
-            "own matching logic. For anything with real stakes (graduation\n"
-            "eligibility, standing, financial holds), tell the student to\n"
-            "confirm on Minerva or with their faculty advisor rather than\n"
-            "asserting these numbers as fact.\n\n"
+            "DEGREE PROGRESS (computed from the student's own completed-course\n"
+            "data against program requirements — not an official McGill record)\n"
+            "This reflects the app's own requirement-matching logic, which can\n"
+            "occasionally miss edge cases. For anything with real stakes\n"
+            "(graduation eligibility, standing, financial holds), tell the\n"
+            "student to confirm on Minerva or with their faculty advisor\n"
+            "rather than asserting these numbers as the final word.\n\n"
             f"{safe_progress}\n"
             "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         )
@@ -499,7 +521,6 @@ async def send_message(
         current_tab=request.current_tab,
         language=request.language or "en",
         card_context=request.card_context,
-        degree_progress=request.degree_progress,
     )
 
     # Real catalogue data for any course code mentioned in THIS message (e.g.
