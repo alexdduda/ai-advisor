@@ -272,7 +272,14 @@ export const usersAPI = {
   uploadProfileImage: async (userId, file) => {
     const { supabase } = await import('./supabase')
     if (!file) throw new Error('No file selected')
-    if (!file.type?.startsWith('image/')) throw new Error('File must be an image')
+    // Whitelist, not a prefix check — image/svg+xml also starts with
+    // "image/" but can carry an embedded <script> (stored XSS if the
+    // object's public URL is ever opened directly). The Supabase bucket
+    // itself enforces this too (allowed_mime_types); this is just faster
+    // user feedback, not the security boundary.
+    if (!['image/png', 'image/jpeg', 'image/webp', 'image/gif'].includes(file.type)) {
+      throw new Error('File must be a PNG, JPEG, WEBP, or GIF image')
+    }
     if (file.size > 5 * 1024 * 1024) throw new Error('Image must be under 5 MB')
 
     const ext = (file.name.split('.').pop() || 'png').toLowerCase().replace(/[^a-z0-9]/g, '')
