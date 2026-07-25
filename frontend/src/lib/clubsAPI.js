@@ -376,6 +376,18 @@ const clubsAPI = {
     return { managers: [], count: 0 }
   },
 
+  // Subscriber count. This endpoint requires auth (it was opened up to
+  // anonymous callers once, which let scrapers enumerate every club's
+  // popularity) — callers must go through here rather than a bare fetch(),
+  // or the request 401s and the count silently renders as zero.
+  async getClubSubscribers(clubId) {
+    try {
+      const res = await fetch(`${BASE_URL}/api/clubs/${clubId}/subscribers`, { headers: await authHeaders() })
+      if (res.ok) return res.json()
+    } catch { /* ignore */ }
+    return { count: 0 }
+  },
+
   async removeClubManager(clubId, managerUserId) {
     const res = await fetch(`${BASE_URL}/api/clubs/${clubId}/managers/${managerUserId}`, {
       method: 'DELETE', headers: await authHeaders(),

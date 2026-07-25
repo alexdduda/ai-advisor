@@ -43,6 +43,7 @@ vi.mock('../../lib/clubsAPI', () => ({
     getClubFacultyStats: vi.fn(),
     uploadClubLogo: vi.fn(),
     getClubManagers: vi.fn(),
+    getClubSubscribers: vi.fn(),
     removeClubManager: vi.fn(),
   },
 }))
