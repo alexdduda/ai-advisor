@@ -1,6 +1,6 @@
 """Pydantic request models for the clubs feature."""
 from typing import Optional
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 from ...config import settings
 from .helpers import convert_to_24h
@@ -92,7 +92,7 @@ class ClubAnnouncementCreate(BaseModel):
 
 
 class ManagerInviteCreate(BaseModel):
-    email: str = Field(..., min_length=3, max_length=200)
+    email: EmailStr = Field(..., max_length=200)
     message: Optional[str] = Field(None, max_length=500)
 
 
