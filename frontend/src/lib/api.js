@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { supabase } from './supabase'
+import { assertRasterImage } from './imageBytes'
 
 const API_URL = import.meta.env.VITE_API_URL || (
   import.meta.env.PROD
@@ -272,21 +273,21 @@ export const usersAPI = {
   uploadProfileImage: async (userId, file) => {
     const { supabase } = await import('./supabase')
     if (!file) throw new Error('No file selected')
-    // Whitelist, not a prefix check — image/svg+xml also starts with
-    // "image/" but can carry an embedded <script> (stored XSS if the
-    // object's public URL is ever opened directly). The Supabase bucket
-    // itself enforces this too (allowed_mime_types); this is just faster
-    // user feedback, not the security boundary.
-    if (!['image/png', 'image/jpeg', 'image/webp', 'image/gif'].includes(file.type)) {
-      throw new Error('File must be a PNG, JPEG, WEBP, or GIF image')
-    }
+    // Verify the actual bytes, not the browser-declared file.type — the latter
+    // is attacker-controlled, and image/svg+xml can carry an embedded <script>
+    // (stored XSS if the object's public URL is opened directly). The bucket's
+    // allowed_mime_types is the server-side control, but it also reads the
+    // *declared* type, so SVG-bytes-as-image/png would otherwise pass both.
+    // Send the sniffed type as contentType so a mislabelled file cannot
+    // dictate how the object is served back.
+    const sniffedType = await assertRasterImage(file)
     if (file.size > 5 * 1024 * 1024) throw new Error('Image must be under 5 MB')
 
     const ext = (file.name.split('.').pop() || 'png').toLowerCase().replace(/[^a-z0-9]/g, '')
     const path = `${userId}/avatar.${ext || 'png'}`
     const { error: upErr } = await supabase.storage
       .from('profile-images')
-      .upload(path, file, { upsert: true, contentType: file.type })
+      .upload(path, file, { upsert: true, contentType: sniffedType })
     if (upErr) throw new Error(upErr.message || 'Upload failed')
 
     const { data: urlData } = supabase.storage.from('profile-images').getPublicUrl(path)
