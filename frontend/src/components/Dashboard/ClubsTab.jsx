@@ -1133,8 +1133,7 @@ function ClubManageDashboard({ club, onClose, onSave, onDelete, isAdmin, t }) {
     clubsAPI.getClubManagers(club.id).then(d => setManagers(d.managers || []))
     clubsAPI.getClubEvents?.(club.id)?.then?.(d => setEvents(d.events || d || []))?.catch?.(() => {})
     clubsAPI.getClubAnnouncements?.(club.id)?.then?.(d => setAnnouncements(d.announcements || d || []))?.catch?.(() => {})
-    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/clubs/${club.id}/subscribers`)
-      .then(r => r.json()).then(d => setSubscribers(d)).catch(() => {})
+    clubsAPI.getClubSubscribers?.(club.id)?.then?.(d => setSubscribers(d))?.catch?.(() => {})
   }, [club?.id])
 
   const handleAddManager = async () => {
