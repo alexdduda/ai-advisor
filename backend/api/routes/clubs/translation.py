@@ -14,6 +14,7 @@ import json
 import logging
 
 from ...utils.supabase_client import get_supabase
+from ...utils.sanitise import sanitise_context_field
 from ...auth import get_current_user_id
 from ._router import router
 
@@ -23,6 +24,16 @@ logger = logging.getLogger(__name__)
 _TRANSLATABLE_FIELDS = ("description", "meeting_schedule", "join_instructions")
 _SUPPORTED_LANGS = ("fr", "zh")
 _LANG_NAMES = {"fr": "French", "zh": "Simplified Chinese (Mandarin)"}
+
+# Per-field caps for sanitise_context_field, mirroring the Field(max_length=...)
+# bounds in schemas.py. These MUST match — sanitise_context_field truncates to
+# its max_length, so using the 500-char default here would silently chop a
+# legitimate 1000-char description or 2000-char join_instructions in half.
+_FIELD_MAX_LENGTH = {
+    "description":       1000,
+    "meeting_schedule":   300,
+    "join_instructions": 2000,
+}
 
 
 def apply_cached_translation(club: dict, lang: str | None) -> dict:
@@ -82,7 +93,17 @@ def _translate_fields(source: dict, lang: str) -> dict:
     from ..chat import get_anthropic_client
 
     lang_name = _LANG_NAMES[lang]
-    payload = json.dumps(source, ensure_ascii=False)
+    # Indirect prompt injection defence. This text is club-owner-controlled and
+    # goes straight into a Claude prompt, so it gets the same treatment as every
+    # other stored field we interpolate (chat.py / cards.py). Without it, an
+    # owner could write benign English and steer the model into emitting an
+    # unrelated FR/ZH "translation" — moderation evasion, since a reviewer
+    # reading only the English source would never see it.
+    safe_source = {
+        k: sanitise_context_field(v, max_length=_FIELD_MAX_LENGTH.get(k, 500))
+        for k, v in source.items()
+    }
+    payload = json.dumps(safe_source, ensure_ascii=False)
     prompt = (
         f"Translate the string VALUES of this JSON object into {lang_name}. "
         f"Return ONLY a JSON object with the exact same keys and translated values — "

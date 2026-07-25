@@ -8,6 +8,7 @@ const normalizeUrl = (url) => {
 const BASE_URL = normalizeUrl(API_URL)
 
 import { supabase } from './supabase'
+import { assertRasterImage } from './imageBytes'
 
 async function authHeaders(json = true) {
   const { data: { session } } = await supabase.auth.getSession()
@@ -344,10 +345,9 @@ const clubsAPI = {
     // Lazy-import the supabase client to avoid circular imports
     const { supabase } = await import('./supabase')
     if (!file) throw new Error('No file selected')
-    // Whitelist, not a prefix check — see uploadProfileImage in api.js for why.
-    if (!['image/png', 'image/jpeg', 'image/webp', 'image/gif'].includes(file.type)) {
-      throw new Error('File must be a PNG, JPEG, WEBP, or GIF image')
-    }
+    // Verify actual bytes, not the declared file.type — see uploadProfileImage
+    // in api.js (and docs/security-review-2026-07-25.md) for why.
+    const sniffedType = await assertRasterImage(file)
     if (file.size > 2 * 1024 * 1024) throw new Error('Image must be under 2 MB')
 
     // Path: club-logos/{club_id}/logo.{ext} — overwrite previous logo
@@ -355,7 +355,7 @@ const clubsAPI = {
     const path = `${clubId}/logo.${ext || 'png'}`
     const { error: upErr } = await supabase.storage
       .from('club-logos')
-      .upload(path, file, { upsert: true, contentType: file.type })
+      .upload(path, file, { upsert: true, contentType: sniffedType })
     if (upErr) throw new Error(upErr.message || 'Upload failed')
 
     const { data: urlData } = supabase.storage.from('club-logos').getPublicUrl(path)

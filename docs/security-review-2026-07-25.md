@@ -135,6 +135,65 @@ the `clubsAPI` / `api.js` helpers for all internal calls.
 
 ---
 
+## Follow-up pass — 2026-07-25 (post-migration verification)
+
+The migrations above were applied and then **verified empirically**, not by
+re-reading the SQL:
+
+- `storage.buckets` for `profile-images` and `club-logos` both report
+  `{image/png,image/jpeg,image/webp,image/gif}` with the intended size caps.
+- RLS confirmed by querying `mcgill_sections`, `newsletter_events`, `users`
+  and `completed_courses` with the **anon** key: 0 rows in every case.
+  `audit_log` is not exposed in PostgREST's schema cache at all.
+
+Attempting the actual attack surfaced two residuals:
+
+### 1. `allowed_mime_types` checks the declared type, not the bytes
+
+A `image/svg+xml` upload is correctly rejected. But SVG **bytes** uploaded
+with a lied `Content-Type: image/png` were *accepted* into `profile-images`.
+Supabase validates the declared Content-Type header, not file content.
+
+**This is not exploitable as XSS.** Traced end to end: the object is served
+back as `image/png`, and browsers do not sniff `image/png` into SVG script
+execution — the same lie that defeats the filter also neuters the payload.
+SVG loaded via `<img>` is script-disabled by spec regardless, and
+`profile_image` URLs are already constrained to our own bucket by the F-06
+validator in `users.py`.
+
+Hardened anyway (`frontend/src/lib/imageBytes.js`): both upload paths now
+verify magic bytes and send the *sniffed* type as `contentType`, so a
+mislabelled file cannot dictate how it is later served. Covered by
+`imageBytes.test.js`, including the exact SVG-as-PNG case.
+
+**Residual, accepted:** this is client-side. Anything calling the Storage
+SDK directly still bypasses it, and the bucket will still accept SVG bytes
+under a lied header. Closing that properly would require proxying uploads
+through the backend for server-side byte validation — disproportionate for a
+non-exploitable issue. Revisit if these buckets are ever served from an
+origin that honours `image/svg+xml`.
+
+### 2. No `X-Content-Type-Options: nosniff` on storage objects
+
+Our own API sets `nosniff` (`main.py`), but public bucket URLs are served by
+Supabase's CDN, which we cannot add response headers to from application
+code. **Not fixable in this repo** — it needs Supabase-side configuration.
+Defense-in-depth only; the MIME allowlist is the actual control.
+
+### 3. Prompt injection on the club-translation path — fixed
+
+`clubs/translation.py` interpolated club-owner-controlled text into a Claude
+prompt with no `sanitise_context_field`, unlike every other LLM path. Bounded
+(1000/300/2000-char fields, JSON-parsed output with per-field fallback) and
+not an XSS vector — there is no `dangerouslySetInnerHTML` anywhere in the
+frontend. The realistic abuse was **moderation evasion**: write benign
+English, steer the model into emitting an unrelated FR/ZH "translation" that
+an English-only reviewer never sees. Now sanitised with per-field caps that
+mirror the `schemas.py` bounds (using the 500-char default would have
+silently truncated legitimate descriptions).
+
+---
+
 ## Not covered by this review
 
 Static review finds missing controls; it does not find business-logic abuse
