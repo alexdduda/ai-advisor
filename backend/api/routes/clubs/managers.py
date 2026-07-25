@@ -140,8 +140,6 @@ async def create_manager_request(
         raise HTTPException(status_code=403, detail="Only the club owner or admins can invite managers")
 
     email = body.email.strip().lower()
-    if not email or "@" not in email:
-        raise HTTPException(status_code=422, detail="Invalid email")
 
     # Find the target user
     target = supabase.table("users").select("id, email").ilike("email", email).execute()
