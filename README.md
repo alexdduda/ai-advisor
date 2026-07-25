@@ -128,4 +128,8 @@ Fork the repo, create a feature branch, and open a pull request. Follow existing
 
 ## License
 
-MIT
+[GNU AGPL v3](LICENSE).
+
+Practically: you're free to use, modify, and self-host this. If you run a
+modified version as a network service, the AGPL requires you to publish your
+source too.
