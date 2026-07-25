@@ -344,7 +344,10 @@ const clubsAPI = {
     // Lazy-import the supabase client to avoid circular imports
     const { supabase } = await import('./supabase')
     if (!file) throw new Error('No file selected')
-    if (!file.type?.startsWith('image/')) throw new Error('File must be an image')
+    // Whitelist, not a prefix check — see uploadProfileImage in api.js for why.
+    if (!['image/png', 'image/jpeg', 'image/webp', 'image/gif'].includes(file.type)) {
+      throw new Error('File must be a PNG, JPEG, WEBP, or GIF image')
+    }
     if (file.size > 2 * 1024 * 1024) throw new Error('Image must be under 2 MB')
 
     // Path: club-logos/{club_id}/logo.{ext} — overwrite previous logo
