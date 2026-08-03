@@ -58,7 +58,7 @@ def list_programs(
         return q.order("name").execute().data
 
     try:
-        return with_retry("list_programs", _run)
+        return with_retry("list_programs", _run, retry_on_timeout=True)
     except Exception:
         logger.error(f"list_programs error:\n{traceback.format_exc()}")
         raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
@@ -127,7 +127,7 @@ def get_program(program_key: str, _: str = Depends(get_current_user_id)):
         return program
 
     try:
-        return with_retry("get_program", _run)
+        return with_retry("get_program", _run, retry_on_timeout=True)
     except HTTPException:
         raise
     except Exception:
@@ -176,7 +176,7 @@ def get_recommended_courses(program_key: str, _: str = Depends(get_current_user_
         ]
 
     try:
-        return with_retry("get_recommended_courses", _run)
+        return with_retry("get_recommended_courses", _run, retry_on_timeout=True)
     except HTTPException:
         raise
     except Exception:

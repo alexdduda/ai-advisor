@@ -311,7 +311,7 @@ async def verify_email(req: VerifyEmailRequest):
             "verification_token, verification_token_expires_at"
         ).eq("id", req.user_id).execute()
 
-    result = with_retry("fetch_verification_token", _fetch)
+    result = with_retry("fetch_verification_token", _fetch, retry_on_timeout=True)
 
     if not result.data:
         # Generic message — don't tell an attacker which user_ids exist.
