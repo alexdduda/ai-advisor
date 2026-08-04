@@ -355,7 +355,7 @@ async def list_posts(
         return q.execute().data or []
 
     try:
-        posts = with_retry("forum_list_posts", _run)
+        posts = with_retry("forum_list_posts", _run, retry_on_timeout=True)
     except Exception as e:
         logger.error(f"forum list_posts error: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch posts")
@@ -517,7 +517,7 @@ async def list_replies(
         )
 
     try:
-        replies = with_retry("forum_list_replies", _run)
+        replies = with_retry("forum_list_replies", _run, retry_on_timeout=True)
     except Exception as e:
         logger.error(f"forum list_replies error: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch replies")

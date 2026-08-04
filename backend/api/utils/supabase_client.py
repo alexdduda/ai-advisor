@@ -31,8 +31,13 @@ T = TypeVar("T")
 # Singleton client
 _supabase_client: Optional[Client] = None
 
-# Disconnect error patterns that warrant a full client reset
-_DISCONNECT_SIGNALS = (
+# ── Retry classification ─────────────────────────────────────────────────────
+# Split deliberately, because the two classes are NOT equally safe to retry.
+#
+# Connection-level failures: the connection died before/while establishing, so
+# the request almost certainly never reached PostgREST. Safe to retry even for
+# writes.
+_CONNECTION_SIGNALS = (
     "server disconnected",
     "connection reset",
     "connection refused",
@@ -40,17 +45,44 @@ _DISCONNECT_SIGNALS = (
     "broken pipe",
     "remotedisconnected",
     "connectionerror",
-    "timeout",
     "localprotocolerror",  # HTTP/2 pseudo-header trailer bug
 )
+
+# Timeouts: the request WAS sent and we simply never saw the response. The
+# server may well have applied it. Retrying a timed-out INSERT would duplicate
+# a forum post or chat message, so these are only retried when the caller
+# declares the operation idempotent (see with_retry's retry_on_timeout).
+#
+# Both spellings are listed on purpose: httpx raises ReadTimeout with the
+# message "The read operation timed out" — which does NOT contain the substring
+# "timeout". The original list had only "timeout", so read timeouts were never
+# classified as retryable and every one became an immediate 500. That was the
+# cause of the /api/cards get_user failures (SYMBOLOS-BACKEND-10/14).
+_TIMEOUT_SIGNALS = ("timed out", "timeout")
 
 MAX_RETRIES = 3
 RETRY_BACKOFF = 0.3  # seconds — doubles each retry: 0.3s, 0.6s
 
 
-def _is_disconnect(exc: Exception) -> bool:
+def _is_connection_error(exc: Exception) -> bool:
+    """Connection never carried the request — safe to retry any operation.
+
+    ConnectTimeout/PoolTimeout are timeouts by type, but both mean we never got
+    a usable connection, so the request was never sent. They belong here, not
+    with the ambiguous read timeouts.
+    """
+    if isinstance(exc, (httpx.ConnectError, httpx.ConnectTimeout, httpx.PoolTimeout)):
+        return True
     msg = str(exc).lower()
-    return any(sig in msg for sig in _DISCONNECT_SIGNALS)
+    return any(sig in msg for sig in _CONNECTION_SIGNALS)
+
+
+def _is_timeout(exc: Exception) -> bool:
+    """Request was sent; the outcome is unknown. Only retry if idempotent."""
+    if isinstance(exc, httpx.TimeoutException):
+        return True
+    msg = str(exc).lower()
+    return any(sig in msg for sig in _TIMEOUT_SIGNALS)
 
 
 def _reset_client() -> None:
@@ -128,11 +160,20 @@ def get_user_supabase(jwt: str) -> Client:
     return client
 
 
-def with_retry(operation: str, fn: Callable[[], T]) -> T:
+def with_retry(operation: str, fn: Callable[[], T], *, retry_on_timeout: bool = False) -> T:
     """
-    Execute fn(), retrying up to MAX_RETRIES times on disconnect errors.
+    Execute fn(), retrying up to MAX_RETRIES times on transient failures.
     Resets the Supabase singleton before each retry so a fresh connection
-    is used rather than the stale one that caused the disconnect.
+    is used rather than the stale one that caused the failure.
+
+    Connection-level failures are always retried — the request never reached
+    the server.
+
+    retry_on_timeout: opt in ONLY for idempotent operations (reads, or writes
+    that are safe to repeat). A read timeout means the request was sent and we
+    never saw the reply, so the server may already have applied it; retrying a
+    non-idempotent write could duplicate a row. Defaults to False so a new
+    write call site is safe unless someone has actually thought about it.
     """
     last_exc: Exception = RuntimeError("unreachable")
     for attempt in range(MAX_RETRIES):
@@ -140,7 +181,8 @@ def with_retry(operation: str, fn: Callable[[], T]) -> T:
             return fn()
         except Exception as exc:
             last_exc = exc
-            if _is_disconnect(exc) and attempt < MAX_RETRIES - 1:
+            retryable = _is_connection_error(exc) or (retry_on_timeout and _is_timeout(exc))
+            if retryable and attempt < MAX_RETRIES - 1:
                 logger.warning(
                     f"{operation}: disconnect on attempt {attempt + 1}, "
                     f"resetting client and retrying in {RETRY_BACKOFF * (2**attempt):.1f}s … ({exc})"
@@ -188,7 +230,7 @@ def get_user_by_id(user_id: str) -> Dict[str, Any]:
             raise UserNotFoundException(user_id)
         return _strip_sensitive(response.data[0])
     try:
-        return with_retry("get_user_by_id", _run)
+        return with_retry("get_user_by_id", _run, retry_on_timeout=True)
     except UserNotFoundException:
         raise
     except Exception as e:
@@ -202,7 +244,7 @@ def get_user_by_email(email: str) -> Optional[Dict[str, Any]]:
         response = supabase.table("users").select("*").eq("email", email).execute()
         return response.data[0] if response.data else None
     try:
-        return with_retry("get_user_by_email", _run)
+        return with_retry("get_user_by_email", _run, retry_on_timeout=True)
     except Exception as e:
         logger.error(f"Error getting user by email: {e}")
         raise DatabaseException("get_user_by_email", str(e))
@@ -283,7 +325,7 @@ def get_chat_history(user_id: str, session_id: Optional[str] = None, limit: int 
             query = query.eq("session_id", session_id)
         return query.order("created_at", desc=False).limit(min(limit, 200)).execute().data or []
     try:
-        return with_retry("get_chat_history", _run)
+        return with_retry("get_chat_history", _run, retry_on_timeout=True)
     except Exception as e:
         logger.error(f"Error getting chat history for {user_id}: {e}")
         raise DatabaseException("get_chat_history", str(e))
@@ -329,7 +371,7 @@ def get_user_sessions(user_id: str, limit: int = 20) -> List[Dict[str, Any]]:
         return sessions[:limit]
 
     try:
-        return with_retry("get_user_sessions", _run)
+        return with_retry("get_user_sessions", _run, retry_on_timeout=True)
     except Exception as e:
         logger.error(f"Error getting user sessions for {user_id}: {e}")
         return []
@@ -407,7 +449,7 @@ def search_courses(
             )
         return db_query.limit(limit).execute().data or []
     try:
-        return with_retry("search_courses", _run)
+        return with_retry("search_courses", _run, retry_on_timeout=True)
     except Exception as e:
         raise DatabaseException(f"Database query failed: {str(e)}")
 
@@ -429,7 +471,7 @@ def get_course(course_code: str) -> List[Dict[str, Any]]:
             or []
         )
     try:
-        return with_retry("get_course", _run)
+        return with_retry("get_course", _run, retry_on_timeout=True)
     except Exception as e:
         raise DatabaseException(f"Database query failed: {str(e)}")
 
@@ -449,7 +491,7 @@ def get_favorites(user_id: str) -> List[Dict[str, Any]]:
             or []
         )
     try:
-        return with_retry("get_favorites", _run)
+        return with_retry("get_favorites", _run, retry_on_timeout=True)
     except Exception as e:
         logger.error(f"Error getting favorites for {user_id}: {e}")
         raise DatabaseException("get_favorites", str(e))
@@ -510,7 +552,7 @@ def is_favorited(user_id: str, course_code: str) -> bool:
         )
         return len(response.data) > 0 if response.data else False
     try:
-        return with_retry("is_favorited", _run)
+        return with_retry("is_favorited", _run, retry_on_timeout=True)
     except Exception as e:
         logger.error(f"Error checking favorite: {e}")
         return False
