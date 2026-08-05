@@ -118,11 +118,34 @@ const cardsAPI = {
     return response.json()
   },
 
-  async sendThreadMessage(cardId, userId, message, cardContext, language = null, degreeProgress = null) {
+  /**
+   * Send a follow-up in a card's thread.
+   *
+   * `threadHistory` is the conversation SO FAR (not including `message`) —
+   * without it every follow-up reached Claude as a standalone question, so a
+   * reply like "A" to the advisor's own "A or B?" had nothing to resolve
+   * against and the thread appeared to have amnesia. The backend caps history
+   * at 16 turns; we trim here too so we're not shipping a long thread over the
+   * wire on every keystroke-sized reply.
+   */
+  async sendThreadMessage(cardId, userId, message, cardContext, language = null, degreeProgress = null, threadHistory = null) {
+    const history = Array.isArray(threadHistory)
+      ? threadHistory
+          .filter(m => (m?.role === 'user' || m?.role === 'assistant') && m?.content)
+          .slice(-16)
+          .map(m => ({ role: m.role, content: String(m.content) }))
+      : []
     const response = await fetch(`${BASE_URL}/api/cards/${cardId}/thread`, {
       method: 'POST',
       headers: await authHeaders(),
-      body: JSON.stringify({ user_id: userId, message, card_context: cardContext, language: language || getLang(), degree_progress: degreeProgress || undefined }),
+      body: JSON.stringify({
+        user_id: userId,
+        message,
+        card_context: cardContext,
+        language: language || getLang(),
+        degree_progress: degreeProgress || undefined,
+        thread_history: history.length ? history : undefined,
+      }),
     })
     if (!response.ok) throw new Error('Failed to send thread message')
     const data = await response.json()

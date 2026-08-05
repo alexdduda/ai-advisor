@@ -453,10 +453,13 @@ export function DashboardDataProvider({ children }) {
     }
   }, [user?.id, refreshAdvisorCards, _getCachedCards, _cacheCards])
 
-  const handleCardChipClick = useCallback(async (cardId, message, cardTitle, cardBody) => {
+  // `threadHistory` is the thread up to but excluding `message` — callers own
+  // the message list, so they pass it in rather than us re-deriving it. Without
+  // it the follow-up loses all conversational context (see sendThreadMessage).
+  const handleCardChipClick = useCallback(async (cardId, message, cardTitle, cardBody, threadHistory = null) => {
     if (!user?.id) return ''
     try {
-      return await cardsAPI.sendThreadMessage(cardId, user.id, message, `${cardTitle}: ${cardBody}`, languageRef.current, degreeProgressRef.current)
+      return await cardsAPI.sendThreadMessage(cardId, user.id, message, `${cardTitle}: ${cardBody}`, languageRef.current, degreeProgressRef.current, threadHistory)
     } catch (error) {
       console.error('Error in card thread:', error)
       return 'Something went wrong. Please try again.'

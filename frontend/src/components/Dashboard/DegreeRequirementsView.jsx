@@ -3,6 +3,7 @@ import { useLanguage } from '../../contexts/PreferencesContext'
 import { useCourseDetail } from '../../contexts/CourseDetailContext'
 import { getAuthHeaders } from '../../lib/apiConfig'
 import { matchCourse as matchCourseWildcard, explicitlyClaimedCourseKeys } from '../../utils/requirementMatch'
+import { foundationProgramKey } from '../../utils/foundationYear'
 import useViewport from '../../hooks/useViewport'
 import {
   FaGraduationCap, FaChevronDown, FaChevronUp, FaChevronRight, FaChevronLeft,
@@ -30,6 +31,7 @@ const TYPE_LABEL_KEYS = {
   required:           'dp.typeCore',
   diploma:            'dp.typeDiploma',
   supplementary_minor: 'dp.typeSupplementaryMinor',
+  foundation:         'dp.typeFoundation',
 }
 const TYPE_COLORS = {
   major:         '#dc2626',
@@ -43,6 +45,7 @@ const TYPE_COLORS = {
   core:          '#0f766e',
   required:      '#0f766e',
   diploma:       '#059669',
+  foundation:    '#0d9488',
 }
 const TYPE_BG = {
   major:         '#fef2f2',
@@ -56,6 +59,7 @@ const TYPE_BG = {
   core:          '#f0fdfa',
   required:      '#f0fdfa',
   diploma:       '#ecfdf5',
+  foundation:    '#f0fdfa',
 }
 
 // Normalize short faculty names (as stored in profile) to full faculty strings
@@ -493,7 +497,9 @@ export default function DegreeRequirementsView({ completedCourses = [], currentC
                   ? ['all', 'major']
                   : facultyFilter === 'School of Physical and Occupational Therapy'
                   ? ['all', 'major']
-                  : ['all', 'major', 'minor', 'honours']
+                  // Arts / Science / B.A. & Sc. also run a U0 Foundation year.
+                  : ['all', 'major', 'minor', 'honours',
+                     ...(foundationProgramKey(facultyFilter) ? ['foundation'] : [])]
           ).map(type => {
             const isActive = typeFilter === type
             const color = TYPE_COLORS[type]

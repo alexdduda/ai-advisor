@@ -857,7 +857,22 @@ export default function AdvisorCards({
   const [thinkingCards, setThinking] = useState(new Set())
   const [expandedCards, setExpanded] = useState(new Set())
 
+  // Synchronous mirror of threadMap. handleSend has to read the thread as it
+  // stood BEFORE the new message so it can ship it as conversation history —
+  // a state value closed over by useCallback would be stale, and reading it
+  // after setThreadMap would already include the new message.
+  const threadMapRef = useRef(threadMap)
+
+  const appendToThread = useCallback((cardId, msg) => {
+    setThreadMap(prev => {
+      const next = { ...prev, [cardId]: [...(prev[cardId] || []), msg] }
+      threadMapRef.current = next
+      return next
+    })
+  }, [])
+
   useEffect(() => {
+    threadMapRef.current = threadMap
     try { localStorage.setItem(storageKey, JSON.stringify(threadMap)) } catch { /* ignore */ }
   }, [threadMap, storageKey])
 
@@ -940,35 +955,34 @@ export default function AdvisorCards({
   }, [generatedAt, t])
 
   const handleSend = useCallback(async (cardId, message, cardTitle, cardBody) => {
+    // Snapshot the thread before appending — this is the conversation history
+    // the advisor needs to make sense of a terse follow-up like "A".
+    const priorThread = threadMapRef.current[cardId] || []
+
     setExpanded(prev => new Set([...prev, cardId]))
-    setThreadMap(prev => ({
-      ...prev,
-      [cardId]: [...(prev[cardId] || []), { role: 'user', content: message, lang: language }],
-    }))
+    appendToThread(cardId, { role: 'user', content: message, lang: language })
     setThinking(prev => new Set([...prev, cardId]))
 
     try {
-      const reply = await onChipClick(cardId, message, cardTitle, cardBody)
-      setThreadMap(prev => ({
-        ...prev,
-        [cardId]: [...(prev[cardId] || []), { role: 'assistant', content: reply }],
-      }))
+      const reply = await onChipClick(cardId, message, cardTitle, cardBody, priorThread)
+      appendToThread(cardId, { role: 'assistant', content: reply })
     } catch {
-      setThreadMap(prev => ({
-        ...prev,
-        [cardId]: [...(prev[cardId] || []), { role: 'assistant', content: t('brief.errorSend') }],
-      }))
+      appendToThread(cardId, { role: 'assistant', content: t('brief.errorSend') })
     } finally {
       setThinking(prev => { const n = new Set(prev); n.delete(cardId); return n })
     }
-  }, [onChipClick, t, language])
+  }, [onChipClick, appendToThread, t, language])
 
   const handleExpand   = useCallback((id) => setExpanded(prev => new Set([...prev, id])), [])
   const handleCollapse = useCallback((id) => setExpanded(prev => { const n = new Set(prev); n.delete(id); return n }), [])
 
   const handleDelete = useCallback((cardId) => {
     setExpanded(prev  => { const n = new Set(prev); n.delete(cardId); return n })
-    setThreadMap(prev => { const n = { ...prev }; delete n[cardId]; return n })
+    setThreadMap(prev => {
+      const n = { ...prev }; delete n[cardId]
+      threadMapRef.current = n
+      return n
+    })
     setThinking(prev  => { const n = new Set(prev); n.delete(cardId); return n })
     setDeletedIds(prev => {
       const n = new Set(prev)

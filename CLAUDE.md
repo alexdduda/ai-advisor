@@ -24,6 +24,7 @@ backend/api/
 ├── seeds/               # Degree requirement data per faculty (seed DB)
 │   ├── science_degree_requirements.py
 │   ├── arts_degree_requirements.py
+│   ├── foundation_degree_requirements.py  # U0 / Freshman year (Arts, Science, B.A.&Sc.)
 │   └── ... (one file per faculty)
 ├── prompts/             # Static prompt content loaded once at startup
 │   ├── site_knowledge.md
@@ -66,7 +67,7 @@ frontend/src/
 - **Home** — daily dashboard: AI "Brief" cards, current courses (active term only), Up Next deadlines, degree progress, quick actions.
 - **Brief / Chat** — AI advisor cards generated per-user from their academic data (`cards.py`); freeform Q&A grounded in student context (`chat.py`).
 - **Courses** — search McGill catalogue with grade history + RateMyProfessor; "My Courses" = saved / current (grouped by term) / completed.
-- **Degree Planning** — seed-driven requirement blocks per program, progress tracking, AI recommendations.
+- **Degree Planning** — seed-driven requirement blocks per program, progress tracking, AI recommendations. U0 students get a **Foundation** tab (driven by `users.foundation_year`, falling back to `year = 0`) alongside their major/minor and electives. A course counts toward exactly one program: `effectiveAllocation` in `DegreePlanningView.jsx` resolves contested courses, and Foundation always wins — McGill doesn't let a U0 course also count toward a major or minor.
 - **Calendar** — events from syllabus import + manual entry + club events.
 - **Transcript import** — PDF → Claude extraction → preview → import (async Inngest job). Populates completed/current courses, GPA, program.
 - **Syllabus import** — PDF(s) → Claude → calendar events (async Inngest job).

@@ -86,6 +86,9 @@ class UserCreate(BaseModel):
     interests: Optional[str] = Field(None, max_length=500)
     current_gpa: Optional[float] = Field(None, ge=0.0, le=4.0)
     is_honours: Optional[bool] = Field(False, description="Whether the student is in an Honours program")
+    # Doing / has done the 30-credit Foundation (U0) year. NULL means unanswered;
+    # the planner then falls back to (year == 0). See the 2026_08_05 migration.
+    foundation_year: Optional[bool] = Field(None, description="Doing or completed the Foundation (U0) year")
     advanced_standing: Optional[List[AdvancedStandingItem]] = Field(default_factory=list)
 
     # FIX #20: Replace deprecated Pydantic v1 @validator with Pydantic v2
@@ -149,6 +152,7 @@ class UserUpdate(BaseModel):
     current_gpa: Optional[float] = Field(None, ge=0.0, le=4.0)
     target_gpa: Optional[float] = Field(None, ge=0.0, le=4.0)
     is_honours: Optional[bool] = None
+    foundation_year: Optional[bool] = None
     profile_image: Optional[str] = None
     notification_prefs: Optional[NotificationPrefs] = None
     advanced_standing: Optional[List[AdvancedStandingItem]] = None

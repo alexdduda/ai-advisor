@@ -105,6 +105,37 @@ export function matchCourse(req, userCourses = [], excludeKeys = null) {
 }
 
 /**
+ * Every course the student has actually taken that `prog` could count —
+ * whether by naming it explicitly or by claiming it through a wildcard /
+ * complementary block.
+ *
+ * The overlap logic used to look only at requirement rows that name a course
+ * outright, so a course that filled a wildcard block ("any 300-level ANTH") in
+ * BOTH a major and a minor was counted twice with no way for the student to
+ * say where it should go. Comparing these sets across programs is what turns
+ * that into a single, assignable claim.
+ */
+export function programClaimableKeys(prog, userCourses = []) {
+  const keys = new Set()
+  if (!prog?.blocks) return keys
+
+  const claims = explicitlyClaimedCourseKeys(prog.blocks)
+  const takenKeys = new Set(userCourses.map(keyOf))
+
+  for (const block of prog.blocks) {
+    for (const c of block?.courses || []) {
+      if (!c?.catalog || wildcardBand(c)) continue
+      const k = keyOf(c)
+      if (takenKeys.has(k)) keys.add(k)
+    }
+    for (const uc of blockWildcardMatches(block, userCourses, claims)) {
+      keys.add(keyOf(uc))
+    }
+  }
+  return keys
+}
+
+/**
  * Return the user courses that satisfy a block's *wildcard* portion —
  * placeholder courses ("Any 200-level X course"), null-catalog entries, or
  * a block-level min_level. Does NOT apply any credit cap or de-dup against
