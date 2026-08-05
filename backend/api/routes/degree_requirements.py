@@ -191,7 +191,8 @@ def seed_requirements(
         None,
         description=(
             "arts | science | engineering | arts_science | "
-            "management | education | environment | law | aes | dentistry | music | all (default: all)"
+            "management | education | environment | law | aes | dentistry | music | "
+            "foundation | all (default: all)"
         ),
     ),
 ):
@@ -225,6 +226,9 @@ def seed_requirements(
         run_music       = faculty in (None, "all", "music", "schulich", "schulich_music")
         run_nursing     = faculty in (None, "all", "nursing", "ingram_nursing")
         run_spot        = faculty in (None, "all", "spot", "physical_occupational_therapy", "rehabilitation_science")
+        # U0 / Freshman year. Not tied to one faculty — one program per entry
+        # faculty (Arts, Science, B.A. & Sc.) lives in the same seed module.
+        run_foundation  = faculty in (None, "all", "foundation", "u0", "freshman")
 
         if run_arts:
             from ..seeds.arts_degree_requirements import seed_degree_requirements as seed_arts
@@ -281,6 +285,10 @@ def seed_requirements(
         if run_spot:
             from ..seeds.spot_degree_requirements import seed_degree_requirements as seed_spot
             results["spot"] = seed_spot(supabase)
+
+        if run_foundation:
+            from ..seeds.foundation_degree_requirements import seed_degree_requirements as seed_foundation
+            results["foundation"] = seed_foundation(supabase)
 
         # Surface any per-faculty errors collected by seeds that support it
         # (e.g. education seed returns {"programs": N, "blocks": N, "errors": [...]})

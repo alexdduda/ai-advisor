@@ -159,10 +159,13 @@ function DesktopDashboard() {
 
   const handlePinnedSend = async (message) => {
     if (!user?.id || !pinnedCard) return
+    // Snapshot before appending — the advisor needs the conversation so far to
+    // resolve a short follow-up ("A") against what it just offered.
+    const priorThread = pinnedThread
     setPinnedThread(prev => [...prev, { role: 'user', content: message }])
     setPinnedIsThinking(true)
     try {
-      const reply = await handleCardChipClick(pinnedCard.id, message, pinnedCard.title, pinnedCard.body)
+      const reply = await handleCardChipClick(pinnedCard.id, message, pinnedCard.title, pinnedCard.body, priorThread)
       setPinnedThread(prev => [...prev, { role: 'assistant', content: reply }])
     } catch {
       setPinnedThread(prev => [...prev, { role: 'assistant', content: 'Something went wrong. Please try again.' }])

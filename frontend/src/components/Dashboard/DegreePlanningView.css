@@ -1079,6 +1079,20 @@
 .dp-elective-card:hover { border-color: var(--accent-primary); }
 .dp-elective-card--taken { opacity: 0.6; }
 
+/* Courses two programs both want — needs the student's attention, so it is
+   not dimmed like the "already taken" electives above it. */
+.dp-elective-card--shared {
+  opacity: 1;
+  border-color: #f59e0b;
+}
+[data-theme="dark"] .dp-elective-card--shared { border-color: #b45309; }
+
+.dp-electives-shared {
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border-primary);
+}
+
 .dp-elective-top {
   display: flex;
   align-items: center;

@@ -355,6 +355,22 @@ def _build_base_context(user: dict, user_sb=None) -> str:
         safe_concentration = sanitise_context_field(str(user.get('concentration') or 'None'))
         safe_interests     = sanitise_context_field(str(user.get('interests') or 'Not specified'))
 
+        # Foundation (U0) year. `year` alone can't tell us this once the student
+        # has moved on to U1 — see the foundation_year column added 2026-08-05.
+        # It changes the advice materially: U0 courses satisfy the 30-credit
+        # Foundation program and cannot be counted toward a major/minor as well.
+        _foundation = user.get("foundation_year")
+        if _foundation is None:
+            _foundation = (user.get("year") == 0)
+        if _foundation:
+            foundation_line = (
+                "  Foundation   : Yes — doing or has completed the 30-credit Foundation (U0) "
+                "year. Foundation courses count toward the U0 program only; they cannot "
+                "also be counted toward a major, minor or concentration."
+            )
+        else:
+            foundation_line = "  Foundation   : No — entered directly into U1 (CEGEP / advanced standing)"
+
         return f"""You are a McGill academic advisor, not a search engine. Your job is to get this
 student to a concrete, correct next step — not to produce the most words.
 
@@ -394,7 +410,8 @@ STUDENT PROFILE
   Major(s)     : {safe_majors}{' (Honours)' if user.get('is_honours') else ''}
   Minor(s)     : {safe_minors}
   Concentration: {safe_concentration}
-  Year         : U{user.get('year') or '?'}
+  Year         : U{user.get('year') if user.get('year') is not None else '?'}
+{foundation_line}
   GPA          : {user.get('current_gpa') or 'Not set'} / 4.0
   Target GPA   : {user.get('target_gpa') or 'Not set'}
   Interests    : {safe_interests}

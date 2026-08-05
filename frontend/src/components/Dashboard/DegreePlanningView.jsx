@@ -16,7 +16,8 @@ import StudyAbroadView from './StudyAbroadView'
 import AdvisingResourcesView from './AdvisingResourcesView'
 import { readCache, writeCache } from '../../lib/userDataCache'
 import { usersAPI } from '../../lib/api'
-import { matchCourse, wildcardBand, blockWildcardMatches, explicitlyClaimedCourseKeys } from '../../utils/requirementMatch'
+import { matchCourse, wildcardBand, blockWildcardMatches, explicitlyClaimedCourseKeys, programClaimableKeys } from '../../utils/requirementMatch'
+import { FOUNDATION_PROGRAM_KEYS, foundationProgramKey, isFoundationStudent } from '../../utils/foundationYear'
 import SectionHeader from '../ui/SectionHeader'
 import './DegreePlanningView.css'
 
@@ -269,7 +270,7 @@ function CourseRow({ course, onClick, actions }) {
 
 
 // ── Electives Panel ────────────────────────────────────────────────────────────
-function ElectivesPanel({ profile, completedCourses, currentCourses, allProgramData, courseAllocations, assignCourse }) {
+function ElectivesPanel({ profile, completedCourses, currentCourses, allProgramData, courseAllocations, effectiveAllocation = {}, overlapKeys = new Set(), claimsByProgram = [], assignCourse }) {
   const { t } = useLanguage()
   const { openCourse } = useCourseDetail()
   const [assignedNote, setAssignedNote] = useState(null)
@@ -319,13 +320,38 @@ function ElectivesPanel({ profile, completedCourses, currentCourses, allProgramD
       if (!c.subject || !c.catalog) return false
       const key = `${c.subject} ${c.catalog}`.toUpperCase()
       if (requiredCodes.has(key)) return false
-      if (courseAllocations[key]) return false
+      // Anything a program already counts — including U0 Foundation work and
+      // courses the student placed by hand — is not an elective.
+      if (effectiveAllocation[key]) return false
       for (const b of wildcardAllBlocks) {
         if (blockWildcardMatches(b, [c]).length > 0) return false
       }
       return true
     })
-  }, [completedCourses, currentCourses, profile, requiredCodes, wildcardAllBlocks, courseAllocations])
+  }, [completedCourses, currentCourses, profile, requiredCodes, wildcardAllBlocks, effectiveAllocation])
+
+  // Courses two or more programs would both count. Before, these were invisible
+  // — they weren't electives (a program claimed them) and no requirement row
+  // offered a picker for them unless a program named the course outright — so a
+  // course quietly filled a requirement in two programs at once.
+  const contestedCourses = useMemo(() => {
+    const byKey = new Map()
+    for (const c of [...completedCourses, ...currentCourses]) {
+      if (!c.subject || !c.catalog) continue
+      const key = `${c.subject} ${c.catalog}`.toUpperCase()
+      if (byKey.has(key) || !overlapKeys.has(key)) continue
+      const claimants = claimsByProgram.filter(p => p.keys.has(key))
+      if (claimants.length < 2) continue
+      byKey.set(key, { key, course: c, claimants })
+    }
+    return [...byKey.values()]
+  }, [completedCourses, currentCourses, overlapKeys, claimsByProgram])
+
+  const progName = (key) => {
+    if (!key) return ''
+    return allProgramData.find(p => p?.program_key === key)?.name
+      ?.replace(/\s*[–-]\s*(Major|Minor|Honours|Concentration).*/, '') || key
+  }
 
   const SOURCE_LABELS = { completed: t('dp.statusDone'), current: t('dp.statusTaking'), transfer: t('dp.statusTransfer') }
   const SOURCE_COLORS = {
@@ -336,6 +362,69 @@ function ElectivesPanel({ profile, completedCourses, currentCourses, allProgramD
 
   return (
     <div className="dp-electives">
+      {/* Courses more than one program could count — placed here so the
+          student decides, rather than the same 3 credits inflating two
+          progress bars. */}
+      {contestedCourses.length > 0 && (
+        <div className="dp-electives-shared">
+          <div className="dp-electives-header">
+            <div className="dp-electives-title-row">
+              <span className="dp-electives-spark"><FaExclamationTriangle /></span>
+              <div>
+                <h3 className="dp-electives-title">{t('dp.sharedCoursesTitle')}</h3>
+                <p className="dp-electives-sub">{t('dp.sharedCoursesSub')}</p>
+              </div>
+            </div>
+            <span className="dp-electives-badge">{contestedCourses.length}</span>
+          </div>
+
+          <div className="dp-electives-grid m-group">
+            {contestedCourses.map(({ key, course, claimants }) => {
+              const resolvedTo = effectiveAllocation[key] || null
+              const lockedToFoundation = !!resolvedTo && FOUNDATION_PROGRAM_KEYS.has(resolvedTo)
+              return (
+                <div key={key} className="dp-elective-card dp-elective-card--shared m-row">
+                  <div className="dp-elective-top">
+                    <span
+                      className="dp-elective-code"
+                      onClick={() => openCourse(course.subject, course.catalog)}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      {course.subject} {course.catalog}
+                    </span>
+                    <span className="dp-elective-cat" style={{ background: '#fef3c7', color: '#92400e' }}>
+                      {t('dp.sharedCoursesBadge').replace('{n}', claimants.length)}
+                    </span>
+                  </div>
+                  <p className="dp-elective-title">{course.course_title || course.title || '-'}</p>
+                  {lockedToFoundation ? (
+                    <p className="dp-elective-assign-note">{t('dp.countedTowardFoundation')}</p>
+                  ) : (
+                    <div className="dp-elective-assign">
+                      <select
+                        className="dp-elective-assign-select"
+                        value={courseAllocations[key] || ''}
+                        onChange={e => handleAssign(key, e.target.value)}
+                      >
+                        <option value="">
+                          {t('dp.countTowardAutoNamed').replace('{program}', progName(resolvedTo))}
+                        </option>
+                        {claimants.map(p => (
+                          <option key={p.key} value={p.key}>
+                            {t('dp.countTowardOnly').replace('{program}', progName(p.key))}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                  {course.credits && <span className="dp-elective-credits">{course.credits} cr</span>}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
       <div className="dp-electives-header">
         <div className="dp-electives-title-row">
           <span className="dp-electives-spark"><FaBook /></span>
@@ -625,7 +714,7 @@ function RecommendationsPanel({ profile, completedCourses, currentCourses, allPr
 }
 
 // ── My Program Requirements card ──────────────────────────────────────────────
-function ProgramSection({ prog, completedCourses, currentCourses, advStanding, openBlocks, setOpenBlocks, courseAllocations = {}, assignCourse, overlapKeys = new Set(), allProgramData = [] }) {
+function ProgramSection({ prog, completedCourses, currentCourses, advStanding, openBlocks, setOpenBlocks, courseAllocations = {}, effectiveAllocation = {}, assignCourse, overlapKeys = new Set(), allProgramData = [] }) {
   const { t } = useLanguage()
   const { openCourse } = useCourseDetail()
   if (!prog) return null
@@ -656,8 +745,9 @@ function ProgramSection({ prog, completedCourses, currentCourses, advStanding, o
     if (seenDbKeys.has(key)) return
     seenDbKeys.add(key)
     if (matchTransfer(c, advStanding)) return
-    // If overlapping course allocated to a different program, skip it
-    if (overlapKeys.has(key) && courseAllocations[key] && courseAllocations[key] !== progKey) return
+    // A course that two programs could both count is resolved to exactly one
+    // of them (see effectiveAllocation) — skip it here if that isn't us.
+    if (effectiveAllocation[key] && effectiveAllocation[key] !== progKey) return
     const ucCompleted = completedCourses.find(uc => `${uc.subject} ${uc.catalog}`.toUpperCase() === key)
     const ucCurrent   = currentCourses.find(uc => `${uc.subject} ${uc.catalog}`.toUpperCase() === key)
     if (ucCompleted) {
@@ -683,7 +773,7 @@ function ProgramSection({ prog, completedCourses, currentCourses, advStanding, o
         if (blockGot >= blockNeeded) break
         const ucKey = `${uc.subject} ${uc.catalog}`.toUpperCase()
         if (seenDbKeys.has(ucKey) || seenUserKeys.has(ucKey)) continue
-        if (overlapKeys.has(ucKey) && courseAllocations[ucKey] && courseAllocations[ucKey] !== progKey) continue
+        if (effectiveAllocation[ucKey] && effectiveAllocation[ucKey] !== progKey) continue
         const cr = parseFloat(uc.credits || 3)
         if (isCompleted) earnedCredits += cr; else inProgressCredits += cr
         blockGot += cr
@@ -703,7 +793,7 @@ function ProgramSection({ prog, completedCourses, currentCourses, advStanding, o
     const ucKey = `${uc.subject} ${uc.catalog}`.toUpperCase()
     if (seenUserKeys.has(ucKey)) continue
     if (matchTransfer(uc, advStanding)) continue
-    if (courseAllocations[ucKey] === progKey) {
+    if (effectiveAllocation[ucKey] === progKey) {
       if (completedKeySet.has(ucKey)) earnedCredits += parseFloat(uc.credits || 3)
       else inProgressCredits += parseFloat(uc.credits || 3)
       seenUserKeys.add(ucKey)
@@ -841,13 +931,29 @@ function ProgramSection({ prog, completedCourses, currentCourses, advStanding, o
                   // placeholder's radio. excludeKeys (explicitClaims) stops a
                   // wildcard row from showing a course as satisfying it when
                   // that course is already claimed by name in another block.
-                  const done = isTransfer || !!matchCourse(c, completedCourses, explicitClaims)
-                  const taking = !done && !!matchCourse(c, currentCourses, explicitClaims)
-                  const isOverlap = c.catalog && overlapKeys.has(key) && (done || taking)
-                  const allocatedTo = isOverlap ? (courseAllocations[key] || null) : null
-                  const allocatedElsewhere = isOverlap && allocatedTo && allocatedTo !== progKey
+                  const matchedCompleted = isTransfer ? null : matchCourse(c, completedCourses, explicitClaims)
+                  const matchedCurrent = (isTransfer || matchedCompleted) ? null : matchCourse(c, currentCourses, explicitClaims)
+                  const done = isTransfer || !!matchedCompleted
+                  const taking = !done && !!matchedCurrent
+
+                  // For a wildcard row ("Any 200-level ANTH course") the
+                  // allocation belongs to the course that actually filled it,
+                  // not to the placeholder's own code — otherwise a course
+                  // counted toward another program still showed a green tick
+                  // here.
+                  const matched = matchedCompleted || matchedCurrent
+                  const filledKey = matched
+                    ? `${matched.subject} ${matched.catalog}`.toUpperCase()
+                    : (c.catalog ? key : null)
+
+                  const resolvedTo = (filledKey && (done || taking)) ? (effectiveAllocation[filledKey] || null) : null
+                  const allocatedElsewhere = !!resolvedTo && resolvedTo !== progKey
+                  const foundationOwns = allocatedElsewhere && FOUNDATION_PROGRAM_KEYS.has(resolvedTo)
+                  // The picker only makes sense where the student actually has
+                  // a choice: Foundation claims are fixed by McGill's rules.
+                  const isOverlap = !!filledKey && overlapKeys.has(filledKey) && (done || taking) && !foundationOwns
                   const otherProgName = allocatedElsewhere
-                    ? (allProgramData.find(p => p?.program_key === allocatedTo)?.name?.replace(/\s*[–-]\s*(Major|Minor|Honours|Concentration).*/, '') || allocatedTo)
+                    ? (allProgramData.find(p => p?.program_key === resolvedTo)?.name?.replace(/\s*[–-]\s*(Major|Minor|Honours|Concentration).*/, '') || resolvedTo)
                     : null
                   return (
                     <div key={c.id} className={`dp-req-course m-row ${done && !allocatedElsewhere ? 'dp-req-course--done' : ''} ${taking && !allocatedElsewhere ? 'dp-req-course--taking' : ''} ${allocatedElsewhere ? 'dp-req-course--conflict' : ''}`}>
@@ -868,17 +974,18 @@ function ProgramSection({ prog, completedCourses, currentCourses, advStanding, o
                           {done && isTransfer  && <span className="dp-req-transfer-tag">{t('dp.statusTransfer')} · {t('dp.transferExempt')}</span>}
                           {done && !isTransfer && !allocatedElsewhere && <span className="dp-req-done-tag">{t('dp.statusDone')}</span>}
                           {taking && !allocatedElsewhere && <span className="dp-req-taking-tag">{t('dp.statusTaking')}</span>}
-                          {allocatedElsewhere && <span className="dp-req-conflict-tag">{t('dp.countedToward').replace('{program}', otherProgName)}</span>}
+                          {allocatedElsewhere && !foundationOwns && <span className="dp-req-conflict-tag">{t('dp.countedToward').replace('{program}', otherProgName)}</span>}
+                          {foundationOwns && <span className="dp-req-conflict-tag">{t('dp.countedTowardFoundation')}</span>}
                         </div>
                         {isOverlap && assignCourse && (
                           <div className="dp-req-overlap-assign">
                             <span className="dp-req-overlap-label"><FaExclamationTriangle style={{ marginRight: '4px', verticalAlign: 'middle' }} />{t('dp.overlapsWith')}</span>
                             <select
                               className="dp-req-overlap-select"
-                              value={allocatedTo || ''}
-                              onChange={e => assignCourse(key, e.target.value || null)}
+                              value={courseAllocations[filledKey] || ''}
+                              onChange={e => assignCourse(filledKey, e.target.value || null)}
                             >
-                              <option value="">{t('dp.countTowardAll')}</option>
+                              <option value="">{t('dp.countTowardAuto')}</option>
                               {allProgramData.filter(Boolean).map(p => (
                                 <option key={p.program_key} value={p.program_key}>
                                   {t('dp.countTowardOnly').replace('{program}', p.name?.replace(/\s*[–-]\s*(Major|Minor|Honours|Concentration).*/, '') || p.program_key)}
@@ -977,6 +1084,7 @@ function MyProgramCard({ profile, completedCourses, currentCourses, onProgressSu
   }
 
   const [programData, setProgramData]         = useState(null)
+  const [foundationData, setFoundationData]   = useState(null)
   const [minorData, setMinorData]             = useState(null)
   const [sciData, setSciData]                 = useState(null)
   const [coreData, setCoreData]               = useState(null)
@@ -989,7 +1097,7 @@ function MyProgramCard({ profile, completedCourses, currentCourses, onProgressSu
   const [openBlocks, setOpenBlocks]           = useState({})
   const [activeTab, setActiveTab]             = useState('major')
   const [_loadFailed, setLoadFailed]           = useState(false)
-  const [unavailable, setUnavailable]         = useState({ major: false, minor: false, core: false, concentration: false })
+  const [unavailable, setUnavailable]         = useState({ major: false, minor: false, core: false, concentration: false, foundation: false })
 
   // Course allocations — lifted from ElectivesPanel so ProgramSection can also use them
   const [courseAllocations, setCourseAllocations] = useState(() => {
@@ -1044,6 +1152,12 @@ function MyProgramCard({ profile, completedCourses, currentCourses, onProgressSu
   const transferCredits = advStanding.reduce((s, c) => s + (c.credits || 0), 0)
   const foundationWaived = transferCredits >= 24 &&
     (profile?.faculty === 'Faculty of Arts' || isBasc)
+
+  // U0 students get their own requirement tab. Waived students don't — their
+  // transfer credit replaced the Foundation year, so there's nothing to track.
+  const foundationKey = (isFoundationStudent(profile) && !foundationWaived)
+    ? foundationProgramKey(isBasc ? 'Faculty of Arts & Science' : (profile?.faculty || ''))
+    : null
 
   const majorKey = toProgramKey(
     profile?.major,
@@ -1113,13 +1227,15 @@ function MyProgramCard({ profile, completedCourses, currentCourses, onProgressSu
 
   useEffect(() => {
     if (!profile) return
-    if (!majorKey && !minorKey && !sciKey && extraMajorsList.length === 0 && extraMinorsList.length === 0) return
+    if (!majorKey && !minorKey && !sciKey && !foundationKey
+        && extraMajorsList.length === 0 && extraMinorsList.length === 0) return
 
     // SWR: hydrate from cache for instant paint, then revalidate from the
     // network. We only show the loading spinner if there's no cached data
     // to display — otherwise the user sees their last-known requirements
     // immediately and the refresh happens silently in the background.
     const majorCached = majorKey ? _progCache(majorKey) : null
+    const foundCached = foundationKey ? _progCache(foundationKey) : null
     const minorCached = minorKey ? _progCache(minorKey) : null
     const sciCached   = sciKey   ? _progCache(sciKey)   : null
     const coreCached  = coreKey  ? _progCache(coreKey)  : null
@@ -1131,9 +1247,10 @@ function MyProgramCard({ profile, completedCourses, currentCourses, onProgressSu
       extraMinorsList.map(({ key }) => [key, _progCache(key)]).filter(([, v]) => v)
     )
 
-    const anyCache = majorCached || minorCached || sciCached || coreCached || concCached
+    const anyCache = majorCached || foundCached || minorCached || sciCached || coreCached || concCached
       || Object.keys(extraMajorsCached).length || Object.keys(extraMinorsCached).length
 
+    if (foundCached) setFoundationData(foundCached)
     if (majorCached) setProgramData(majorCached)
     if (minorCached) setMinorData(minorCached)
     if (sciCached)   setSciData(sciCached)
@@ -1149,6 +1266,7 @@ function MyProgramCard({ profile, completedCourses, currentCourses, onProgressSu
       // Cold start — clear stale state and show the spinner.
       setLoading(true)
       setProgramData(null)
+      setFoundationData(null)
       setMinorData(null)
       setSciData(null)
       setExtraMajorsData({})
@@ -1157,7 +1275,7 @@ function MyProgramCard({ profile, completedCourses, currentCourses, onProgressSu
       setLoading(false)
     }
     setLoadFailed(false)
-    setUnavailable({ major: false, minor: false })
+    setUnavailable({ major: false, minor: false, foundation: false })
     fetchedRef.current = true
 
     // Fetch extra majors
@@ -1177,18 +1295,20 @@ function MyProgramCard({ profile, completedCourses, currentCourses, onProgressSu
       fetchProgram(sciKey, setSciData),
       fetchProgram(coreKey, setCoreData),
       fetchProgram(concentrationKey, setConcentrationData),
+      fetchProgram(foundationKey, setFoundationData),
       ...extraMajorFetches,
       ...extraMinorFetches,
-    ]).then(([majorResult, minorResult, , coreResult, concResult]) => {
+    ]).then(([majorResult, minorResult, , coreResult, concResult, foundResult]) => {
       setUnavailable({
         major:         majorResult === 'not_found',
         minor:         minorResult === 'not_found',
         core:          coreResult  === 'not_found',
         concentration: concResult  === 'not_found',
+        foundation:    foundResult === 'not_found',
       })
     }).finally(() => setLoading(false))
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [majorKey, minorKey, sciKey, coreKey, concentrationKey,
+  }, [majorKey, minorKey, sciKey, coreKey, concentrationKey, foundationKey,
       extraMajorsList.map(x=>x.key).join(','),
       extraMinorsList.map(x=>x.key).join(','),
       !!profile, profile?.concentration])
@@ -1211,12 +1331,13 @@ function MyProgramCard({ profile, completedCourses, currentCourses, onProgressSu
         const extraMinorFetches = extraMinorsList.map(({ key }) =>
           fetchProgram(key, d => setExtraMinorsData(prev => ({ ...prev, [key]: d })))
         )
-        const [majorResult, minorResult, , coreResult, concResult] = await Promise.all([
+        const [majorResult, minorResult, , coreResult, concResult, foundResult] = await Promise.all([
           fetchProgram(majorKey, setProgramData),
           fetchProgram(minorKey, setMinorData),
           fetchProgram(sciKey, setSciData),
           fetchProgram(coreKey, setCoreData),
           fetchProgram(concentrationKey, setConcentrationData),
+          fetchProgram(foundationKey, setFoundationData),
           ...extraMajorFetches,
           ...extraMinorFetches,
         ])
@@ -1225,27 +1346,44 @@ function MyProgramCard({ profile, completedCourses, currentCourses, onProgressSu
           minor:         minorResult === 'not_found',
           core:          coreResult  === 'not_found',
           concentration: concResult  === 'not_found',
+          foundation:    foundResult === 'not_found',
         })
       }
     } catch { /* ignore */ }
     finally { setSeeding(false) }
   }
 
+  // U0 students often haven't declared a major yet — the Foundation program on
+  // its own is enough to render this card for them.
   const hasSomething = profile?.major || profile?.minor ||
     profile?.other_majors?.length > 0 || profile?.other_minors?.length > 0 ||
     (isBasc && profile?.other_majors?.length > 0) ||
-    isMgmt
-  if (!hasSomething) return null
+    isMgmt || !!foundationKey
+  // NOTE: the bail-out on !hasSomething is deliberately at the bottom, just
+  // before the JSX. Several hooks live below this point, and `hasSomething`
+  // flips from false to true when the profile loads — returning here would
+  // change the hook count between renders and blow up the component.
 
   const hasMajor         = !!programData
+  const hasFoundation    = !!foundationData
   const hasMinor         = !!minorData
   const hasCore          = !!coreData
   const hasConcentration = !!concentrationData
   const hasExtraMajors   = Object.keys(extraMajorsData).length > 0
   const hasExtraMinors   = Object.keys(extraMinorsData).length > 0
-  const hasAny           = hasMajor || hasMinor || hasCore || hasConcentration || hasExtraMajors || hasExtraMinors
+  const hasAny           = hasMajor || hasFoundation || hasMinor || hasCore || hasConcentration || hasExtraMajors || hasExtraMinors
 
   const tabs = []
+  // Foundation first — it's the year the student is actually in, and its
+  // courses are claimed before any other program gets to count them.
+  if (foundationKey) {
+    tabs.push({
+      id: 'foundation',
+      label: t('dp.tabFoundationLabel'),
+      data: foundationData,
+      unavailable: unavailable.foundation,
+    })
+  }
   if (isMgmt) {
     tabs.push({ id: 'core', label: 'BCom Core', data: coreData, unavailable: unavailable.core })
     if (profile?.major) tabs.push({ id: 'major', label: profile.major, data: programData, unavailable: unavailable.major })
@@ -1278,26 +1416,95 @@ function MyProgramCard({ profile, completedCourses, currentCourses, onProgressSu
   const currentTabData = currentTab?.data
   const currentTabUnavailable = currentTab?.unavailable
 
-  // All programs array and overlap detection
-  // eslint-disable-next-line react-hooks/rules-of-hooks
+  // All programs array and overlap detection.
+  // Order matters: it's the tie-break for a course two programs both want, and
+  // Foundation must come first — McGill's rule is that a course used for the
+  // U0 Foundation program can't be counted toward a major or minor as well.
   const allProgramDataArray = useMemo(() => [
-    programData, minorData, sciData, coreData, concentrationData,
+    foundationData, programData, minorData, sciData, coreData, concentrationData,
     ...Object.values(extraMajorsData), ...Object.values(extraMinorsData),
-  ].filter(Boolean), [programData, minorData, sciData, coreData, concentrationData, extraMajorsData, extraMinorsData])
+  ].filter(Boolean), [foundationData, programData, minorData, sciData, coreData, concentrationData, extraMajorsData, extraMinorsData])
 
-  // overlapKeys: course keys that appear in 2+ programs
-  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const allUserCourses = useMemo(
+    () => [...completedCourses, ...currentCourses],
+    [completedCourses, currentCourses]
+  )
+
+  // What each program could count from the courses the student has actually
+  // taken — by name OR through a wildcard/complementary block.
+  const claimsByProgram = useMemo(
+    () => allProgramDataArray.map(prog => ({
+      key: prog.program_key,
+      keys: programClaimableKeys(prog, allUserCourses),
+    })),
+    [allProgramDataArray, allUserCourses]
+  )
+
+  // overlapKeys: course keys two or more programs would both count.
+  //
+  // This used to consider only requirement rows that name a course outright,
+  // which missed the common case — a course filling a wildcard block ("any
+  // 300-level ANTH course") in both a major and a minor. Those silently
+  // counted twice and the student was never offered a way to place them.
   const overlapKeys = useMemo(() => {
     const counts = new Map()
+    const bump = key => counts.set(key, (counts.get(key) || 0) + 1)
+
+    // Courses the student has taken that 2+ programs can claim.
+    claimsByProgram.forEach(({ keys }) => keys.forEach(bump))
+
+    // Plus courses named by 2+ programs but not yet taken, so the conflict is
+    // visible while planning (this was the original behaviour).
     allProgramDataArray.forEach(prog => {
+      const named = new Set()
       prog.blocks?.forEach(b => b.courses?.forEach(c => {
-        if (!c.catalog) return
-        const key = `${c.subject} ${c.catalog}`.toUpperCase()
-        counts.set(key, (counts.get(key) || 0) + 1)
+        if (!c.catalog || wildcardBand(c)) return
+        named.add(`${c.subject} ${c.catalog}`.toUpperCase())
       }))
+      named.forEach(bump)
     })
+
     return new Set([...counts.entries()].filter(([, n]) => n > 1).map(([k]) => k))
-  }, [allProgramDataArray])
+  }, [claimsByProgram, allProgramDataArray])
+
+  // Where each contested course actually counts. One course, one program.
+  //
+  // Resolution order:
+  //   1. the student's own choice, if that program can still claim the course
+  //   2. otherwise the first program in allProgramDataArray that claims it —
+  //      Foundation, then major, then minor.
+  //
+  // Foundation is never overridable: McGill doesn't allow a U0 course to also
+  // count toward a major or minor, so an allocation pointing elsewhere is
+  // ignored rather than silently producing a plan that won't be approved.
+  const effectiveAllocation = useMemo(() => {
+    const out = {}
+    const foundationClaims = claimsByProgram.find(p => FOUNDATION_PROGRAM_KEYS.has(p.key))
+    // Only honour a stored choice that points at a program we actually loaded —
+    // otherwise a course assigned to a minor the student has since dropped
+    // would disappear from every program instead of falling back.
+    const loadedKeys = new Set(claimsByProgram.map(p => p.key))
+
+    for (const { key: progKey, keys } of claimsByProgram) {
+      for (const courseKey of keys) {
+        if (out[courseKey]) continue          // an earlier program already took it
+        if (foundationClaims?.keys.has(courseKey)) {
+          out[courseKey] = foundationClaims.key
+          continue
+        }
+        const chosen = courseAllocations[courseKey]
+        out[courseKey] = (chosen && loadedKeys.has(chosen)) ? chosen : progKey
+      }
+    }
+
+    // Courses manually assigned to a program that no block matches (the
+    // "Other Courses (Added by you)" path) still belong where the student put
+    // them — they're not contested, they're placed.
+    for (const [courseKey, progKey] of Object.entries(courseAllocations)) {
+      if (!out[courseKey]) out[courseKey] = progKey
+    }
+    return out
+  }, [claimsByProgram, courseAllocations])
 
   const calcRingProgress = (prog) => {
     if (!prog) return { pct: 0, earned: 0, total: prog?.total_credits || 36 }
@@ -1318,7 +1525,8 @@ function MyProgramCard({ profile, completedCourses, currentCourses, onProgressSu
       if (seenDb.has(key)) return
       seenDb.add(key)
       if (matchTransfer(c, advStanding)) return
-      if (overlapKeys.has(key) && courseAllocations[key] && courseAllocations[key] !== progKey) return
+      // A contested course counts once, in the program it was resolved to.
+      if (effectiveAllocation[key] && effectiveAllocation[key] !== progKey) return
       const uc = completedCourses.find(u => `${u.subject} ${u.catalog}`.toUpperCase() === key)
       if (uc) {
         earned += parseFloat(uc.credits || c.credits || 3)
@@ -1336,7 +1544,7 @@ function MyProgramCard({ profile, completedCourses, currentCourses, onProgressSu
         if (got >= needed) break
         const ucKey = `${uc.subject} ${uc.catalog}`.toUpperCase()
         if (seenDb.has(ucKey) || seenUser.has(ucKey)) continue
-        if (overlapKeys.has(ucKey) && courseAllocations[ucKey] && courseAllocations[ucKey] !== progKey) continue
+        if (effectiveAllocation[ucKey] && effectiveAllocation[ucKey] !== progKey) continue
         earned += parseFloat(uc.credits || 3)
         got += parseFloat(uc.credits || 3)
         seenUser.add(ucKey)
@@ -1349,7 +1557,7 @@ function MyProgramCard({ profile, completedCourses, currentCourses, onProgressSu
       const ucKey = `${uc.subject} ${uc.catalog}`.toUpperCase()
       if (seenUser.has(ucKey) || !completedKeys.has(ucKey)) continue
       if (matchTransfer(uc, advStanding)) continue
-      if (courseAllocations[ucKey] === progKey) {
+      if (effectiveAllocation[ucKey] === progKey) {
         earned += parseFloat(uc.credits || 3)
         seenUser.add(ucKey)
       }
@@ -1358,6 +1566,7 @@ function MyProgramCard({ profile, completedCourses, currentCourses, onProgressSu
     return { pct: Math.min(100, Math.round((earned / total) * 100)), earned, total }
   }
 
+  const foundationRing    = calcRingProgress(foundationData)
   const majorRing         = calcRingProgress(programData)
   const minorRing         = calcRingProgress(minorData)
   const coreRing          = calcRingProgress(coreData)
@@ -1377,10 +1586,12 @@ function MyProgramCard({ profile, completedCourses, currentCourses, onProgressSu
     })
     .join('\n')
 
-  // eslint-disable-next-line react-hooks/rules-of-hooks
   useEffect(() => {
     onProgressSummaryChange?.(progressSummaryText)
   }, [progressSummaryText, onProgressSummaryChange])
+
+  // Every hook above runs unconditionally; only the render bails out.
+  if (!hasSomething) return null
 
   return (
     <div className="dp-req-card">
@@ -1498,6 +1709,25 @@ function MyProgramCard({ profile, completedCourses, currentCourses, onProgressSu
               </>
             ) : (
               <>
+                {hasFoundation && (
+                  <div className="dp-req-progress-item">
+                    <div className="dp-req-ring">
+                      <svg viewBox="0 0 36 36" className="dp-req-ring-svg">
+                        <circle cx="18" cy="18" r="15.9" className="dp-req-ring-bg" />
+                        <circle cx="18" cy="18" r="15.9"
+                          className="dp-req-ring-fill" style={{ stroke: '#0d9488' }}
+                          strokeDasharray={`${foundationRing.pct} ${100 - foundationRing.pct}`}
+                          strokeDashoffset="25"
+                        />
+                      </svg>
+                      <span className="dp-req-ring-label">{foundationRing.pct}%</span>
+                    </div>
+                    <div className="dp-req-prog-text">
+                      <span className="dp-req-prog-name">{t('dp.ringFoundation')}</span>
+                      <span className="dp-req-prog-detail">{foundationRing.earned}/{foundationRing.total} {t('dp.credits')}</span>
+                    </div>
+                  </div>
+                )}
                 {hasMajor && (
                   <div className="dp-req-progress-item">
                     <div className="dp-req-ring">
@@ -1598,7 +1828,9 @@ function MyProgramCard({ profile, completedCourses, currentCourses, onProgressSu
                 className={`dp-prog-tab ${activeTab === tab.id ? 'dp-prog-tab--active' : ''}`}
                 onClick={() => setActiveTab(tab.id)}
               >
-                {tab.id === 'core'
+                {tab.id === 'foundation'
+                  ? tab.label
+                  : tab.id === 'core'
                   ? t('dp.tabCore').replace('{label}', tab.label)
                   : tab.id === 'concentration'
                   ? t('dp.tabConcentration').replace('{label}', tab.label)
@@ -1651,6 +1883,7 @@ function MyProgramCard({ profile, completedCourses, currentCourses, onProgressSu
               openBlocks={openBlocks}
               setOpenBlocks={setOpenBlocks}
               courseAllocations={courseAllocations}
+              effectiveAllocation={effectiveAllocation}
               assignCourse={assignCourse}
               overlapKeys={overlapKeys}
               allProgramData={allProgramDataArray}
@@ -1677,6 +1910,9 @@ function MyProgramCard({ profile, completedCourses, currentCourses, onProgressSu
               currentCourses={currentCourses}
               allProgramData={allProgramDataArray}
               courseAllocations={courseAllocations}
+              effectiveAllocation={effectiveAllocation}
+              overlapKeys={overlapKeys}
+              claimsByProgram={claimsByProgram}
               assignCourse={assignCourse}
             />
           </div>

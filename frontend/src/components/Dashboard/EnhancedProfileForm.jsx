@@ -41,6 +41,7 @@ export default function EnhancedProfileForm({ profile, user, onSave, onCancel })
     interests: '',
     current_gpa: '',
     is_honours: false,
+    foundation_year: false,
     advanced_standing: []
   })
 
@@ -66,6 +67,8 @@ export default function EnhancedProfileForm({ profile, user, onSave, onCancel })
         interests: profile.interests || '',
         current_gpa: profile.current_gpa || '',
         is_honours: profile.is_honours || false,
+        // Null means the student never answered — a U0 is one by definition.
+        foundation_year: profile.foundation_year ?? (Number(profile.year) === 0),
         advanced_standing: (profile.advanced_standing || []).map(c => ({
           counts_toward_degree: true,
           counts_toward_major: false,
@@ -211,8 +214,9 @@ export default function EnhancedProfileForm({ profile, user, onSave, onCancel })
     cleanedData.major = formData.major?.trim() || ""
     cleanedData.faculty = formData.faculty?.trim() || ""
     cleanedData.is_honours = formData.is_honours || false
+    cleanedData.foundation_year = formData.foundation_year || false
 
-    cleanedData.year = formData.year ? parseInt(formData.year) : null
+    cleanedData.year = formData.year !== '' && formData.year != null ? parseInt(formData.year) : null
 
     if (formData.current_gpa) {
       const gpa = parseFloat(formData.current_gpa)
@@ -289,6 +293,18 @@ export default function EnhancedProfileForm({ profile, user, onSave, onCancel })
                 <option value="4">U4</option>
                 <option value="5+">U5+</option>
               </select>
+              {/* Year alone can't tell us this once a student moves on to U1,
+                  and it decides whether their U0 courses are tracked as the
+                  Foundation program or dumped into electives. */}
+              <label className="pef-check">
+                <input
+                  type="checkbox"
+                  checked={formData.foundation_year}
+                  onChange={(e) => setFormData(prev => ({ ...prev, foundation_year: e.target.checked }))}
+                />
+                {t('profileForm.foundationYear')}
+              </label>
+              <span className="pef-hint">{t('profileForm.foundationYearHint')}</span>
             </EditRow>
 
             {isBasc(formData.faculty) ? (
