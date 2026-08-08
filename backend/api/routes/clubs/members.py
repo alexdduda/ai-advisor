@@ -128,12 +128,24 @@ async def update_member_role(club_id: str, member_user_id: str, req: Request, cu
         supabase.table("clubs").update({"created_by": member_user_id}).eq("id", club_id).execute()
         return {"success": True, "role": "owner"}
 
-    # Admins cannot change other admins or the owner
-    if caller_is_club_admin and not caller_is_owner and not caller_is_global_admin:
-        target_membership = supabase.table("user_clubs").select("role").eq("user_id", member_user_id).eq("club_id", club_id).execute()
-        target_role = target_membership.data[0].get("role") if target_membership.data else "member"
-        if target_is_owner:
-            raise HTTPException(status_code=403, detail="Admins cannot change the owner's role")
+    # DELIBERATE: a Manager may demote another Manager. This is not an
+    # oversight — it exists so a club isn't stranded when the Owner goes
+    # inactive and the remaining Managers need to reorganise themselves.
+    # remove_club_member allows the mirror case for the same reason.
+    #
+    # The Owner stays protected regardless: they cannot be demoted (guarded
+    # above), cannot be removed (remove_club_member), ownership transfer
+    # requires caller_is_owner, and deleting a club is platform-admin only.
+    # So the blast radius of a rogue Manager is the manager roster, never the
+    # club itself.
+    #
+    # There used to be a block here reading "Admins cannot change other admins
+    # or the owner" — but it only ever tested target_is_owner (already
+    # unreachable by this point, since the owner-guard above returns first) and
+    # loaded target_role into a variable it never used. It was dead code
+    # contradicting the intended behaviour, plus a wasted Supabase round-trip
+    # on every role change. Removed rather than implemented; see
+    # test_club_role_permissions.py for the behaviour this locks in.
 
     # Get current role of target
     membership = supabase.table("user_clubs").select("role").eq("user_id", member_user_id).eq("club_id", club_id).execute()
