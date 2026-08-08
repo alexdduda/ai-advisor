@@ -32,10 +32,15 @@ inngest_client = inngest.Inngest(
 
 # ── Transcript processing ─────────────────────────────────────────────────────
 
+# Kept as a named constant because the cleanup in process_transcript's finally
+# block has to know which attempt is the last one — see the comment there.
+_TRANSCRIPT_RETRIES = 2
+
+
 @inngest_client.create_function(
     fn_id="process-transcript",
     trigger=inngest.TriggerEvent(event="transcript/process"),
-    retries=2,
+    retries=_TRANSCRIPT_RETRIES,
 )
 async def process_transcript(ctx: inngest.Context) -> dict:
     data         = ctx.event.data
@@ -49,6 +54,7 @@ async def process_transcript(ctx: inngest.Context) -> dict:
 
     update_job(job_id, "processing")
 
+    succeeded = False
     try:
         # Late imports to avoid circular dependency at module load time
         from .routes.transcript import (
@@ -84,6 +90,7 @@ async def process_transcript(ctx: inngest.Context) -> dict:
             result = {"results": persisted, "saved": True}
 
         update_job(job_id, "done", result=result)
+        succeeded = True
         return result
 
     except Exception as exc:
@@ -113,11 +120,29 @@ async def process_transcript(ctx: inngest.Context) -> dict:
         raise
 
     finally:
-        # Clean up the temp PDF regardless of success/failure
-        try:
-            get_supabase().storage.from_("job-uploads").remove([storage_path])
-        except Exception:
-            pass
+        # Only delete the upload once nothing else will need it.
+        #
+        # This used to run unconditionally ("regardless of success/failure"),
+        # which quietly defeated retries=N: a transient Claude 429/timeout
+        # raised, the finally deleted the PDF, and every subsequent retry then
+        # died on `StorageApiError: Object not found` at the download. The
+        # retries were guaranteed to fail, and the student saw a misleading
+        # generic error instead of the real one. That was SYMBOLOS-BACKEND-F.
+        #
+        # ctx.attempt is 0-based, so the last attempt is _TRANSCRIPT_RETRIES.
+        # Keeping the object on a non-final failure means the retry has
+        # something to actually retry with.
+        is_final_attempt = ctx.attempt >= _TRANSCRIPT_RETRIES
+        if succeeded or is_final_attempt:
+            try:
+                get_supabase().storage.from_("job-uploads").remove([storage_path])
+            except Exception:
+                pass
+        else:
+            logger.info(
+                "Transcript job %s: keeping upload for retry (attempt %s of %s)",
+                job_id, ctx.attempt + 1, _TRANSCRIPT_RETRIES + 1,
+            )
 
 
 # ── Syllabus processing ───────────────────────────────────────────────────────
