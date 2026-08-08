@@ -472,9 +472,27 @@ app.include_router(admin_approval.router,       prefix=f"{settings.API_PREFIX}/a
 # ── Inngest serve endpoint ───────────────────────────────────────────────────
 # Registers /api/inngest so Inngest can call back our background functions.
 # Must come after all routers are included.
-from .inngest_app import inngest_client, INNGEST_FUNCTIONS
-import inngest.fast_api
-inngest.fast_api.serve(app, inngest_client, INNGEST_FUNCTIONS)
+#
+# Preview deployments don't get INNGEST_* env vars (they're set on Production
+# only), so serving here logged "missing signing key" at error level on every
+# preview boot — 199 events in Sentry, all environment=preview, none of them
+# actionable. Production is unaffected and config.py already hard-fails there
+# if the keys are absent, so skipping when unkeyed can't mask a real outage.
+#
+# Local dev is deliberately still served: the Inngest dev server doesn't check
+# signatures, so background jobs keep working without any keys.
+_vercel_env = os.getenv("VERCEL_ENV") or os.getenv("ENVIRONMENT", "development")
+_is_vercel_preview = _vercel_env == "preview"
+
+if _is_vercel_preview and not settings.INNGEST_SIGNING_KEY.strip():
+    logger.info(
+        "Inngest serve skipped — no signing key on this preview deployment. "
+        "Background jobs are disabled here; production is unaffected."
+    )
+else:
+    from .inngest_app import inngest_client, INNGEST_FUNCTIONS
+    import inngest.fast_api
+    inngest.fast_api.serve(app, inngest_client, INNGEST_FUNCTIONS)
 
 
 @app.get("/")
