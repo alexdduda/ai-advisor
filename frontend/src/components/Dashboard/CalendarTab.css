@@ -827,6 +827,7 @@
   width: 100%;
   max-width: 500px;
   max-height: calc(100vh - 40px);
+  max-height: calc(100dvh - 40px);
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   animation: popIn 0.2s ease;
@@ -1238,6 +1239,7 @@
   width: 100%;
   max-width: 640px;
   max-height: 72vh;
+  max-height: 72dvh;
   display: flex;
   flex-direction: column;
   box-shadow: var(--shadow-2xl);
@@ -1438,6 +1440,7 @@
 @media (max-width: 640px) {
   .cal-day-drawer {
     max-height: 85vh;
+    max-height: 85dvh;
     border-radius: 14px 14px 0 0;
   }
   .cal-day-drawer__item-title { max-width: 140px; }
@@ -1736,7 +1739,9 @@
   border-radius: 16px;
   width: min(600px, 100%);
   height: calc(100vh - 40px);
+  height: calc(100dvh - 40px);
   max-height: calc(100vh - 40px);
+  max-height: calc(100dvh - 40px);
   display: flex;
   flex-direction: column;
   box-shadow: 0 20px 60px rgba(0,0,0,0.22);
@@ -1806,7 +1811,9 @@
   .cal-bulk-modal {
     width: 100%;
     height: 92vh;
+    height: 92dvh;
     max-height: 92vh;
+    max-height: 92dvh;
     border-radius: 16px 16px 0 0;
     border-bottom: none;
   }
@@ -2093,7 +2100,9 @@
   position: relative;
   width: min(520px, 96vw);
   height: calc(100vh - 40px);
+  height: calc(100dvh - 40px);
   max-height: calc(100vh - 40px);
+  max-height: calc(100dvh - 40px);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -2537,7 +2546,9 @@
 .mgr-modal {
   width: min(560px, 96vw);
   height: calc(100vh - 40px);
+  height: calc(100dvh - 40px);
   max-height: calc(100vh - 40px);
+  max-height: calc(100dvh - 40px);
   background: var(--bg-primary);
   border-radius: 16px;
   border: 1px solid var(--border-primary);
@@ -2959,7 +2970,9 @@
 
 @media (max-width: 480px) {
   .cal-bulk-overlay { align-items: flex-end; padding: 0; }
-  .mgr-modal { width: 100%; border-radius: 16px 16px 0 0; height: 92vh; max-height: 92vh; }
+  .mgr-modal { width: 100%; border-radius: 16px 16px 0 0; height: 92vh;
+ height: 92dvh; max-height: 92vh;
+ max-height: 92dvh; }
   .mgr-legend-hint { display: none; }
 }
 
@@ -3507,6 +3520,7 @@
     min-width: 0;
     max-width: 100%;
     max-height: 88vh;
+    max-height: 88dvh;
     overflow-y: auto;
   }
   .cal-event-popup-actions { flex-wrap: wrap; }
@@ -3514,6 +3528,7 @@
 
   .cal-day-drawer {
     max-height: 85vh;
+    max-height: 85dvh;
     border-radius: 14px 14px 0 0;
   }
   .cal-day-drawer__header { flex-wrap: wrap; gap: 8px; }
@@ -3531,7 +3546,7 @@
   }
 
   .cal-gcal-overlay { padding: 12px; }
-  .cal-gcal-modal { max-width: 100%; max-height: 88vh; overflow-y: auto; }
+  .cal-gcal-modal { max-width: 100%; max-height: 88vh; max-height: 88dvh; overflow-y: auto; }
 }
 
 /* ══════════════════════════════════════════════════════════════════════

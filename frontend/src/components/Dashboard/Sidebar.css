@@ -104,9 +104,9 @@
 .logo-icon--image {
   background: transparent;
   padding: 0;
-  object-fit: cover;
-  /* The PNG already has its own rounded edge — keep the same radius so
-     it visually matches the original red square. */
+  object-fit: contain;
+  /* The mark is a transparent PNG cropped to the artwork, so it sits directly
+     on the sidebar background with no tile behind it. */
 }
 
 .logo-name {
