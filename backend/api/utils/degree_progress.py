@@ -236,13 +236,25 @@ def _key_of(subject: str, catalog) -> str:
     return f"{subject or ''} {catalog or ''}".upper()
 
 
+# "…or above" / "…or higher" / "…and greater" — the band has no ceiling.
+_OPEN_ENDED = re.compile(r"\b(?:or|and)\s+(?:above|higher|greater)\b")
+
+
 def wildcard_band(req: dict) -> Optional[dict]:
     """If `req` is a wildcard placeholder ("Any 200-level X course"), return
     {subject, min, max}; else None. Port of wildcardBand() in requirementMatch.js."""
     if not req:
         return None
     title = (req.get('title') or '').lower()
-    looks_wild = bool(re.search(r'\bany\b', title)) and bool(re.search(r'level', title))
+    open_ended = bool(_OPEN_ENDED.search(title))
+    # Requiring the word "level" dropped rows phrased "Any COMP course at 300+";
+    # those have a null catalog, so they fell through to the legacy
+    # any-course-in-this-subject path and matched COMP 202 as well as COMP 400.
+    looks_wild = bool(re.search(r'\bany\b', title)) and (
+        bool(re.search(r'level', title))
+        or bool(re.search(r'\d{3}\s*\+', title))
+        or open_ended
+    )
     if not looks_wild:
         return None
 
@@ -254,10 +266,12 @@ def wildcard_band(req: dict) -> Optional[dict]:
     if m:
         return {'subject': subject, 'min': int(m.group(1)), 'max': float('inf')}
 
+    # "Any 300-level COMP course or above" is McGill's phrasing for 300/400/500.
+    # Reading it as 300–399 silently dropped every 400- and 500-level course.
     m = re.search(r'(\d{3})\s*-?\s*level', title)
     if m:
         lvl = int(m.group(1))
-        return {'subject': subject, 'min': lvl, 'max': lvl + 99}
+        return {'subject': subject, 'min': lvl, 'max': float('inf') if open_ended else lvl + 99}
 
     if re.search(r'upper[\s-]*level', title):
         return {'subject': subject, 'min': 300, 'max': float('inf')}
@@ -265,7 +279,7 @@ def wildcard_band(req: dict) -> Optional[dict]:
     try:
         cat = int(req.get('catalog'))
         if cat % 100 == 0:
-            return {'subject': subject, 'min': cat, 'max': cat + 99}
+            return {'subject': subject, 'min': cat, 'max': float('inf') if open_ended else cat + 99}
     except (TypeError, ValueError):
         pass
     return None
@@ -289,7 +303,13 @@ def block_wildcard_matches(block: dict, user_courses: list, exclude_keys: Option
     courses = (block or {}).get('courses') or []
     bands = [b for b in (wildcard_band(c) for c in courses) if b]
     min_level = (block or {}).get('min_level') or 0
-    legacy_applies = any(not c.get('catalog') for c in courses) or min_level > 0
+    # A null-catalog row that DOES parse into a band must not also switch on the
+    # legacy catch-all — otherwise "Any MATH course at 300+" matches MATH 133,
+    # because the catch-all ORs in every course sharing the subject and throws
+    # the level away. Only rows we genuinely can't interpret fall back.
+    legacy_applies = any(
+        not c.get('catalog') and not wildcard_band(c) for c in courses
+    ) or min_level > 0
     if not legacy_applies and not bands:
         return []
 

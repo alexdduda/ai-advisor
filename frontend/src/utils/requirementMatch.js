@@ -22,10 +22,18 @@
  */
 
 /** If `req` is a wildcard placeholder, return {subject, min, max}; else null. */
+/** "…or above" / "…or higher" / "…and greater" — the band has no ceiling. */
+const OPEN_ENDED = /\b(?:or|and)\s+(?:above|higher|greater)\b/
+
 export function wildcardBand(req) {
   if (!req) return null
   const title = (req.title || '').toLowerCase()
-  const looksWild = /\bany\b/.test(title) && /level/.test(title)
+  // Requiring the word "level" used to be the gate, which dropped rows phrased
+  // "Any COMP course at 300+". Those have a null catalog, so they fell through
+  // to the legacy any-course-in-this-subject path in blockWildcardMatches and
+  // matched COMP 202 as readily as COMP 400.
+  const looksWild = /\bany\b/.test(title)
+    && (/level/.test(title) || /\d{3}\s*\+/.test(title) || OPEN_ENDED.test(title))
   if (!looksWild) return null
 
   const subject = (req.subject || '').toUpperCase()
@@ -35,11 +43,14 @@ export function wildcardBand(req) {
   let m = title.match(/(\d{3})\s*\+/)
   if (m) return { subject, min: parseInt(m[1], 10), max: Infinity }
 
-  // "NNN-level" → that single hundred band.
+  // "NNN-level" → that single hundred band, UNLESS the title also says the
+  // band is open-ended. "Any 300-level COMP course or above" is the McGill
+  // phrasing for 300/400/500; reading it as 300–399 silently dropped every
+  // 400- and 500-level course a student had taken toward that requirement.
   m = title.match(/(\d{3})\s*-?\s*level/)
   if (m) {
     const lvl = parseInt(m[1], 10)
-    return { subject, min: lvl, max: lvl + 99 }
+    return { subject, min: lvl, max: OPEN_ENDED.test(title) ? Infinity : lvl + 99 }
   }
 
   // "upper-level" with no explicit number → conventionally 300+.
@@ -48,7 +59,7 @@ export function wildcardBand(req) {
   // Fallback: a round-hundred placeholder catalog (e.g. "200").
   const cat = parseInt(req.catalog, 10)
   if (!Number.isNaN(cat) && cat % 100 === 0) {
-    return { subject, min: cat, max: cat + 99 }
+    return { subject, min: cat, max: OPEN_ENDED.test(title) ? Infinity : cat + 99 }
   }
   return null
 }
@@ -195,7 +206,12 @@ export function overlappingCourseKeys(programs = [], userCourses = []) {
 export function blockWildcardMatches(block, userCourses = [], excludeKeys = null) {
   const bands = (block?.courses || []).map(c => wildcardBand(c)).filter(Boolean)
   const minLevel = block?.min_level || 0
-  const legacyApplies = (block?.courses || []).some(c => !c.catalog) || minLevel > 0
+  // A null-catalog row that DOES parse into a band must not also switch on the
+  // legacy catch-all — otherwise "Any MATH course at 300+" matches MATH 133,
+  // because the catch-all ORs in every course sharing the subject and throws
+  // the level away. Only rows we genuinely can't interpret fall back.
+  const legacyApplies = (block?.courses || []).some(c => !c.catalog && !wildcardBand(c))
+    || minLevel > 0
   if (!legacyApplies && bands.length === 0) return []
 
   const blockSubjects = new Set(
