@@ -311,6 +311,16 @@ def update_user(user_id: str, updates: Dict[str, Any]) -> Dict[str, Any]:
     except UserNotFoundException:
         raise
     except Exception as e:
+        # A taken username is normal user input, not a server fault. Postgres
+        # raises 23505 on users_username_key; without this it surfaced as
+        # DatabaseException -> HTTP 500 and paged as an error in Sentry
+        # (SYMBOLOS-BACKEND-15/16/17/18), while the student just saw a generic
+        # failure with no hint that the name was already taken.
+        # create_user already maps this to UsernameTakenException; the update
+        # path simply never did.
+        msg = str(e)
+        if "23505" in msg and "users_username_key" in msg:
+            raise UsernameTakenException()
         logger.error(f"Error updating user {user_id}: {e}")
         raise DatabaseException("update_user", str(e))
 
