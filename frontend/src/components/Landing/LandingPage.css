@@ -572,8 +572,15 @@ html[data-theme="dark"] #root:has(.landing-root) {
   text-decoration: none;
   background: transparent;
   border: none;
-  padding: 0;
   cursor: pointer;
+  /* These were 20px tall with padding:0 — far below a usable touch target, and
+     they sit at the very bottom of the page where iOS Safari's toolbar crowds
+     them. Padding (rather than a negative margin) keeps real separation between
+     neighbouring targets, so a near-miss doesn't open the wrong document. */
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 6px;
 }
 .landing-footer__links a:hover,
 .landing-footer__legal-btn:hover {
