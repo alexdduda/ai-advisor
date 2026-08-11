@@ -21,6 +21,7 @@ from api.utils.supabase_client import (
 from api.exceptions import (
     UserNotFoundException,
     UserAlreadyExistsException,
+    UsernameTakenException,
     DatabaseException
 )
 from ..config import settings
@@ -439,6 +440,12 @@ async def update_user(user_id: str, updates: UserUpdate, req: Request, current_u
             status_code=status.HTTP_404_NOT_FOUND,
             detail={"code": "user_not_found", "message": "User not found"}
         )
+    except UsernameTakenException:
+        # Must be re-raised explicitly: it's an AppException, so the broad
+        # `except Exception` below would otherwise convert a normal 409
+        # user-input conflict into a 500 and page it as a server error.
+        # app_exception_handler renders it with the right status and message.
+        raise
     except HTTPException:
         raise
     except Exception as e:
