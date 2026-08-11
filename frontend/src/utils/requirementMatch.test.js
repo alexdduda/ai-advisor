@@ -5,6 +5,7 @@ import {
   blockWildcardMatches,
   explicitlyClaimedCourseKeys,
   programClaimableKeys,
+  overlappingCourseKeys,
 } from './requirementMatch'
 
 const course = (subject, catalog, credits = 3) => ({ subject, catalog, credits })
@@ -107,5 +108,60 @@ describe('explicitlyClaimedCourseKeys', () => {
     const claims = explicitlyClaimedCourseKeys([{ courses: [course('EAST', '220')] }])
     expect(blockWildcardMatches(block, [course('EAST', '220')], claims)).toEqual([])
     expect(blockWildcardMatches(block, [course('EAST', '211')], claims)).toEqual([course('EAST', '211')])
+  })
+})
+
+describe('overlappingCourseKeys', () => {
+  // The real shape that produced the bug: a Computer Science major that names
+  // its courses outright, plus an Anthropology minor made entirely of wildcard
+  // bands. Nothing is shared between them.
+  const csMajor = {
+    program_key: 'computer_science_arts_major',
+    blocks: [
+      { title: 'Required Courses', courses: [course('COMP', '250'), course('COMP', '206')] },
+      { title: 'Group A', courses: [course('MATH', '222'), course('MATH', '323')] },
+    ],
+  }
+  const anthMinor = {
+    program_key: 'anthropology_minor',
+    blocks: [
+      { title: '200-level', courses: [wildRow('ANTH', 200, 'Anthropology')] },
+      { title: '300+', courses: [wildRow('ANTH', 300, 'Anthropology')] },
+    ],
+  }
+  const taken = [course('COMP', '250'), course('COMP', '206'), course('MATH', '222'), course('ANTH', '209')]
+
+  it('reports nothing when two programs share no courses', () => {
+    // Regression: each of these was counted twice — once as a course the
+    // student had taken that CS can claim, once as a course CS names — so all
+    // four came back as "overlapping with another program" when no second
+    // program wanted any of them.
+    expect([...overlappingCourseKeys([csMajor, anthMinor], taken)]).toEqual([])
+  })
+
+  it('still reports a course two different programs both name', () => {
+    const statsMinor = {
+      program_key: 'statistics_minor',
+      blocks: [{ title: 'Required', courses: [course('MATH', '222')] }],
+    }
+    expect([...overlappingCourseKeys([csMajor, statsMinor], taken)]).toEqual(['MATH 222'])
+  })
+
+  it('still reports a course one program names and another claims by wildcard', () => {
+    const anthMajor = {
+      program_key: 'anthropology_major',
+      blocks: [{ title: 'Required', courses: [course('ANTH', '209')] }],
+    }
+    // ANTH 209 is named by the major and swept up by the minor's 200-level band.
+    expect([...overlappingCourseKeys([anthMajor, anthMinor], taken)]).toEqual(['ANTH 209'])
+  })
+
+  it('does not report a course a single program both names and claims', () => {
+    expect([...overlappingCourseKeys([csMajor], taken)]).toEqual([])
+  })
+
+  it('ignores programs with no program_key rather than merging them', () => {
+    const anon = { blocks: [{ courses: [course('COMP', '250')] }] }
+    expect([...overlappingCourseKeys([csMajor, anon], taken)]).toEqual([])
   })
 })
