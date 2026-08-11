@@ -165,3 +165,50 @@ describe('overlappingCourseKeys', () => {
     expect([...overlappingCourseKeys([csMajor, anon], taken)]).toEqual([])
   })
 })
+
+describe('open-ended level bands ("or above")', () => {
+  const band = (subject, catalog, title) => wildcardBand({ subject, catalog, title })
+
+  it('reads "300-level ... or above" as open-ended, not a single hundred', () => {
+    // McGill's phrasing for 300/400/500. Reading it as 300–399 silently dropped
+    // every 400- and 500-level course toward the requirement — on a real
+    // account, COMP 421 and COMP 559 landed in Electives instead.
+    const b = band('COMP', '300', 'Any 300-level COMP course or above (excluding COMP 396).')
+    expect(b).toEqual({ subject: 'COMP', min: 300, max: Infinity })
+  })
+
+  it.each([
+    ['Any 300-level or above Geography course', 'GEOG', '300'],
+    ['Any COMP course at 300 level or above (excluding specified projects)', 'COMP', '300'],
+    ['Any MUHL course at 300-level or higher', 'MUHL', '300'],
+    ['Any Psychology course at 300-level or above', 'PSYC', '300'],
+  ])('handles %s', (title, subject, catalog) => {
+    expect(band(subject, catalog, title).max).toBe(Infinity)
+  })
+
+  it('parses "NNN+" phrasing that never mentions "level"', () => {
+    // These rows have a null catalog, so failing to produce a band dropped them
+    // into the legacy any-course-in-this-subject path.
+    expect(band('COMP', null, 'Any COMP course at 300+')).toEqual({ subject: 'COMP', min: 300, max: Infinity })
+    expect(band('MATH', null, 'Any MATH statistics course at 400+')).toEqual({ subject: 'MATH', min: 400, max: Infinity })
+  })
+
+  it('leaves a plain single-hundred band closed', () => {
+    expect(band('ANTH', '200', 'Any 200-level Anthropology course')).toEqual({ subject: 'ANTH', min: 200, max: 299 })
+    expect(band('ANTH', '300', 'Any 300-level Anthropology course')).toEqual({ subject: 'ANTH', min: 300, max: 399 })
+  })
+
+  it('a parseable null-catalog row no longer triggers the legacy catch-all', () => {
+    // Before: "Any MATH course at 300+" produced no band AND had a null
+    // catalog, so the block matched every MATH course the student had.
+    const block = { credits_needed: 6, courses: [{ subject: 'MATH', catalog: null, title: 'Any MATH course at 300+' }] }
+    const taken = [course('MATH', '133'), course('MATH', '323'), course('COMP', '250')]
+    expect(blockWildcardMatches(block, taken)).toEqual([course('MATH', '323')])
+  })
+
+  it('still falls back to the catch-all for a row it cannot interpret', () => {
+    const block = { credits_needed: 6, courses: [{ subject: 'MATH', catalog: null, title: 'Mathematics elective' }] }
+    const taken = [course('MATH', '133'), course('COMP', '250')]
+    expect(blockWildcardMatches(block, taken)).toEqual([course('MATH', '133')])
+  })
+})
