@@ -1240,6 +1240,7 @@ const EN_TRANSLATIONS = {
     'dp.countedTowardFoundation': 'Counted toward your Foundation (U0) year',
     'dp.sharedCoursesTitle': 'Courses claimed by more than one program',
     'dp.sharedCoursesSub': 'A course can only count once. Pick where each of these should go — otherwise we place it in the first program that needs it.',
+    'dp.decisionsNeededHint': 'Courses two programs both want — pick where each should count.',
     'dp.sharedCoursesBadge': '{n} programs',
     'dp.dismiss': 'Dismiss',
     'dp.tabCore': 'Core: {label}',

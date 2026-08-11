@@ -16,7 +16,7 @@ import StudyAbroadView from './StudyAbroadView'
 import AdvisingResourcesView from './AdvisingResourcesView'
 import { readCache, writeCache } from '../../lib/userDataCache'
 import { usersAPI } from '../../lib/api'
-import { matchCourse, wildcardBand, blockWildcardMatches, explicitlyClaimedCourseKeys, programClaimableKeys } from '../../utils/requirementMatch'
+import { matchCourse, wildcardBand, blockWildcardMatches, explicitlyClaimedCourseKeys, programClaimableKeys, overlappingCourseKeys } from '../../utils/requirementMatch'
 import { FOUNDATION_PROGRAM_KEYS, foundationProgramKey, isFoundationStudent } from '../../utils/foundationYear'
 import SectionHeader from '../ui/SectionHeader'
 import './DegreePlanningView.css'
@@ -1062,7 +1062,7 @@ function ProgramSection({ prog, completedCourses, currentCourses, advStanding, o
   )
 }
 
-function MyProgramCard({ profile, completedCourses, currentCourses, onProgressSummaryChange }) {
+function MyProgramCard({ profile, completedCourses, currentCourses, onProgressSummaryChange, onDecisionsNeededChange }) {
   const { t } = useLanguage()
 
   // ── Per-program cache ───────────────────────────────────────
@@ -1440,32 +1440,12 @@ function MyProgramCard({ profile, completedCourses, currentCourses, onProgressSu
     [allProgramDataArray, allUserCourses]
   )
 
-  // overlapKeys: course keys two or more programs would both count.
-  //
-  // This used to consider only requirement rows that name a course outright,
-  // which missed the common case — a course filling a wildcard block ("any
-  // 300-level ANTH course") in both a major and a minor. Those silently
-  // counted twice and the student was never offered a way to place them.
-  const overlapKeys = useMemo(() => {
-    const counts = new Map()
-    const bump = key => counts.set(key, (counts.get(key) || 0) + 1)
-
-    // Courses the student has taken that 2+ programs can claim.
-    claimsByProgram.forEach(({ keys }) => keys.forEach(bump))
-
-    // Plus courses named by 2+ programs but not yet taken, so the conflict is
-    // visible while planning (this was the original behaviour).
-    allProgramDataArray.forEach(prog => {
-      const named = new Set()
-      prog.blocks?.forEach(b => b.courses?.forEach(c => {
-        if (!c.catalog || wildcardBand(c)) return
-        named.add(`${c.subject} ${c.catalog}`.toUpperCase())
-      }))
-      named.forEach(bump)
-    })
-
-    return new Set([...counts.entries()].filter(([, n]) => n > 1).map(([k]) => k))
-  }, [claimsByProgram, allProgramDataArray])
+  // Course keys two or more DIFFERENT programs would both count — see
+  // overlappingCourseKeys() for why "different" is the load-bearing word.
+  const overlapKeys = useMemo(
+    () => overlappingCourseKeys(allProgramDataArray, allUserCourses),
+    [allProgramDataArray, allUserCourses]
+  )
 
   // Where each contested course actually counts. One course, one program.
   //
@@ -1505,6 +1485,36 @@ function MyProgramCard({ profile, completedCourses, currentCourses, onProgressSu
     }
     return out
   }, [claimsByProgram, courseAllocations])
+
+  // How many courses genuinely need the student to decide where they count.
+  // This is the ONLY thing the MyDegree tab badge should surface — it used to
+  // show favourites + completed + current, i.e. a running total of coursework,
+  // which reads as "28 things need your attention" when nothing does.
+  //
+  // A course qualifies only when two different programs both want it AND the
+  // student hasn't already placed it. Foundation claims are excluded: McGill
+  // fixes those, so there is no choice to make.
+  const decisionsNeeded = useMemo(() => {
+    const seen = new Set()
+    let n = 0
+    for (const c of [...completedCourses, ...currentCourses]) {
+      if (!c.subject || !c.catalog) continue
+      const key = `${c.subject} ${c.catalog}`.toUpperCase()
+      if (seen.has(key)) continue
+      seen.add(key)
+      if (!overlapKeys.has(key)) continue
+      const claimants = claimsByProgram.filter(p => p.keys.has(key))
+      if (claimants.length < 2) continue
+      if (claimants.some(p => FOUNDATION_PROGRAM_KEYS.has(p.key))) continue
+      if (courseAllocations[key]) continue      // already decided
+      n += 1
+    }
+    return n
+  }, [completedCourses, currentCourses, overlapKeys, claimsByProgram, courseAllocations])
+
+  useEffect(() => {
+    onDecisionsNeededChange?.(decisionsNeeded)
+  }, [decisionsNeeded, onDecisionsNeededChange])
 
   const calcRingProgress = (prog) => {
     if (!prog) return { pct: 0, earned: 0, total: prog?.total_credits || 36 }
@@ -1934,7 +1944,8 @@ function MyProgramCard({ profile, completedCourses, currentCourses, onProgressSu
 
 // ── Main component ─────────────────────────────────────────────────────────────
 export default function DegreePlanningView({
-  favorites = [],
+  // `favorites` is still passed by DashboardTabContent but no longer read here —
+  // it only ever fed the MyDegree tab badge, which now counts decisions, not coursework.
   completedCourses = [],
   currentCourses = [],
   profile = {},
@@ -1944,6 +1955,8 @@ export default function DegreePlanningView({
 }) {
   const { t } = useLanguage()
   const [subTab, setSubTab] = useState('my_courses')
+  // Lifted out of MyProgramCard so the tab badge can show it. 0 = no badge.
+  const [decisionsNeeded, setDecisionsNeeded] = useState(0)
 
   return (
     <div className="dp-view">
@@ -1956,9 +1969,13 @@ export default function DegreePlanningView({
         >
           <FaGraduationCap className="dp-subtab-icon" />
           <span>{t('dp.myDegree')}</span>
-          {(favorites.length + completedCourses.length + currentCourses.length) > 0 && (
-            <span className="dp-subtab-count">
-              {favorites.length + completedCourses.length + currentCourses.length}
+          {/* Only ever a count of things the student must act on — courses two
+              programs both want, where they still have to pick one. This used
+              to be favourites + completed + current, so a student with 28
+              courses and nothing to decide saw a permanent red "28". */}
+          {decisionsNeeded > 0 && (
+            <span className="dp-subtab-count" title={t('dp.decisionsNeededHint')}>
+              {decisionsNeeded}
             </span>
           )}
         </button>
@@ -2044,6 +2061,7 @@ export default function DegreePlanningView({
                 completedCourses={completedCourses}
                 currentCourses={currentCourses}
                 onProgressSummaryChange={onProgressSummaryChange}
+                onDecisionsNeededChange={setDecisionsNeeded}
               />
             </div>
 

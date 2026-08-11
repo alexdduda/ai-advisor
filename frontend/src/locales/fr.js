@@ -1158,6 +1158,7 @@ const FR_TRANSLATIONS = {
     'dp.countedTowardFoundation': 'Compté pour votre année de fondation (U0)',
     'dp.sharedCoursesTitle': 'Cours revendiqués par plus d\'un programme',
     'dp.sharedCoursesSub': 'Un cours ne peut compter qu\'une seule fois. Choisissez où placer chacun de ces cours, sinon nous l\'attribuons au premier programme qui en a besoin.',
+    'dp.decisionsNeededHint': 'Cours que deux programmes revendiquent — choisissez où chacun doit compter.',
     'dp.sharedCoursesBadge': '{n} programmes',
     'dp.tabFoundationLabel': 'Fondation (U0)',
     'dp.ringFoundation': 'Fondation (U0)',

@@ -1220,6 +1220,7 @@ const ZH_TRANSLATIONS = {
     'dp.countedTowardFoundation': '已计入你的基础年（U0）',
     'dp.sharedCoursesTitle': '被多个专业同时认领的课程',
     'dp.sharedCoursesSub': '一门课只能计入一次。请选择每门课应计入哪个专业，否则我们会将其计入第一个需要它的专业。',
+    'dp.decisionsNeededHint': '两个专业都需要的课程 — 请选择每门课应计入哪个专业。',
     'dp.sharedCoursesBadge': '{n} 个专业',
     'dp.tabFoundationLabel': '基础年（U0）',
     'dp.ringFoundation': '基础年（U0）',
