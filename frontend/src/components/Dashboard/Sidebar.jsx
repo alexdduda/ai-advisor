@@ -10,7 +10,7 @@ import { useTheme, useLanguage } from '../../contexts/PreferencesContext'
 import PrivacyPolicy from '../Legal/PrivacyPolicy'
 import TermsOfService from '../Legal/TOS'
 import AboutUs from '../Legal/AboutUs'
-import logoMark from '../../assets/loading-logo.png'
+import logoMark from '../../assets/logo-mark.png'
 import './Sidebar.css'
 
 const NAV_ITEMS = (t) => [
