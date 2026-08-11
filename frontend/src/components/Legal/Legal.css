@@ -2,12 +2,29 @@
 .legal-overlay {
   position: fixed;
   inset: 0;
+  /* index.html sets viewport-fit=cover, so the page draws *under* iOS system
+     UI — that only works if we pad back out by the safe-area insets. And vh
+     on iOS is the LARGE viewport (height as if the toolbars were retracted),
+     so a vh-sized overlay is taller than what you can actually see and Safari's
+     chrome covers its edges — including the close button. dvh tracks the
+     toolbars as they expand and collapse. Same pattern as MobileLayout.css. */
+  height: 100vh;
+  height: 100dvh;
   background: rgba(0, 0, 0, 0.55);
-  z-index: 2000;
+  /* Modal tier is 9000 (TranscriptUpload, CourseDetailModal, CookieConsent);
+     this sat at 2000, so the cookie banner painted over the bottom ~140px of
+     the policy text and swallowed taps there — you could not read the privacy
+     policy the banner itself links to. Sits above the banner, but below the
+     9999/10000 loading + error screens. Not equal to 9000: a tie would be
+     resolved by DOM order, which is not something to rely on. */
+  z-index: 9100;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+  padding: max(16px, env(safe-area-inset-top))
+           max(16px, env(safe-area-inset-right))
+           max(16px, env(safe-area-inset-bottom))
+           max(16px, env(safe-area-inset-left));
   backdrop-filter: blur(2px);
   animation: legal-fade-in 0.18s ease;
 }
@@ -22,6 +39,9 @@
   width: 100%;
   max-width: 680px;
   max-height: 88vh;
+  /* 100% = the overlay's content box, i.e. already inset by the safe areas, so
+     the modal can never extend under the notch or the home indicator. */
+  max-height: min(88dvh, 100%);
   display: flex;
   flex-direction: column;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
@@ -74,6 +94,12 @@
   color: white;
   font-size: 1rem;
   cursor: pointer;
+  /* 44x44 is the minimum comfortable touch target; this was 34x26. */
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 6px 10px;
   border-radius: 8px;
   transition: background 0.15s;
