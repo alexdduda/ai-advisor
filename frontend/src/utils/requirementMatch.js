@@ -136,6 +136,49 @@ export function programClaimableKeys(prog, userCourses = []) {
 }
 
 /**
+ * Course keys that TWO OR MORE DIFFERENT programs would both count — the only
+ * case where the student actually has to decide where a course goes.
+ *
+ * Counting distinct programs is the whole point. An earlier version kept a
+ * single integer per course and incremented it once from the "programs that can
+ * claim this taken course" pass and again from the "programs that name this
+ * course in a requirement row" pass. Both passes see the SAME program for a
+ * course the student has taken that their own program requires, so the counter
+ * hit 2 and every such course was reported as overlapping. A Computer Science
+ * major with an Anthropology minor — whose requirements share nothing — got an
+ * "overlaps with another program" picker on all ten of their COMP/MATH rows.
+ *
+ * `programs` are the full program objects (needs `program_key` and `blocks`).
+ */
+export function overlappingCourseKeys(programs = [], userCourses = []) {
+  const programsByCourse = new Map()
+  const add = (courseKey, progKey) => {
+    if (!progKey || !courseKey) return
+    let progs = programsByCourse.get(courseKey)
+    if (!progs) { progs = new Set(); programsByCourse.set(courseKey, progs) }
+    progs.add(progKey)
+  }
+
+  for (const prog of programs) {
+    if (!prog) continue
+    // Courses the student has taken that this program could count.
+    for (const k of programClaimableKeys(prog, userCourses)) add(k, prog.program_key)
+    // Plus courses this program names outright, taken or not, so a conflict is
+    // visible while planning.
+    for (const block of prog.blocks || []) {
+      for (const c of block?.courses || []) {
+        if (!c?.catalog || wildcardBand(c)) continue
+        add(keyOf(c), prog.program_key)
+      }
+    }
+  }
+
+  return new Set(
+    [...programsByCourse.entries()].filter(([, progs]) => progs.size > 1).map(([k]) => k)
+  )
+}
+
+/**
  * Return the user courses that satisfy a block's *wildcard* portion —
  * placeholder courses ("Any 200-level X course"), null-catalog entries, or
  * a block-level min_level. Does NOT apply any credit cap or de-dup against
