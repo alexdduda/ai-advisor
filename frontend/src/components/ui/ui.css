@@ -207,6 +207,7 @@
   position: relative;
   width: 100%;
   max-height: min(85vh, 720px);
+  max-height: min(85dvh, 720px);
   display: flex;
   flex-direction: column;
   background: var(--modal-bg);
@@ -297,5 +298,5 @@
 
 @media (max-width: 480px) {
   .ui-modal-overlay { padding: 10px; }
-  .ui-modal { max-height: 92vh; }
+  .ui-modal { max-height: 92vh; max-height: 92dvh; }
 }

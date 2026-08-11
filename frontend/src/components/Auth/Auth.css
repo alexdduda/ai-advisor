@@ -99,9 +99,9 @@
 .auth-logo-mark-img {
   width: 44px;
   height: 44px;
-  object-fit: cover;
-  border-radius: 10px;
-  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  object-fit: contain;
+  /* No border/radius: the mark is transparent now, so a rounded outline would
+     just float around empty space instead of framing the old beige tile. */
 }
 
 .auth-logo-name {

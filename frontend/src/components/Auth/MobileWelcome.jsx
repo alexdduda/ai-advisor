@@ -3,7 +3,7 @@ import { FaChevronRight } from 'react-icons/fa'
 import { useLanguage } from '../../contexts/PreferencesContext'
 import PrivacyPolicy from '../Legal/PrivacyPolicy'
 import TermsOfService from '../Legal/TOS'
-import logoMark from '../../assets/loading-logo.png'
+import logoMark from '../../assets/logo-mark.png'
 import './MobileWelcome.css'
 
 /**

@@ -14,7 +14,7 @@ import AboutUs from '../Legal/AboutUs'
 import { authAPI } from '../../lib/api'
 import useViewport from '../../hooks/useViewport'
 import MobileAuth from './MobileAuth'
-import logoMark from '../../assets/loading-logo.png'
+import logoMark from '../../assets/logo-mark.png'
 import signInPhoto from '../../assets/sign-in.jpg'
 import './Auth.css'
 
