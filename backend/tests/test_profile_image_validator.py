@@ -14,9 +14,14 @@ unbounded data: blob stored straight in the row.
 import pytest
 from pydantic import ValidationError
 
+from api.config import settings
 from api.routes.users import UserUpdate
 
-SUPA = "https://jgkfeyqnpsivbgoiekze.supabase.co"
+# Derived from settings, never hardcoded: CI runs with a dummy
+# SUPABASE_URL (https://test.supabase.co), so a literal project URL here
+# passes locally and fails in CI — which is exactly what happened the first
+# time this file was written.
+SUPA = settings.SUPABASE_URL.rstrip('/')
 
 
 def _set(url):
@@ -46,7 +51,7 @@ class TestRejected:
         # check used `in` (substring), so an attacker-registered domain ending
         # in the project host passed. Now an exact match.
         f"{SUPA}.evil.com/storage/v1/object/public/profile-images/x.svg",
-        "https://notjgkfeyqnpsivbgoiekze.supabase.co/storage/v1/object/public/profile-images/x.png",
+        SUPA.replace('https://', 'https://not') + "/storage/v1/object/public/profile-images/x.png",
         "http://symbolos.ca/storage/profile-images/x.png",         # not https
         "https://symbolos.ca/uploads/x.png",                       # wrong path
         "https://symbolos.ca/storage/club-logos/x.png",            # wrong bucket
