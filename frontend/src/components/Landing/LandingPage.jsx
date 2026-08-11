@@ -22,7 +22,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import { HiChevronDown } from 'react-icons/hi'
 import { FaSun, FaMoon, FaPalette } from 'react-icons/fa'
-import logoMark from '../../assets/loading-logo.png'
+import logoMark from '../../assets/logo-mark.png'
 import mcgillSkyline from '../../assets/landing/mcgill-skyline.jpg'
 import PrivacyPolicy from '../Legal/PrivacyPolicy'
 import TermsOfService from '../Legal/TOS'

@@ -475,7 +475,13 @@
 .ma-legal-link {
   border: none;
   background: none;
-  padding: 6px 4px;
+  /* 44px minimum touch target — these were 29px tall, and they sit at the very
+     bottom of the screen where iOS Safari's toolbar crowds them. Matches
+     .landing-footer__legal-btn. */
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 8px;
   font-family: inherit;
   font-size: 0.75rem;
   color: var(--text-tertiary, #9ca3af);

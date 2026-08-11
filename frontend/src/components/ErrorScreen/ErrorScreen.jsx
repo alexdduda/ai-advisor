@@ -19,7 +19,7 @@ import {
   FaExclamationTriangle, FaSync, FaHome, FaSignInAlt,
   FaSignOutAlt, FaEnvelope, FaInfoCircle,
 } from 'react-icons/fa'
-import logoMark from '../../assets/loading-logo.png'
+import logoMark from '../../assets/logo-mark.png'
 import './ErrorScreen.css'
 
 const SUPPORT_EMAIL = 'symbolosadvsry@gmail.com'

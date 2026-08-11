@@ -22,6 +22,7 @@
   width: 100%;
   max-width: 600px;
   max-height: 88vh;
+  max-height: 88dvh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -747,7 +748,7 @@
 /* ── Responsive ──────────────────────────────────────── */
 @media (max-width: 640px) {
   .tu-overlay { padding: 0; align-items: flex-end; }
-  .tu-modal { max-width: 100%; border-radius: 18px 18px 0 0; max-height: 90vh; }
+  .tu-modal { max-width: 100%; border-radius: 18px 18px 0 0; max-height: 90vh; max-height: 90dvh; }
   .tu-info-grid { grid-template-columns: 1fr 1fr; }
   .tu-done-stats { gap: 0.5rem; }
   .tu-done-stat { min-width: 75px; }
