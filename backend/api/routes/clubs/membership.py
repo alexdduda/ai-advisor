@@ -91,9 +91,23 @@ async def get_user_clubs(user_id: str, req: Request, lang: Optional[str] = Query
     """Return all clubs a user has joined."""
     require_self(current_user_id, user_id)
     try:
+        # Explicit column list rather than clubs(*): this runs on the
+        # user-scoped (authenticated) client, and `*` would return
+        # contact_email / executive_emails / created_by for every club the
+        # student has merely joined — the same PII strip_club_pii removes from
+        # the public listing. Mirrors the column grants in
+        # migrations/2026_08_10_clubs_column_grants.sql; keep the two in sync.
         result = (
             user_sb.table("user_clubs")
-            .select("*, clubs(*)")
+            .select(
+                "*, clubs("
+                "id, name, category, description, description_fr, description_zh, "
+                "meeting_schedule, meeting_schedule_fr, meeting_schedule_zh, "
+                "join_instructions, join_instructions_fr, join_instructions_zh, "
+                "location, logo_url, website_url, application_url, tags, "
+                "member_count, is_private, is_verified, created_at"
+                ")"
+            )
             .eq("user_id", user_id)
             .execute()
         )
