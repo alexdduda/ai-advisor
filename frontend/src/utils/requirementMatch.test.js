@@ -174,7 +174,9 @@ describe('open-ended level bands ("or above")', () => {
     // every 400- and 500-level course toward the requirement — on a real
     // account, COMP 421 and COMP 559 landed in Electives instead.
     const b = band('COMP', '300', 'Any 300-level COMP course or above (excluding COMP 396).')
-    expect(b).toEqual({ subject: 'COMP', min: 300, max: Infinity })
+    expect(b.subject).toBe('COMP')
+    expect(b.min).toBe(300)
+    expect(b.max).toBe(Infinity)
   })
 
   it.each([
@@ -210,5 +212,42 @@ describe('open-ended level bands ("or above")', () => {
     const block = { credits_needed: 6, courses: [{ subject: 'MATH', catalog: null, title: 'Mathematics elective' }] }
     const taken = [course('MATH', '133'), course('COMP', '250')]
     expect(blockWildcardMatches(block, taken)).toEqual([course('MATH', '133')])
+  })
+})
+
+describe('band exclusions ("excluding COMP 396")', () => {
+  const CS_ABOVE = 'Any 300-level COMP course or above (excluding COMP 396).'
+
+  it('parses the excluded code off the title', () => {
+    const b = wildcardBand({ subject: 'COMP', catalog: '300', title: CS_ABOVE })
+    expect([...b.exclude]).toEqual(['COMP 396'])
+  })
+
+  it('keeps the excluded course out of the block', () => {
+    const block = { credits_needed: 6, courses: [{ subject: 'COMP', catalog: '300', title: CS_ABOVE }] }
+    const taken = [course('COMP', '396'), course('COMP', '421'), course('COMP', '250')]
+    // 396 is excluded by name; 250 is below the band.
+    expect(blockWildcardMatches(block, taken)).toEqual([course('COMP', '421')])
+  })
+
+  it('excludes by name through matchCourse too', () => {
+    const req = { subject: 'COMP', catalog: '300', title: CS_ABOVE }
+    expect(matchCourse(req, [course('COMP', '396')])).toBeNull()
+    expect(matchCourse(req, [course('COMP', '396'), course('COMP', '400')])).toEqual(course('COMP', '400'))
+  })
+
+  it('excludes nothing when the carve-out names a category, not codes', () => {
+    // "specified projects and independent studies" is not resolvable from the
+    // title — leaving those courses in is the honest behaviour.
+    const b = wildcardBand({
+      subject: 'COMP', catalog: '300',
+      title: 'Any COMP course at 300 level or above (excluding specified projects and independent studies)',
+    })
+    expect(b.exclude).toBeUndefined()
+    expect(b.max).toBe(Infinity)
+  })
+
+  it('leaves titles with no carve-out alone', () => {
+    expect(wildcardBand({ subject: 'ANTH', catalog: '200', title: 'Any 200-level Anthropology course' }).exclude).toBeUndefined()
   })
 })
