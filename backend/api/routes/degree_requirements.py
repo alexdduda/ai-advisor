@@ -298,14 +298,39 @@ def seed_requirements(
             if isinstance(res, dict) and res.get("errors")
         }
         if errors:
-            logger.warning(f"seed_requirements completed with errors: {errors}")
+            logger.error(f"seed_requirements completed with errors: {errors}")
 
         return {"success": True, "seeded": results, **({"errors": errors} if errors else {})}
 
     try:
-        return with_retry("seed_requirements", _run)
+        result = with_retry("seed_requirements", _run)
     except HTTPException:
         raise
     except Exception:
         logger.error(f"seed_requirements error:\n{traceback.format_exc()}")
         raise HTTPException(status_code=500, detail="An internal error occurred. Please try again.")
+
+    # A partial seed is a data-loss event, not a warning. Each seed fn deletes a
+    # program's blocks before re-inserting them, so a per-block failure leaves
+    # that block EMPTY. This used to return 200 with the errors tucked into the
+    # body, and a real failure slipped through unnoticed: the AES seeder raised
+    # KeyError on courses with no 'subject', silently zeroing both of
+    # agec_bsc_agenvsc's blocks and finishing 4 course rows short while still
+    # reporting success.
+    #
+    # Raised out here, not inside _run, so with_retry can never see it — a retry
+    # would re-run the entire seed for every faculty.
+    if result.get("errors"):
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "code": "seed_incomplete",
+                "message": (
+                    "Seeding finished with errors — some requirement blocks may be "
+                    "empty. Fix the underlying error and re-run."
+                ),
+                "seeded": result.get("seeded"),
+                "errors": result["errors"],
+            },
+        )
+    return result
