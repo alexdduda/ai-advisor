@@ -107,7 +107,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'required',
         "credits_needed": 22,
         "notes": 'Required for out-of-province students as part of the 32-credit Foundation Program. Applicants who can demonstrate mastery through auditions and placement tests may be exempt from individual courses and proceed to more advanced courses.',
-        "sort_order": 1,
+        "sort_order": 0,
         "courses": [
           {
             "subject": 'MUHL',
@@ -187,7 +187,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'choose_credits',
         "credits_needed": 4,
         "notes": 'Part of the 32-credit Foundation Program. 4 credits of Large Ensemble selected in consultation with the Program Adviser. Specific courses not listed on this page.',
-        "sort_order": 2,
+        "sort_order": 1,
       },
       {
         "block_key": 'performance_voice_bmus_foundation_non_music_electives',
@@ -195,7 +195,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'choose_credits',
         "credits_needed": 6,
         "notes": 'Part of the 32-credit Foundation Program. 6 credits of Non-Music Electives selected in consultation with the Program Adviser. Specific courses not listed on this page.',
-        "sort_order": 3,
+        "sort_order": 2,
       },
       {
         "block_key": 'performance_voice_bmus_required_performance',
@@ -203,7 +203,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'required',
         "credits_needed": 20,
         "notes": 'Minimum grade of B- required in all practical instruction/exams. Credits: MUIN 280 and 281 are 2.5 each; MUIN 380 and 381 are 2.5 each; MUIN 480 and 481 are 2 each; MUIN 282, 382 are 1 each; MUIN 482 is 2 credits.',
-        "sort_order": 4,
+        "sort_order": 3,
         "courses": [
           {
             "subject": 'MUIN',
@@ -276,7 +276,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'required',
         "credits_needed": 9,
         "notes": "Prior to or concurrent with diction courses, the Voice Major must furnish evidence of having completed English Second Language courses, ITAL 205D1/D2 (Italian for Beginners), GERM 202 (German Language, Beginners'), or their equivalent. This language requirement may be fulfilled by appropriate high school or CEGEP courses, or as part of the non-music and/or free elective requirements or by extra university courses.",
-        "sort_order": 5,
+        "sort_order": 4,
         "courses": [
           {
             "subject": 'MUPG',
@@ -322,7 +322,7 @@ MUSIC_PROGRAMS = [
         "title": 'Required Courses – Theory (9 credits)',
         "block_type": 'required',
         "credits_needed": 9,
-        "sort_order": 6,
+        "sort_order": 5,
         "courses": [
           {
             "subject": 'MUTH',
@@ -352,7 +352,7 @@ MUSIC_PROGRAMS = [
         "title": 'Required Courses – Musicianship (4 credits)',
         "block_type": 'required',
         "credits_needed": 4,
-        "sort_order": 7,
+        "sort_order": 6,
         "courses": [
           {
             "subject": 'MUSP',
@@ -375,7 +375,7 @@ MUSIC_PROGRAMS = [
         "title": 'Required Courses – Music History/Literature (3 credits)',
         "block_type": 'required',
         "credits_needed": 3,
-        "sort_order": 8,
+        "sort_order": 7,
         "courses": [
           {
             "subject": 'MUHL',
@@ -391,7 +391,7 @@ MUSIC_PROGRAMS = [
         "title": 'Required Courses – Professional Development (1 credit)',
         "block_type": 'required',
         "credits_needed": 1,
-        "sort_order": 9,
+        "sort_order": 8,
         "courses": [
           {
             "subject": 'MUPD',
@@ -408,7 +408,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'choose_credits',
         "credits_needed": 10,
         "notes": 'All ensemble courses under MUEN may be taken in multiple terms. Page was truncated; list below is incomplete. Advisors should verify the full list of eligible courses from the official catalogue.',
-        "sort_order": 10,
+        "sort_order": 9,
         "courses": [
           {
             "subject": 'MUEN',
@@ -449,7 +449,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'choose_credits',
         "credits_needed": 17,
         "notes": 'Page was truncated before the remaining complementary course sub-sections (totalling approximately 17 credits of the 27-credit complementary block) were displayed. Advisors must consult the official catalogue for the full list.',
-        "sort_order": 11,
+        "sort_order": 10,
       },
     ],
   },
@@ -468,7 +468,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'required',
         "credits_needed": 22,
         "notes": 'Students who can demonstrate mastery through auditions, placement tests, and equivalencies may be exempt and proceed to more advanced courses. Students admitted with keyboard as principal instrument are exempt from MUSP 170 and MUSP 171.',
-        "sort_order": 1,
+        "sort_order": 0,
         "courses": [
           {
             "subject": 'MUHL',
@@ -550,7 +550,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'required',
         "credits_needed": 2,
         "notes": '2 credits of Assigned Small Ensemble as part of the Foundation Program. Specific courses assigned in consultation with Program Adviser.',
-        "sort_order": 2,
+        "sort_order": 1,
       },
       {
         "block_key": 'performance_piano_bmus_foundation_large_ensemble',
@@ -558,7 +558,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'required',
         "credits_needed": 4,
         "notes": '4 credits of Large Ensemble as part of the Foundation Program. Specific courses assigned in consultation with Program Adviser.',
-        "sort_order": 3,
+        "sort_order": 2,
       },
       {
         "block_key": 'performance_piano_bmus_foundation_non_music_electives',
@@ -566,7 +566,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'required',
         "credits_needed": 6,
         "notes": '6 credits of Non-Music Electives as part of the Foundation Program, selected in consultation with the Program Adviser.',
-        "sort_order": 4,
+        "sort_order": 3,
       },
       {
         "block_key": 'performance_piano_bmus_required_performance',
@@ -574,7 +574,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'required',
         "credits_needed": 31,
         "notes": 'Credit sum of listed courses: 2.5+2.5+1+0+0+2.5+2.5+1+0+2+2+2+2+2+2+2+2 = 28.5cr plus 0-credit courses. The catalogue states 45 credits total for all required courses combined across all sub-sections.',
-        "sort_order": 5,
+        "sort_order": 4,
         "courses": [
           {
             "subject": 'MUIN',
@@ -710,7 +710,7 @@ MUSIC_PROGRAMS = [
         "title": 'Required Courses – Theory',
         "block_type": 'required',
         "credits_needed": 9,
-        "sort_order": 6,
+        "sort_order": 5,
         "courses": [
           {
             "subject": 'MUTH',
@@ -740,7 +740,7 @@ MUSIC_PROGRAMS = [
         "title": 'Required Courses – Musicianship',
         "block_type": 'required',
         "credits_needed": 4,
-        "sort_order": 7,
+        "sort_order": 6,
         "courses": [
           {
             "subject": 'MUSP',
@@ -763,7 +763,7 @@ MUSIC_PROGRAMS = [
         "title": 'Required Courses – Music History',
         "block_type": 'required',
         "credits_needed": 3,
-        "sort_order": 8,
+        "sort_order": 7,
         "courses": [
           {
             "subject": 'MUHL',
@@ -779,7 +779,7 @@ MUSIC_PROGRAMS = [
         "title": 'Required Courses – Professional Development',
         "block_type": 'required',
         "credits_needed": 1,
-        "sort_order": 9,
+        "sort_order": 8,
         "courses": [
           {
             "subject": 'MUPD',
@@ -796,7 +796,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'choose_credits',
         "credits_needed": 8,
         "notes": 'Large Ensemble during the first four terms (2 credits x 4 semesters). All MUEN ensembles may be taken in multiple terms. List is incomplete due to page truncation — only partial MUEN course list was captured.',
-        "sort_order": 10,
+        "sort_order": 9,
         "courses": [
           {
             "subject": 'MUEN',
@@ -845,7 +845,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'required',
         "credits_needed": 22,
         "notes": 'For out-of-province students. Applicants who demonstrate mastery through auditions and placement tests may be exempt from individual courses and proceed to more advanced courses.',
-        "sort_order": 1,
+        "sort_order": 0,
         "courses": [
           {
             "subject": 'MUHL',
@@ -925,7 +925,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'choose_credits',
         "credits_needed": 2,
         "notes": '2 credits of Assigned Small Ensemble as part of Foundation requirement for out-of-province students, selected in consultation with the Program Adviser.',
-        "sort_order": 2,
+        "sort_order": 1,
       },
       {
         "block_key": 'performance_orchestral_bmus_foundation_large_ensemble',
@@ -933,7 +933,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'choose_credits',
         "credits_needed": 4,
         "notes": '4 credits of Large Ensemble as part of Foundation requirement for out-of-province students, selected in consultation with the Program Adviser.',
-        "sort_order": 3,
+        "sort_order": 2,
       },
       {
         "block_key": 'performance_orchestral_bmus_foundation_non_music_electives',
@@ -941,7 +941,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'choose_credits',
         "credits_needed": 6,
         "notes": '6 credits of Non-Music Electives as part of Foundation requirement for out-of-province students, selected in consultation with the Program Adviser.',
-        "sort_order": 4,
+        "sort_order": 3,
       },
       {
         "block_key": 'performance_orchestral_bmus_required_performance',
@@ -949,7 +949,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'required',
         "credits_needed": 20,
         "notes": 'Minimum grade of B- required in all practical instruction/exams.',
-        "sort_order": 5,
+        "sort_order": 4,
         "courses": [
           {
             "subject": 'MUIN',
@@ -1021,7 +1021,7 @@ MUSIC_PROGRAMS = [
         "title": 'Required Courses – Theory (9 credits)',
         "block_type": 'required',
         "credits_needed": 9,
-        "sort_order": 6,
+        "sort_order": 5,
         "courses": [
           {
             "subject": 'MUTH',
@@ -1051,7 +1051,7 @@ MUSIC_PROGRAMS = [
         "title": 'Required Courses – Musicianship (4 credits)',
         "block_type": 'required',
         "credits_needed": 4,
-        "sort_order": 7,
+        "sort_order": 6,
         "courses": [
           {
             "subject": 'MUSP',
@@ -1074,7 +1074,7 @@ MUSIC_PROGRAMS = [
         "title": 'Required Courses – Music History (3 credits)',
         "block_type": 'required',
         "credits_needed": 3,
-        "sort_order": 8,
+        "sort_order": 7,
         "courses": [
           {
             "subject": 'MUHL',
@@ -1090,7 +1090,7 @@ MUSIC_PROGRAMS = [
         "title": 'Required Courses – Professional Development (1 credit)',
         "block_type": 'required',
         "credits_needed": 1,
-        "sort_order": 9,
+        "sort_order": 8,
         "courses": [
           {
             "subject": 'MUPD',
@@ -1107,7 +1107,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'choose_credits',
         "credits_needed": 12,
         "notes": '2 credits per term, as assigned by audition. All ensemble courses under MUEN may be taken in multiple terms. Violin, viola, and cello majors must complete two terms of MUEN 565 String Quartet Seminar.',
-        "sort_order": 10,
+        "sort_order": 9,
         "courses": [
           {
             "subject": 'MUEN',
@@ -1187,7 +1187,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'choose_credits',
         "credits_needed": 4,
         "notes": '1 credit per term, as assigned by audition. All ensemble courses under MUEN may be taken in multiple terms. The full list of eligible small ensemble courses was truncated in the catalogue page; only MUEN 540 was partially visible.',
-        "sort_order": 11,
+        "sort_order": 10,
         "courses": [
           {
             "subject": 'MUEN',
@@ -1204,7 +1204,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'choose_credits',
         "credits_needed": 17,
         "notes": 'The catalogue page was truncated and did not display the remaining 17 credits of complementary requirements (33 total complementary credits minus 12 large ensemble minus 4 small ensemble). These courses could not be extracted. Adviser should consult the full catalogue page.',
-        "sort_order": 12,
+        "sort_order": 11,
       },
     ],
   },
@@ -1223,7 +1223,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'required',
         "credits_needed": 22,
         "notes": 'Students who can demonstrate through auditions, placement tests, or equivalencies that they have mastered the material in any of the courses listed below will be exempt and may proceed to more advanced courses. Incoming jazz guitarists and pianists are automatically exempt from MUJZ 170 and MUJZ 171.',
-        "sort_order": 1,
+        "sort_order": 0,
         "courses": [
           {
             "subject": 'MUIN',
@@ -1305,7 +1305,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'required',
         "credits_needed": 2,
         "notes": '2 credits of MUEN 570 Jazz Combo taken in the Foundation Program (2 semesters).',
-        "sort_order": 2,
+        "sort_order": 1,
         "courses": [
           {
             "subject": 'MUEN',
@@ -1323,7 +1323,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'choose_credits',
         "credits_needed": 4,
         "notes": '4 credits of Large Ensemble. Rhythm section players (piano, guitar, bass, drums, vibraphone) may substitute these 4 credits with free electives. Specific large ensemble courses are not listed on the catalogue page.',
-        "sort_order": 3,
+        "sort_order": 2,
       },
       {
         "block_key": 'performance_jazz_bmus_foundation_nonmusic_electives',
@@ -1331,7 +1331,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'choose_credits',
         "credits_needed": 6,
         "notes": '6 credits of Non-Music Electives. Specific courses are not listed on the catalogue page.',
-        "sort_order": 4,
+        "sort_order": 3,
       },
       {
         "block_key": 'performance_jazz_bmus_required_performance',
@@ -1339,7 +1339,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'required',
         "credits_needed": 20,
         "notes": 'Part of the 53-credit Required Courses block. Practical lessons and performance examinations.',
-        "sort_order": 5,
+        "sort_order": 4,
         "courses": [
           {
             "subject": 'MUIN',
@@ -1412,7 +1412,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'required',
         "credits_needed": 4,
         "notes": 'MUEN 570 Jazz Combo taken in four semesters for 4 credits (in addition to the 2 credits taken in the Foundation Program).',
-        "sort_order": 6,
+        "sort_order": 5,
         "courses": [
           {
             "subject": 'MUEN',
@@ -1430,14 +1430,14 @@ MUSIC_PROGRAMS = [
         "block_type": 'multi_group',
         "credits_needed": 12,
         "notes": 'Students choose either the Instrumental Majors stream or the Vocal Majors stream.',
-        "sort_order": 7,
+        "sort_order": 6,
       },
       {
         "block_key": 'performance_jazz_bmus_required_improvisation_instrumental',
         "title": 'Jazz Improvisation – Instrumental Majors',
         "block_type": 'group',
         "group_name": 'Instrumental Majors',
-        "sort_order": 8,
+        "sort_order": 7,
         "courses": [
           {
             "subject": 'MUJZ',
@@ -1478,7 +1478,7 @@ MUSIC_PROGRAMS = [
         "title": 'Jazz Improvisation – Vocal Majors',
         "block_type": 'group',
         "group_name": 'Vocal Majors',
-        "sort_order": 9,
+        "sort_order": 8,
         "courses": [
           {
             "subject": 'MUJZ',
@@ -1520,7 +1520,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'required',
         "credits_needed": 12,
         "notes": 'Part of the 53-credit Required Courses block.',
-        "sort_order": 10,
+        "sort_order": 9,
         "courses": [
           {
             "subject": 'MUJZ',
@@ -1558,7 +1558,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'required',
         "credits_needed": 6,
         "notes": 'Part of the 53-credit Required Courses block. MUJZ 493 description was truncated in the catalogue page but the course is clearly listed.',
-        "sort_order": 11,
+        "sort_order": 10,
         "courses": [
           {
             "subject": 'MUHL',
@@ -1594,7 +1594,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'required',
         "constraint_notes": 'Organ and guitar principals are automatically exempt from MUSP 170 and MUSP 171 keyboard proficiency.',
         "notes": 'Organ and guitar principals are automatically exempt from MUSP 170 and MUSP 171 keyboard proficiency.',
-        "sort_order": 1,
+        "sort_order": 0,
         "courses": [
           {
             "subject": 'MUHL',
@@ -1773,7 +1773,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'required',
         "constraint_notes": 'Private organ or guitar lessons Years 3–4 plus three required jury examinations.',
         "notes": 'Private organ or guitar lessons Years 3–4 plus three required jury examinations.',
-        "sort_order": 2,
+        "sort_order": 1,
         "courses": [
           {
             "subject": 'MUIN',
@@ -1846,7 +1846,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'required',
         "constraint_notes": 'Theory and Analysis 3–5 and Musicianship Training 3–4 are required in addition to the shared BMus core.',
         "notes": 'Theory and Analysis 3–5 and Musicianship Training 3–4 are required in addition to the shared BMus core.',
-        "sort_order": 3,
+        "sort_order": 2,
         "courses": [
           {
             "subject": 'MUTH',
@@ -1911,7 +1911,7 @@ MUSIC_PROGRAMS = [
         "credits_needed": 8,
         "constraint_notes": '8 credits of ensemble courses. Small ensemble (2 cr) and large ensemble (4 cr) required in Years 1–2; additional chamber credits in Years 3–4.',
         "notes": '8 credits of ensemble courses. Small ensemble (2 cr) and large ensemble (4 cr) required in Years 1–2; additional chamber credits in Years 3–4.',
-        "sort_order": 4,
+        "sort_order": 3,
         "courses": [
           {
             "subject": 'MUEN',
@@ -1968,7 +1968,7 @@ MUSIC_PROGRAMS = [
         "credits_needed": 6,
         "constraint_notes": '6 credits from MUHL or MUPP at 300-level or above, selected in consultation with adviser.',
         "notes": '6 credits from MUHL or MUPP at 300-level or above, selected in consultation with adviser.',
-        "sort_order": 5,
+        "sort_order": 4,
         "courses": [
           {
             "subject": 'MUHL',
@@ -2036,7 +2036,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'required',
         "credits_needed": 22,
         "notes": 'Applicants who can demonstrate through auditions and placement tests that they have mastered the material in any of the courses below will be exempt from them and may proceed to more advanced courses.',
-        "sort_order": 1,
+        "sort_order": 0,
         "courses": [
           {
             "subject": 'MUHL',
@@ -2116,7 +2116,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'choose_credits',
         "credits_needed": 2,
         "notes": '2 credits of Assigned Small Ensemble as part of the Foundation Program. Specific courses assigned by the program; full list not provided in catalogue page.',
-        "sort_order": 2,
+        "sort_order": 1,
       },
       {
         "block_key": 'performance_early_music_bmus_foundation_large_ensemble',
@@ -2124,7 +2124,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'choose_credits',
         "credits_needed": 4,
         "notes": '4 credits of Large Ensemble as part of the Foundation Program. Specific courses assigned by the program; full list not provided in catalogue page.',
-        "sort_order": 3,
+        "sort_order": 2,
       },
       {
         "block_key": 'performance_early_music_bmus_foundation_nonmusic_electives',
@@ -2132,7 +2132,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'choose_credits',
         "credits_needed": 6,
         "notes": '6 credits of Non-Music Electives as part of the Foundation Program. Selected in consultation with the Program Adviser.',
-        "sort_order": 4,
+        "sort_order": 3,
       },
     ],
   },
@@ -2151,7 +2151,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'required',
         "credits_needed": 34,
         "notes": '34 credits selected in consultation with the Program Adviser: 22 credits of Prerequisite Courses, 2 credits of Assigned Small Ensemble, 4 credits of Large Ensemble, 6 credits of Non-Music Electives. Students who can demonstrate through auditions and placement tests that they have mastered the material in any prerequisite courses will be exempt and may proceed to more advanced courses.',
-        "sort_order": 1,
+        "sort_order": 0,
         "courses": [
           {
             "subject": 'MUHL',
@@ -2231,7 +2231,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'required',
         "credits_needed": 24,
         "notes": 'Practical lessons and examinations across Years 2–4. Continuation requires a minimum grade of B- in practical instruction/exams and ensembles.',
-        "sort_order": 2,
+        "sort_order": 1,
         "courses": [
           {
             "subject": 'MUIN',
@@ -2320,7 +2320,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'required',
         "credits_needed": 9,
         "notes": 'Prior to, or concurrent with registration in the corresponding Diction courses, the student must furnish evidence of having completed English Second Language courses, ITAL 205D1/D2, GERM 202, or their equivalent. This language requirement may be fulfilled by appropriate high school or CEGEP courses, or as part of the non-music and/or free elective requirements, or by extra university courses.',
-        "sort_order": 3,
+        "sort_order": 2,
         "courses": [
           {
             "subject": 'MUPG',
@@ -2364,7 +2364,7 @@ MUSIC_PROGRAMS = [
         "title": 'Required Courses — Theory',
         "block_type": 'required',
         "credits_needed": 12,
-        "sort_order": 4,
+        "sort_order": 3,
         "courses": [
           {
             "subject": 'MUTH',
@@ -2401,7 +2401,7 @@ MUSIC_PROGRAMS = [
         "title": 'Required Courses — Musicianship',
         "block_type": 'required',
         "credits_needed": 4,
-        "sort_order": 5,
+        "sort_order": 4,
         "courses": [
           {
             "subject": 'MUSP',
@@ -2424,7 +2424,7 @@ MUSIC_PROGRAMS = [
         "title": 'Required Courses — Music History/Literature/Performance Practice',
         "block_type": 'required',
         "credits_needed": 6,
-        "sort_order": 6,
+        "sort_order": 5,
         "courses": [
           {
             "subject": 'MUHL',
@@ -2447,7 +2447,7 @@ MUSIC_PROGRAMS = [
         "title": 'Required Courses — Professional Development',
         "block_type": 'required',
         "credits_needed": 1,
-        "sort_order": 7,
+        "sort_order": 6,
         "courses": [
           {
             "subject": 'MUPD',
@@ -2464,7 +2464,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'choose_credits',
         "credits_needed": 10,
         "notes": 'Page truncated; only one course (MUEN 454) was visible. Full list of eligible ensemble and complementary performance courses is incomplete. All ensemble courses under MUEN may be taken in multiple terms.',
-        "sort_order": 8,
+        "sort_order": 7,
         "courses": [
           {
             "subject": 'MUEN',
@@ -2492,7 +2492,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'required',
         "credits_needed": 22,
         "notes": 'Students who can demonstrate through auditions, placement tests or equivalencies that they have mastered the material in any of the courses below will be exempt from them and may proceed to more advanced courses.',
-        "sort_order": 1,
+        "sort_order": 0,
         "courses": [
           {
             "subject": 'MUHL',
@@ -2572,7 +2572,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'choose_credits',
         "credits_needed": 4,
         "notes": '4 credits of Large Ensemble, selected in consultation with the Program Adviser. Specific courses not listed on catalogue page.',
-        "sort_order": 2,
+        "sort_order": 1,
       },
       {
         "block_key": 'composition_major_bmus_foundation_non_music_electives',
@@ -2580,7 +2580,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'choose_credits',
         "credits_needed": 6,
         "notes": '6 credits of Non-Music Electives, selected in consultation with the Program Adviser. Specific courses not listed on catalogue page.',
-        "sort_order": 3,
+        "sort_order": 2,
       },
       {
         "block_key": 'composition_major_bmus_required_composition',
@@ -2588,7 +2588,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'required',
         "credits_needed": 39,
         "notes": 'Part of the 61-credit Required Courses block. Minimum grade of B- required in courses given by the Composition Area.',
-        "sort_order": 4,
+        "sort_order": 3,
         "courses": [
           {
             "subject": 'MUCO',
@@ -2709,7 +2709,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'required',
         "credits_needed": 6,
         "notes": 'Part of the 61-credit Required Courses block.',
-        "sort_order": 5,
+        "sort_order": 4,
         "courses": [
           {
             "subject": 'MUTH',
@@ -2732,7 +2732,7 @@ MUSIC_PROGRAMS = [
         "title": 'Required Courses – Musicianship (partial – page truncated)',
         "block_type": 'required',
         "notes": 'Part of the 61-credit Required Courses block. Page was truncated; MUSP 346 entry is incomplete and additional courses may follow. Credits_needed set to null due to incomplete data.',
-        "sort_order": 6,
+        "sort_order": 5,
         "courses": [
           {
             "subject": 'MUSP',
@@ -2775,7 +2775,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'required',
         "credits_needed": 22,
         "notes": 'Students may be exempted if they demonstrate mastery through auditions, placement tests, or equivalencies.',
-        "sort_order": 1,
+        "sort_order": 0,
         "courses": [
           {
             "subject": 'MUHL',
@@ -2855,7 +2855,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'choose_credits',
         "credits_needed": 4,
         "notes": '4 credits of Large Ensemble courses (not specified in catalogue; student selects with adviser).',
-        "sort_order": 2,
+        "sort_order": 1,
       },
       {
         "block_key": 'music_history_major_bmus_foundation_electives',
@@ -2863,14 +2863,14 @@ MUSIC_PROGRAMS = [
         "block_type": 'choose_credits',
         "credits_needed": 6,
         "notes": '6 credits of Non-Music Electives (any course outside Music; student selects with adviser).',
-        "sort_order": 3,
+        "sort_order": 2,
       },
       {
         "block_key": 'music_history_major_bmus_required_history',
         "title": 'Required Courses – History (3 credits)',
         "block_type": 'required',
         "credits_needed": 3,
-        "sort_order": 4,
+        "sort_order": 3,
         "courses": [
           {
             "subject": 'MUHL',
@@ -2886,7 +2886,7 @@ MUSIC_PROGRAMS = [
         "title": 'Required Courses – Theory (9 credits)',
         "block_type": 'required',
         "credits_needed": 9,
-        "sort_order": 5,
+        "sort_order": 4,
         "courses": [
           {
             "subject": 'MUTH',
@@ -2916,7 +2916,7 @@ MUSIC_PROGRAMS = [
         "title": 'Required Courses – Musicianship (4 credits)',
         "block_type": 'required',
         "credits_needed": 4,
-        "sort_order": 6,
+        "sort_order": 5,
         "courses": [
           {
             "subject": 'MUSP',
@@ -2939,7 +2939,7 @@ MUSIC_PROGRAMS = [
         "title": 'Required Courses – Performance (6 credits)',
         "block_type": 'required',
         "credits_needed": 6,
-        "sort_order": 7,
+        "sort_order": 6,
         "courses": [
           {
             "subject": 'MUIN',
@@ -2969,7 +2969,7 @@ MUSIC_PROGRAMS = [
         "title": 'Required Courses – Music Professional Development (1 credit)',
         "block_type": 'required',
         "credits_needed": 1,
-        "sort_order": 8,
+        "sort_order": 7,
         "courses": [
           {
             "subject": 'MUPD',
@@ -2986,7 +2986,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'multi_group',
         "credits_needed": 27,
         "notes": '27 credits total from Group I, Group II, and Group III, with a minimum of 6 credits from each group.',
-        "sort_order": 9,
+        "sort_order": 8,
       },
       {
         "block_key": 'music_history_major_bmus_complementary_history_group_i',
@@ -2995,7 +2995,7 @@ MUSIC_PROGRAMS = [
         "group_name": 'Group I',
         "credits_needed": 6,
         "notes": 'Minimum 6 credits from this group.',
-        "sort_order": 10,
+        "sort_order": 9,
         "courses": [
           {
             "subject": 'MUHL',
@@ -3069,7 +3069,7 @@ MUSIC_PROGRAMS = [
         "group_name": 'Group II',
         "credits_needed": 6,
         "notes": 'Minimum 6 credits from this group.',
-        "sort_order": 11,
+        "sort_order": 10,
         "courses": [
           {
             "subject": 'MUHL',
@@ -3150,7 +3150,7 @@ MUSIC_PROGRAMS = [
         "group_name": 'Group III',
         "credits_needed": 6,
         "notes": 'Minimum 6 credits from this group.',
-        "sort_order": 12,
+        "sort_order": 11,
         "courses": [
           {
             "subject": 'MUHL',
@@ -3216,7 +3216,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'choose_credits',
         "credits_needed": 3,
         "notes": '3 credits from courses with MUTH prefix at 200 or 300 level.',
-        "sort_order": 13,
+        "sort_order": 12,
       },
       {
         "block_key": 'music_history_major_bmus_complementary_musicianship',
@@ -3224,7 +3224,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'choose_credits',
         "credits_needed": 2,
         "notes": '2 credits from listed musicianship courses.',
-        "sort_order": 14,
+        "sort_order": 13,
         "courses": [
           {
             "subject": 'MUSP',
@@ -3240,7 +3240,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'choose_credits',
         "credits_needed": 33,
         "notes": '33 credits of electives (any courses in consultation with Programme Adviser). These complete the 124-credit total: 32 (Foundation) + 23 (Required) + 36 (Complementary) + 33 (Electives) = 124 credits.',
-        "sort_order": 15,
+        "sort_order": 14,
       },
     ],
   },
@@ -3259,7 +3259,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'required',
         "credits_needed": 32,
         "notes": '32 credits selected as described below, in consultation with the Program Adviser: 22 credits of Prerequisite Courses, 4 credits of Large Ensembles, 6 credits of Non-Music Electives. Students who can demonstrate through auditions, placement tests or equivalencies that they have mastered the material in any of the courses below will be exempt from them and may proceed to more advanced courses.',
-        "sort_order": 1,
+        "sort_order": 0,
         "courses": [
           {
             "subject": 'MUHL',
@@ -3338,7 +3338,7 @@ MUSIC_PROGRAMS = [
         "title": 'Required Courses - Theory (9 credits)',
         "block_type": 'required',
         "credits_needed": 9,
-        "sort_order": 2,
+        "sort_order": 1,
         "courses": [
           {
             "subject": 'MUTH',
@@ -3368,7 +3368,7 @@ MUSIC_PROGRAMS = [
         "title": 'Required Courses - Musicianship (6 credits)',
         "block_type": 'required',
         "credits_needed": 6,
-        "sort_order": 3,
+        "sort_order": 2,
         "courses": [
           {
             "subject": 'MUSP',
@@ -3398,7 +3398,7 @@ MUSIC_PROGRAMS = [
         "title": 'Required Courses - Music History (3 credits)',
         "block_type": 'required',
         "credits_needed": 3,
-        "sort_order": 4,
+        "sort_order": 3,
         "courses": [
           {
             "subject": 'MUHL',
@@ -3414,7 +3414,7 @@ MUSIC_PROGRAMS = [
         "title": 'Required Courses - Performance (6 credits)',
         "block_type": 'required',
         "credits_needed": 6,
-        "sort_order": 5,
+        "sort_order": 4,
         "courses": [
           {
             "subject": 'MUIN',
@@ -3444,7 +3444,7 @@ MUSIC_PROGRAMS = [
         "title": 'Required Courses - Professional Development (1 credit)',
         "block_type": 'required',
         "credits_needed": 1,
-        "sort_order": 6,
+        "sort_order": 5,
         "courses": [
           {
             "subject": 'MUPD',
@@ -3461,7 +3461,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'choose_credits',
         "credits_needed": 6,
         "notes": '6 credits selected from:',
-        "sort_order": 7,
+        "sort_order": 6,
         "courses": [
           {
             "subject": 'MUTH',
@@ -3495,7 +3495,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'choose_credits',
         "credits_needed": 6,
         "notes": '6 credits selected from:',
-        "sort_order": 8,
+        "sort_order": 7,
         "courses": [
           {
             "subject": 'MUTH',
@@ -3529,7 +3529,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'choose_credits',
         "credits_needed": 6,
         "notes": '6 credits selected from:',
-        "sort_order": 9,
+        "sort_order": 8,
         "courses": [
           {
             "subject": 'MUTH',
@@ -3563,7 +3563,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'choose_credits',
         "credits_needed": 12,
         "notes": '12 credits selected from courses not taken above and the following:',
-        "sort_order": 10,
+        "sort_order": 9,
         "courses": [
           {
             "subject": 'MUCO',
@@ -3585,7 +3585,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'choose_credits',
         "credits_needed": 6,
         "notes": '6 credits from courses with a prefix of MUHL or MUPP.',
-        "sort_order": 11,
+        "sort_order": 10,
         "courses": [
           {
             "subject": 'MUHL',
@@ -3609,7 +3609,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'choose_credits',
         "credits_needed": 4,
         "notes": '4 credits selected from:',
-        "sort_order": 12,
+        "sort_order": 11,
         "courses": [
           {
             "subject": 'MUEN',
@@ -3679,7 +3679,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'choose_credits',
         "credits_needed": 9,
         "notes": '9 credits of non-Music Electives.',
-        "sort_order": 13,
+        "sort_order": 12,
       },
       {
         "block_key": 'music_theory_major_bmus_electives_free',
@@ -3687,7 +3687,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'choose_credits',
         "credits_needed": 18,
         "notes": '18 credits of free Electives.',
-        "sort_order": 14,
+        "sort_order": 13,
       },
     ],
   },
@@ -3706,7 +3706,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'required',
         "credits_needed": 2,
         "notes": 'Part of the Foundation Program (21 credits). Students who demonstrate mastery through placement tests may be exempt.',
-        "sort_order": 1,
+        "sort_order": 0,
         "courses": [
           {
             "subject": 'MUPD',
@@ -3723,7 +3723,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'level_elective',
         "credits_needed": 4,
         "notes": '4 credits from courses with a MUEN prefix. Part of the Foundation Program (21 credits).',
-        "sort_order": 2,
+        "sort_order": 1,
       },
       {
         "block_key": 'music_studies_major_bmus_foundation_streams',
@@ -3731,14 +3731,14 @@ MUSIC_PROGRAMS = [
         "block_type": 'multi_group',
         "credits_needed": 15,
         "notes": '15 credits from one of the following two streams: Classical or Jazz. Part of the Foundation Program (21 credits).',
-        "sort_order": 3,
+        "sort_order": 2,
       },
       {
         "block_key": 'music_studies_major_bmus_required',
         "title": 'Required Courses (8 credits)',
         "block_type": 'required',
         "credits_needed": 8,
-        "sort_order": 4,
+        "sort_order": 3,
         "courses": [
           {
             "subject": 'MUHL',
@@ -3770,7 +3770,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'multi_group',
         "credits_needed": 10,
         "notes": '10 credits from one of the following two streams. Part of Complementary Courses (46 credits).',
-        "sort_order": 5,
+        "sort_order": 4,
       },
       {
         "block_key": 'music_studies_major_bmus_complementary_pool',
@@ -3778,7 +3778,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'pool_group',
         "credits_needed": 36,
         "notes": '36 credits selected from any combination of the following lists. The page is truncated and the full list is incomplete — Composition, Music Theory, Applied Performance Sciences, and possibly other tracks are missing from the extracted text.',
-        "sort_order": 6,
+        "sort_order": 5,
       },
     ],
   },
@@ -3797,7 +3797,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'required',
         "constraint_notes": 'Faculty Program requires MUTH 350 Theory and Analysis 5 in addition to the shared BMus core. Source: mcgill.ca/music/programs/bmus/faculty-program/requirements',
         "notes": 'Faculty Program requires MUTH 350 Theory and Analysis 5 in addition to the shared BMus core. Source: mcgill.ca/music/programs/bmus/faculty-program/requirements',
-        "sort_order": 1,
+        "sort_order": 0,
         "courses": [
           {
             "subject": 'MUHL',
@@ -3986,7 +3986,7 @@ MUSIC_PROGRAMS = [
         "credits_needed": 6,
         "constraint_notes": '6 credits from MUHL or MUPP at 300-level or above.',
         "notes": '6 credits from MUHL or MUPP at 300-level or above.',
-        "sort_order": 2,
+        "sort_order": 1,
         "courses": [
           {
             "subject": 'MUHL',
@@ -4037,7 +4037,7 @@ MUSIC_PROGRAMS = [
         "credits_needed": 4,
         "constraint_notes": '4 credits of MUEN ensembles.',
         "notes": '4 credits of MUEN ensembles.',
-        "sort_order": 3,
+        "sort_order": 2,
         "courses": [
           {
             "subject": 'MUEN',
@@ -4310,7 +4310,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'required',
         "constraint_notes": 'Same core as all B.Mus. programs.',
         "notes": 'Same core as all B.Mus. programs.',
-        "sort_order": 1,
+        "sort_order": 0,
         "courses": [
           {
             "subject": 'MUHL',
@@ -4489,7 +4489,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'required',
         "constraint_notes": 'Required Music Education technique and pedagogy courses in the B.Mus. Music Education component. Source: mcgill.ca/music/programs/bmus/bmus-bed/requirements',
         "notes": 'Required Music Education technique and pedagogy courses in the B.Mus. Music Education component. Source: mcgill.ca/music/programs/bmus/bmus-bed/requirements',
-        "sort_order": 2,
+        "sort_order": 1,
         "courses": [
           {
             "subject": 'MUCT',
@@ -4580,7 +4580,7 @@ MUSIC_PROGRAMS = [
         "block_type": 'required',
         "constraint_notes": 'Required Education courses from the Faculty of Education: professional seminars (EDEA), Music Education methods (EDEA 442/472), foundations, and four music field-experience practica (EDFE). Source: mcgill.ca/music/programs/bmus/bmus-bed/requirements',
         "notes": 'Required Education courses from the Faculty of Education: professional seminars (EDEA), Music Education methods (EDEA 442/472), foundations, and four music field-experience practica (EDFE). Source: mcgill.ca/music/programs/bmus/bmus-bed/requirements',
-        "sort_order": 3,
+        "sort_order": 2,
         "courses": [
           {
             "subject": 'EDEA',
@@ -4726,7 +4726,7 @@ MUSIC_PROGRAMS = [
         "credits_needed": 4,
         "constraint_notes": '4 credits from approved MUEN ensemble courses. Students choose based on their principal instrument/voice.',
         "notes": '4 credits from approved MUEN ensemble courses. Students choose based on their principal instrument/voice.',
-        "sort_order": 4,
+        "sort_order": 3,
         "courses": [
           {
             "subject": 'MUEN',

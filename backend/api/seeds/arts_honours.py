@@ -251,6 +251,7 @@ ARTS_HONOURS = [
         "title": 'Required Course (3 credits)',
         "block_type": 'required',
         "credits_needed": 3,
+        "constraint_notes": 'Part of 9-credit methods requirement. Must be taken at McGill.',
         "notes": 'Part of 9-credit methods requirement. Must be taken at McGill.',
         "sort_order": 1,
         "courses": [
@@ -269,6 +270,7 @@ ARTS_HONOURS = [
         "title": '200-Level Courses (12 credits)',
         "block_type": 'required',
         "credits_needed": 12,
+        "constraint_notes": '3 credits required in each of four fields: Political Theory, Comparative Politics, International Relations, Canadian Politics. Students must take a 200-level course in a field before taking 300+ level courses in that field.',
         "notes": '3 credits required in each of four fields: Political Theory, Comparative Politics, International Relations, Canadian Politics. Students must take a 200-level course in a field before taking 300+ level courses in that field.',
         "sort_order": 2,
         "courses": [
@@ -286,6 +288,7 @@ ARTS_HONOURS = [
             "catalog": '222',
             "title": 'Political Process and Behaviour in Canada',
             "credits": 3.0,
+            "is_required": True,
             "choose_from_group": 'Canadian Politics',
             "notes": 'Introduction to contemporary political life in Canada, political culture, socialization, participation, electoral systems, parties, and interest groups.',
           },
@@ -303,6 +306,7 @@ ARTS_HONOURS = [
             "catalog": '227',
             "title": 'Introduction to Comparative Politics - Global South',
             "credits": 3.0,
+            "is_required": True,
             "choose_from_group": 'Comparative Politics',
             "notes": 'Introduction to politics across the Global South; colonialism, independence, development in Africa, Asia, and Latin America.',
           },
@@ -313,6 +317,7 @@ ARTS_HONOURS = [
         "title": 'Methods Courses at 300/400 Level (6 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 6,
+        "constraint_notes": '6 credits in POLI Methods courses must be taken at 300 or 400 level. Part of 9-credit methods requirement (including POLI 210). Must be taken at McGill.',
         "notes": '6 credits in POLI Methods courses must be taken at 300 or 400 level. Part of 9-credit methods requirement (including POLI 210). Must be taken at McGill.',
         "sort_order": 3,
         "courses": [
@@ -331,6 +336,7 @@ ARTS_HONOURS = [
         "block_type": 'choose_credits',
         "group_name": 'Canadian Politics',
         "credits_needed": 3,
+        "constraint_notes": 'Minimum 3 credits at 200-level, remaining credits from 300+ level. Maximum 24 credits total in this field.',
         "notes": 'Minimum 3 credits at 200-level, remaining credits from 300+ level. Maximum 24 credits total in this field.',
         "sort_order": 4,
         "courses": [
@@ -477,6 +483,7 @@ ARTS_HONOURS = [
         "block_type": 'choose_credits',
         "group_name": 'Comparative Politics',
         "credits_needed": 3,
+        "constraint_notes": 'Minimum 3 credits at 200-level, remaining credits from 300+ level. Maximum 27 credits total in this field (exception to 24-credit cap).',
         "notes": 'Minimum 3 credits at 200-level, remaining credits from 300+ level. Maximum 27 credits total in this field (exception to 24-credit cap).',
         "sort_order": 5,
         "courses": [
@@ -640,6 +647,7 @@ ARTS_HONOURS = [
         "block_type": 'choose_credits',
         "group_name": 'International Relations',
         "credits_needed": 3,
+        "constraint_notes": 'Minimum 3 credits at 200-level. Remaining credits from 300+ level. Maximum 24 credits total in this field.',
         "notes": 'Minimum 3 credits at 200-level. Remaining credits from 300+ level. Maximum 24 credits total in this field.',
         "sort_order": 6,
         "courses": [
@@ -659,6 +667,7 @@ ARTS_HONOURS = [
         "block_type": 'choose_credits',
         "group_name": 'Political Theory',
         "credits_needed": 3,
+        "constraint_notes": 'Minimum 3 credits at 200-level. Remaining credits from 300+ level. Maximum 24 credits total in this field.',
         "notes": 'Minimum 3 credits at 200-level. Remaining credits from 300+ level. Maximum 24 credits total in this field.',
         "sort_order": 7,
         "courses": [
@@ -677,6 +686,7 @@ ARTS_HONOURS = [
         "title": '400-Level Courses and Honours Seminar (12+ credits)',
         "block_type": 'choose_credits',
         "credits_needed": 12,
+        "constraint_notes": 'At least 12 credits at 400 level and above, including one mandatory 500-level Honours Seminar. Must be taken at McGill. One 500-level Honours Seminar is required and counts toward the 12-credit minimum.',
         "notes": 'At least 12 credits at 400 level and above, including one mandatory 500-level Honours Seminar. Must be taken at McGill. One 500-level Honours Seminar is required and counts toward the 12-credit minimum.',
         "sort_order": 8,
         "courses": [
@@ -704,6 +714,7 @@ ARTS_HONOURS = [
         "block_key": 'psychology_honours_prerequisites',
         "title": 'Program Prerequisites (0–6 credits)',
         "block_type": 'required',
+        "constraint_notes": 'Students planning to enter the BA Honours Psychology program should have completed an introductory course in general psychology, biology and statistics at the CEGEP level. Otherwise, they can complete them in their first year at McGill. PSYC 100 is listed for McGill Foundation students in U0. 3 credits of biology from BIOL 111, 112, or 115 for students without CEGEP biology.',
         "notes": 'Students planning to enter the BA Honours Psychology program should have completed an introductory course in general psychology, biology and statistics at the CEGEP level. Otherwise, they can complete them in their first year at McGill. PSYC 100 is listed for McGill Foundation students in U0. 3 credits of biology from BIOL 111, 112, or 115 for students without CEGEP biology.',
         "sort_order": 1,
         "courses": [
@@ -712,6 +723,7 @@ ARTS_HONOURS = [
             "catalog": '100',
             "title": 'Introduction to Psychology.',
             "credits": 3.0,
+            "is_required": True,
             "recommended": True,
             "recommendation_reason": 'Recommended for McGill Foundation students to complete in U0 year.',
             "notes": 'Listed as a prerequisite/recommended course for students entering the Honours program.',
@@ -723,6 +735,7 @@ ARTS_HONOURS = [
         "title": 'Biology Prerequisite – 3 credits from:',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'Students who have not completed Human Biology or General Biology 1 or 2 in CEGEP are advised to complete one of the following during their first year.',
         "notes": 'Students who have not completed Human Biology or General Biology 1 or 2 in CEGEP are advised to complete one of the following during their first year.',
         "sort_order": 2,
         "courses": [
@@ -751,6 +764,7 @@ ARTS_HONOURS = [
         "title": 'Required Courses (33 credits)',
         "block_type": 'required',
         "credits_needed": 33,
+        "constraint_notes": 'PSYC 204 exemption: CEGEP students exempt if they completed Quantitative Methods + Advanced Quantitative Methods or Statistics for Social Science (min 75%), or Probability & Statistics/Statistics (min 75%). B.A. students who are exempt replace PSYC 204 with 3 credits at the 300 level in PSYC, ANTH, LING, or SOCI.',
         "notes": 'PSYC 204 exemption: CEGEP students exempt if they completed Quantitative Methods + Advanced Quantitative Methods or Statistics for Social Science (min 75%), or Probability & Statistics/Statistics (min 75%). B.A. students who are exempt replace PSYC 204 with 3 credits at the 300 level in PSYC, ANTH, LING, or SOCI.',
         "sort_order": 3,
         "courses": [
@@ -837,6 +851,7 @@ ARTS_HONOURS = [
         "title": 'Complementary Courses – Additional Research / 500-level (3–9 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": '3-9 credits must be completed from the following courses and/or any 500-level Psychology course. The catalogue lists PSYC 486, 487, and 488D1 as options. The page was truncated and PSYC 488D1 details were incomplete. Students may also choose any 500-level PSYC course.',
         "notes": '3-9 credits must be completed from the following courses and/or any 500-level Psychology course. The catalogue lists PSYC 486, 487, and 488D1 as options. The page was truncated and PSYC 488D1 details were incomplete. Students may also choose any 500-level PSYC course.',
         "sort_order": 4,
         "courses": [
@@ -868,6 +883,7 @@ ARTS_HONOURS = [
         "title": 'Complementary Courses – Remaining Credits (up to 27 credits total)',
         "block_type": 'choose_credits',
         "credits_needed": 18,
+        "constraint_notes": 'The catalogue page was truncated and did not fully specify the remaining complementary course options beyond the research courses and 500-level PSYC courses. The total complementary requirement is 27 credits. Approximately 18 credits remain unspecified from the truncated portion of the page. Advisors should consult the full eCalendar page for complete details.',
         "notes": 'The catalogue page was truncated and did not fully specify the remaining complementary course options beyond the research courses and 500-level PSYC courses. The total complementary requirement is 27 credits. Approximately 18 credits remain unspecified from the truncated portion of the page. Advisors should consult the full eCalendar page for complete details.',
         "sort_order": 5,
       },
@@ -887,6 +903,7 @@ ARTS_HONOURS = [
         "title": 'Required Courses (21 credits)',
         "block_type": 'required',
         "credits_needed": 21,
+        "constraint_notes": 'Note: Students who are exempted from SOCI 350 must replace it with another 300-level or higher sociology course.',
         "notes": 'Note: Students who are exempted from SOCI 350 must replace it with another 300-level or higher sociology course.',
         "sort_order": 1,
         "courses": [
@@ -947,6 +964,7 @@ ARTS_HONOURS = [
         "title": 'Complementary Courses (30 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 30,
+        "constraint_notes": '30 credits of complementary sociology (SOCI) courses with constraints: minimum 9 credits at 400 level or higher; maximum 9 credits at 200 level. 500-level seminars open to Honours students in final year.',
         "notes": '30 credits of complementary sociology (SOCI) courses with constraints: minimum 9 credits at 400 level or higher; maximum 9 credits at 200 level. 500-level seminars open to Honours students in final year.',
         "sort_order": 2,
         "courses": [
@@ -1188,6 +1206,7 @@ ARTS_HONOURS = [
         "title": 'Distribution Requirement (9 credits: 3 from Group A, 3 from Group B, 3 from Group C)',
         "block_type": 'multi_group',
         "credits_needed": 9,
+        "constraint_notes": 'Cognate courses may not be used to satisfy the Distribution requirement. The same course may be used to satisfy both a Distribution and Temporal Breadth requirement.',
         "notes": 'Cognate courses may not be used to satisfy the Distribution requirement. The same course may be used to satisfy both a Distribution and Temporal Breadth requirement.',
         "sort_order": 2,
       },
@@ -1350,6 +1369,7 @@ ARTS_HONOURS = [
         "block_type": 'group',
         "group_name": 'Group C',
         "credits_needed": 3,
+        "constraint_notes": 'Group C course list is incomplete due to page truncation. Only courses visible in the extracted text are listed here.',
         "notes": 'Group C course list is incomplete due to page truncation. Only courses visible in the extracted text are listed here.',
         "sort_order": 5,
         "courses": [
@@ -1410,6 +1430,7 @@ ARTS_HONOURS = [
         "title": 'Temporal Breadth Requirement',
         "block_type": 'required',
         "credits_needed": 6,
+        "constraint_notes": 'At least 3 credits must be focused on the period before 1800; at least 3 credits must be focused on the period after 1800. HIST 299 and HIST 399 may not be used to satisfy Temporal Breadth requirements. The same course may satisfy both a Distribution and a Temporal Breadth requirement.',
         "notes": 'At least 3 credits must be focused on the period before 1800; at least 3 credits must be focused on the period after 1800. HIST 299 and HIST 399 may not be used to satisfy Temporal Breadth requirements. The same course may satisfy both a Distribution and a Temporal Breadth requirement.',
         "sort_order": 6,
       },
@@ -1418,6 +1439,7 @@ ARTS_HONOURS = [
         "title": 'Level Requirement: Honours Seminars (minimum 6 credits, 500-level D1/D2)',
         "block_type": 'level_elective',
         "credits_needed": 6,
+        "constraint_notes": 'Minimum 6 credits of honours seminars (500-level D1/D2 courses). Specific seminar listings not provided in catalogue text.',
         "notes": 'Minimum 6 credits of honours seminars (500-level D1/D2 courses). Specific seminar listings not provided in catalogue text.',
         "sort_order": 7,
       },
@@ -1426,6 +1448,7 @@ ARTS_HONOURS = [
         "title": 'Level Requirement: Additional 400-level or Higher HIST Courses (minimum 6 credits)',
         "block_type": 'level_elective',
         "credits_needed": 6,
+        "constraint_notes": 'Minimum 6 additional credits of 400-level or higher HIST courses. A second honours seminar (500-level D1/D2) may be used to fulfill this requirement.',
         "notes": 'Minimum 6 additional credits of 400-level or higher HIST courses. A second honours seminar (500-level D1/D2) may be used to fulfill this requirement.',
         "sort_order": 8,
       },
@@ -1434,6 +1457,7 @@ ARTS_HONOURS = [
         "title": 'Complementary Courses Pool (51 credits total: HIST or cognate courses)',
         "block_type": 'choose_credits',
         "credits_needed": 51,
+        "constraint_notes": '51 credits total from HIST or cognate courses (cognate course list not shown due to page truncation). Maximum 18 credits at the 200-level. Must satisfy Distribution requirement (Groups A/B/C), Temporal Breadth requirement, and Level requirements. GPA requirements: 3.30 in program courses, 3.0 (B) or higher in each program course, CGPA 3.0 or higher.',
         "notes": '51 credits total from HIST or cognate courses (cognate course list not shown due to page truncation). Maximum 18 credits at the 200-level. Must satisfy Distribution requirement (Groups A/B/C), Temporal Breadth requirement, and Level requirements. GPA requirements: 3.30 in program courses, 3.0 (B) or higher in each program course, CGPA 3.0 or higher.',
         "sort_order": 9,
       },
@@ -1453,6 +1477,7 @@ ARTS_HONOURS = [
         "title": 'Required Courses (21 credits)',
         "block_type": 'required',
         "credits_needed": 21,
+        "constraint_notes": 'Required courses must be completed at McGill unless Departmental permission is obtained. A minimum grade of B+ must be obtained in three out of four of: LING 330, LING 331, LING 360, LING 371, as well as LING 480D1/D2.',
         "notes": 'Required courses must be completed at McGill unless Departmental permission is obtained. A minimum grade of B+ must be obtained in three out of four of: LING 330, LING 331, LING 360, LING 371, as well as LING 480D1/D2.',
         "sort_order": 1,
         "courses": [
@@ -1518,6 +1543,7 @@ ARTS_HONOURS = [
         "title": 'Logic/Computability Elective (3 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": '3 credits from the following logic/computability/deductive logic courses. Note: COMP 230 also appears in the Computer Science list under Other Fields.',
         "notes": '3 credits from the following logic/computability/deductive logic courses. Note: COMP 230 also appears in the Computer Science list under Other Fields.',
         "sort_order": 2,
         "courses": [
@@ -1547,6 +1573,7 @@ ARTS_HONOURS = [
         "title": 'Linguistics Electives (24 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 24,
+        "constraint_notes": '24 credits of Linguistics (LING) courses. 15 of the credits must be at the 400/500 level and only 3 credits can be at the 200 level. This requirement may include INLG 411. The list below is not exhaustive; students may take any eligible LING courses subject to these level constraints.',
         "notes": '24 credits of Linguistics (LING) courses. 15 of the credits must be at the 400/500 level and only 3 credits can be at the 200 level. This requirement may include INLG 411. The list below is not exhaustive; students may take any eligible LING courses subject to these level constraints.',
         "sort_order": 3,
         "courses": [
@@ -1564,6 +1591,7 @@ ARTS_HONOURS = [
         "title": 'Other Fields (12 credits)',
         "block_type": 'pool_group',
         "credits_needed": 12,
+        "constraint_notes": "12 credits in related fields selected from the following list: Computer Science, French Language and Literature, Language (any language course other than the student's native language; literature courses not acceptable), Mathematics, Philosophy, Psychology, Statistics (any statistics course from any department).",
         "notes": "12 credits in related fields selected from the following list: Computer Science, French Language and Literature, Language (any language course other than the student's native language; literature courses not acceptable), Mathematics, Philosophy, Psychology, Statistics (any statistics course from any department).",
         "sort_order": 4,
       },
@@ -1572,6 +1600,7 @@ ARTS_HONOURS = [
         "title": 'Computer Science',
         "block_type": 'group',
         "group_name": 'Computer Science',
+        "constraint_notes": 'Courses from Computer Science that may count toward Other Fields requirement.',
         "notes": 'Courses from Computer Science that may count toward Other Fields requirement.',
         "sort_order": 5,
         "courses": [
@@ -1604,6 +1633,7 @@ ARTS_HONOURS = [
         "title": 'French Language and Literature',
         "block_type": 'group',
         "group_name": 'French Language and Literature',
+        "constraint_notes": 'Courses from French Language and Literature that may count toward Other Fields requirement.',
         "notes": 'Courses from French Language and Literature that may count toward Other Fields requirement.',
         "sort_order": 6,
         "courses": [
@@ -1638,6 +1668,7 @@ ARTS_HONOURS = [
         "title": 'Language',
         "block_type": 'group',
         "group_name": 'Language',
+        "constraint_notes": "Any course in a language other than the student's native language. Literature courses are not acceptable. No specific courses listed in the catalogue.",
         "notes": "Any course in a language other than the student's native language. Literature courses are not acceptable. No specific courses listed in the catalogue.",
         "sort_order": 7,
       },
@@ -1646,6 +1677,7 @@ ARTS_HONOURS = [
         "title": 'Mathematics',
         "block_type": 'group',
         "group_name": 'Mathematics',
+        "constraint_notes": 'Courses from Mathematics that may count toward Other Fields requirement.',
         "notes": 'Courses from Mathematics that may count toward Other Fields requirement.',
         "sort_order": 8,
         "courses": [
@@ -1663,6 +1695,7 @@ ARTS_HONOURS = [
         "title": 'Philosophy',
         "block_type": 'group',
         "group_name": 'Philosophy',
+        "constraint_notes": 'Courses from Philosophy that may count toward Other Fields requirement.',
         "notes": 'Courses from Philosophy that may count toward Other Fields requirement.',
         "sort_order": 9,
         "courses": [
@@ -1687,6 +1720,7 @@ ARTS_HONOURS = [
         "title": 'Psychology',
         "block_type": 'group',
         "group_name": 'Psychology',
+        "constraint_notes": 'Courses from Psychology that may count toward Other Fields requirement.',
         "notes": 'Courses from Psychology that may count toward Other Fields requirement.',
         "sort_order": 10,
         "courses": [
@@ -1734,6 +1768,7 @@ ARTS_HONOURS = [
         "title": 'Statistics',
         "block_type": 'group',
         "group_name": 'Statistics',
+        "constraint_notes": 'Any course in statistics from any department. No specific courses listed in the catalogue.',
         "notes": 'Any course in statistics from any department. No specific courses listed in the catalogue.',
         "sort_order": 11,
       },
@@ -2004,6 +2039,7 @@ ARTS_HONOURS = [
         "title": 'Additional Philosophy Electives (24 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 24,
+        "constraint_notes": 'Must include 12 credits at 400 and 500 levels (not including PHIL 499), with at least 3 credits at 500 level. Maximum of 15 credits from 200-level courses may be used toward the Honours program. Only one of PHIL 200 or PHIL 201 may be counted toward the program.',
         "notes": 'Must include 12 credits at 400 and 500 levels (not including PHIL 499), with at least 3 credits at 500 level. Maximum of 15 credits from 200-level courses may be used toward the Honours program. Only one of PHIL 200 or PHIL 201 may be counted toward the program.',
         "sort_order": 7,
         "courses": [
@@ -2056,6 +2092,7 @@ ARTS_HONOURS = [
         "title": '200/300 Level Complementary Courses (up to 36 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 36,
+        "constraint_notes": 'Maximum of 36 credits of 200- and 300-level courses: maximum of 21 credits at the 200 level and maximum of 6 credits of Special Topic courses. Students may take a maximum of 9 credits at the 300 and 400 level offered by other departments if directly related to their focus of study within Anthropology and approved by their departmental program adviser.',
         "notes": 'Maximum of 36 credits of 200- and 300-level courses: maximum of 21 credits at the 200 level and maximum of 6 credits of Special Topic courses. Students may take a maximum of 9 credits at the 300 and 400 level offered by other departments if directly related to their focus of study within Anthropology and approved by their departmental program adviser.',
         "sort_order": 2,
         "courses": [
@@ -2073,6 +2110,7 @@ ARTS_HONOURS = [
         "title": 'Core 350 Level (minimum 9 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 9,
+        "constraint_notes": 'Select a minimum of 9 credits of core courses at the 350 level.',
         "notes": 'Select a minimum of 9 credits of core courses at the 350 level.',
         "sort_order": 3,
         "courses": [
@@ -2118,6 +2156,7 @@ ARTS_HONOURS = [
         "title": '400/500 Level (minimum 9 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 9,
+        "constraint_notes": 'A minimum of 9 credits of Anthropology (ANTH) courses at the 400- or 500-level, and a maximum of 3 credits can be a Special Topic course.',
         "notes": 'A minimum of 9 credits of Anthropology (ANTH) courses at the 400- or 500-level, and a maximum of 3 credits can be a Special Topic course.',
         "sort_order": 4,
         "courses": [
@@ -2171,6 +2210,7 @@ ARTS_HONOURS = [
         "title": 'Complementary Courses – Introductory (3–15 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'Introduction to methods, theories, and practices in diverse fields of the discipline.',
         "notes": 'Introduction to methods, theories, and practices in diverse fields of the discipline.',
         "sort_order": 2,
         "courses": [
@@ -2216,6 +2256,7 @@ ARTS_HONOURS = [
         "title": 'Complementary Courses – Departmental (33–45 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 33,
+        "constraint_notes": 'Maximum 15 credits at 200-level. Minimum 6 credits at 400-level or above (other than ARTH 490). 6 credits should be taken in a language other than English or in courses in one or two related disciplines selected with written approval of academic adviser. Courses from ARCH, EAST, and PHIL may be approved as complementary.',
         "notes": 'Maximum 15 credits at 200-level. Minimum 6 credits at 400-level or above (other than ARTH 490). 6 credits should be taken in a language other than English or in courses in one or two related disciplines selected with written approval of academic adviser. Courses from ARCH, EAST, and PHIL may be approved as complementary.',
         "sort_order": 3,
         "courses": [
@@ -2595,6 +2636,7 @@ ARTS_HONOURS = [
         "title": 'Introductory Categories (6 credits)',
         "block_type": 'multi_group',
         "credits_needed": 6,
+        "constraint_notes": '6 credits from the following two categories: 3 credits from Culture, Populations and Development AND 3 credits from Politics, Society and Development',
         "notes": '6 credits from the following two categories: 3 credits from Culture, Populations and Development AND 3 credits from Politics, Society and Development',
         "sort_order": 2,
       },
@@ -2701,6 +2743,7 @@ ARTS_HONOURS = [
         "title": 'Methods (6-9 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 6,
+        "constraint_notes": 'Students must consult with the IDS Adviser when selecting their Methods courses. Students must also consult with the most recent Faculty of Arts policy on course overlap.',
         "notes": 'Students must consult with the IDS Adviser when selecting their Methods courses. Students must also consult with the most recent Faculty of Arts policy on course overlap.',
         "sort_order": 3,
         "courses": [
@@ -2771,6 +2814,7 @@ ARTS_HONOURS = [
         "title": 'Thematic Courses (30-33 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 30,
+        "constraint_notes": 'Choose 30-33 credits from the following thematic areas: African Studies, Agriculture, Agricultural Economics, Anthropology, and others as listed. Page was truncated but substantial course list provided.',
         "notes": 'Choose 30-33 credits from the following thematic areas: African Studies, Agriculture, Agricultural Economics, Anthropology, and others as listed. Page was truncated but substantial course list provided.',
         "sort_order": 4,
         "courses": [
@@ -2966,6 +3010,7 @@ ARTS_HONOURS = [
         "title": 'Statistics (3 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'Credit given for statistics courses is subject to certain restrictions. Students should consult the Course Overlap information in the Course Requirements section for the Faculty of Arts.',
         "notes": 'Credit given for statistics courses is subject to certain restrictions. Students should consult the Course Overlap information in the Course Requirements section for the Faculty of Arts.',
         "sort_order": 3,
         "courses": [
@@ -3006,6 +3051,7 @@ ARTS_HONOURS = [
         "title": 'Field Courses (3 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'Field course offerings are determined each year in February.',
         "notes": 'Field course offerings are determined each year in February.',
         "sort_order": 4,
         "courses": [
@@ -3052,6 +3098,7 @@ ARTS_HONOURS = [
         "title": 'Geography (24 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 24,
+        "constraint_notes": 'GEOG courses excluding GEOG 200 (Geographical Perspectives: World Environmental Problems) and GEOG 205 (Global Change: Past and Future), selected in consultation with the Program Adviser. No more than 6 credits may be taken from 200-level courses.',
         "notes": 'GEOG courses excluding GEOG 200 (Geographical Perspectives: World Environmental Problems) and GEOG 205 (Global Change: Past and Future), selected in consultation with the Program Adviser. No more than 6 credits may be taken from 200-level courses.',
         "sort_order": 5,
       },
@@ -3060,6 +3107,7 @@ ARTS_HONOURS = [
         "title": 'Outside Geography (9 credits)',
         "block_type": 'level_elective',
         "credits_needed": 9,
+        "constraint_notes": "9 credits at the 300 or 400 level or above of courses taught by units other than Geography selected from the humanities, social and physical sciences or engineering that have been approved by the Program Adviser as related to the student's focus within Geography.",
         "notes": "9 credits at the 300 or 400 level or above of courses taught by units other than Geography selected from the humanities, social and physical sciences or engineering that have been approved by the Program Adviser as related to the student's focus within Geography.",
         "sort_order": 6,
       },
@@ -3265,6 +3313,7 @@ ARTS_HONOURS = [
         "title": 'Complementary Courses: Ancient History or Classical Civilization (minimum 3 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'Other courses may be counted towards this requirement with the approval of the program adviser.',
         "notes": 'Other courses may be counted towards this requirement with the approval of the program adviser.',
         "sort_order": 4,
         "courses": [
@@ -3494,6 +3543,7 @@ ARTS_HONOURS = [
         "title": 'Required Courses (18 credits)',
         "block_type": 'required',
         "credits_needed": 18,
+        "constraint_notes": 'Students are advised to take GSFS 200 and GSFS 250 in their first year and GSFS 300 in their second year. GSFS 495D1/D2 and GSFS 496D1/D2 must be taken in the last full year of the program.',
         "notes": 'Students are advised to take GSFS 200 and GSFS 250 in their first year and GSFS 300 in their second year. GSFS 495D1/D2 and GSFS 496D1/D2 must be taken in the last full year of the program.',
         "sort_order": 1,
         "courses": [
@@ -3563,6 +3613,7 @@ ARTS_HONOURS = [
         "title": 'GSFS Complementary Courses (9 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 9,
+        "constraint_notes": '3 credits of the 9 must be at the 400 or 500 level. Credits may count towards only one program requirement.',
         "notes": '3 credits of the 9 must be at the 400 or 500 level. Credits may count towards only one program requirement.',
         "sort_order": 2,
         "courses": [
@@ -3663,6 +3714,7 @@ ARTS_HONOURS = [
         "title": 'Interdisciplinary Complementary Courses (30 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 30,
+        "constraint_notes": 'Courses must centrally engage with at least two of the following themes: gender, sexuality, feminism, and social justice. 9 credits minimum must be at the 400 or 500 level and 12 credits maximum may be at the 200 level. Maximum of 12 transfer credits may be accepted by approved exchange programs, subject to University approval.',
         "notes": 'Courses must centrally engage with at least two of the following themes: gender, sexuality, feminism, and social justice. 9 credits minimum must be at the 400 or 500 level and 12 credits maximum may be at the 200 level. Maximum of 12 transfer credits may be accepted by approved exchange programs, subject to University approval.',
         "sort_order": 3,
         "courses": [
@@ -3846,6 +3898,7 @@ ARTS_HONOURS = [
         "title": 'Required Courses (9 credits)',
         "block_type": 'required',
         "credits_needed": 9,
+        "constraint_notes": 'All three courses are mandatory for honours completion.',
         "notes": 'All three courses are mandatory for honours completion.',
         "sort_order": 1,
         "courses": [
@@ -3877,6 +3930,7 @@ ARTS_HONOURS = [
         "title": 'Jewish History (6 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 6,
+        "constraint_notes": 'Choose 6 credits: one course from the first pair (400 B.C.E.–1000) and one from the second pair (1000–2000).',
         "notes": 'Choose 6 credits: one course from the first pair (400 B.C.E.–1000) and one from the second pair (1000–2000).',
         "sort_order": 2,
         "courses": [
@@ -3915,6 +3969,7 @@ ARTS_HONOURS = [
         "title": 'Jewish Language (0–18 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 0,
+        "constraint_notes": "Each Honours student must complete at least one Jewish language at the advanced level of instruction. A student who can demonstrate competence in a Jewish language may be permitted to substitute other courses for all or part of the language requirement. Hebrew and Yiddish language courses are available; consult the catalogue sections 'Language and Literature - Hebrew' and 'Language and Literature - Yiddish' for specific course listings.",
         "notes": "Each Honours student must complete at least one Jewish language at the advanced level of instruction. A student who can demonstrate competence in a Jewish language may be permitted to substitute other courses for all or part of the language requirement. Hebrew and Yiddish language courses are available; consult the catalogue sections 'Language and Literature - Hebrew' and 'Language and Literature - Yiddish' for specific course listings.",
         "sort_order": 3,
       },
@@ -3923,6 +3978,7 @@ ARTS_HONOURS = [
         "title": 'Areas of Jewish Studies (27–45 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 27,
+        "constraint_notes": 'Students must select courses to reflect progress to the advanced level in two or more of the following seven areas: Biblical Studies, Rabbinic Studies, Literature (Hebrew, Yiddish), Jewish Thought, Jewish History, Modern Jewish Studies, and East European Studies. Select courses in consultation with a program adviser.',
         "notes": 'Students must select courses to reflect progress to the advanced level in two or more of the following seven areas: Biblical Studies, Rabbinic Studies, Literature (Hebrew, Yiddish), Jewish Thought, Jewish History, Modern Jewish Studies, and East European Studies. Select courses in consultation with a program adviser.',
         "sort_order": 4,
         "courses": [
@@ -4154,6 +4210,7 @@ ARTS_HONOURS = [
         "title": 'Required Courses (6 credits)',
         "block_type": 'required',
         "credits_needed": 6,
+        "constraint_notes": 'Honours thesis',
         "notes": 'Honours thesis',
         "sort_order": 1,
         "courses": [
@@ -4180,6 +4237,7 @@ ARTS_HONOURS = [
         "title": 'Introduction to East Asian Culture (3–6 credits)',
         "block_type": 'pool_group',
         "credits_needed": 6,
+        "constraint_notes": '3-6 credits from Group A (EAST 211/212/213) and 0-3 credits from Group B (EAST 215/216/250). At least 3 credits must come from Group A.',
         "notes": '3-6 credits from Group A (EAST 211/212/213) and 0-3 credits from Group B (EAST 215/216/250). At least 3 credits must come from Group A.',
         "sort_order": 2,
       },
@@ -4188,6 +4246,7 @@ ARTS_HONOURS = [
         "title": 'Introduction to East Asian Culture – Group A (3–6 credits)',
         "block_type": 'group',
         "group_name": 'Group A',
+        "constraint_notes": '3-6 credits from this group',
         "notes": '3-6 credits from this group',
         "sort_order": 3,
         "courses": [
@@ -4219,6 +4278,7 @@ ARTS_HONOURS = [
         "title": 'Introduction to East Asian Culture – Group B (0–3 credits)',
         "block_type": 'group',
         "group_name": 'Group B',
+        "constraint_notes": '0-3 credits from this group',
         "notes": '0-3 credits from this group',
         "sort_order": 4,
         "courses": [
@@ -4250,6 +4310,7 @@ ARTS_HONOURS = [
         "title": 'East Asian Language (24 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 24,
+        "constraint_notes": '24 credits of an East Asian language selected from the list below. Admission to language courses is subject to placement tests.',
         "notes": '24 credits of an East Asian language selected from the list below. Admission to language courses is subject to placement tests.',
         "sort_order": 5,
         "courses": [
@@ -4426,6 +4487,7 @@ ARTS_HONOURS = [
         "title": 'East Asian Literature, Culture and Society (24 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 24,
+        "constraint_notes": '24 credits of courses in East Asian Literature, Culture and Society. WARNING: Page was truncated mid-description of EAST 464 — additional courses may exist beyond what is listed here.',
         "notes": '24 credits of courses in East Asian Literature, Culture and Society. WARNING: Page was truncated mid-description of EAST 464 — additional courses may exist beyond what is listed here.',
         "sort_order": 6,
         "courses": [
@@ -4775,6 +4837,7 @@ ARTS_HONOURS = [
         "title": 'Languages – Three Levels (18–21 credits from one language: Arabic, Persian, Turkish, or Urdu)',
         "block_type": 'pool_group',
         "credits_needed": 18,
+        "constraint_notes": 'Students must complete 18-21 credits (3 levels) in ONE language: Arabic, Persian, Turkish, or Urdu. One level = 6 credits (or for Arabic: level 1 = 9 credits via ISLA 221D1/D2, giving a total of 21 credits for three Arabic levels). The extra 3 Arabic credits may count toward the 9-12 credits at any level category.',
         "notes": 'Students must complete 18-21 credits (3 levels) in ONE language: Arabic, Persian, Turkish, or Urdu. One level = 6 credits (or for Arabic: level 1 = 9 credits via ISLA 221D1/D2, giving a total of 21 credits for three Arabic levels). The extra 3 Arabic credits may count toward the 9-12 credits at any level category.',
         "sort_order": 2,
       },
@@ -4783,6 +4846,7 @@ ARTS_HONOURS = [
         "title": 'Arabic',
         "block_type": 'group',
         "group_name": 'Arabic',
+        "constraint_notes": 'Three levels of Arabic total 21 credits (ISLA 221D1/D2 = 9cr, ISLA 322D1/D2 or ISLA 322 = 6cr, ISLA 423D1/D2 = 6cr). The extra 3 credits beyond 18 may count toward the any-level complementary requirement. ISLA 322 is offered as a 6-credit full-year course as well as D1/D2 halves.',
         "notes": 'Three levels of Arabic total 21 credits (ISLA 221D1/D2 = 9cr, ISLA 322D1/D2 or ISLA 322 = 6cr, ISLA 423D1/D2 = 6cr). The extra 3 credits beyond 18 may count toward the any-level complementary requirement. ISLA 322 is offered as a 6-credit full-year course as well as D1/D2 halves.',
         "sort_order": 3,
         "courses": [
@@ -4873,6 +4937,7 @@ ARTS_HONOURS = [
         "title": 'Persian',
         "block_type": 'group',
         "group_name": 'Persian',
+        "constraint_notes": 'Three levels of Persian = 18 credits.',
         "notes": 'Three levels of Persian = 18 credits.',
         "sort_order": 4,
         "courses": [
@@ -4947,6 +5012,7 @@ ARTS_HONOURS = [
         "title": 'Turkish',
         "block_type": 'group',
         "group_name": 'Turkish',
+        "constraint_notes": 'Three levels of Turkish = 18 credits.',
         "notes": 'Three levels of Turkish = 18 credits.',
         "sort_order": 5,
         "courses": [
@@ -5029,6 +5095,7 @@ ARTS_HONOURS = [
         "title": 'Urdu',
         "block_type": 'group',
         "group_name": 'Urdu',
+        "constraint_notes": 'Three levels of Urdu = 18 credits.',
         "notes": 'Three levels of Urdu = 18 credits.',
         "sort_order": 6,
         "courses": [
@@ -5095,6 +5162,7 @@ ARTS_HONOURS = [
         "title": 'Non-Language ISLA 100-/200-Level Courses (3 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": '3 credits of 100-/200-level non-language ISLA courses required.',
         "notes": '3 credits of 100-/200-level non-language ISLA courses required.',
         "sort_order": 7,
         "courses": [
@@ -5117,6 +5185,7 @@ ARTS_HONOURS = [
         "title": 'Non-Language ISLA 300-Level Courses (12 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 12,
+        "constraint_notes": '12 credits of 300-level non-language ISLA courses required. The page was truncated mid-extraction; only courses visible before truncation are listed here. Advisors should verify the full list on the eCalendar.',
         "notes": '12 credits of 300-level non-language ISLA courses required. The page was truncated mid-extraction; only courses visible before truncation are listed here. Advisors should verify the full list on the eCalendar.',
         "sort_order": 8,
         "courses": [
@@ -5174,6 +5243,7 @@ ARTS_HONOURS = [
         "title": 'Non-Language ISLA 400-/500-Level Courses (9 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 9,
+        "constraint_notes": '9 credits of 400-/500-level non-language ISLA courses required. The page was truncated before this section was visible; course list is incomplete. Advisors should consult the eCalendar directly.',
         "notes": '9 credits of 400-/500-level non-language ISLA courses required. The page was truncated before this section was visible; course list is incomplete. Advisors should consult the eCalendar directly.',
         "sort_order": 9,
       },
@@ -5182,6 +5252,7 @@ ARTS_HONOURS = [
         "title": 'Any Level Complementary Courses (9–12 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 9,
+        "constraint_notes": '9-12 credits at any level, including more language courses, but no more than 9 non-language credits overall at the 100-/200-level. Students may use Non-ISLA courses from the listed non-ISLA course list. credits_needed set to 9 (minimum); maximum is 12 depending on Arabic language choice. The page was truncated before the Non-ISLA courses list was visible.',
         "notes": '9-12 credits at any level, including more language courses, but no more than 9 non-language credits overall at the 100-/200-level. Students may use Non-ISLA courses from the listed non-ISLA course list. credits_needed set to 9 (minimum); maximum is 12 depending on Arabic language choice. The page was truncated before the Non-ISLA courses list was visible.',
         "sort_order": 10,
       },
