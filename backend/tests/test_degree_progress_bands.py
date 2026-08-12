@@ -148,3 +148,41 @@ class TestBlockCreditCap:
         from api.utils.degree_progress import calc_ring_progress
         done = [{'subject': 'COMP', 'catalog': '421', 'credits': 3}]
         assert calc_ring_progress(self._prog(), done, [], {}, set())['earned'] == 3
+
+
+class TestMultiTermCourseLevels:
+    """D1/D2 courses must resolve to their numeric level, like JS parseInt.
+
+    Python's int("227D1") raises; JavaScript's parseInt("227D1") is 227. The
+    port used int(), so every multi-term course (ECON 230D1, FRSL 207D1, …)
+    silently fell out of level bands on the backend while the frontend counted
+    them — the two runtimes disagreeing about a student's credits is precisely
+    what degree_progress.py exists to prevent.
+    """
+
+    BLOCK = {'credits_needed': 18, 'courses': [
+        {'subject': 'ECON', 'title': 'Any ECON course at 210+'},
+    ]}
+
+    def test_d_course_counts_toward_a_band(self):
+        taken = [{'subject': 'ECON', 'catalog': '227D1', 'credits': 3}]
+        assert block_wildcard_matches(self.BLOCK, taken) == taken
+
+    def test_band_floor_still_excludes_lower_courses(self):
+        taken = [{'subject': 'ECON', 'catalog': '208', 'credits': 3}]
+        assert block_wildcard_matches(self.BLOCK, taken) == []
+
+    def test_d_course_respects_a_closed_band(self):
+        block = {'credits_needed': 6, 'courses': [
+            {'subject': 'FRSL', 'catalog': '200', 'title': 'Any 200-level French course'},
+        ]}
+        inside = [{'subject': 'FRSL', 'catalog': '207D1', 'credits': 3}]
+        outside = [{'subject': 'FRSL', 'catalog': '307D1', 'credits': 3}]
+        assert block_wildcard_matches(block, inside) == inside
+        assert block_wildcard_matches(block, outside) == []
+
+    def test_unparseable_catalog_is_still_no_level(self):
+        block = {'credits_needed': 6, 'courses': [
+            {'subject': 'ECON', 'title': 'Any ECON course at 210+'},
+        ]}
+        assert block_wildcard_matches(block, [{'subject': 'ECON', 'catalog': 'XXX'}]) == []

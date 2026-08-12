@@ -41,9 +41,15 @@ MODULES = {
     "foundation_degree_requirements": "FOUNDATION_PROGRAMS",
 }
 
-# Production had 299 programs / 1231 blocks / 8760 courses when the seeds were
-# generated. A large drop means someone shrank the seeds again.
-MIN_PROGRAMS, MIN_BLOCKS, MIN_COURSES = 299, 1231, 8760
+# Floor, not a target: a drop below this means someone shrank the seeds again.
+#
+# 8753 rather than the original 8760 because the Economics for Management major
+# was corrected against McGill: its Complementary block is published as a rule
+# ("other 200-, 300- and 400-level ECON courses, excluding those below 210"),
+# not a list, so eight hand-picked rows became one `ECON 210+` wildcard. Raise
+# this floor deliberately when a verified correction changes it — never lower
+# it to make a failing run pass.
+MIN_PROGRAMS, MIN_BLOCKS, MIN_COURSES = 299, 1231, 8753
 
 
 def all_programs():
