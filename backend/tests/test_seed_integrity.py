@@ -52,9 +52,12 @@ MODULES = {
 #       BUSA 356 required, the 17-course International Business Component, and
 #       placeholder blocks for the external minor and language/experiential
 #       requirements McGill does not enumerate)
+#   bcom_core_economics       +1 program, +1 block, +12 courses (the Management
+#       Core as it applies to the Economics major — 36 credits over 12 courses,
+#       without MGCR 293/294)
 # Raise this floor deliberately when a verified correction changes it — never
 # lower it to make a failing run pass.
-MIN_PROGRAMS, MIN_BLOCKS, MIN_COURSES = 299, 1233, 8759
+MIN_PROGRAMS, MIN_BLOCKS, MIN_COURSES = 300, 1234, 8771
 
 
 def all_programs():
@@ -122,3 +125,82 @@ def test_courses_are_identifiable(programs):
                 assert c.get("subject") or c.get("title"), (
                     f"{mod}:{p['program_key']} has an unidentifiable course row: {c}"
                 )
+
+
+class TestBComProgramKeys:
+    """Every B.Com. major the profile UI offers must resolve to a seeded program.
+
+    toProgramKey() in DegreePlanningView.jsx builds a program_key from the
+    student's major name via a slug map, then fetches it. Two slugs did not
+    match anything seeded — 'ob_hr' and 'intl_management' produced
+    ob_hr_major_bcom and intl_management_major_bcom, where the real keys are
+    organizational_behaviour_hr_major_bcom and
+    international_management_major_bcom. Students in those two majors got a 404
+    and a completely empty requirements tab, silently.
+
+    This mirrors the slug map so a future rename breaks a test instead of a
+    student's degree plan.
+    """
+
+    # Mirrors mgmtSlugMap in DegreePlanningView.jsx
+    SLUGS = {
+        'Accounting': 'accounting',
+        'Finance': 'finance',
+        'Marketing': 'marketing',
+        'Business Analytics': 'business_analytics',
+        'Strategic Management': 'strategic_management',
+        'Information Technology Management': 'it_management',
+        'Organizational Behaviour and Human Resources': 'organizational_behaviour_hr',
+        'International Management': 'international_management',
+        'Managing for Sustainability': 'managing_sustainability',
+        'Retail Management': 'retail_management',
+        'Economics for Management Students': 'economics_management',
+        'Mathematics and Statistics for Management': 'math_stats_management',
+    }
+
+    def _keys(self):
+        import importlib
+        m = importlib.import_module('api.seeds.management_degree_requirements')
+        return {p['program_key'] for p in m.MANAGEMENT_PROGRAMS}
+
+    def test_every_major_slug_resolves(self):
+        keys = self._keys()
+        missing = {n: f'{s}_major_bcom' for n, s in self.SLUGS.items()
+                   if f'{s}_major_bcom' not in keys}
+        assert not missing, f'B.Com. majors with no seeded program: {missing}'
+
+    def test_core_and_its_economics_variant_both_exist(self):
+        keys = self._keys()
+        assert 'bcom_core' in keys
+        assert 'bcom_core_economics' in keys
+
+    def test_economics_reconciles_with_mcgill(self):
+        """36-credit Core + 33-credit major = the 69 McGill publishes."""
+        import importlib
+        m = importlib.import_module('api.seeds.management_degree_requirements')
+        by = {p['program_key']: p for p in m.MANAGEMENT_PROGRAMS}
+        assert by['bcom_core_economics']['total_credits'] == 36
+        assert by['economics_management_major_bcom']['total_credits'] == 33
+        assert (by['bcom_core_economics']['total_credits']
+                + by['economics_management_major_bcom']['total_credits']) == 69
+
+    def test_standard_majors_reconcile_on_the_42_credit_core(self):
+        import importlib
+        m = importlib.import_module('api.seeds.management_degree_requirements')
+        by = {p['program_key']: p for p in m.MANAGEMENT_PROGRAMS}
+        core = by['bcom_core']['total_credits']
+        assert core == 42
+        for k in ('marketing_major_bcom', 'accounting_major_bcom', 'finance_major_bcom'):
+            assert core + by[k]['total_credits'] == 72, k
+
+    def test_economics_core_omits_the_substituted_courses(self):
+        import importlib
+        m = importlib.import_module('api.seeds.management_degree_requirements')
+        by = {p['program_key']: p for p in m.MANAGEMENT_PROGRAMS}
+        codes = {f"{c['subject']} {c['catalog']}"
+                 for b in by['bcom_core_economics']['blocks']
+                 for c in (b.get('courses') or [])}
+        # ECON 230D1/D2 replaces MGCR 293; ECON 332 + 333 replace MGCR 294
+        assert 'MGCR 293' not in codes
+        assert 'MGCR 294' not in codes
+        assert 'MGCR 211' in codes and len(codes) == 12
