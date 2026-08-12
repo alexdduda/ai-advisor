@@ -1,0 +1,40 @@
+# gitleaks configuration
+#
+# Extends the default ruleset — every built-in rule stays active. The single
+# allowlist below exists for one specific, verified false positive.
+#
+# WHAT AND WHY
+# `backend/api/seeds/*.py` describe McGill degree requirements. Each requirement
+# block carries a human-readable slug in a field named `block_key`:
+#
+#     "block_key": 'dmd_years34_clinical',
+#     "block_key": 'cs_liberal_bsc_comp300_electives',
+#
+# gitleaks' `generic-api-key` rule fires on any identifier containing "key"
+# followed by a long-enough quoted string, so these 1231 slugs read as
+# credentials. They are not secrets: they are stable identifiers for
+# requirement blocks, and they are also stored in plain text in the
+# `requirement_blocks.block_key` column.
+#
+# These lines existed before too, but the seed files aligned their values with
+# extra padding ("block_key":      "value"). The rule tolerates at most five
+# filler characters between the separator and the value, so seven spaces-plus-a-
+# quote silently missed the pattern. Regenerating the seeds from production
+# (scripts/export_degree_seeds.py) emits compact formatting, which surfaced what
+# had always been there. The allowlist is the honest fix; restoring decorative
+# whitespace to hide from a scanner is not.
+#
+# Deliberately narrow: matched against the whole LINE, and only lines that are
+# exactly a `block_key` assignment whose value is a lowercase slug. A real
+# credential pasted into these files — different field name, or any character
+# outside [a-z0-9_] — is still caught.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Degree-requirement block slugs (block_key) are identifiers, not credentials"
+regexTarget = "line"
+regexes = [
+  '''^\s*["']?block_key["']?\s*:\s*["'][a-z0-9_]+["'],?\s*$''',
+]
