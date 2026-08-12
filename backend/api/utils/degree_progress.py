@@ -240,6 +240,38 @@ def _key_of(subject: str, catalog) -> str:
 _OPEN_ENDED = re.compile(r"\b(?:or|and)\s+(?:above|higher|greater)\b")
 
 
+def _band_exclusions(title: str) -> Optional[set]:
+    """Course codes a wildcard title carves out, e.g. "(excluding COMP 396)".
+
+    Only reads text after "excluding"/"except", and only picks up things shaped
+    like a course code. Titles excluding a *category* ("specified projects and
+    independent studies") yield nothing — we can't tell which courses those are
+    from the title, so we leave them in rather than guess.
+    Port of bandExclusions() in requirementMatch.js."""
+    m = re.search(r'exclud\w*|except\b', title)
+    if not m:
+        return None
+    codes = re.findall(r'\b([a-z]{2,4})\s*(\d{3}[a-z0-9]*)', title[m.start():])
+    if not codes:
+        return None
+    return {f"{s} {c}".upper() for s, c in codes}
+
+
+def _course_in_band(band: dict, course: dict) -> bool:
+    """Does `course` fall inside `band`, respecting the band's own exclusions?
+    Port of courseInBand()."""
+    if (course.get('subject') or '').upper() != band['subject']:
+        return False
+    try:
+        cat = int(course.get('catalog'))
+    except (TypeError, ValueError):
+        return False
+    if cat < band['min'] or cat > band['max']:
+        return False
+    exclude = band.get('exclude')
+    return not (exclude and _key_of(course.get('subject'), course.get('catalog')) in exclude)
+
+
 def wildcard_band(req: dict) -> Optional[dict]:
     """If `req` is a wildcard placeholder ("Any 200-level X course"), return
     {subject, min, max}; else None. Port of wildcardBand() in requirementMatch.js."""
@@ -262,24 +294,34 @@ def wildcard_band(req: dict) -> Optional[dict]:
     if not subject:
         return None
 
+    exclude = _band_exclusions(title)
+
+    def mk(lo, hi):
+        # Only carry `exclude` when there is something to exclude, so a plain
+        # band stays shape-identical to what it has always been (and to the JS).
+        band = {'subject': subject, 'min': lo, 'max': hi}
+        if exclude:
+            band['exclude'] = exclude
+        return band
+
     m = re.search(r'(\d{3})\s*\+', title)
     if m:
-        return {'subject': subject, 'min': int(m.group(1)), 'max': float('inf')}
+        return mk(int(m.group(1)), float('inf'))
 
     # "Any 300-level COMP course or above" is McGill's phrasing for 300/400/500.
     # Reading it as 300–399 silently dropped every 400- and 500-level course.
     m = re.search(r'(\d{3})\s*-?\s*level', title)
     if m:
         lvl = int(m.group(1))
-        return {'subject': subject, 'min': lvl, 'max': float('inf') if open_ended else lvl + 99}
+        return mk(lvl, float('inf') if open_ended else lvl + 99)
 
     if re.search(r'upper[\s-]*level', title):
-        return {'subject': subject, 'min': 300, 'max': float('inf')}
+        return mk(300, float('inf'))
 
     try:
         cat = int(req.get('catalog'))
         if cat % 100 == 0:
-            return {'subject': subject, 'min': cat, 'max': float('inf') if open_ended else cat + 99}
+            return mk(cat, float('inf') if open_ended else cat + 99)
     except (TypeError, ValueError):
         pass
     return None
@@ -325,10 +367,7 @@ def block_wildcard_matches(block: dict, user_courses: list, exclude_keys: Option
             uc_lvl = int(uc.get('catalog'))
         except (TypeError, ValueError):
             uc_lvl = None
-        in_band = any(
-            b['subject'] == uc_subj and uc_lvl is not None and b['min'] <= uc_lvl <= b['max']
-            for b in bands
-        )
+        in_band = any(_course_in_band(b, uc) for b in bands)
         in_legacy = legacy_applies and uc_subj in block_subjects
         if in_legacy and min_level > 0 and (uc_lvl is None or uc_lvl < min_level):
             in_legacy = False
@@ -401,14 +440,19 @@ def calc_ring_progress(
         needed = needed if needed is not None else float('inf')
         got = 0.0
         for uc in block_wildcard_matches(b, completed_courses, claims):
-            if got >= needed:
+            remaining = needed - got
+            if remaining <= 0:
                 break
             uc_key = _key_of(uc.get('subject'), uc.get('catalog'))
             if uc_key in seen_db or uc_key in seen_user:
                 continue
             if uc_key in overlap_keys and course_allocations.get(uc_key) and course_allocations[uc_key] != prog_key:
                 continue
-            credits = float(uc.get('credits') or 3)
+            # Clamp to what the block still needs. The cap was checked only
+            # before adding, so the last course always overshot — a 6-credit
+            # block could award 8. Surplus credit is real, but it counts toward
+            # the degree at large, not toward this block's requirement.
+            credits = min(float(uc.get('credits') or 3), remaining)
             earned += credits
             got += credits
             seen_user.add(uc_key)

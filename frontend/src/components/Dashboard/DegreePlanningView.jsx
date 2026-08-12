@@ -770,11 +770,17 @@ function ProgramSection({ prog, completedCourses, currentCourses, advStanding, o
     let blockGot = 0
     const takeWildcard = (pool, isCompleted) => {
       for (const uc of blockWildcardMatches(b, pool, explicitClaims)) {
-        if (blockGot >= blockNeeded) break
+        const remaining = blockNeeded - blockGot
+        if (remaining <= 0) break
         const ucKey = `${uc.subject} ${uc.catalog}`.toUpperCase()
         if (seenDbKeys.has(ucKey) || seenUserKeys.has(ucKey)) continue
         if (effectiveAllocation[ucKey] && effectiveAllocation[ucKey] !== progKey) continue
-        const cr = parseFloat(uc.credits || 3)
+        // Clamp to what the block still needs. The cap used to be checked only
+        // before adding, so the last course always overshot: a 6-credit block
+        // fed COMP 322 (1) + COMP 421 (3) + COMP 559 (4) counted the full 8.
+        // Surplus credit is real, but it counts toward the degree at large, not
+        // toward this block's requirement.
+        const cr = Math.min(parseFloat(uc.credits || 3), remaining)
         if (isCompleted) earnedCredits += cr; else inProgressCredits += cr
         blockGot += cr
         seenUserKeys.add(ucKey)

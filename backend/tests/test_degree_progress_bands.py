@@ -30,9 +30,8 @@ def band(subject, catalog, title):
 
 class TestOpenEnded:
     def test_or_above_has_no_ceiling(self):
-        assert band('COMP', '300', 'Any 300-level COMP course or above (excluding COMP 396).') == {
-            'subject': 'COMP', 'min': 300, 'max': math.inf,
-        }
+        b = band('COMP', '300', 'Any 300-level COMP course or above (excluding COMP 396).')
+        assert (b['subject'], b['min'], b['max']) == ('COMP', 300, math.inf)
 
     def test_every_open_ended_phrasing_in_the_catalogue(self):
         # Exactly the titles present in requirement_courses today.
@@ -87,3 +86,65 @@ class TestLegacyFallback:
         ]}
         taken = [{'subject': 'MATH', 'catalog': '133'}, {'subject': 'COMP', 'catalog': '250'}]
         assert block_wildcard_matches(block, taken) == [{'subject': 'MATH', 'catalog': '133'}]
+
+
+class TestExclusions:
+    CS_ABOVE = 'Any 300-level COMP course or above (excluding COMP 396).'
+
+    def test_parses_the_excluded_code_off_the_title(self):
+        assert band('COMP', '300', self.CS_ABOVE)['exclude'] == {'COMP 396'}
+
+    def test_excluded_course_stays_out_of_the_block(self):
+        block = {'credits_needed': 6, 'courses': [
+            {'subject': 'COMP', 'catalog': '300', 'title': self.CS_ABOVE},
+        ]}
+        taken = [
+            {'subject': 'COMP', 'catalog': '396'},
+            {'subject': 'COMP', 'catalog': '421'},
+            {'subject': 'COMP', 'catalog': '250'},   # below the band
+        ]
+        assert block_wildcard_matches(block, taken) == [{'subject': 'COMP', 'catalog': '421'}]
+
+    def test_category_carve_out_excludes_nothing(self):
+        """"excluding specified projects and independent studies" names no codes,
+        so we leave those courses in rather than guess which they are."""
+        b = band('COMP', '300',
+                 'Any COMP course at 300 level or above (excluding specified projects and independent studies)')
+        assert 'exclude' not in b
+        assert b['max'] == math.inf
+
+    def test_plain_band_carries_no_exclude_key(self):
+        assert band('ANTH', '200', 'Any 200-level Anthropology course') == {
+            'subject': 'ANTH', 'min': 200, 'max': 299,
+        }
+
+
+class TestBlockCreditCap:
+    """A block awards at most credits_needed. The cap used to be checked only
+    before adding a course, so the last one always overshot — on a real account
+    a 6-credit block absorbed COMP 322 (1) + COMP 421 (3) + COMP 559 (4) = 8,
+    inflating that program's ring."""
+
+
+    BLOCK = {
+        'credits_needed': 6,
+        'courses': [{'subject': 'COMP', 'catalog': '300',
+                     'title': 'Any 300-level COMP course or above'}],
+    }
+
+    def _prog(self):
+        return {'program_key': 'p', 'total_credits': 36, 'blocks': [dict(self.BLOCK)]}
+
+    def test_block_never_awards_more_than_it_needs(self):
+        from api.utils.degree_progress import calc_ring_progress
+        done = [
+            {'subject': 'COMP', 'catalog': '322', 'credits': 1},
+            {'subject': 'COMP', 'catalog': '421', 'credits': 3},
+            {'subject': 'COMP', 'catalog': '559', 'credits': 4},   # would overshoot to 8
+        ]
+        assert calc_ring_progress(self._prog(), done, [], {}, set())['earned'] == 6
+
+    def test_under_the_cap_is_untouched(self):
+        from api.utils.degree_progress import calc_ring_progress
+        done = [{'subject': 'COMP', 'catalog': '421', 'credits': 3}]
+        assert calc_ring_progress(self._prog(), done, [], {}, set())['earned'] == 3
