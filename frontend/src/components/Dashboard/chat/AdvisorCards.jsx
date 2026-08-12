@@ -347,6 +347,14 @@ function AdvisorCard({
         </div>
       </div>
 
+      {/* The question that produced this card, above the answer so the card
+          reads as a conversation. Parity with the mobile thread: without it the
+          student's own wording only ever existed as the pending card's title
+          and vanished the moment the real card replaced it. */}
+      {card.user_question && (
+        <p className="advisor-card__question">{card.user_question}</p>
+      )}
+
       {/* ── Body — always visible ── */}
       <p className="advisor-card__body">{card.body}</p>
 
@@ -652,11 +660,23 @@ function MobileCardThread({ card, thread, isThinking, onSend, onClose, onSaveTog
         isThinking={isThinking}
         className="thread-messages--fill"
         leading={
-          <div className="mobile-card-thread__intro">
-            <span className="advisor-card__icon"><CardIcon /></span>
-            <p className="advisor-card__body">{card.body}</p>
-            <CardChips chips={chips} isThinking={isThinking} onSend={onSend} />
-          </div>
+          <>
+            {/* The question that produced this card, rendered as the first
+                message so the conversation reads in order. It only used to
+                exist as the card's title while the answer was pending — once
+                the real card arrived the title became the model's paraphrase
+                and the student's own words disappeared, including on reopen. */}
+            {card.user_question && (
+              <div className="thread-message thread-message--user">
+                <p className="thread-text">{card.user_question}</p>
+              </div>
+            )}
+            <div className="mobile-card-thread__intro">
+              <span className="advisor-card__icon"><CardIcon /></span>
+              <p className="advisor-card__body">{card.body}</p>
+              <CardChips chips={chips} isThinking={isThinking} onSend={onSend} />
+            </div>
+          </>
         }
       />
 

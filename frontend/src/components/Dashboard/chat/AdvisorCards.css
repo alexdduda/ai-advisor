@@ -311,6 +311,19 @@
   letter-spacing: -0.01em;
 }
 
+/* The student's own question, shown above the advisor's answer. Quieter than
+   the body and set off by a rule so the card reads question-then-answer
+   rather than as two paragraphs of equal weight. */
+.advisor-card__question {
+  margin: 0 0 10px;
+  padding-left: 10px;
+  border-left: 2px solid var(--accent-primary);
+  font-size: 0.9rem;
+  font-style: italic;
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+
 .advisor-card__body {
   font-size: 0.875rem;
   color: var(--text-secondary);
@@ -1453,14 +1466,22 @@
    checks the same query so the unmount timer does not leave the view stranded
    when the animation is suppressed. */
 .mobile-card-thread {
+  /* Deliberately NOT full-bleed to the bottom.
+     This is a column flex whose last child is the composer, and reaching the
+     bottom edge meant the chat bar was unreachable on a real iPhone — twice.
+     Covering the tab bar (the original intent, via z-index 150) depends on how
+     iOS resolves a fixed `inset: 0` box against the large viewport, which
+     desktop Chrome cannot reproduce, so it could not be verified before
+     shipping. Ending the thread ABOVE the tab bar removes the dependency
+     entirely: the composer's position no longer relies on viewport units, on
+     z-index, or on which viewport iOS decides to use. The tab bar stays usable
+     as a bonus.
+     64px is .mobile-tabbar's height; the inset matches its padding-bottom. */
   position: fixed;
-  inset: 0;
-  /* iOS sizes a `position: fixed; inset: 0` box to the LARGE viewport — the
-     height as if Safari's toolbars were retracted. This is a column flex with
-     the composer as its last child, so the box ran taller than the visible
-     area and the chat bar sat below the fold: the thread opened with its
-     content, a gap, and no way to reply. dvh tracks the toolbars. */
-  height: 100dvh;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: calc(64px + env(safe-area-inset-bottom, 0px));
   z-index: 150;
   display: flex;
   flex-direction: column;
@@ -1561,7 +1582,9 @@
   padding: 10px 16px;
   padding-left:   max(16px, env(safe-area-inset-left));
   padding-right:  max(16px, env(safe-area-inset-right));
-  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  /* The container now stops above the tab bar, which already carries the
+     home-indicator inset, so adding it again here would double the gap. */
+  padding-bottom: 10px;
   border-top: 1px solid var(--border-primary);
   background: var(--bg-primary);
 }
