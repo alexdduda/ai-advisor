@@ -676,7 +676,10 @@ function MobileFeed({ cards, threadMap, thinkingCards, onOpen, onSaveToggle, onD
           key={card.id}
           card={card}
           thread={threadMap[card.id] || []}
-          isThinking={thinkingCards.has(card.id)}
+          // A placeholder card is waiting on its first answer, so it reads as
+          // thinking — which also stops CardChatBar accepting a follow-up for
+          // a card that has no row server-side yet.
+          isThinking={thinkingCards.has(card.id) || !!card._pending}
           onOpen={onOpen}
           onSaveToggle={onSaveToggle}
           onDelete={onDelete}
@@ -775,8 +778,10 @@ function DraggableFeed({
           <AdvisorCard
             card={card}
             thread={threadMap[card.id] || []}
-            isThinking={thinkingCards.has(card.id)}
-            isExpanded={expandedCards.has(card.id)}
+            isThinking={thinkingCards.has(card.id) || !!card._pending}
+            // Also match the placeholder this card replaced, so the panel
+            // doesn't collapse for a render when the id changes.
+            isExpanded={expandedCards.has(card.id) || expandedCards.has(card._replacedPendingId)}
             isPinned={card.id === pinnedCardId}
             onSaveToggle={onSaveToggle}
             onPinToggle={onPinToggle}
@@ -1044,8 +1049,15 @@ export default function AdvisorCards({
 
   // Resolved from visibleCards so a refresh or a delete that drops the card
   // also dismisses the thread instead of stranding a stale overlay.
+  //
+  // The second lookup follows a freeform question through its answer: the
+  // placeholder card is replaced by the real one and its id changes, so
+  // matching only on id would drop the overlay for a commit and replay the
+  // push-in animation. Resolving during render keeps it mounted.
   const mobileThreadCard = mobileThreadId
-    ? visibleCards.find(c => c.id === mobileThreadId) || null
+    ? (visibleCards.find(c => c.id === mobileThreadId)
+       || visibleCards.find(c => c._replacedPendingId === mobileThreadId)
+       || null)
     : null
 
   return (
@@ -1191,7 +1203,7 @@ export default function AdvisorCards({
         <MobileCardThread
           card={mobileThreadCard}
           thread={threadMap[mobileThreadCard.id] || []}
-          isThinking={thinkingCards.has(mobileThreadCard.id)}
+          isThinking={thinkingCards.has(mobileThreadCard.id) || !!mobileThreadCard._pending}
           onSend={(msg) => handleSend(mobileThreadCard.id, msg, mobileThreadCard.title, mobileThreadCard.body)}
           onClose={closeMobileThread}
           onSaveToggle={onSaveToggle}

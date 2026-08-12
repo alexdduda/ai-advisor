@@ -1183,11 +1183,27 @@ function MyProgramCard({ profile, completedCourses, currentCourses, onProgressSu
     ? foundationProgramKey(isBasc ? 'Faculty of Arts & Science' : (profile?.faculty || ''))
     : null
 
-  const majorKey = toProgramKey(
-    profile?.major,
-    'major',
-    isBasc && !bascIsMultiTrack ? 'Faculty of Arts & Science' : (profile?.faculty || '')
-  )
+  // Honours students get the honours program, not the major.
+  //
+  // profile.is_honours was collected but never read here, so someone in
+  // Honours Physics was shown the Physics Major requirements — different
+  // course lists and a different credit total. toProgramKey has always
+  // understood type 'honours' (physics_honours_bsc, history_honours,
+  // investment_management_honours_bcom); nothing ever passed it.
+  //
+  // Not every major has an honours counterpart, and sending a student to a
+  // key that does not exist is what produced the blank tabs fixed alongside
+  // this. So the plain major key is kept as a fallback and used if the
+  // honours fetch 404s.
+  const majorFaculty = isBasc && !bascIsMultiTrack
+    ? 'Faculty of Arts & Science'
+    : (profile?.faculty || '')
+  const plainMajorKey = toProgramKey(profile?.major, 'major', majorFaculty)
+  const honoursKey = profile?.is_honours
+    ? toProgramKey(profile?.major, 'honours', majorFaculty)
+    : null
+  const majorKey = honoursKey || plainMajorKey
+  const majorFallbackKey = honoursKey && honoursKey !== plainMajorKey ? plainMajorKey : null
   const sciKey = isBasc && bascIsMultiTrack
     ? toProgramKey(profile?.other_majors?.[0], 'major', 'Faculty of Science')
     : null
@@ -1320,8 +1336,19 @@ function MyProgramCard({ profile, completedCourses, currentCourses, onProgressSu
         .then(result => ({ key, name, result }))
     )
 
+    // Honours first, plain major if that program doesn't exist. Without the
+    // fallback an honours student in a program with no honours variant would
+    // see an empty requirements tab.
+    const fetchMajor = async () => {
+      const result = await fetchProgram(majorKey, setProgramData)
+      if (result === 'not_found' && majorFallbackKey) {
+        return fetchProgram(majorFallbackKey, setProgramData)
+      }
+      return result
+    }
+
     Promise.all([
-      fetchProgram(majorKey, setProgramData),
+      fetchMajor(),
       fetchProgram(minorKey, setMinorData),
       fetchProgram(sciKey, setSciData),
       fetchProgram(coreKey, setCoreData),
@@ -1339,7 +1366,7 @@ function MyProgramCard({ profile, completedCourses, currentCourses, onProgressSu
       })
     }).finally(() => setLoading(false))
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [majorKey, minorKey, sciKey, coreKey, concentrationKey, foundationKey,
+  }, [majorKey, majorFallbackKey, minorKey, sciKey, coreKey, concentrationKey, foundationKey,
       extraMajorsList.map(x=>x.key).join(','),
       extraMinorsList.map(x=>x.key).join(','),
       !!profile, profile?.concentration])

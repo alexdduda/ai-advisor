@@ -204,3 +204,53 @@ class TestBComProgramKeys:
         assert 'MGCR 293' not in codes
         assert 'MGCR 294' not in codes
         assert 'MGCR 211' in codes and len(codes) == 12
+
+
+class TestHonoursProgramKeys:
+    """Honours students must land on an honours program that exists.
+
+    profile.is_honours was collected but never read by DegreePlanningView, so
+    majorKey was always built with type 'major' and someone in Honours Physics
+    saw the Physics Major requirements — different courses, different total.
+
+    toProgramKey has always understood type 'honours'; nothing passed it. Now it
+    does, with the plain major key kept as a fallback for majors that have no
+    honours variant. These tests mirror the suffix rules so a rename breaks here
+    rather than in a student's plan.
+    """
+
+    def _keys(self):
+        import importlib
+        keys = set()
+        for mod, var in MODULES.items():
+            m = importlib.import_module(f'api.seeds.{mod}')
+            keys |= {p['program_key'] for p in getattr(m, var)}
+        return keys
+
+    def test_honours_keys_exist_for_the_faculties_that_use_them(self):
+        keys = self._keys()
+        # (slug, suffix) mirroring toProgramKey: science -> _honours_bsc,
+        # arts/general -> _honours, management -> _honours_bcom
+        expected = [
+            'physics_honours_bsc',                  # a real is_honours user
+            'history_honours',                      # a real is_honours user
+            'cs_honours_bsc',
+            'anthropology_honours',
+            'investment_management_honours_bcom',
+        ]
+        missing = [k for k in expected if k not in keys]
+        assert not missing, f'honours programs the UI would request but that do not exist: {missing}'
+
+    def test_a_major_without_an_honours_variant_still_has_its_major(self):
+        """The fallback target must exist, or turning on is_honours would send
+        the student to a tab with nothing in it."""
+        keys = self._keys()
+        assert 'retail_management_honours_bcom' not in keys   # no honours variant
+        assert 'retail_management_major_bcom' in keys          # so the fallback resolves
+
+    def test_investment_management_exists_only_as_honours(self):
+        """Why the fallback is one-directional: there is no Investment
+        Management *major*, so a student in it must mark is_honours."""
+        keys = self._keys()
+        assert 'investment_management_honours_bcom' in keys
+        assert 'investment_management_major_bcom' not in keys

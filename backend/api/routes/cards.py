@@ -338,6 +338,12 @@ def insert_user_card(user_id: str, card_data: dict, question: str, language: str
         "body": card_data.get("body", ""), "actions": json.dumps(actions),
         "category": _sanitise_category(card_data), "priority": 0,
         "sort_order": next_sort, "generated_at": now, "prompted_language": language,
+        # What the student actually typed. `title` is the model's paraphrase and
+        # only falls back to the question, so without this the original wording
+        # was lost the moment the card was written — the column existed and
+        # nothing had ever populated it. Bounded because title is varchar-ish
+        # and this is free text straight from the user.
+        "user_question": (question or "")[:2000],
     }
     result = supabase.table("advisor_cards").insert(row).execute()
     inserted = result.data[0] if result.data else row
