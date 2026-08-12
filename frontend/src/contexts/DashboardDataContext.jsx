@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 /**
  * DashboardDataContext
  *
@@ -25,6 +26,7 @@ import favoritesAPI from '../lib/favoritesAPI'
 import completedCoursesAPI from '../lib/completedCoursesAPI'
 import currentCoursesAPI from '../lib/currentCoursesAPI'
 import cardsAPI from '../lib/cardsAPI'
+import { PENDING_CARD_PREFIX, isPendingCardId } from '../lib/pendingCard'
 import clubsAPI from '../lib/clubsAPI'
 import { getCreditsRequired } from '../utils/mcgillData'
 import { normalizeQuery, buildCorrectionCandidates } from '../utils/fuzzySearch'
@@ -66,17 +68,6 @@ export function DashboardDataProvider({ children }) {
 
   // Deep link into the Brief: open a specific advisor card's chat (from Home).
   const [briefOpenCardId, setBriefOpenCardId] = useState(null)
-
-  // ── Tab change ─────────────────────────────────────────
-  // Shells may wrap this to add their own side effects (the desktop shell
-  // closes its sidebar on narrow viewports).
-  const handleTabChange = useCallback((tab) => {
-    setActiveTab(tab)
-    setSearchResults([])
-    setSearchError(null)
-    setSearchCorrection(null)
-    setHasSearched(false)
-  }, [])
 
   // Deep-link intents are exposed as setters rather than as ready-made
   // navigation helpers, because each shell composes them with its *own*
@@ -161,6 +152,19 @@ export function DashboardDataProvider({ children }) {
   const [sortBy, setSortBy] = useState('relevance')
   const [searchTerm, setSearchTerm] = useState('')      // semester filter, '' = all
   const [availableTerms, setAvailableTerms] = useState([])
+
+  // ── Tab change ─────────────────────────────────────────
+  // Declared after the search state it resets: these setters are stable, but
+  // referencing them above their useState calls trips react-hooks/immutability.
+  // Shells may wrap this to add their own side effects (the desktop shell
+  // closes its sidebar on narrow viewports).
+  const handleTabChange = useCallback((tab) => {
+    setActiveTab(tab)
+    setSearchResults([])
+    setSearchError(null)
+    setSearchCorrection(null)
+    setHasSearched(false)
+  }, [])
 
   // ── Favorites & completed ──────────────────────────────
   // SWR-style: hydrate user-data state from localStorage so the UI paints
@@ -467,7 +471,8 @@ export function DashboardDataProvider({ children }) {
   }, [user?.id])
 
   const handleCardSaveToggle = async (cardId, isSaved) => {
-    if (!user?.id) return
+    // A placeholder card isn't in the database yet — saving it would 404.
+    if (!user?.id || isPendingCardId(cardId)) return
     try {
       const updated = await cardsAPI.saveCard(cardId, isSaved)
       setAdvisorCards(prev =>
@@ -480,6 +485,9 @@ export function DashboardDataProvider({ children }) {
 
   const handleCardsReorder = async (order) => {
     if (!user?.id) return
+    // Drop placeholders from the payload; the server has no row to reorder.
+    order = (order || []).filter(o => !isPendingCardId(o?.id))
+    if (!order.length) return
     try {
       await cardsAPI.reorderCards(user.id, order)
       setAdvisorCards(prev => {
@@ -495,6 +503,9 @@ export function DashboardDataProvider({ children }) {
 
   const handleDeleteCard = async (cardId) => {
     setAdvisorCards(prev => prev.filter(c => c.id !== cardId))
+    // Nothing to delete server-side for a placeholder — dropping it locally is
+    // the whole operation.
+    if (isPendingCardId(cardId)) return
     try { await cardsAPI.deleteCard(user.id, cardId) } catch (e) {
       console.warn('Failed to delete card from DB:', e)
     }
@@ -506,13 +517,57 @@ export function DashboardDataProvider({ children }) {
     const question = freeformInput.trim()
     setFreeformInput('')
     setIsAsking(true)
+
+    // Show the question and open its chat immediately rather than after the
+    // model replies. Asking used to clear the input and then sit silently for
+    // several seconds before a collapsed card appeared at the top of the feed —
+    // the student had no confirmation their question had registered, and what
+    // they typed was on screen nowhere.
+    //
+    // The placeholder carries PENDING_CARD_PREFIX in its id; anything that
+    // would call the API with a card id refuses to act on one (see
+    // isPendingCardId) because that id does not exist server-side yet.
+    const pendingId = `${PENDING_CARD_PREFIX}${Date.now()}`
+    const pendingCard = {
+      id: pendingId,
+      source: 'user',
+      card_type: 'insight',
+      label: 'YOUR QUESTION',
+      title: question,
+      user_question: question,
+      body: '',
+      actions: [],
+      category: 'other',
+      is_saved: false,
+      _pending: true,
+    }
+    setAdvisorCards(prev => [pendingCard, ...prev])
+    setBriefOpenCardId(pendingId)
+
     try {
       const data = await cardsAPI.askCard(user.id, question, languageRef.current)
       if (data.card) {
-        setAdvisorCards(prev => [data.card, ...prev])
+        // Swap in the real card and keep the chat open on it — the id changes,
+        // so the open-card pointer has to follow or the view would close.
+        // _replacedPendingId lets the open views resolve through the swap in a
+        // single render. Without it the id changes underneath them, the card
+        // they are keyed to vanishes for one commit, and the mobile thread
+        // unmounts and replays its slide-in animation mid-answer.
+        setAdvisorCards(prev => prev.map(
+          c => (c.id === pendingId ? { ...data.card, _replacedPendingId: pendingId } : c)
+        ))
+        setBriefOpenCardId(data.card.id)
+      } else {
+        setAdvisorCards(prev => prev.filter(c => c.id !== pendingId))
+        setBriefOpenCardId(null)
       }
     } catch (error) {
       console.error('Error asking card:', error)
+      // Roll the placeholder back and hand the student their text back rather
+      // than losing it to a failed request.
+      setAdvisorCards(prev => prev.filter(c => c.id !== pendingId))
+      setBriefOpenCardId(null)
+      setFreeformInput(question)
     } finally {
       setIsAsking(false)
     }
