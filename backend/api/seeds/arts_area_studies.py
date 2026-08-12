@@ -55,6 +55,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Introductory Categories (6 credits)',
         "block_type": 'multi_group',
         "credits_needed": 6,
+        "constraint_notes": 'Students must choose 3 credits from Culture, Populations and Development AND 3 credits from Politics, Society and Development',
         "notes": 'Students must choose 3 credits from Culture, Populations and Development AND 3 credits from Politics, Society and Development',
         "sort_order": 2,
       },
@@ -161,6 +162,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Methods (3–6 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'Students must consult with the IDS Adviser and review the Faculty of Arts course overlap policy when selecting Methods courses',
         "notes": 'Students must consult with the IDS Adviser and review the Faculty of Arts course overlap policy when selecting Methods courses',
         "sort_order": 5,
         "courses": [
@@ -400,6 +402,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Complementary Courses (9 credits)',
         "block_type": 'pool_group',
         "credits_needed": 9,
+        "constraint_notes": 'Thematic: 9 credits from the following groups.',
         "notes": 'Thematic: 9 credits from the following groups.',
         "sort_order": 2,
         "courses": [
@@ -722,6 +725,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Required Courses (12 credits)',
         "block_type": 'required',
         "credits_needed": 12,
+        "constraint_notes": 'All four courses are required. Students are advised to take GSFS 200 and GSFS 250 in first year, GSFS 300 in second year, and GSFS 400 in final year.',
         "notes": 'All four courses are required. Students are advised to take GSFS 200 and GSFS 250 in first year, GSFS 300 in second year, and GSFS 400 in final year.',
         "sort_order": 1,
         "courses": [
@@ -760,6 +764,7 @@ ARTS_AREA_STUDIES = [
         "title": 'GSFS Complementary Courses (9 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 9,
+        "constraint_notes": '9 credits from GSFS courses. Minimum 3 credits must be at 400 or 500 level. Credits may count towards only one program requirement.',
         "notes": '9 credits from GSFS courses. Minimum 3 credits must be at 400 or 500 level. Credits may count towards only one program requirement.',
         "sort_order": 2,
         "courses": [
@@ -860,6 +865,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Complementary Courses (15 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 15,
+        "constraint_notes": '15 credits from the Complementary Course List. Minimum 3 credits must be at 400 or 500 level. Maximum 9 credits at 200 level. Complementary courses must centrally engage with at least two of the following themes: gender, sexuality, feminism, and social justice. Maximum of 12 transfer credits may be accepted by approved exchange programs, subject to University approval.',
         "notes": '15 credits from the Complementary Course List. Minimum 3 credits must be at 400 or 500 level. Maximum 9 credits at 200 level. Complementary courses must centrally engage with at least two of the following themes: gender, sexuality, feminism, and social justice. Maximum of 12 transfer credits may be accepted by approved exchange programs, subject to University approval.',
         "sort_order": 3,
         "courses": [
@@ -1175,6 +1181,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Complementary Courses (12 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 12,
+        "constraint_notes": 'Minimum of 6 credits must be at the 300 level or higher. Complementary courses must centrally engage with at least two of the following themes: gender, sexuality, feminism, and social justice. Maximum of 3 transfer credits may be accepted from approved exchange programs subject to University approval.',
         "notes": 'Minimum of 6 credits must be at the 300 level or higher. Complementary courses must centrally engage with at least two of the following themes: gender, sexuality, feminism, and social justice. Maximum of 3 transfer credits may be accepted from approved exchange programs subject to University approval.',
         "sort_order": 3,
         "courses": [
@@ -1461,6 +1468,7 @@ ARTS_AREA_STUDIES = [
         "block_type": 'group',
         "group_name": 'Quebec Studies',
         "credits_needed": 3,
+        "constraint_notes": 'Or another undergraduate-level 3-credit course focused on Quebec',
         "notes": 'Or another undergraduate-level 3-credit course focused on Quebec',
         "sort_order": 4,
         "courses": [
@@ -1579,6 +1587,7 @@ ARTS_AREA_STUDIES = [
         "title": 'CANS 300-400 Level Courses (9-15 credits)',
         "block_type": 'group',
         "group_name": 'CANS 300-400 Courses',
+        "constraint_notes": '9-15 credits in interdisciplinary Canadian Studies courses',
         "notes": '9-15 credits in interdisciplinary Canadian Studies courses',
         "sort_order": 6,
         "courses": [
@@ -1701,6 +1710,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Complementary 300+ Level Courses (6-12 credits)',
         "block_type": 'group',
         "group_name": 'Complementary 300+ Courses',
+        "constraint_notes": '6-12 credits chosen from complementary courses at 300+ level',
         "notes": '6-12 credits chosen from complementary courses at 300+ level',
         "sort_order": 7,
         "courses": [
@@ -1920,6 +1930,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Complementary Courses – Disciplinary',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": '3 credits chosen from the following disciplinary courses',
         "notes": '3 credits chosen from the following disciplinary courses',
         "sort_order": 2,
         "courses": [
@@ -2002,6 +2013,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Complementary Courses – Canadian Studies',
         "block_type": 'choose_credits',
         "credits_needed": 9,
+        "constraint_notes": '3-9 credits in interdisciplinary Canadian Studies (CANS) courses',
         "notes": '3-9 credits in interdisciplinary Canadian Studies (CANS) courses',
         "sort_order": 3,
         "courses": [
@@ -2108,6 +2120,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Complementary Courses – Additional',
         "block_type": 'choose_credits',
         "credits_needed": 0,
+        "constraint_notes": '0-6 credits chosen from the following additional courses',
         "notes": '0-6 credits chosen from the following additional courses',
         "sort_order": 4,
         "courses": [
@@ -2295,6 +2308,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Complementary Courses',
         "block_type": 'multi_group',
         "credits_needed": 33,
+        "constraint_notes": '33 credits from one of the following two streams.',
         "notes": '33 credits from one of the following two streams.',
         "sort_order": 2,
       },
@@ -2303,6 +2317,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Classical Languages Stream',
         "block_type": 'group',
         "group_name": 'Classical Languages Stream',
+        "constraint_notes": '33 credits of classics (CLAS) or related courses. Minimum 6 credits advanced Ancient Greek and/or Latin. Maximum 12 credits of complementary courses at the 200 level. Maximum 9 credits of non-CLAS courses may be counted toward the program.',
         "notes": '33 credits of classics (CLAS) or related courses. Minimum 6 credits advanced Ancient Greek and/or Latin. Maximum 12 credits of complementary courses at the 200 level. Maximum 9 credits of non-CLAS courses may be counted toward the program.',
         "sort_order": 3,
         "courses": [
@@ -2353,6 +2368,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Classical Studies Stream',
         "block_type": 'group',
         "group_name": 'Classical Studies Stream',
+        "constraint_notes": 'Total 33 credits (6 required + 27 elective). Minimum 6 credits intermediate Ancient Greek and/or Latin. Minimum 6 credits 400-level CLAS courses. Maximum 12 credits of complementary courses at the 200 level. Maximum 9 credits of non-CLAS courses may be counted toward the program.',
         "notes": 'Total 33 credits (6 required + 27 elective). Minimum 6 credits intermediate Ancient Greek and/or Latin. Minimum 6 credits 400-level CLAS courses. Maximum 12 credits of complementary courses at the 200 level. Maximum 9 credits of non-CLAS courses may be counted toward the program.',
         "sort_order": 4,
         "courses": [
@@ -2452,6 +2468,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Complementary Courses (15 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 15,
+        "constraint_notes": '15 credits of Classics (CLAS) or related courses with the following constraints: (1) Minimum 6 credits of Ancient Greek or Latin language courses; (2) Minimum 3 credits at 400-level; (3) Maximum 9 credits at 200-level; (4) Maximum 6 credits of non-CLAS McGill courses and/or transfer credits.',
         "notes": '15 credits of Classics (CLAS) or related courses with the following constraints: (1) Minimum 6 credits of Ancient Greek or Latin language courses; (2) Minimum 3 credits at 400-level; (3) Maximum 9 credits at 200-level; (4) Maximum 6 credits of non-CLAS McGill courses and/or transfer credits.',
         "sort_order": 2,
         "courses": [
@@ -2592,6 +2609,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Jewish History (6 credits minimum)',
         "block_type": 'choose_credits',
         "credits_needed": 6,
+        "constraint_notes": '6 credits (minimum) in the history of Jewish civilization to be chosen from the following.',
         "notes": '6 credits (minimum) in the history of Jewish civilization to be chosen from the following.',
         "sort_order": 1,
         "courses": [
@@ -2632,6 +2650,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Jewish Language (6 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 6,
+        "constraint_notes": '6 credits reflecting an advanced level of competence in either Hebrew or Yiddish chosen from the following. Students without the background necessary to complete the advanced language requirement may substitute up to 12 credits in language.',
         "notes": '6 credits reflecting an advanced level of competence in either Hebrew or Yiddish chosen from the following. Students without the background necessary to complete the advanced language requirement may substitute up to 12 credits in language.',
         "sort_order": 2,
         "courses": [
@@ -2678,6 +2697,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Areas of Jewish Studies (24 credits)',
         "block_type": 'pool_group',
         "credits_needed": 24,
+        "constraint_notes": "24 credits in Jewish Studies of which at least 12 are devoted to a single area of study. Hebrew language courses are found listed under the heading 'Language and Literature - Hebrew', and Yiddish language courses are found under the heading 'Language and Literature - Yiddish' in the areas of study lists. Students without the background necessary to complete the advanced language requirement may substitute up to 12 credits in language.",
         "notes": "24 credits in Jewish Studies of which at least 12 are devoted to a single area of study. Hebrew language courses are found listed under the heading 'Language and Literature - Hebrew', and Yiddish language courses are found under the heading 'Language and Literature - Yiddish' in the areas of study lists. Students without the background necessary to complete the advanced language requirement may substitute up to 12 credits in language.",
         "sort_order": 3,
       },
@@ -2686,6 +2706,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Biblical Studies',
         "block_type": 'group',
         "group_name": 'Biblical Studies',
+        "constraint_notes": 'Area of study option within Areas of Jewish Studies. At least 12 credits must be in one area.',
         "notes": 'Area of study option within Areas of Jewish Studies. At least 12 credits must be in one area.',
         "sort_order": 3,
         "courses": [
@@ -2745,6 +2766,7 @@ ARTS_AREA_STUDIES = [
         "title": 'East European Studies',
         "block_type": 'group',
         "group_name": 'East European Studies',
+        "constraint_notes": 'Area of study option within Areas of Jewish Studies. At least 12 credits must be in one area.',
         "notes": 'Area of study option within Areas of Jewish Studies. At least 12 credits must be in one area.',
         "sort_order": 4,
         "courses": [
@@ -2860,6 +2882,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Jewish History',
         "block_type": 'group',
         "group_name": 'Jewish History',
+        "constraint_notes": 'Area of study option within Areas of Jewish Studies. At least 12 credits must be in one area.',
         "notes": 'Area of study option within Areas of Jewish Studies. At least 12 credits must be in one area.',
         "sort_order": 5,
         "courses": [
@@ -3000,6 +3023,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Complementary Courses (18 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 18,
+        "constraint_notes": '18 credits in Jewish Studies of which 9 are normally taken at the 300 level or above. Consultation with an adviser is strongly recommended. At least 9 credits will normally be taken at an advanced level in a single area or theme (e.g., Biblical Studies, East European Studies, Jewish History, Jewish Thought, Literature (Hebrew, Yiddish), Modern Jewish Studies, and Rabbinic Studies).',
         "notes": '18 credits in Jewish Studies of which 9 are normally taken at the 300 level or above. Consultation with an adviser is strongly recommended. At least 9 credits will normally be taken at an advanced level in a single area or theme (e.g., Biblical Studies, East European Studies, Jewish History, Jewish Thought, Literature (Hebrew, Yiddish), Modern Jewish Studies, and Rabbinic Studies).',
         "sort_order": 1,
         "courses": [
@@ -3252,6 +3276,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Introduction to East Asian Culture (3-6 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'Choose 3-6 credits from the following courses.',
         "notes": 'Choose 3-6 credits from the following courses.',
         "sort_order": 1,
         "courses": [
@@ -3298,6 +3323,7 @@ ARTS_AREA_STUDIES = [
         "title": 'East Asian Language (6-9 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 6,
+        "constraint_notes": '6-9 credits of East Asian language courses selected from the list below. Admission to language courses is subject to placement tests.',
         "notes": '6-9 credits of East Asian language courses selected from the list below. Admission to language courses is subject to placement tests.',
         "sort_order": 2,
         "courses": [
@@ -3476,6 +3502,7 @@ ARTS_AREA_STUDIES = [
         "title": 'East Asian Literature, Culture and Society (21-24 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 21,
+        "constraint_notes": '21-24 credits of courses in East Asian Literature, Culture and Society selected from the list below. At least 6 credits must be taken at the 400 or 500 level.',
         "notes": '21-24 credits of courses in East Asian Literature, Culture and Society selected from the list below. At least 6 credits must be taken at the 400 or 500 level.',
         "sort_order": 3,
         "courses": [
@@ -3569,6 +3596,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Languages – Two Levels (12–15 credits from one language: Arabic, Persian, Turkish, or Urdu)',
         "block_type": 'pool_group',
         "credits_needed": 12,
+        "constraint_notes": "Students must complete two levels (12–15 credits) in ONE language: Arabic, Persian, Turkish, or Urdu. For Arabic, the first two levels total 15 credits (ISLA 221D1/D2 = 9 credits + ISLA 322/322D1/D2 = 6 credits); the extra 3 credits may count toward the 'any level' complementary course requirement. Hebrew courses (JWST 220D1/D2, 320D1/D2, 340D1/D2) are considered non-language courses.",
         "notes": "Students must complete two levels (12–15 credits) in ONE language: Arabic, Persian, Turkish, or Urdu. For Arabic, the first two levels total 15 credits (ISLA 221D1/D2 = 9 credits + ISLA 322/322D1/D2 = 6 credits); the extra 3 credits may count toward the 'any level' complementary course requirement. Hebrew courses (JWST 220D1/D2, 320D1/D2, 340D1/D2) are considered non-language courses.",
         "sort_order": 1,
       },
@@ -3577,6 +3605,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Arabic',
         "block_type": 'group',
         "group_name": 'Arabic',
+        "constraint_notes": "First two levels of Arabic total 15 credits (ISLA 221D1/D2 = 9 cr + ISLA 322 or 322D1/D2 = 6 cr). The extra 3 credits beyond the 12-credit minimum may count toward the 'any level' block.",
         "notes": "First two levels of Arabic total 15 credits (ISLA 221D1/D2 = 9 cr + ISLA 322 or 322D1/D2 = 6 cr). The extra 3 credits beyond the 12-credit minimum may count toward the 'any level' block.",
         "sort_order": 2,
         "courses": [
@@ -3853,6 +3882,7 @@ ARTS_AREA_STUDIES = [
         "title": 'ISLA 200-Level Non-Language Courses (3 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": '3 credits of 200-level non-language ISLA courses.',
         "notes": '3 credits of 200-level non-language ISLA courses.',
         "sort_order": 6,
         "courses": [
@@ -3875,6 +3905,7 @@ ARTS_AREA_STUDIES = [
         "title": 'ISLA 300-Level Non-Language Courses (6 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 6,
+        "constraint_notes": '6 credits of 300-level non-language ISLA courses. The course list below is incomplete due to page truncation; only courses visible in the extracted text are listed.',
         "notes": '6 credits of 300-level non-language ISLA courses. The course list below is incomplete due to page truncation; only courses visible in the extracted text are listed.',
         "sort_order": 7,
         "courses": [
@@ -3940,6 +3971,7 @@ ARTS_AREA_STUDIES = [
         "title": 'ISLA 400-/500-Level Non-Language Courses (6 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 6,
+        "constraint_notes": '6 credits of 400-/500-level non-language ISLA courses. Course list not available due to page truncation. Advisor should verify full list from the catalogue.',
         "notes": '6 credits of 400-/500-level non-language ISLA courses. Course list not available due to page truncation. Advisor should verify full list from the catalogue.',
         "sort_order": 8,
       },
@@ -3948,6 +3980,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Any Level – ISLA or Non-ISLA Courses (6–9 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 6,
+        "constraint_notes": '6–9 credits at any level, including more language courses, but no more than 6 non-language credits overall at the 200-level. Students may fulfill these credits by taking complementary courses from the Non-ISLA Courses list (which includes JWST Hebrew courses considered non-language). Full course list not available due to page truncation. credits_needed set to 6 (minimum); may be up to 9 credits depending on Arabic usage.',
         "notes": '6–9 credits at any level, including more language courses, but no more than 6 non-language credits overall at the 200-level. Students may fulfill these credits by taking complementary courses from the Non-ISLA Courses list (which includes JWST Hebrew courses considered non-language). Full course list not available due to page truncation. credits_needed set to 6 (minimum); may be up to 9 credits depending on Arabic usage.',
         "sort_order": 9,
       },
@@ -4018,6 +4051,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Statistics (3 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'Credit given for statistics courses is subject to certain restrictions. Students should consult the Course Overlap information in the Course Requirements section for the Faculty of Arts.',
         "notes": 'Credit given for statistics courses is subject to certain restrictions. Students should consult the Course Overlap information in the Course Requirements section for the Faculty of Arts.',
         "sort_order": 3,
         "courses": [
@@ -4058,6 +4092,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Field Courses (3 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'Field course offerings are determined each year in February.',
         "notes": 'Field course offerings are determined each year in February.',
         "sort_order": 4,
         "courses": [
@@ -4155,6 +4190,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Geography Electives (18 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 18,
+        "constraint_notes": 'The remaining 18 credits are to be selected from Geography (GEOG) courses excluding GEOG 200 (Geographical Perspectives: World Environmental Problems) and GEOG 205 (Global Change: Past and Future). Of these 18 credits, at least 3 credits must be at the 400 level or above.',
         "notes": 'The remaining 18 credits are to be selected from Geography (GEOG) courses excluding GEOG 200 (Geographical Perspectives: World Environmental Problems) and GEOG 205 (Global Change: Past and Future). Of these 18 credits, at least 3 credits must be at the 400 level or above.',
         "sort_order": 6,
         "courses": [
@@ -4162,6 +4198,7 @@ ARTS_AREA_STUDIES = [
             "subject": 'GEOG',
             "catalog": 'any',
             "title": 'Any GEOG course (excluding GEOG 200 and GEOG 205)',
+            "credits": 3.0,
             "notes": 'At least 3 credits must be at 400-level or above',
           },
         ],
@@ -4269,6 +4306,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Required Courses (18 credits)',
         "block_type": 'required',
         "credits_needed": 18,
+        "constraint_notes": 'COMP 202 can be replaced with an additional computer science complementary course for students with sufficient programming knowledge.',
         "notes": 'COMP 202 can be replaced with an additional computer science complementary course for students with sufficient programming knowledge.',
         "sort_order": 1,
         "courses": [
@@ -4322,6 +4360,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Complementary Courses (18 credits)',
         "block_type": 'pool_group',
         "credits_needed": 18,
+        "constraint_notes": '18 credits selected as follows: 3 credits from each of groups A, B, C, D (12 credits total); additional 3 credits from Group A or B; remaining 3 credits from COMP 230 or COMP 300+ courses (excluding COMP 396).',
         "notes": '18 credits selected as follows: 3 credits from each of groups A, B, C, D (12 credits total); additional 3 credits from Group A or B; remaining 3 credits from COMP 230 or COMP 300+ courses (excluding COMP 396).',
         "sort_order": 2,
       },
@@ -4447,6 +4486,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Additional Complementary Courses (6 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 6,
+        "constraint_notes": '3 additional credits from Group A or B; remaining 3 credits from COMP 230 or COMP 300+ courses (excluding COMP 396).',
         "notes": '3 additional credits from Group A or B; remaining 3 credits from COMP 230 or COMP 300+ courses (excluding COMP 396).',
         "sort_order": 7,
         "courses": [
@@ -4513,6 +4553,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Complementary Courses – Mathematics Foundation (6 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 6,
+        "constraint_notes": 'Students who have taken equivalent courses in CEGEP or elsewhere, or have advanced placement will be granted Advanced Standing and do not need to take these courses. They should replace the credits of the exempted courses with elective courses.',
         "notes": 'Students who have taken equivalent courses in CEGEP or elsewhere, or have advanced placement will be granted Advanced Standing and do not need to take these courses. They should replace the credits of the exempted courses with elective courses.',
         "sort_order": 2,
         "courses": [
@@ -4535,6 +4576,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Complementary Courses – Electives (9 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 9,
+        "constraint_notes": '9 credits selected from the following list or from Computer Science (COMP) courses at the 300 level or above excluding COMP 396 (Undergraduate Research Project), COMP 400 (Project in Computer Science), COMP 401 (Project in Biology and Computer Science), COMP 402 (Honours Project in Computer Science and Biology), and COMP 480 (Independent Studies in Computer Science). Students are strongly encouraged to talk to an advisor of the School before choosing their complementary courses to ensure they follow an approved course sequence.',
         "notes": '9 credits selected from the following list or from Computer Science (COMP) courses at the 300 level or above excluding COMP 396 (Undergraduate Research Project), COMP 400 (Project in Computer Science), COMP 401 (Project in Biology and Computer Science), COMP 402 (Honours Project in Computer Science and Biology), and COMP 480 (Independent Studies in Computer Science). Students are strongly encouraged to talk to an advisor of the School before choosing their complementary courses to ensure they follow an approved course sequence.',
         "sort_order": 3,
         "courses": [
@@ -4566,6 +4608,7 @@ ARTS_AREA_STUDIES = [
             "subject": 'COMP',
             "catalog": '300',
             "title": 'Any COMP course at 300 level or above (excluding specified projects and independent studies)',
+            "credits": 3.0,
             "notes": 'Any Computer Science (COMP) course at the 300 level or above, excluding COMP 396, COMP 400, COMP 401, COMP 402, and COMP 480.',
           },
         ],
@@ -4586,6 +4629,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Complementary Courses (18 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 18,
+        "constraint_notes": '18 credits selected from Computer Science (COMP) courses at the 300 level or above excluding COMP 396. Students may also select a maximum of 3 credits of MATH courses from the list provided.',
         "notes": '18 credits selected from Computer Science (COMP) courses at the 300 level or above excluding COMP 396. Students may also select a maximum of 3 credits of MATH courses from the list provided.',
         "sort_order": 1,
         "courses": [
@@ -4647,6 +4691,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Complementary Courses (36 credits)',
         "block_type": 'pool_group',
         "credits_needed": 36,
+        "constraint_notes": '6 credits must be in pre-20th century literature and culture. A minimum of 9 credits of literature, culture, and film courses must be taught in German. A maximum of 6 credits of LLCU courses may be counted, with prior departmental approval.',
         "notes": '6 credits must be in pre-20th century literature and culture. A minimum of 9 credits of literature, culture, and film courses must be taught in German. A maximum of 6 credits of LLCU courses may be counted, with prior departmental approval.',
         "sort_order": 1,
       },
@@ -4655,6 +4700,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Language Courses',
         "block_type": 'group',
         "group_name": 'Language Courses',
+        "constraint_notes": 'Select from the following language courses as part of the 36-credit complementary requirement.',
         "notes": 'Select from the following language courses as part of the 36-credit complementary requirement.',
         "sort_order": 2,
         "courses": [
@@ -4737,6 +4783,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Literature and Culture Courses',
         "block_type": 'group',
         "group_name": 'Literature and Culture Courses',
+        "constraint_notes": 'Select from the following literature and culture courses as part of the 36-credit complementary requirement. 6 credits must be in pre-20th century literature and culture. A minimum of 9 credits must be taught in German.',
         "notes": 'Select from the following literature and culture courses as part of the 36-credit complementary requirement. 6 credits must be in pre-20th century literature and culture. A minimum of 9 credits must be taught in German.',
         "sort_order": 3,
         "courses": [
@@ -5005,6 +5052,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Complementary Courses (18 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 18,
+        "constraint_notes": "18 credits of courses in German literature, culture, and film taught in English or German selected from the following list. A maximum of 6 credits of LLCU courses can be taken, with prior departmental approval. Beginners' and Intermediate Language courses may not be applied towards this Minor Concentration.",
         "notes": "18 credits of courses in German literature, culture, and film taught in English or German selected from the following list. A maximum of 6 credits of LLCU courses can be taken, with prior departmental approval. Beginners' and Intermediate Language courses may not be applied towards this Minor Concentration.",
         "sort_order": 1,
         "courses": [
@@ -5232,6 +5280,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Language and Civilization',
         "block_type": 'choose_credits',
         "credits_needed": 0,
+        "constraint_notes": '0-18 credits from this section',
         "notes": '0-18 credits from this section',
         "sort_order": 1,
         "courses": [
@@ -5290,6 +5339,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Introductory Courses',
         "block_type": 'choose_credits',
         "credits_needed": 6,
+        "constraint_notes": '6-12 credits from this section',
         "notes": '6-12 credits from this section',
         "sort_order": 2,
         "courses": [
@@ -5324,6 +5374,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Hispanic Literature and Culture',
         "block_type": 'choose_credits',
         "credits_needed": 6,
+        "constraint_notes": '6-30 credits from this section with a minimum of 6 credits at the 400 level or above',
         "notes": '6-30 credits from this section with a minimum of 6 credits at the 400 level or above',
         "sort_order": 3,
         "courses": [
@@ -5492,6 +5543,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Language Courses (0–12 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 12,
+        "constraint_notes": 'Choose up to 12 credits from Spanish language courses.',
         "notes": 'Choose up to 12 credits from Spanish language courses.',
         "sort_order": 1,
         "courses": [
@@ -5530,6 +5582,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Content Courses (6–18 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 6,
+        "constraint_notes": '6–18 credits from Hispanic Studies courses other than language courses. Maximum 6 credits in English-taught courses. Advanced Placement (AP) credits cannot be counted towards the Minor.',
         "notes": '6–18 credits from Hispanic Studies courses other than language courses. Maximum 6 credits in English-taught courses. Advanced Placement (AP) credits cannot be counted towards the Minor.',
         "sort_order": 2,
         "courses": [
@@ -5558,6 +5611,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Complementary Courses (36 credits)',
         "block_type": 'pool_group',
         "credits_needed": 36,
+        "constraint_notes": '36 credits selected from the three Italian course lists. Group A requirements vary by student language background: students with no Italian knowledge must take 12 credits; students with some knowledge may take 6 credits only; students with competency may substitute courses from Groups B and C. ALL students with background must consult with Department for proper placement.',
         "notes": '36 credits selected from the three Italian course lists. Group A requirements vary by student language background: students with no Italian knowledge must take 12 credits; students with some knowledge may take 6 credits only; students with competency may substitute courses from Groups B and C. ALL students with background must consult with Department for proper placement.',
         "sort_order": 1,
       },
@@ -5566,6 +5620,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Group A – Basic Language Courses',
         "block_type": 'group',
         "group_name": 'Group A',
+        "constraint_notes": '0-12 credits depending on language background. Students with no knowledge of Italian must take 12 credits. Students with some knowledge may take 6 credits only. Students with competency may substitute courses from Groups B and C.',
         "notes": '0-12 credits depending on language background. Students with no knowledge of Italian must take 12 credits. Students with some knowledge may take 6 credits only. Students with competency may substitute courses from Groups B and C.',
         "sort_order": 2,
         "courses": [
@@ -5632,6 +5687,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Group B – Courses Taught in Italian',
         "block_type": 'group',
         "group_name": 'Group B',
+        "constraint_notes": 'Minimum of 12 credits required from this group, of which a maximum of 6 credits may be at the 200 level.',
         "notes": 'Minimum of 12 credits required from this group, of which a maximum of 6 credits may be at the 200 level.',
         "sort_order": 3,
         "courses": [
@@ -5756,6 +5812,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Group C – Courses Taught in English',
         "block_type": 'group',
         "group_name": 'Group C',
+        "constraint_notes": '0-12 credits from this group.',
         "notes": '0-12 credits from this group.',
         "sort_order": 4,
         "courses": [
@@ -5847,6 +5904,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Group A – Basic Language Courses and Group B – Courses Taught in Italian (12-18 credits combined)',
         "block_type": 'pool_group',
         "credits_needed": 12,
+        "constraint_notes": '12 to 18 credits must come from Group A and/or Group B combined. The remaining credits (0-6) may come from Group C.',
         "notes": '12 to 18 credits must come from Group A and/or Group B combined. The remaining credits (0-6) may come from Group C.',
         "sort_order": 1,
       },
@@ -5856,6 +5914,7 @@ ARTS_AREA_STUDIES = [
         "block_type": 'choose_credits',
         "group_name": 'Group C',
         "credits_needed": 6,
+        "constraint_notes": 'Up to 6 credits (0-6) may be chosen from Group C. These credits supplement Group A and Group B to reach the 18-credit total.',
         "notes": 'Up to 6 credits (0-6) may be chosen from Group C. These credits supplement Group A and Group B to reach the 18-credit total.',
         "sort_order": 2,
         "courses": [
@@ -6075,6 +6134,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Complementary Courses (12 credits)',
         "block_type": 'multi_group',
         "credits_needed": 12,
+        "constraint_notes": '12 credits selected as follows: 3 credits from Group A and 9 credits from Group B drawn from at least 2 disciplines with no more than 6 credits from any one discipline.',
         "notes": '12 credits selected as follows: 3 credits from Group A and 9 credits from Group B drawn from at least 2 disciplines with no more than 6 credits from any one discipline.',
         "sort_order": 2,
       },
@@ -6122,6 +6182,7 @@ ARTS_AREA_STUDIES = [
         "block_type": 'choose_credits',
         "group_name": 'Group B',
         "credits_needed": 9,
+        "constraint_notes": '9 credits from Group B drawn from at least 2 disciplines with no more than 6 credits from any one discipline.',
         "notes": '9 credits from Group B drawn from at least 2 disciplines with no more than 6 credits from any one discipline.',
         "sort_order": 4,
         "courses": [
@@ -6446,6 +6507,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Introductory Courses at 200 Level (3-9 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'Students must choose between 3-9 credits from this list',
         "notes": 'Students must choose between 3-9 credits from this list',
         "sort_order": 2,
         "courses": [
@@ -6630,6 +6692,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Classical Language Courses (0-12 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 0,
+        "constraint_notes": 'Students may choose between 0-12 credits from classical language courses',
         "notes": 'Students may choose between 0-12 credits from classical language courses',
         "sort_order": 3,
         "courses": [
@@ -6795,6 +6858,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Complementary Courses – Introductory (6 credits at 200 level)',
         "block_type": 'choose_credits',
         "credits_needed": 6,
+        "constraint_notes": '6 credits of Introductory Courses at the 200 level.',
         "notes": '6 credits of Introductory Courses at the 200 level.',
         "sort_order": 2,
         "courses": [
@@ -6967,6 +7031,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Complementary Courses – Advanced (9 credits at 300 level or higher)',
         "block_type": 'choose_credits',
         "credits_needed": 9,
+        "constraint_notes": '9 credits of Advanced Courses at the 300 level or higher.',
         "notes": '9 credits of Advanced Courses at the 300 level or higher.',
         "sort_order": 3,
         "courses": [
@@ -7182,6 +7247,7 @@ ARTS_AREA_STUDIES = [
         "block_type": 'choose_courses',
         "credits_needed": 6,
         "courses_needed": 2,
+        "constraint_notes": 'Choose 2 of the following courses',
         "notes": 'Choose 2 of the following courses',
         "sort_order": 1,
         "courses": [
@@ -7210,6 +7276,7 @@ ARTS_AREA_STUDIES = [
         "title": 'East Asian Literature, Culture and Society (12 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 12,
+        "constraint_notes": '12 credits of courses in East Asian Literature, Culture and Society selected from the list below',
         "notes": '12 credits of courses in East Asian Literature, Culture and Society selected from the list below',
         "sort_order": 2,
         "courses": [
@@ -7620,6 +7687,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Required Courses (6 credits)',
         "block_type": 'required',
         "credits_needed": 6,
+        "constraint_notes": 'Liberal Arts students are required to take two courses designed to help them reflect on the contemporary significance of a Liberal Arts education and on their experience in the Liberal Arts program.',
         "notes": 'Liberal Arts students are required to take two courses designed to help them reflect on the contemporary significance of a Liberal Arts education and on their experience in the Liberal Arts program.',
         "sort_order": 1,
         "courses": [
@@ -7644,6 +7712,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Complementary Courses (30 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 30,
+        "constraint_notes": 'Students must complete 30 credits in one of three specialized streams: (1) Literature and the Arts, (2) History, Culture and Society, (3) Philosophy and Religion. Distribution requirements apply to all streams: at least 6 credits from 200-level introductory courses within one stream; at least 15 credits at 300-level or above; at least 6 credits at 400-level or above (language courses cannot count); no more than 18 credits from a single discipline; at least 6 credits in coursework emphasizing Africa and/or Asia; at least 6 credits emphasizing Europe and/or the Americas or Australasia; at least 6 credits emphasizing texts or history from before 1500; at least 6 credits emphasizing texts or history from 1500–1900.',
         "notes": 'Students must complete 30 credits in one of three specialized streams: (1) Literature and the Arts, (2) History, Culture and Society, (3) Philosophy and Religion. Distribution requirements apply to all streams: at least 6 credits from 200-level introductory courses within one stream; at least 15 credits at 300-level or above; at least 6 credits at 400-level or above (language courses cannot count); no more than 18 credits from a single discipline; at least 6 credits in coursework emphasizing Africa and/or Asia; at least 6 credits emphasizing Europe and/or the Americas or Australasia; at least 6 credits emphasizing texts or history from before 1500; at least 6 credits emphasizing texts or history from 1500–1900.',
         "sort_order": 2,
       },
@@ -7652,6 +7721,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Stream 1: Literature and the Arts – List A (6 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 6,
+        "constraint_notes": 'Stream 1 (Literature and the Arts including Theatre and Architecture): Students must choose 6 credits from List A (introductory courses, to be taken early in the program) and 24 credits from List B. Up to 6 credits of Music (MUAR) courses can be selected from List A in consultation with the Program Director.',
         "notes": 'Stream 1 (Literature and the Arts including Theatre and Architecture): Students must choose 6 credits from List A (introductory courses, to be taken early in the program) and 24 credits from List B. Up to 6 credits of Music (MUAR) courses can be selected from List A in consultation with the Program Director.',
         "sort_order": 3,
         "courses": [
@@ -7830,6 +7900,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Stream 1: Literature and the Arts – List B (24 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 24,
+        "constraint_notes": "Students may choose from: any course (other than a language-teaching course) at the 200 level or above in ARCH, ARTH, CLAS, ENGL, FREN, GERM, HISP, ITAL, LLCU, RUSS; and any course (other than a language-teaching course) at the 200 level or above in JWST listed under 'Biblical Studies,' 'Languages and Literatures – Hebrew,' or 'Language and Literature – Yiddish.' A maximum of 9 credits may come from the specific additional list below. Additional courses may be substituted with the approval of the Program Director. Catalogue page was truncated; only partial List B specific courses were visible.",
         "notes": "Students may choose from: any course (other than a language-teaching course) at the 200 level or above in ARCH, ARTH, CLAS, ENGL, FREN, GERM, HISP, ITAL, LLCU, RUSS; and any course (other than a language-teaching course) at the 200 level or above in JWST listed under 'Biblical Studies,' 'Languages and Literatures – Hebrew,' or 'Language and Literature – Yiddish.' A maximum of 9 credits may come from the specific additional list below. Additional courses may be substituted with the approval of the Program Director. Catalogue page was truncated; only partial List B specific courses were visible.",
         "sort_order": 4,
         "courses": [
@@ -7993,6 +8064,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Complementary Courses (15 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 15,
+        "constraint_notes": '9-15 credits selected from the list below. At least 6 credits should be at the 300-level or above. No more than 6 credits in any given area (LLCU, GERM, HISP, ITAL, and RUSS) shall count toward the Minor Concentration (not including LLCU 210). Students with advanced knowledge of German, Italian, Russian, or Spanish can count GERM, HISP, ITAL, and RUSS literature courses taught in those languages toward the Minor Concentration.',
         "notes": '9-15 credits selected from the list below. At least 6 credits should be at the 300-level or above. No more than 6 credits in any given area (LLCU, GERM, HISP, ITAL, and RUSS) shall count toward the Minor Concentration (not including LLCU 210). Students with advanced knowledge of German, Italian, Russian, or Spanish can count GERM, HISP, ITAL, and RUSS literature courses taught in those languages toward the Minor Concentration.',
         "sort_order": 2,
         "courses": [
@@ -8247,6 +8319,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Language and Culture Complementary Courses (3-6 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'Choose 3-6 credits from the following Spanish language and Latin American literature courses.',
         "notes": 'Choose 3-6 credits from the following Spanish language and Latin American literature courses.',
         "sort_order": 2,
         "courses": [
@@ -8313,6 +8386,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Core Complementary Courses (3-6 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'Choose 3-6 credits from the following core courses.',
         "notes": 'Choose 3-6 credits from the following core courses.',
         "sort_order": 3,
         "courses": [
@@ -8351,6 +8425,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Electives from Other Units (3-9 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": '3-9 credits to be selected from the following course list in consultation with the Program Adviser. If more than one course is chosen, they must be from at least two different disciplines or departments. At least one course should be at the 300 level or above. No more than 6 credits in Spanish or Portuguese language shall count for the Minor Concentration.',
         "notes": '3-9 credits to be selected from the following course list in consultation with the Program Adviser. If more than one course is chosen, they must be from at least two different disciplines or departments. At least one course should be at the 300 level or above. No more than 6 credits in Spanish or Portuguese language shall count for the Minor Concentration.',
         "sort_order": 4,
         "courses": [
@@ -8854,6 +8929,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Core Courses (12 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 12,
+        "constraint_notes": "All complementary courses must fall outside the discipline or field of the student's major program or concentration, and must be 200-level or above.",
         "notes": "All complementary courses must fall outside the discipline or field of the student's major program or concentration, and must be 200-level or above.",
         "sort_order": 1,
         "courses": [
@@ -8894,6 +8970,7 @@ ARTS_AREA_STUDIES = [
         "title": 'Complementary Courses (6 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 6,
+        "constraint_notes": "All complementary courses must fall outside the discipline or field of the student's major program or concentration, and must be 200-level or above.",
         "notes": "All complementary courses must fall outside the discipline or field of the student's major program or concentration, and must be 200-level or above.",
         "sort_order": 2,
         "courses": [

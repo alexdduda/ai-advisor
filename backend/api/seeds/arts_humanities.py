@@ -18,6 +18,7 @@ ARTS_HUMANITIES = [
         "title": 'Required Courses (15 credits)',
         "block_type": 'required',
         "credits_needed": 15,
+        "constraint_notes": 'Required courses must be completed at McGill unless Departmental permission is obtained.',
         "notes": 'Required courses must be completed at McGill unless Departmental permission is obtained.',
         "sort_order": 1,
         "courses": [
@@ -68,6 +69,7 @@ ARTS_HUMANITIES = [
         "title": 'Complementary Courses (21 credits)',
         "block_type": 'multi_group',
         "credits_needed": 21,
+        "constraint_notes": 'Only 3 credits at the 200 level may count towards complementary credits.',
         "notes": 'Only 3 credits at the 200 level may count towards complementary credits.',
         "sort_order": 2,
       },
@@ -77,6 +79,7 @@ ARTS_HUMANITIES = [
         "block_type": 'choose_credits',
         "group_name": 'Logic Electives',
         "credits_needed": 3,
+        "constraint_notes": 'Choose 3 credits from the following courses.',
         "notes": 'Choose 3 credits from the following courses.',
         "sort_order": 3,
         "courses": [
@@ -111,6 +114,7 @@ ARTS_HUMANITIES = [
         "title": 'Linguistics Electives (18 credits)',
         "block_type": 'level_elective',
         "credits_needed": 18,
+        "constraint_notes": "18 credits in Linguistics (LING) chosen according to student's interests. At least 9 of these credits must be at the 400/500 level. Only 3 credits at the 200 level may count towards complementary credits. The catalogue lists INLG 411 as an example of eligible 400-level courses but does not provide an exhaustive list of available courses.",
         "notes": "18 credits in Linguistics (LING) chosen according to student's interests. At least 9 of these credits must be at the 400/500 level. Only 3 credits at the 200 level may count towards complementary credits. The catalogue lists INLG 411 as an example of eligible 400-level courses but does not provide an exhaustive list of available courses.",
         "sort_order": 4,
         "courses": [
@@ -139,6 +143,7 @@ ARTS_HUMANITIES = [
         "title": 'Required Courses (9 credits)',
         "block_type": 'required',
         "credits_needed": 9,
+        "constraint_notes": 'Required courses must be completed at McGill unless Departmental permission is obtained.',
         "notes": 'Required courses must be completed at McGill unless Departmental permission is obtained.',
         "sort_order": 1,
         "courses": [
@@ -170,6 +175,7 @@ ARTS_HUMANITIES = [
         "title": 'Complementary Courses (9 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 9,
+        "constraint_notes": "9 credits in Linguistics chosen according to student's interests. Constraint: 6 credits must be at 300 level or higher. Only 3 credits at the 200 level may count. Students taking LING 360 (Introduction to Semantics) may count one of the prerequisite courses (COMP 230, MATH 318, or PHIL 210) toward this requirement.",
         "notes": "9 credits in Linguistics chosen according to student's interests. Constraint: 6 credits must be at 300 level or higher. Only 3 credits at the 200 level may count. Students taking LING 360 (Introduction to Semantics) may count one of the prerequisite courses (COMP 230, MATH 318, or PHIL 210) toward this requirement.",
         "sort_order": 2,
         "courses": [
@@ -219,6 +225,7 @@ ARTS_HUMANITIES = [
         "title": 'Distribution Requirement (9 credits: 3 from Group A, 3 from Group B, 3 from Group C)',
         "block_type": 'multi_group',
         "credits_needed": 9,
+        "constraint_notes": '3 credits must come from Group A, 3 from Group B, and 3 from Group C. Cognate courses may not be used to satisfy the Distribution requirement. The same course may be used to satisfy both a Distribution and Temporal Breadth requirement.',
         "notes": '3 credits must come from Group A, 3 from Group B, and 3 from Group C. Cognate courses may not be used to satisfy the Distribution requirement. The same course may be used to satisfy both a Distribution and Temporal Breadth requirement.',
         "sort_order": 1,
       },
@@ -446,6 +453,7 @@ ARTS_HUMANITIES = [
         "title": 'Remaining HIST or Cognate Electives (27 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 27,
+        "constraint_notes": '36 credits total of HIST or approved cognate courses. 9 credits satisfied by the Distribution Requirement (Groups A, B, C); remaining 27 credits may be any HIST or cognate courses subject to: (1) Temporal Breadth: at least 3 credits before 1800 and at least 3 credits after 1800 (HIST 299 may not count toward Temporal Breadth); (2) Level: maximum 15 credits at the 200-level; minimum 6 credits at the 400- or 500-level (at most 3 credits of HIST 498 or HIST 499 may count toward this minimum). Cognate courses may not satisfy the Distribution requirement. AP/IB credits may not be included in credit requirements.',
         "notes": '36 credits total of HIST or approved cognate courses. 9 credits satisfied by the Distribution Requirement (Groups A, B, C); remaining 27 credits may be any HIST or cognate courses subject to: (1) Temporal Breadth: at least 3 credits before 1800 and at least 3 credits after 1800 (HIST 299 may not count toward Temporal Breadth); (2) Level: maximum 15 credits at the 200-level; minimum 6 credits at the 400- or 500-level (at most 3 credits of HIST 498 or HIST 499 may count toward this minimum). Cognate courses may not satisfy the Distribution requirement. AP/IB credits may not be included in credit requirements.',
         "sort_order": 5,
       },
@@ -465,6 +473,7 @@ ARTS_HUMANITIES = [
         "title": 'Complementary Courses (18 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 18,
+        "constraint_notes": '18 credits of history courses (HIST or Cognate courses). No more than 6 credits may be at the 200-level. Cognate courses (CLAS, ISLA, JWST, RELG) limited to maximum 3 credits total. Additional courses may be submitted for consideration to the Undergraduate Program Director.',
         "notes": '18 credits of history courses (HIST or Cognate courses). No more than 6 credits may be at the 200-level. Cognate courses (CLAS, ISLA, JWST, RELG) limited to maximum 3 credits total. Additional courses may be submitted for consideration to the Undergraduate Program Director.',
         "sort_order": 1,
         "courses": [
@@ -648,6 +657,7 @@ ARTS_HUMANITIES = [
         "title": 'Introductory Methods, Theories, and Practices (3–15 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'Select 3–15 credits as an introduction to methods, theories, and practices in diverse fields of the discipline.',
         "notes": 'Select 3–15 credits as an introduction to methods, theories, and practices in diverse fields of the discipline.',
         "sort_order": 1,
         "courses": [
@@ -688,6 +698,7 @@ ARTS_HUMANITIES = [
         "title": 'Complementary Courses (21–33 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 21,
+        "constraint_notes": 'Select 21–33 credits from departmental course offerings. Maximum 12 credits may be at the 200 level. Minimum 3 credits must be at the 400 level or above (excluding ARTH 490 Museum Internship). Courses in studio practice cannot be counted toward the Major concentration.',
         "notes": 'Select 21–33 credits from departmental course offerings. Maximum 12 credits may be at the 200 level. Minimum 3 credits must be at the 400 level or above (excluding ARTH 490 Museum Internship). Courses in studio practice cannot be counted toward the Major concentration.',
         "sort_order": 2,
         "courses": [
@@ -921,6 +932,7 @@ ARTS_HUMANITIES = [
         "title": 'Related Courses (Optional)',
         "block_type": 'choose_credits',
         "credits_needed": 0,
+        "constraint_notes": 'In addition to architectural courses given by the Department, program students are encouraged to consider courses from the School of Architecture, the departments of East Asian Studies and Philosophy which may, upon consultation with the Department, be regarded as fulfilling part of the requirements.',
         "notes": 'In addition to architectural courses given by the Department, program students are encouraged to consider courses from the School of Architecture, the departments of East Asian Studies and Philosophy which may, upon consultation with the Department, be regarded as fulfilling part of the requirements.',
         "sort_order": 3,
         "courses": [
@@ -970,6 +982,7 @@ ARTS_HUMANITIES = [
         "title": 'Complementary Courses (18 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 18,
+        "constraint_notes": 'Students must choose 18 credits total. At least 9 credits must be at the 300-level or above. Courses in studio practice cannot be counted towards the Minor Concentration. Students are encouraged to consult with the Department about courses from the School of Architecture, Department of East Asian Studies, and Department of Philosophy.',
         "notes": 'Students must choose 18 credits total. At least 9 credits must be at the 300-level or above. Courses in studio practice cannot be counted towards the Minor Concentration. Students are encouraged to consult with the Department about courses from the School of Architecture, Department of East Asian Studies, and Department of Philosophy.',
         "sort_order": 1,
         "courses": [
@@ -1275,6 +1288,7 @@ ARTS_HUMANITIES = [
         "title": 'Required Courses (9 credits)',
         "block_type": 'required',
         "credits_needed": 9,
+        "constraint_notes": 'These courses should be taken in the first two terms of the program.',
         "notes": 'These courses should be taken in the first two terms of the program.',
         "sort_order": 1,
         "courses": [
@@ -1306,6 +1320,7 @@ ARTS_HUMANITIES = [
         "title": 'Canadian Literature (3 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": '3 credits from a list of Canadian Literature courses.',
         "notes": '3 credits from a list of Canadian Literature courses.',
         "sort_order": 2,
         "courses": [
@@ -1364,6 +1379,7 @@ ARTS_HUMANITIES = [
         "title": 'Theory, Criticism and Methods (3 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": '3 credits of Theory, Criticism, and Methods courses from the complementary list or with the permission of your department adviser.',
         "notes": '3 credits of Theory, Criticism, and Methods courses from the complementary list or with the permission of your department adviser.',
         "sort_order": 3,
         "courses": [
@@ -1410,6 +1426,7 @@ ARTS_HUMANITIES = [
         "title": 'Areas of English Literature – Early (6 credits)',
         "block_type": 'multi_group',
         "credits_needed": 6,
+        "constraint_notes": '6 credits, 3 credits each from two of the following areas: Backgrounds of English Literature, Old English, Medieval, Renaissance.',
         "notes": '6 credits, 3 credits each from two of the following areas: Backgrounds of English Literature, Old English, Medieval, Renaissance.',
         "sort_order": 4,
       },
@@ -1594,6 +1611,7 @@ ARTS_HUMANITIES = [
         "title": 'Areas of English Literature – Later (6 credits)',
         "block_type": 'multi_group',
         "credits_needed": 6,
+        "constraint_notes": '6 credits, 3 credits each from two of the following areas: Restoration, 18th Century, Romantic, Victorian, 19th Century American. NOTE: This block is incomplete due to page truncation. Only Restoration area courses were fully captured; 18th Century and subsequent areas were cut off.',
         "notes": '6 credits, 3 credits each from two of the following areas: Restoration, 18th Century, Romantic, Victorian, 19th Century American. NOTE: This block is incomplete due to page truncation. Only Restoration area courses were fully captured; 18th Century and subsequent areas were cut off.',
         "sort_order": 9,
       },
@@ -1659,6 +1677,7 @@ ARTS_HUMANITIES = [
         "title": 'Major Author',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": '3 credits on a Major Author',
         "notes": '3 credits on a Major Author',
         "sort_order": 2,
         "courses": [
@@ -1711,6 +1730,7 @@ ARTS_HUMANITIES = [
         "title": 'Pre-1800',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": '3 credits from a list of pre-1800 literature courses',
         "notes": '3 credits from a list of pre-1800 literature courses',
         "sort_order": 3,
         "courses": [
@@ -1847,6 +1867,7 @@ ARTS_HUMANITIES = [
         "title": 'Additional Literature',
         "block_type": 'choose_credits',
         "credits_needed": 6,
+        "constraint_notes": '6 additional credits from ENGL offerings in Literature. Any ENGL course not on these Literature lists, such as courses in Cultural Studies, may not count.',
         "notes": '6 additional credits from ENGL offerings in Literature. Any ENGL course not on these Literature lists, such as courses in Cultural Studies, may not count.',
         "sort_order": 4,
         "courses": [
@@ -2005,6 +2026,7 @@ ARTS_HUMANITIES = [
         "block_type": 'choose_courses',
         "credits_needed": 15,
         "courses_needed": 5,
+        "constraint_notes": 'Five courses in Communication Studies selected from the list below',
         "notes": 'Five courses in Communication Studies selected from the list below',
         "sort_order": 2,
         "courses": [
@@ -2186,6 +2208,7 @@ ARTS_HUMANITIES = [
         "title": 'Complementary Courses',
         "block_type": 'multi_group',
         "credits_needed": 33,
+        "constraint_notes": '33 credits total, of which no more than 9 may be at the 200 level and at least 9 must be at the 400 or 500 level. Only one of PHIL 200 or PHIL 201 may be included.',
         "notes": '33 credits total, of which no more than 9 may be at the 200 level and at least 9 must be at the 400 or 500 level. Only one of PHIL 200 or PHIL 201 may be included.',
         "sort_order": 2,
       },
@@ -2305,6 +2328,7 @@ ARTS_HUMANITIES = [
         "title": 'Group C or Group D (6 credits, two courses)',
         "block_type": 'choose_credits',
         "credits_needed": 6,
+        "constraint_notes": '6 credits (two courses) from either Group C or Group D combined.',
         "notes": '6 credits (two courses) from either Group C or Group D combined.',
         "sort_order": 5,
         "courses": [
@@ -2517,6 +2541,7 @@ ARTS_HUMANITIES = [
         "title": 'Additional Elective Courses',
         "block_type": 'choose_credits',
         "credits_needed": 15,
+        "constraint_notes": '15 additional credits from Groups A, B, C, D, E, F or other Philosophy (PHIL) courses. Only one of PHIL 200 (Introduction to Philosophy 1) or PHIL 201 (Introduction to Philosophy 2) may be included. Subject to overall complementary constraints: max 9 credits at 200-level, min 9 credits at 400/500-level.',
         "notes": '15 additional credits from Groups A, B, C, D, E, F or other Philosophy (PHIL) courses. Only one of PHIL 200 (Introduction to Philosophy 1) or PHIL 201 (Introduction to Philosophy 2) may be included. Subject to overall complementary constraints: max 9 credits at 200-level, min 9 credits at 400/500-level.',
         "sort_order": 8,
         "courses": [
@@ -2552,6 +2577,7 @@ ARTS_HUMANITIES = [
         "title": 'Complementary Courses (18 credits)',
         "block_type": 'pool_group',
         "credits_needed": 18,
+        "constraint_notes": '18 credits total, of which no more than 9 credits may be at the 200 level and at least 3 credits must be at the 400 or 500 level. Must include one course from at least four of the five groups.',
         "notes": '18 credits total, of which no more than 9 credits may be at the 200 level and at least 3 credits must be at the 400 or 500 level. Must include one course from at least four of the five groups.',
         "sort_order": 1,
       },
@@ -2560,6 +2586,7 @@ ARTS_HUMANITIES = [
         "title": 'Group A',
         "block_type": 'group',
         "group_name": 'Group A',
+        "constraint_notes": 'Ethics and Applied Philosophy',
         "notes": 'Ethics and Applied Philosophy',
         "sort_order": 2,
         "courses": [
@@ -2640,6 +2667,7 @@ ARTS_HUMANITIES = [
         "title": 'Group B',
         "block_type": 'group',
         "group_name": 'Group B',
+        "constraint_notes": 'Logic, Epistemology, Metaphysics, and Philosophy of Science',
         "notes": 'Logic, Epistemology, Metaphysics, and Philosophy of Science',
         "sort_order": 3,
         "courses": [
@@ -2734,6 +2762,7 @@ ARTS_HUMANITIES = [
         "title": 'Group C',
         "block_type": 'group',
         "group_name": 'Group C',
+        "constraint_notes": 'Continental and European Philosophy',
         "notes": 'Continental and European Philosophy',
         "sort_order": 4,
         "courses": [
@@ -2765,6 +2794,7 @@ ARTS_HUMANITIES = [
         "title": 'Group D',
         "block_type": 'group',
         "group_name": 'Group D',
+        "constraint_notes": 'Ancient Philosophy',
         "notes": 'Ancient Philosophy',
         "sort_order": 5,
         "courses": [
@@ -2845,6 +2875,7 @@ ARTS_HUMANITIES = [
         "title": 'Group E',
         "block_type": 'group',
         "group_name": 'Group E',
+        "constraint_notes": 'Modern Philosophy and History of Philosophy',
         "notes": 'Modern Philosophy and History of Philosophy',
         "sort_order": 6,
         "courses": [

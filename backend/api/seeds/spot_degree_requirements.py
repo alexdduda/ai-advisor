@@ -258,7 +258,7 @@ SPOT_PROGRAMS = [
         "block_type": 'required',
         "credits_needed": 27,
         "notes": 'Courses shared between PT and OT programs in U1.',
-        "sort_order": 0,
+        "sort_order": 1,
         "courses": [
           {
             "subject": 'ANAT',
@@ -332,7 +332,7 @@ SPOT_PROGRAMS = [
         "block_type": 'choose_credits',
         "credits_needed": 6,
         "notes": '6–9 complementary credits chosen from: Psychology (lifespan development recommended), Management (private practice), Academic Writing, Sociology/Anthropology, French/English second language (max 6 cr.), or PHTH 301 Sports Medicine Practicum (3 cr.). POTH 204 exemption replaces waived stats with an extra 3-credit complementary.',
-        "sort_order": 1,
+        "sort_order": 2,
       },
       {
         "block_key": 'pt_u1_complementary',
@@ -340,7 +340,7 @@ SPOT_PROGRAMS = [
         "block_type": 'choose_credits',
         "credits_needed": 3,
         "notes": '1 complementary course chosen from: Psychology (lifespan development recommended), Management (private practice), Academic Writing, Sociology/Anthropology, French/English second language (max 6 cr.), or Sports Medicine Practicum.',
-        "sort_order": 1,
+        "sort_order": 3,
       },
       {
         "block_key": 'pt_elective',
@@ -348,7 +348,7 @@ SPOT_PROGRAMS = [
         "block_type": 'choose_credits',
         "credits_needed": 3,
         "notes": 'Maximum one 3-credit elective course.',
-        "sort_order": 2,
+        "sort_order": 4,
       },
       {
         "block_key": 'pt_u2_required',
@@ -356,7 +356,7 @@ SPOT_PROGRAMS = [
         "block_type": 'required',
         "credits_needed": 33,
         "notes": 'U2 PT-specific and shared required courses.',
-        "sort_order": 2,
+        "sort_order": 5,
         "courses": [
           {
             "subject": 'ANAT',
@@ -442,7 +442,7 @@ SPOT_PROGRAMS = [
         "block_type": 'choose_credits',
         "credits_needed": 6,
         "notes": '2 complementary courses from approved areas (see U1 note above).',
-        "sort_order": 3,
+        "sort_order": 6,
       },
       {
         "block_key": 'pt_u3_required',
@@ -450,7 +450,7 @@ SPOT_PROGRAMS = [
         "block_type": 'required',
         "credits_needed": 21,
         "notes": 'Advanced PT courses plus integration seminar and PT research project.',
-        "sort_order": 4,
+        "sort_order": 7,
         "courses": [
           {
             "subject": 'PHTH',
@@ -714,7 +714,7 @@ SPOT_PROGRAMS = [
         "block_type": 'required',
         "credits_needed": 27,
         "notes": 'Courses shared between OT and PT programs in U1.',
-        "sort_order": 0,
+        "sort_order": 1,
         "courses": [
           {
             "subject": 'ANAT',
@@ -788,7 +788,7 @@ SPOT_PROGRAMS = [
         "block_type": 'choose_credits',
         "credits_needed": 15,
         "notes": '15 complementary credits from: Psychology (lifespan development recommended), Management, Academic Writing, Sociology/Anthropology, or second language (max 6 cr.). POTH 204 exemption adds 3 credits to this requirement.',
-        "sort_order": 1,
+        "sort_order": 2,
       },
       {
         "block_key": 'ot_u1_complementary',
@@ -796,14 +796,14 @@ SPOT_PROGRAMS = [
         "block_type": 'choose_credits',
         "credits_needed": 3,
         "notes": '1 complementary course: Psychology (lifespan development), Management, Academic Writing, Sociology/Anthropology, or second language (max 6 cr.).',
-        "sort_order": 1,
+        "sort_order": 3,
       },
       {
         "block_key": 'ot_u2_required',
         "title": 'Year 2 (U2) – Occupational Therapy Core',
         "block_type": 'required',
         "credits_needed": 33,
-        "sort_order": 2,
+        "sort_order": 4,
         "courses": [
           {
             "subject": 'ANAT',
@@ -889,7 +889,7 @@ SPOT_PROGRAMS = [
         "block_type": 'choose_credits',
         "credits_needed": 6,
         "notes": '2 complementary courses from approved areas.',
-        "sort_order": 3,
+        "sort_order": 5,
       },
       {
         "block_key": 'ot_u3_required',
@@ -897,7 +897,7 @@ SPOT_PROGRAMS = [
         "block_type": 'required',
         "credits_needed": 21,
         "notes": 'Advanced OT courses, therapeutic strategies practicum, and research methods.',
-        "sort_order": 4,
+        "sort_order": 6,
         "courses": [
           {
             "subject": 'OCC1',

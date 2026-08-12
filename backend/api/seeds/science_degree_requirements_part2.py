@@ -18,6 +18,7 @@ SCIENCE_PROGRAMS_PART2 = [
         "title": 'Required Courses (13 credits)',
         "block_type": 'required',
         "credits_needed": 13,
+        "constraint_notes": 'If any of the required courses are part of your primary program or were taken at CEGEP, then they must be substituted by courses from the minor options list that are not part of your primary program. The total number of credits exclusive to the minor is at least 19.',
         "notes": 'If any of the required courses are part of your primary program or were taken at CEGEP, then they must be substituted by courses from the minor options list that are not part of your primary program. The total number of credits exclusive to the minor is at least 19.',
         "sort_order": 1,
         "courses": [
@@ -57,6 +58,7 @@ SCIENCE_PROGRAMS_PART2 = [
         "title": 'Complementary Courses (6-7 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 6,
+        "constraint_notes": '6-7 credits required. Any level 300-500 CHEM course can be substituted for courses within this list.',
         "notes": '6-7 credits required. Any level 300-500 CHEM course can be substituted for courses within this list.',
         "sort_order": 2,
         "courses": [
@@ -283,6 +285,7 @@ SCIENCE_PROGRAMS_PART2 = [
         "title": 'Required Courses (53 credits)',
         "block_type": 'required',
         "credits_needed": 53,
+        "constraint_notes": 'COMP 202 or COMP 208 is strongly recommended during U1 for students with no prior programming experience. MATH 222 is strongly recommended during U1. PHYS 242 should be completed during U2. Students who completed MATH 150 and MATH 151 are not required to take MATH 222. CHEM 242 has a CEGEP equivalent (footnote 1). MATH 222 has a note that students who completed MATH 150/151 are exempt (footnote 2).',
         "notes": 'COMP 202 or COMP 208 is strongly recommended during U1 for students with no prior programming experience. MATH 222 is strongly recommended during U1. PHYS 242 should be completed during U2. Students who completed MATH 150 and MATH 151 are not required to take MATH 222. CHEM 242 has a CEGEP equivalent (footnote 1). MATH 222 has a note that students who completed MATH 150/151 are exempt (footnote 2).',
         "sort_order": 1,
         "courses": [
@@ -424,6 +427,7 @@ SCIENCE_PROGRAMS_PART2 = [
         "title": 'Complementary: Research (6 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 6,
+        "constraint_notes": 'Students may take up to 12 Research Project credits but only 6 of these may be used to fulfil the program requirement. Choose from CHEM 470 and/or CHEM 480.',
         "notes": 'Students may take up to 12 Research Project credits but only 6 of these may be used to fulfil the program requirement. Choose from CHEM 470 and/or CHEM 480.',
         "sort_order": 2,
         "courses": [
@@ -447,6 +451,7 @@ SCIENCE_PROGRAMS_PART2 = [
         "title": 'Complementary: 300-level Chemistry or MATH 315 plus Chemistry (6 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 6,
+        "constraint_notes": '6 credits of Chemistry courses at the 300 level or higher, OR MATH 315 (Ordinary Differential Equations) plus 3 credits of Chemistry courses at the 300 level or higher. MATH 315 is listed as an explicit option; remaining credits must be CHEM 300+.',
         "notes": '6 credits of Chemistry courses at the 300 level or higher, OR MATH 315 (Ordinary Differential Equations) plus 3 credits of Chemistry courses at the 300 level or higher. MATH 315 is listed as an explicit option; remaining credits must be CHEM 300+.',
         "sort_order": 3,
         "courses": [
@@ -464,6 +469,7 @@ SCIENCE_PROGRAMS_PART2 = [
         "title": 'Complementary: 400-level Chemistry (6 credits)',
         "block_type": 'level_elective',
         "credits_needed": 6,
+        "constraint_notes": '6 credits of Chemistry courses at the 400 level or higher.',
         "notes": '6 credits of Chemistry courses at the 400 level or higher.',
         "sort_order": 4,
       },
@@ -1037,6 +1043,7 @@ SCIENCE_PROGRAMS_PART2 = [
         "title": 'Core CHEM Requirement (3 or 4 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": '3 or 4 credits selected from this block. If CHEM 212 has already been taken or its equivalent, credits can be made up with CHEM 204, CHEM 222, or a 3- or 4-credit Biology complementary course approved by the Biology Adviser.',
         "notes": '3 or 4 credits selected from this block. If CHEM 212 has already been taken or its equivalent, credits can be made up with CHEM 204, CHEM 222, or a 3- or 4-credit Biology complementary course approved by the Biology Adviser.',
         "sort_order": 2,
         "courses": [
@@ -1060,6 +1067,7 @@ SCIENCE_PROGRAMS_PART2 = [
         "title": 'Core Blocks A, B, and C (9 credits)',
         "block_type": 'multi_group',
         "credits_needed": 9,
+        "constraint_notes": '3 credits from each of Block A (Ecology and Evolution), Block B (Molecular and Cellular), and Block C (Neuro/Behaviour).',
         "notes": '3 credits from each of Block A (Ecology and Evolution), Block B (Molecular and Cellular), and Block C (Neuro/Behaviour).',
         "sort_order": 3,
       },
@@ -1154,6 +1162,7 @@ SCIENCE_PROGRAMS_PART2 = [
         "title": 'Honours Block (9 or 12 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 9,
+        "constraint_notes": 'Students take either BIOL 479D1/479D2 (9 credits total) OR BIOL 480D1/480D2 (12 credits total). Acceptance requires CGPA of 3.50 and approval of an Independent Studies proposal.',
         "notes": 'Students take either BIOL 479D1/479D2 (9 credits total) OR BIOL 480D1/480D2 (12 credits total). Acceptance requires CGPA of 3.50 and approval of an Independent Studies proposal.',
         "sort_order": 7,
         "courses": [
@@ -1192,6 +1201,7 @@ SCIENCE_PROGRAMS_PART2 = [
         "title": 'Other Biology Electives (12-15 credits)',
         "block_type": 'level_elective',
         "credits_needed": 12,
+        "constraint_notes": '15 credits of Biology courses at the 300-500 levels if taking BIOL 479D1/D2, or 12 credits if taking BIOL 480D1/D2. With permission of the Biology Adviser, up to 6 credits may be taken from other science department courses (300-500 levels). Up to 3 credits of previous independent research courses may be included. Must include 6 credits of 400-500 level courses.',
         "notes": '15 credits of Biology courses at the 300-500 levels if taking BIOL 479D1/D2, or 12 credits if taking BIOL 480D1/D2. With permission of the Biology Adviser, up to 6 credits may be taken from other science department courses (300-500 levels). Up to 3 credits of previous independent research courses may be included. Must include 6 credits of 400-500 level courses.',
         "sort_order": 8,
       },
@@ -1355,6 +1365,7 @@ SCIENCE_PROGRAMS_PART2 = [
         "title": 'U1 Required Courses (20-24 credits)',
         "block_type": 'required',
         "credits_needed": 22,
+        "constraint_notes": 'Credit range 20-24 reflects the footnote: students with CEGEP-level credit for CHEM 212 equivalent may not take CHEM 242 and should replace it with 3 credits of an elective.',
         "notes": 'Credit range 20-24 reflects the footnote: students with CEGEP-level credit for CHEM 212 equivalent may not take CHEM 242 and should replace it with 3 credits of an elective.',
         "sort_order": 1,
         "courses": [
@@ -1422,6 +1433,7 @@ SCIENCE_PROGRAMS_PART2 = [
         "title": 'U1 Complementary Courses (6 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 6,
+        "constraint_notes": '6 credits selected from the following list.',
         "notes": '6 credits selected from the following list.',
         "sort_order": 2,
         "courses": [
@@ -1513,6 +1525,7 @@ SCIENCE_PROGRAMS_PART2 = [
         "title": 'U2 Complementary Courses (3 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": '3 credits selected from the following list.',
         "notes": '3 credits selected from the following list.',
         "sort_order": 4,
         "courses": [
@@ -1595,6 +1608,7 @@ SCIENCE_PROGRAMS_PART2 = [
         "title": 'U3 Complementary Courses – Primary List (3-6 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 6,
+        "constraint_notes": '3-6 credits selected from this list. BIOC 462 is worth 6 credits but only 3 credits count toward the 6-credit complementary requirement. The remaining credits (if any) must be selected from the secondary complementary list.',
         "notes": '3-6 credits selected from this list. BIOC 462 is worth 6 credits but only 3 credits count toward the 6-credit complementary requirement. The remaining credits (if any) must be selected from the secondary complementary list.',
         "sort_order": 6,
         "courses": [
@@ -1641,6 +1655,7 @@ SCIENCE_PROGRAMS_PART2 = [
         "block_key": 'biochemistry_major_bsc_u3_complementary_secondary',
         "title": 'U3 Complementary Courses – Secondary/Remainder List',
         "block_type": 'choose_credits',
+        "constraint_notes": 'Remainder credits (if any) after selecting from the primary list must be chosen from this list. Used when the primary list does not supply all 6 required complementary credits.',
         "notes": 'Remainder credits (if any) after selecting from the primary list must be chosen from this list. Used when the primary list does not supply all 6 required complementary credits.',
         "sort_order": 7,
         "courses": [
@@ -1717,6 +1732,7 @@ SCIENCE_PROGRAMS_PART2 = [
         "title": 'U1 Required Courses (20-24 credits)',
         "block_type": 'required',
         "credits_needed": 20,
+        "constraint_notes": 'Students with CEGEP-level credit for the equivalent of CHEM 242 may not take it at McGill and should replace it with an elective to satisfy the total credit requirement.',
         "notes": 'Students with CEGEP-level credit for the equivalent of CHEM 242 may not take it at McGill and should replace it with an elective to satisfy the total credit requirement.',
         "sort_order": 1,
         "courses": [
@@ -1784,6 +1800,7 @@ SCIENCE_PROGRAMS_PART2 = [
         "title": 'U1 Complementary Courses (6 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 6,
+        "constraint_notes": '6 credits selected from the listed courses.',
         "notes": '6 credits selected from the listed courses.',
         "sort_order": 2,
         "courses": [
@@ -1877,6 +1894,7 @@ SCIENCE_PROGRAMS_PART2 = [
         "title": 'U2 Complementary Courses (3 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": '3 credits selected from the listed courses.',
         "notes": '3 credits selected from the listed courses.',
         "sort_order": 4,
         "courses": [
@@ -1972,6 +1990,7 @@ SCIENCE_PROGRAMS_PART2 = [
         "title": 'U3 Complementary Courses (3-6 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": '3-6 credits selected from the listed courses. Primary list: BIOC 458, BIOC 470, BIOC 491, BIOC 503, BIOC 504, BIOC 505. Remainder (if any) from secondary list including BIOL 300, BIOL 303, BIOL 304, BIOL 313, BIOL 314, CHEM 267 (list may be truncated in source). BIOC 491 is 6 credits.',
         "notes": '3-6 credits selected from the listed courses. Primary list: BIOC 458, BIOC 470, BIOC 491, BIOC 503, BIOC 504, BIOC 505. Remainder (if any) from secondary list including BIOL 300, BIOL 303, BIOL 304, BIOL 313, BIOL 314, CHEM 267 (list may be truncated in source). BIOC 491 is 6 credits.',
         "sort_order": 6,
         "courses": [
@@ -2072,6 +2091,7 @@ SCIENCE_PROGRAMS_PART2 = [
         "title": 'U1 Required Courses — Core (20 credits)',
         "block_type": 'required',
         "credits_needed": 20,
+        "constraint_notes": 'CHEM 212 and CHEM 222 each carry footnotes: students who took these courses in CEGEP are exempt and must replace those credits with elective course(s).',
         "notes": 'CHEM 212 and CHEM 222 each carry footnotes: students who took these courses in CEGEP are exempt and must replace those credits with elective course(s).',
         "sort_order": 1,
         "courses": [
@@ -2134,6 +2154,7 @@ SCIENCE_PROGRAMS_PART2 = [
         "block_type": 'choose_courses',
         "credits_needed": 3,
         "courses_needed": 1,
+        "constraint_notes": 'Choose one of BIOC 212 or BIOL 201.',
         "notes": 'Choose one of BIOC 212 or BIOL 201.',
         "sort_order": 2,
         "courses": [
@@ -2157,6 +2178,7 @@ SCIENCE_PROGRAMS_PART2 = [
         "block_type": 'choose_courses',
         "credits_needed": 3,
         "courses_needed": 1,
+        "constraint_notes": 'Choose one statistics course from the list.',
         "notes": 'Choose one statistics course from the list.',
         "sort_order": 3,
         "courses": [
@@ -2260,6 +2282,7 @@ SCIENCE_PROGRAMS_PART2 = [
         "title": 'U3 Complementary Courses (6 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 6,
+        "constraint_notes": '6 credits selected from the following list.',
         "notes": '6 credits selected from the following list.',
         "sort_order": 6,
         "courses": [
@@ -2288,6 +2311,7 @@ SCIENCE_PROGRAMS_PART2 = [
         "title": 'Complementary Courses (9 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 9,
+        "constraint_notes": "9 credits selected from the following list. ANAT 458 and BIOC 458 share the same title 'Membranes and Cellular Signaling' but are listed as separate courses. EXMD 504 description was truncated in the source page but the course code and credits are confirmed.",
         "notes": "9 credits selected from the following list. ANAT 458 and BIOC 458 share the same title 'Membranes and Cellular Signaling' but are listed as separate courses. EXMD 504 description was truncated in the source page but the course code and credits are confirmed.",
         "sort_order": 7,
         "courses": [
@@ -2426,6 +2450,7 @@ SCIENCE_PROGRAMS_PART2 = [
         "title": 'U1 Required Courses (23 credits fixed)',
         "block_type": 'required',
         "credits_needed": 23,
+        "constraint_notes": 'CHEM 212 and CHEM 222 have CEGEP exemptions: students exempt from either must replace those credits with elective course(s).',
         "notes": 'CHEM 212 and CHEM 222 have CEGEP exemptions: students exempt from either must replace those credits with elective course(s).',
         "sort_order": 1,
         "courses": [
@@ -2487,6 +2512,7 @@ SCIENCE_PROGRAMS_PART2 = [
         "title": 'U1 Required — One of (3 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'Choose one of BIOC 212 or BIOL 201.',
         "notes": 'Choose one of BIOC 212 or BIOL 201.',
         "sort_order": 2,
         "courses": [
@@ -2509,6 +2535,7 @@ SCIENCE_PROGRAMS_PART2 = [
         "title": 'U1, U2, or U3 Required Course — Statistics (3 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'Choose one statistics course from the listed options.',
         "notes": 'Choose one statistics course from the listed options.',
         "sort_order": 3,
         "courses": [
@@ -2612,6 +2639,7 @@ SCIENCE_PROGRAMS_PART2 = [
         "title": 'U3 Required — Honours Research Project (6 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 6,
+        "constraint_notes": 'Students take either MIMM 501D1 and MIMM 501D2 (Honours Research Project in Immunology) or MIMM 502D1 and MIMM 502D2 (Honours Research Project in Microbiology). Both courses in the chosen D1/D2 pair must be taken together.',
         "notes": 'Students take either MIMM 501D1 and MIMM 501D2 (Honours Research Project in Immunology) or MIMM 502D1 and MIMM 502D2 (Honours Research Project in Microbiology). Both courses in the chosen D1/D2 pair must be taken together.',
         "sort_order": 6,
         "courses": [
@@ -2650,6 +2678,7 @@ SCIENCE_PROGRAMS_PART2 = [
         "title": 'U3 Complementary Courses (6 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 6,
+        "constraint_notes": '6 credits selected from the listed MIMM courses.',
         "notes": '6 credits selected from the listed MIMM courses.',
         "sort_order": 7,
         "courses": [
@@ -2678,6 +2707,7 @@ SCIENCE_PROGRAMS_PART2 = [
         "title": 'Complementary Courses (3 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": '3 credits selected from the listed courses. Page may be slightly truncated after BIOT 505 but all visible courses are included. ANAT 261 is 4 credits.',
         "notes": '3 credits selected from the listed courses. Page may be slightly truncated after BIOT 505 but all visible courses are included. ANAT 261 is 4 credits.',
         "sort_order": 8,
         "courses": [
@@ -2941,6 +2971,7 @@ SCIENCE_PROGRAMS_PART2 = [
         "title": 'Required Courses (40 credits)',
         "block_type": 'required',
         "credits_needed": 40,
+        "constraint_notes": 'Students who have taken the equivalent of CHEM 212, CHEM 222, and/or MATH 203 in CEGEP and receive a course exemption upon admission are exempt from the program requirement(s) and must replace these credits with elective course credits to satisfy the total credit requirement for their degree.',
         "notes": 'Students who have taken the equivalent of CHEM 212, CHEM 222, and/or MATH 203 in CEGEP and receive a course exemption upon admission are exempt from the program requirement(s) and must replace these credits with elective course credits to satisfy the total credit requirement for their degree.',
         "sort_order": 1,
         "courses": [
@@ -3037,6 +3068,7 @@ SCIENCE_PROGRAMS_PART2 = [
         "title": 'Statistics Requirement (3 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'Select 3 credits from the following. Students with CEGEP equivalent of MATH 203 may be exempt and must replace credits with electives.',
         "notes": 'Select 3 credits from the following. Students with CEGEP equivalent of MATH 203 may be exempt and must replace credits with electives.',
         "sort_order": 2,
         "courses": [
@@ -3066,6 +3098,7 @@ SCIENCE_PROGRAMS_PART2 = [
         "title": 'Complementary Courses (24 credits)',
         "block_type": 'multi_group',
         "credits_needed": 24,
+        "constraint_notes": 'Minimum of 6 credits must be at the 400-level or higher. 12 credits from Advanced Anatomy Courses (AAC) AND 12 credits from Biologically Oriented Courses (BOC). Courses may appear in both lists but cannot be double-counted.',
         "notes": 'Minimum of 6 credits must be at the 400-level or higher. 12 credits from Advanced Anatomy Courses (AAC) AND 12 credits from Biologically Oriented Courses (BOC). Courses may appear in both lists but cannot be double-counted.',
         "sort_order": 3,
       },
@@ -3075,6 +3108,7 @@ SCIENCE_PROGRAMS_PART2 = [
         "block_type": 'group',
         "group_name": 'Advanced Anatomy Courses (AAC)',
         "credits_needed": 12,
+        "constraint_notes": '12 credits selected from the following advanced anatomy courses.',
         "notes": '12 credits selected from the following advanced anatomy courses.',
         "sort_order": 4,
         "courses": [
@@ -3164,6 +3198,7 @@ SCIENCE_PROGRAMS_PART2 = [
         "block_type": 'group',
         "group_name": 'Biologically Oriented Courses (BOC)',
         "credits_needed": 12,
+        "constraint_notes": '12 credits selected from the following biologically oriented courses. WARNING: This list was truncated in the source page — the list cuts off at BIOC 503. Advisors should verify the full BOC list in the official catalogue.',
         "notes": '12 credits selected from the following biologically oriented courses. WARNING: This list was truncated in the source page — the list cuts off at BIOC 503. Advisors should verify the full BOC list in the official catalogue.',
         "sort_order": 5,
         "courses": [
