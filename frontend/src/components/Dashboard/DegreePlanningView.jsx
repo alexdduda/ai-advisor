@@ -32,6 +32,19 @@ async function getAuthHeaders() {
   return { Authorization: `Bearer ${session.access_token}` }
 }
 
+/**
+ * B.Com. majors that replace Management Core courses instead of adding to them,
+ * mapped to the Core variant they should see.
+ *
+ * Economics for Management Students is the only one today: ECON 230D1/D2
+ * replaces MGCR 293 and ECON 332 + ECON 333 replace MGCR 294, and those ECON
+ * courses count toward the major. Their Core is 36 credits over 12 courses, not
+ * 42 over 14 — which is how McGill arrives at 69 for the whole program.
+ */
+const BCOM_CORE_VARIANTS = {
+  economics_management_major_bcom: 'bcom_core_economics',
+}
+
 // Map profile major/minor names to program_keys
 function toProgramKey(name, type = 'major', faculty = '') {
   if (!name) return null
@@ -133,8 +146,13 @@ function toProgramKey(name, type = 'major', faculty = '') {
       'Business Analytics': 'business_analytics',
       'Strategic Management': 'strategic_management',
       'Information Technology Management': 'it_management',
-      'Organizational Behaviour and Human Resources': 'ob_hr',
-      'International Management': 'intl_management',
+      // These two slugs must match the seeded program_keys exactly. They used
+      // to read 'ob_hr' and 'intl_management', which produced
+      // ob_hr_major_bcom / intl_management_major_bcom — neither of which
+      // exists, so students in those majors got a 404 and an empty
+      // requirements tab.
+      'Organizational Behaviour and Human Resources': 'organizational_behaviour_hr',
+      'International Management': 'international_management',
       'Managing for Sustainability': 'managing_sustainability',
       'Retail Management': 'retail_management',
       'Economics for Management Students': 'economics_management',
@@ -1174,8 +1192,15 @@ function MyProgramCard({ profile, completedCourses, currentCourses, onProgressSu
     ? toProgramKey(profile?.other_majors?.[0], 'major', 'Faculty of Science')
     : null
   const minorKey = !isMgmt ? toProgramKey(profile?.minor, 'minor', profile?.faculty || '') : null
-  // Management-specific keys
-  const coreKey          = isMgmt ? 'bcom_core' : null
+  // Management-specific keys.
+  //
+  // A few B.Com. majors SUBSTITUTE core courses rather than adding to them, so
+  // they get their own Core variant. Economics students don't take MGCR 293 or
+  // MGCR 294 — ECON 230D1/D2 and ECON 332 + ECON 333 replace them and are
+  // counted in the major — which is why McGill states that program as 69
+  // credits (36 core + 33 major) where the standard 42-credit Core would give
+  // 72. Showing them the standard Core overstated their requirements by 6.
+  const coreKey          = isMgmt ? (BCOM_CORE_VARIANTS[majorKey] || 'bcom_core') : null
   const concentrationKey = isMgmt && profile?.concentration
     ? toProgramKey(profile.concentration, 'concentration', profile?.faculty || '')
     : null
