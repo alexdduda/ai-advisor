@@ -22,240 +22,335 @@ Accuracy notes:
 """
 
 LAW_PROGRAMS = [
-
-  # ══════════════════════════════════════════════════════════════════════
-  #  BCL/JD – BACHELOR OF CIVIL LAW / JURIS DOCTOR (105 credits)
-  # ══════════════════════════════════════════════════════════════════════
   {
-    "program_key":   "law_bcl_jd",
-    "name":          "Bachelor of Civil Law / Juris Doctor (BCL/JD)",
-    "program_type":  "major",
-    "faculty":       "Faculty of Law",
+    "program_key": 'law_bcl_jd',
+    "name": 'Bachelor of Civil Law / Juris Doctor (BCL/JD)',
+    "program_type": 'major',
+    "faculty": 'Faculty of Law',
     "total_credits": 105,
-    "description": (
-      "The BCL/JD is McGill's unique dual-degree law program, integrating the Civil Law "
-      "and Common Law traditions in a single three-year curriculum taught bilingually. "
-      "Graduates receive both the Bachelor of Civil Law (BCL) and the Juris Doctor (JD), "
-      "qualifying them to practise in Quebec (civil law jurisdiction) and all common law "
-      "provinces. Admission requires at least 60 completed university credits. "
-      "The 105-credit program consists of 47 required credits, 12 complementary credits "
-      "across four groups, 46 elective credits from Faculty offerings, and one research "
-      "paper (writing requirement)."
-    ),
-    "ecalendar_url": "https://www.mcgill.ca/law-studies/bcljd-studies/structure/courses",
+    "description": "The BCL/JD is McGill's unique dual-degree law program, integrating the Civil Law and Common Law traditions in a single three-year curriculum taught bilingually. Graduates receive both the Bachelor of Civil Law (BCL) and the Juris Doctor (JD), qualifying them to practise in Quebec (civil law jurisdiction) and all common law provinces. Admission requires at least 60 completed university credits. The 105-credit program consists of 47 required credits, 12 complementary credits across four groups, 46 elective credits from Faculty offerings, and one research paper (writing requirement).",
+    "ecalendar_url": 'https://coursecatalogue.mcgill.ca/en/undergraduate/law/programs/law-bcl-jd/',
     "blocks": [
-
-      # ── FIRST-YEAR REQUIRED (33 cr) ──────────────────────────────────
       {
-        "block_key":   "law_1y_required",
-        "title":       "Required Courses – First Year (33 credits)",
-        "block_type":  "required",
+        "block_key": 'law_bcl_jd_required_first_year',
+        "title": 'Required Courses – First Year (33 credits)',
+        "block_type": 'required',
         "credits_needed": 33,
-        "courses_needed": None,
-        "group_name":  None,
-        "notes": (
-          "All 33 credits must be taken in first year. Courses offered in both English "
-          "and French. D1/D2 courses must be registered together and completed in "
-          "consecutive terms."
-        ),
-        "sort_order":  1,
+        "notes": 'The following 33 credits of courses may be taken only in the first year.',
+        "sort_order": 1,
         "courses": [
-          {"subject": "LAWG", "catalog": "100D1", "title": "Contractual Obligations",            "credits": 3,   "is_required": True, "notes": "Must register for both LAWG 100D1 and LAWG 100D2. Completed in consecutive terms."},
-          {"subject": "LAWG", "catalog": "100D2", "title": "Contractual Obligations",            "credits": 3,   "is_required": True, "notes": "Prereq: LAWG 100D1. Completed in consecutive terms."},
-          {"subject": "LAWG", "catalog": "101D1", "title": "Extra-Contractual Obligations/Torts","credits": 3,   "is_required": True, "notes": "Must register for both LAWG 101D1 and LAWG 101D2."},
-          {"subject": "LAWG", "catalog": "101D2", "title": "Extra-Contractual Obligations/Torts","credits": 3,   "is_required": True, "notes": "Prereq: LAWG 101D1. Completed in consecutive terms."},
-          {"subject": "LAWG", "catalog": "102D1", "title": "Criminal Justice",                   "credits": 3,   "is_required": True, "notes": "Must register for both LAWG 102D1 and LAWG 102D2."},
-          {"subject": "LAWG", "catalog": "102D2", "title": "Criminal Justice",                   "credits": 3,   "is_required": True, "notes": "Prereq: LAWG 102D1. Completed in consecutive terms."},
-          {"subject": "LAWG", "catalog": "103",   "title": "Indigenous Legal Traditions",        "credits": 3,   "is_required": True, "notes": "Open only to first-year McGill law students. Taught in English and French."},
-          {"subject": "LAWG", "catalog": "110D1", "title": "Integration Workshop",               "credits": 1.5, "is_required": True, "notes": "Must register for both LAWG 110D1 and LAWG 110D2."},
-          {"subject": "LAWG", "catalog": "110D2", "title": "Integration Workshop",               "credits": 1.5, "is_required": True, "notes": "Prereq: LAWG 110D1. Completed in consecutive terms."},
-          {"subject": "PUB2", "catalog": "101D1", "title": "Constitutional Law",                 "credits": 3,   "is_required": True, "notes": "Must register for both PUB2 101D1 and PUB2 101D2."},
-          {"subject": "PUB2", "catalog": "101D2", "title": "Constitutional Law",                 "credits": 3,   "is_required": True, "notes": "Prereq: PUB2 101D1. Completed in consecutive terms."},
-          {"subject": "PUB3", "catalog": "116",   "title": "Foundations",                        "credits": 3,   "is_required": True, "notes": "Overview of Civil and Common Law traditions and Aboriginal legal traditions."},
+          {
+            "subject": 'LAWG',
+            "catalog": '100D1',
+            "title": 'Contractual Obligations',
+            "credits": 3.0,
+            "is_required": True,
+          },
+          {
+            "subject": 'LAWG',
+            "catalog": '100D2',
+            "title": 'Contractual Obligations',
+            "credits": 3.0,
+            "is_required": True,
+            "notes": 'See LAWG 100D1 for course description.',
+          },
+          {
+            "subject": 'LAWG',
+            "catalog": '101D1',
+            "title": 'Extra-Contractual Obligations/Torts',
+            "credits": 3.0,
+            "is_required": True,
+          },
+          {
+            "subject": 'LAWG',
+            "catalog": '101D2',
+            "title": 'Extra-Contractual Obligations/Torts',
+            "credits": 3.0,
+            "is_required": True,
+            "notes": 'See LAWG 101D1 for course description.',
+          },
+          {
+            "subject": 'LAWG',
+            "catalog": '102D1',
+            "title": 'Criminal Justice',
+            "credits": 3.0,
+            "is_required": True,
+          },
+          {
+            "subject": 'LAWG',
+            "catalog": '102D2',
+            "title": 'Criminal Justice',
+            "credits": 3.0,
+            "is_required": True,
+          },
+          {
+            "subject": 'LAWG',
+            "catalog": '103',
+            "title": 'Indigenous Legal Traditions',
+            "credits": 3.0,
+            "is_required": True,
+          },
+          {
+            "subject": 'LAWG',
+            "catalog": '110D1',
+            "title": 'Integration Workshop',
+            "credits": 1.5,
+            "is_required": True,
+          },
+          {
+            "subject": 'LAWG',
+            "catalog": '110D2',
+            "title": 'Integration Workshop',
+            "credits": 1.5,
+            "is_required": True,
+          },
+          {
+            "subject": 'PUB2',
+            "catalog": '101D1',
+            "title": 'Constitutional Law',
+            "credits": 3.0,
+            "is_required": True,
+          },
+          {
+            "subject": 'PUB2',
+            "catalog": '101D2',
+            "title": 'Constitutional Law',
+            "credits": 3.0,
+            "is_required": True,
+            "notes": 'See PUB2 101D1 for course description.',
+          },
+          {
+            "subject": 'PUB3',
+            "catalog": '116',
+            "title": 'Foundations',
+            "credits": 3.0,
+            "is_required": True,
+          },
         ],
       },
-
-      # ── SECOND-YEAR REQUIRED (14 cr) ─────────────────────────────────
       {
-        "block_key":   "law_2y_required",
-        "title":       "Required Courses – Second Year (14 credits)",
-        "block_type":  "required",
-        "credits_needed": 14,
-        "courses_needed": None,
-        "group_name":  None,
-        "notes": (
-          "All 14 credits must be taken in second year. "
-          "PROC 124 is an intensive course held in May/June."
-        ),
-        "sort_order":  2,
+        "block_key": 'law_bcl_jd_required_second_year',
+        "title": 'Required Courses – Second Year (13 credits)',
+        "block_type": 'required',
+        "credits_needed": 13,
+        "notes": 'The following 13 credits of courses may be taken only in the second year.',
+        "sort_order": 2,
         "courses": [
-          {"subject": "LAWG", "catalog": "210",   "title": "Legal Ethics and Professionalism",       "credits": 3, "is_required": True, "notes": "Limited to 2nd-year Law students only. Includes Focus Week intensive sessions."},
-          {"subject": "LAWG", "catalog": "220D1", "title": "Property",                               "credits": 3, "is_required": True, "notes": "Must register for both LAWG 220D1 and LAWG 220D2."},
-          {"subject": "LAWG", "catalog": "220D2", "title": "Property",                               "credits": 3, "is_required": True, "notes": "Prereq: LAWG 220D1. Completed in consecutive terms."},
-          {"subject": "PRAC", "catalog": "200",   "title": "Advocacy",                               "credits": 1, "is_required": True, "notes": "Critical analysis of oral advocacy skills. Limited to 2nd-year Law students."},
-          {"subject": "PROC", "catalog": "124",   "title": "Judicial Institutions and Civil Procedure","credits": 4, "is_required": True, "notes": "Intensive format; held May–June. Covers Quebec, Ontario, and federal courts."},
+          {
+            "subject": 'LAWG',
+            "catalog": '210',
+            "title": 'Legal Ethics and Professionalism',
+            "credits": 3.0,
+            "is_required": True,
+          },
+          {
+            "subject": 'LAWG',
+            "catalog": '220D1',
+            "title": 'Property',
+            "credits": 3.0,
+            "is_required": True,
+          },
+          {
+            "subject": 'LAWG',
+            "catalog": '220D2',
+            "title": 'Property',
+            "credits": 3.0,
+            "is_required": True,
+            "notes": 'See LAWG 220D1 for description.',
+          },
+          {
+            "subject": 'PROC',
+            "catalog": '124',
+            "title": 'Judicial Institutions and Civil Procedure',
+            "credits": 4.0,
+            "is_required": True,
+          },
         ],
       },
-
-      # ── COMPLEMENTARY A: CIVIL LAW IMMERSION (3 cr) ──────────────────
       {
-        "block_key":   "law_comp_civil_law",
-        "title":       "Complementary A – Civil Law Immersion (3 credits)",
-        "block_type":  "choose_credits",
+        "block_key": 'law_bcl_jd_required_any_year',
+        "title": 'Required Courses – Any Year (1 credit)',
+        "block_type": 'required',
+        "credits_needed": 1,
+        "notes": 'The following 1 credit course may be taken in any year after completing the first year.',
+        "sort_order": 3,
+        "courses": [
+          {
+            "subject": 'PRAC',
+            "catalog": '200',
+            "title": 'Advocacy',
+            "credits": 1.0,
+            "is_required": True,
+          },
+        ],
+      },
+      {
+        "block_key": 'law_bcl_jd_complementary',
+        "title": 'Complementary Courses (12 credits)',
+        "block_type": 'multi_group',
+        "credits_needed": 12,
+        "notes": '3 credits from each of four groups: Civil Law Immersion, Common Law Immersion, Social Diversity/Human Rights/Indigenous Law, and a 4th group not captured in the available catalogue text.',
+        "sort_order": 4,
+      },
+      {
+        "block_key": 'law_bcl_jd_complementary_civil_law_immersion',
+        "title": 'Civil Law Immersion Courses (3 credits)',
+        "block_type": 'group',
+        "group_name": 'Civil Law Immersion Courses',
         "credits_needed": 3,
-        "courses_needed": None,
-        "group_name":  None,
-        "notes": (
-          "Choose at least 3 credits from this list of Civil Law immersion courses. "
-          "These courses provide immersion in the culture, epistemology and practices "
-          "of the Civil Law Tradition."
-        ),
-        "sort_order":  3,
+        "notes": '3 credits from the following list of civil law courses.',
+        "sort_order": 5,
         "courses": [
-          {"subject": "BUS2", "catalog": "561",   "title": "Insurance",                            "credits": 3, "notes": "General principles of insurance contract under Quebec law. Not open to students who took BUS2 461."},
-          {"subject": "LAWG", "catalog": "506",   "title": "Advanced Civil Law Property",          "credits": 3, "notes": "Civil law reasoning and methodology through property concepts."},
-          {"subject": "PROC", "catalog": "200",   "title": "Advanced Civil Law Obligations",       "credits": 3, "notes": "General theory of obligations in the Civil Law tradition. Includes unjust enrichment."},
-          {"subject": "PRV2", "catalog": "270",   "title": "Law of Persons",                       "credits": 3, "notes": "Existence and attributes of physical and legal persons in the Civil Law of Quebec.", "recommended": True, "recommendation_reason": "Foundational civil law course, frequently offered."},
-          {"subject": "PRV4", "catalog": "548",   "title": "Administration Property of Another and Trusts", "credits": 3, "notes": "Basic law on administration of property of another. Not open to students who took PRV4 448."},
+          {
+            "subject": 'BUS2',
+            "catalog": '561',
+            "title": 'Insurance',
+            "credits": 3.0,
+            "choose_from_group": 'Civil Law Immersion Courses',
+            "notes": 'This course provides an opportunity for immersion in the culture, epistemology and practices of the Civil Law Tradition.',
+          },
+          {
+            "subject": 'LAWG',
+            "catalog": '506',
+            "title": 'Advanced Civil Law Property',
+            "credits": 3.0,
+            "choose_from_group": 'Civil Law Immersion Courses',
+            "notes": 'This course provides an opportunity for immersion in the culture, epistemology and practices of the Civil Law Tradition. Not currently offered.',
+          },
+          {
+            "subject": 'PROC',
+            "catalog": '200',
+            "title": 'Advanced Civil Law Obligations',
+            "credits": 3.0,
+            "choose_from_group": 'Civil Law Immersion Courses',
+            "notes": 'This course provides an opportunity for immersion in the culture, epistemology and practices of the Civil Law Tradition.',
+          },
+          {
+            "subject": 'PRV1',
+            "catalog": '549',
+            "title": 'Contrats nommés/Nominate Contracts',
+            "credits": 3.0,
+            "choose_from_group": 'Civil Law Immersion Courses',
+          },
+          {
+            "subject": 'PRV2',
+            "catalog": '270',
+            "title": 'Law of Persons',
+            "credits": 3.0,
+            "choose_from_group": 'Civil Law Immersion Courses',
+            "notes": 'This course provides an opportunity for immersion in the culture, epistemology and practices of the Civil Law Tradition. Not currently offered.',
+          },
+          {
+            "subject": 'PRV4',
+            "catalog": '548',
+            "title": 'Administration Property of Another and Trusts',
+            "credits": 3.0,
+            "choose_from_group": 'Civil Law Immersion Courses',
+          },
         ],
       },
-
-      # ── COMPLEMENTARY B: COMMON LAW IMMERSION (3 cr) ─────────────────
       {
-        "block_key":   "law_comp_common_law",
-        "title":       "Complementary B – Common Law Immersion (3 credits)",
-        "block_type":  "choose_credits",
+        "block_key": 'law_bcl_jd_complementary_common_law_immersion',
+        "title": 'Common Law Immersion Courses (3 credits)',
+        "block_type": 'group',
+        "group_name": 'Common Law Immersion Courses',
         "credits_needed": 3,
-        "courses_needed": None,
-        "group_name":  None,
-        "notes": (
-          "Choose at least 3 credits from this list of Common Law immersion courses. "
-          "These courses provide immersion in the culture, epistemology and practices "
-          "of the Common Law Tradition."
-        ),
-        "sort_order":  4,
+        "notes": '3 credits from the following list of common law courses.',
+        "sort_order": 6,
         "courses": [
-          {"subject": "PRV3", "catalog": "200",   "title": "Advanced Common Law Obligations",      "credits": 3, "notes": "Tort, contract, and restitution in theory and practice. Covers unjust enrichment.", "recommended": True, "recommendation_reason": "Frequently offered; core common law course."},
-          {"subject": "PRV3", "catalog": "534",   "title": "Remedies",                             "credits": 3, "notes": "Selected private law remedies at common law, in equity, and under statute. Not open to students who took PRV3 434."},
-          {"subject": "PRV4", "catalog": "500",   "title": "Restitution",                          "credits": 3, "notes": "Law of restitution and unjust enrichment at common law. Not open to students who took PRV4 435."},
-          {"subject": "PRV4", "catalog": "549",   "title": "Equity and Trusts",                    "credits": 3, "notes": "Law of gratuitous transfers, express trusts, powers of appointment. Not open to students who took PRV4 449 or PRV4 449D1/D2."},
+          {
+            "subject": 'PRV3',
+            "catalog": '200',
+            "title": 'Advanced Common Law Obligations',
+            "credits": 3.0,
+            "choose_from_group": 'Common Law Immersion Courses',
+            "notes": 'This course provides an opportunity for immersion in the culture, epistemology and practices of the Common Law Tradition.',
+          },
+          {
+            "subject": 'PRV3',
+            "catalog": '534',
+            "title": 'Remedies',
+            "credits": 3.0,
+            "choose_from_group": 'Common Law Immersion Courses',
+            "notes": 'This course provides an opportunity for immersion in the culture, epistemology and practices of the Common Law Tradition.',
+          },
+          {
+            "subject": 'PRV4',
+            "catalog": '500',
+            "title": 'Restitution',
+            "credits": 3.0,
+            "choose_from_group": 'Common Law Immersion Courses',
+            "notes": 'This course provides an opportunity for immersion in the culture, epistemology and practices of the Common Law Tradition. Not currently offered.',
+          },
+          {
+            "subject": 'PRV4',
+            "catalog": '549',
+            "title": 'Equity and Trusts',
+            "credits": 3.0,
+            "choose_from_group": 'Common Law Immersion Courses',
+            "notes": 'This course provides an opportunity for immersion in the culture, epistemology and practices of the Common Law Tradition.',
+          },
+          {
+            "subject": 'PRV5',
+            "catalog": '582',
+            "title": 'Advanced Torts',
+            "credits": 3.0,
+            "choose_from_group": 'Common Law Immersion Courses',
+            "notes": 'This course provides an opportunity for immersion in the culture, epistemology and practices of the Common Law Tradition.',
+          },
         ],
       },
-
-      # ── COMPLEMENTARY C: SOCIAL DIVERSITY / HR / INDIGENOUS (3 cr) ───
       {
-        "block_key":   "law_comp_diversity_hr",
-        "title":       "Complementary C – Social Diversity, Human Rights and Indigenous Law (3 credits)",
-        "block_type":  "choose_credits",
+        "block_key": 'law_bcl_jd_complementary_social_diversity',
+        "title": 'Social Diversity, Human Rights and Indigenous Law Courses (3 credits)',
+        "block_type": 'group',
+        "group_name": 'Social Diversity, Human Rights and Indigenous Law Courses',
         "credits_needed": 3,
-        "courses_needed": None,
-        "group_name":  None,
-        "notes": (
-          "Choose at least 3 credits from this list of courses on social diversity, "
-          "human rights, and Indigenous law."
-        ),
-        "sort_order":  5,
+        "notes": 'Students must take at least 3 credits from the following courses. List is truncated in the available catalogue text; only partial course list captured.',
+        "sort_order": 7,
         "courses": [
-          {"subject": "CMPL", "catalog": "500",   "title": "Indigenous Peoples and the State",      "credits": 3, "recommended": True, "recommendation_reason": "Frequently offered; important for Canadian law practice."},
-          {"subject": "CMPL", "catalog": "504",   "title": "Feminist Legal Theory",                 "credits": 3},
-          {"subject": "CMPL", "catalog": "511",   "title": "Social Diversity and Law",              "credits": 3},
-          {"subject": "CMPL", "catalog": "516",   "title": "International Development Law",         "credits": 3},
-          {"subject": "CMPL", "catalog": "565",   "title": "International Humanitarian Law",        "credits": 3, "notes": "Prereq: PUB2 105. Not open to first-year students."},
-          {"subject": "CMPL", "catalog": "571",   "title": "International Law of Human Rights",     "credits": 3, "recommended": True, "recommendation_reason": "Frequently offered."},
-          {"subject": "CMPL", "catalog": "573",   "title": "Civil Liberties",                       "credits": 3},
-          {"subject": "CMPL", "catalog": "575",   "title": "Discrimination and the Law",            "credits": 3},
-          {"subject": "IDFC", "catalog": "500",   "title": "Indigenous Field Studies",              "credits": 3, "notes": "Intensive field course; 1 week living in the field. Additional fee ~$447. Open to Law students."},
-          {"subject": "LAWG", "catalog": "503",   "title": "Inter-American Human Rights",           "credits": 3, "notes": "Restricted to Law students. Language of instruction may vary."},
-          {"subject": "LAWG", "catalog": "505",   "title": "Critical Engagements with Human Rights","credits": 3, "notes": "Prereq: LAWG 517 or instructor permission."},
-          {"subject": "LAWG", "catalog": "507",   "title": "Critical Race Theory Advanced Seminar", "credits": 3},
-          {"subject": "LAWG", "catalog": "508D1", "title": "Indigenous Constitutionalism",          "credits": 3, "notes": "Must register for both LAWG 508D1 and LAWG 508D2."},
-          {"subject": "LAWG", "catalog": "508D2", "title": "Indigenous Constitutionalism",          "credits": 3, "notes": "Prereq: LAWG 508D1. Completed in consecutive terms."},
-          {"subject": "LEEL", "catalog": "369",   "title": "Labour Law",                            "credits": 3, "notes": "Also counts toward Group D (Administrative Law)."},
-          {"subject": "LEEL", "catalog": "582",   "title": "Law and Poverty",                       "credits": 3, "notes": "Not open to students who took LEEL 482. Also counts toward Group D."},
-          {"subject": "PUB2", "catalog": "105",   "title": "Public International Law",              "credits": 3},
-          {"subject": "PUB2", "catalog": "500",   "title": "Law and Psychiatry",                    "credits": 3, "notes": "Open to limited students in Law, Psychiatry, and Psychology. Also counts toward Group D."},
-          {"subject": "PUB2", "catalog": "502",   "title": "International Criminal Law",            "credits": 3, "notes": "Not open to students who took PUB2 425."},
-          {"subject": "PUB2", "catalog": "551",   "title": "Immigration and Refugee Law",           "credits": 3, "notes": "Not open to students who took PUB2 451. Also counts toward Group D."},
+          {
+            "subject": 'CMPL',
+            "catalog": '500',
+            "title": 'Indigenous Peoples and the State',
+            "credits": 3.0,
+            "choose_from_group": 'Social Diversity, Human Rights and Indigenous Law Courses',
+          },
+          {
+            "subject": 'CMPL',
+            "catalog": '504',
+            "title": 'Feminist Legal Theory',
+            "credits": 3.0,
+            "choose_from_group": 'Social Diversity, Human Rights and Indigenous Law Courses',
+            "notes": 'Not currently offered.',
+          },
+          {
+            "subject": 'CMPL',
+            "catalog": '511',
+            "title": 'Social Diversity and Law',
+            "credits": 3.0,
+            "choose_from_group": 'Social Diversity, Human Rights and Indigenous Law Courses',
+            "notes": 'Not currently offered.',
+          },
+          {
+            "subject": 'CMPL',
+            "catalog": '516',
+            "title": 'International Development Law',
+            "credits": 3.0,
+            "choose_from_group": 'Social Diversity, Human Rights and Indigenous Law Courses',
+          },
+          {
+            "subject": 'CMPL',
+            "catalog": '565',
+            "title": 'International Humanitarian Law',
+            "credits": 3.0,
+            "choose_from_group": 'Social Diversity, Human Rights and Indigenous Law Courses',
+            "notes": 'Course description truncated in catalogue page. Not currently offered per available text.',
+          },
         ],
       },
-
-      # ── COMPLEMENTARY D: ADMINISTRATIVE LAW (3 cr) ───────────────────
-      {
-        "block_key":   "law_comp_admin_law",
-        "title":       "Complementary D – Principles of Administrative Law (3 credits)",
-        "block_type":  "choose_credits",
-        "credits_needed": 3,
-        "courses_needed": None,
-        "group_name":  None,
-        "notes": (
-          "Choose at least 3 credits from this list of courses covering principles of "
-          "Canadian administrative law and related regulatory subjects."
-        ),
-        "sort_order":  6,
-        "courses": [
-          {"subject": "BUS1", "catalog": "532",   "title": "Bankruptcy and Insolvency",             "credits": 3, "notes": "Not open to students who took BUS1 432."},
-          {"subject": "BUS2", "catalog": "504",   "title": "Securities Regulation",                 "credits": 3, "notes": "Not open to students who took BUS2 372."},
-          {"subject": "CMPL", "catalog": "539",   "title": "International Taxation",                "credits": 3},
-          {"subject": "CMPL", "catalog": "543",   "title": "Law and Practice of International Trade","credits": 3},
-          {"subject": "CMPL", "catalog": "574",   "title": "Government Control of Business",        "credits": 3},
-          {"subject": "CMPL", "catalog": "575",   "title": "Discrimination and the Law",            "credits": 3, "notes": "Not open to students who took CMPL 475. Also counts toward Group C."},
-          {"subject": "CMPL", "catalog": "577",   "title": "Communications Law",                    "credits": 3},
-          {"subject": "CMPL", "catalog": "580",   "title": "Environment and the Law",               "credits": 3},
-          {"subject": "LAWG", "catalog": "523",   "title": "Tax Practice Seminar",                  "credits": 3},
-          {"subject": "LEEL", "catalog": "369",   "title": "Labour Law",                            "credits": 3, "recommended": True, "recommendation_reason": "Frequently offered; also counts toward Group C."},
-          {"subject": "LEEL", "catalog": "570",   "title": "Employment Law",                        "credits": 3, "notes": "Not open to students who took LEEL 470."},
-          {"subject": "LEEL", "catalog": "582",   "title": "Law and Poverty",                       "credits": 3, "notes": "Not open to students who took LEEL 482. Also counts toward Group C."},
-          {"subject": "PRV4", "catalog": "545",   "title": "Land Use Planning",                     "credits": 3, "notes": "Not open to students who took PRV4 145."},
-          {"subject": "PRV5", "catalog": "483",   "title": "Consumer Law",                          "credits": 3},
-          {"subject": "PUB2", "catalog": "400",   "title": "The Administrative Process",            "credits": 3, "recommended": True, "recommendation_reason": "Core administrative law; frequently offered."},
-          {"subject": "PUB2", "catalog": "401",   "title": "Judicial Review of Administrative Action","credits": 3, "recommended": True, "recommendation_reason": "Core administrative law; frequently offered."},
-          {"subject": "PUB2", "catalog": "500",   "title": "Law and Psychiatry",                    "credits": 3, "notes": "Also counts toward Group C."},
-          {"subject": "PUB2", "catalog": "515",   "title": "Tax Policy",                            "credits": 3, "notes": "Not open to students who took PUB2 415."},
-          {"subject": "PUB2", "catalog": "551",   "title": "Immigration and Refugee Law",           "credits": 3, "notes": "Not open to students who took PUB2 451. Also counts toward Group C."},
-        ],
-      },
-
-      # ── ELECTIVES (46 cr) ────────────────────────────────────────────
-      {
-        "block_key":   "law_electives",
-        "title":       "Elective Courses (46 credits)",
-        "block_type":  "choose_credits",
-        "credits_needed": 46,
-        "courses_needed": None,
-        "group_name":  None,
-        "notes": (
-          "46 credits of elective courses from any Faculty of Law offerings, or courses "
-          "approved as credit equivalences. The available elective list varies each year — "
-          "see the Faculty's Current Courses page. Electives may include upper-year "
-          "seminars, clinics, international exchange credits, focus week workshops, "
-          "student-initiated seminars, and approved non-course credits."
-        ),
-        "sort_order":  7,
-        "courses": [],
-      },
-
-      # ── WRITING REQUIREMENT ───────────────────────────────────────────
-      {
-        "block_key":   "law_writing_requirement",
-        "title":       "Research Paper (Writing Requirement)",
-        "block_type":  "required",
-        "credits_needed": None,
-        "courses_needed": 1,
-        "group_name":  None,
-        "notes": (
-          "All students must submit at least one research paper. This may be satisfied by: "
-          "(1) writing an essay in a course where the essay constitutes ≥75% of the final grade; "
-          "(2) writing a supervised term essay for credit within the Faculty of Law; or "
-          "(3) publishing an article in the McGill Law Journal, approved by the Faculty Advisor. "
-          "Papers written jointly do not satisfy this requirement."
-        ),
-        "sort_order":  8,
-        "courses": [],
-      },
-
     ],
   },
-
 ]
 
 
