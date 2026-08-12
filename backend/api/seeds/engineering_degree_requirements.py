@@ -37,6 +37,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Required Year 0 Courses (29 credits)',
         "block_type": 'required',
         "credits_needed": 29,
+        "constraint_notes": 'Generally, students admitted to Engineering from Quebec CEGEPs are granted transfer credits for Year 0 (Foundation) courses, except BIOL 112. Students from Quebec CEGEPs who have successfully completed a course at CEGEP equivalent to BIOL 112 may obtain transfer credits by passing the McGill Science Placement Exam for BIOL 112.',
         "notes": 'Generally, students admitted to Engineering from Quebec CEGEPs are granted transfer credits for Year 0 (Foundation) courses, except BIOL 112. Students from Quebec CEGEPs who have successfully completed a course at CEGEP equivalent to BIOL 112 may obtain transfer credits by passing the McGill Science Placement Exam for BIOL 112.',
         "sort_order": 1,
         "courses": [
@@ -103,6 +104,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Required Non-Departmental Courses (27 credits)',
         "block_type": 'required',
         "credits_needed": 27,
+        "constraint_notes": 'CHEM 212: Students from a CEGEP background who have completed an equivalent CEGEP course may obtain transfer credits by passing the McGill Placement Exam before the start of their first term.',
         "notes": 'CHEM 212: Students from a CEGEP background who have completed an equivalent CEGEP course may obtain transfer credits by passing the McGill Placement Exam before the start of their first term.',
         "sort_order": 2,
         "courses": [
@@ -191,6 +193,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Required Bioengineering Courses (53 credits)',
         "block_type": 'required',
         "credits_needed": 53,
+        "constraint_notes": 'BIEN 300 is listed with 3 credits but no title was available in the catalogue text. BIEN 470D1 and BIEN 470D2 must be taken together. The catalogue text was cut off after BIEN 560.',
         "notes": 'BIEN 300 is listed with 3 credits but no title was available in the catalogue text. BIEN 470D1 and BIEN 470D2 must be taken together. The catalogue text was cut off after BIEN 560.',
         "sort_order": 3,
         "courses": [
@@ -342,6 +345,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Required Year 0 Courses (26 credits)',
         "block_type": 'required',
         "credits_needed": 26,
+        "constraint_notes": 'Generally, students admitted to Engineering from Quebec CEGEPs may be granted transfer credit for Year 0 courses.',
         "notes": 'Generally, students admitted to Engineering from Quebec CEGEPs may be granted transfer credit for Year 0 courses.',
         "sort_order": 1,
         "courses": [
@@ -663,6 +667,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Required Year 0 Courses (26 credits)',
         "block_type": 'required',
         "credits_needed": 26,
+        "constraint_notes": 'Generally, students admitted to Engineering from Quebec CEGEPs may be granted transfer credit for Year 0 courses.',
         "notes": 'Generally, students admitted to Engineering from Quebec CEGEPs may be granted transfer credit for Year 0 courses.',
         "sort_order": 1,
         "courses": [
@@ -951,6 +956,7 @@ ENGINEERING_PROGRAMS = [
         "block_type": 'choose_credits',
         "group_name": 'List A - Design Technical Complementaries',
         "credits_needed": 6,
+        "constraint_notes": '6-15 credits from the following. Total complementary credits: 21. The catalogue page was truncated; only the first two List A courses are visible.',
         "notes": '6-15 credits from the following. Total complementary credits: 21. The catalogue page was truncated; only the first two List A courses are visible.',
         "sort_order": 4,
         "courses": [
@@ -994,6 +1000,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Required Year 0 Courses (22 credits)',
         "block_type": 'required',
         "credits_needed": 22,
+        "constraint_notes": 'Generally, students admitted to Engineering from Quebec CEGEPs may be granted transfer credit for Year 0 courses.',
         "notes": 'Generally, students admitted to Engineering from Quebec CEGEPs may be granted transfer credit for Year 0 courses.',
         "sort_order": 1,
         "courses": [
@@ -1132,6 +1139,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Required Electrical Engineering Courses (57 credits)',
         "block_type": 'required',
         "credits_needed": 57,
+        "constraint_notes": 'ECSE 458N1 and ECSE 458N2 can be taken instead of ECSE 458D1 and ECSE 458D2.',
         "notes": 'ECSE 458N1 and ECSE 458N2 can be taken instead of ECSE 458D1 and ECSE 458D2.',
         "sort_order": 3,
         "courses": [
@@ -1263,6 +1271,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Complementary Courses (26-29 credits)',
         "block_type": 'multi_group',
         "credits_needed": 26,
+        "constraint_notes": '17-20 credits (5 courses) of Technical Complementaries must be taken: 8 credits (2 courses) from List A, and 9-12 credits (3 courses) from List A or List B. Additionally, 9 credits of General Complementaries are required. The catalogue page was truncated and List B and General Complementaries courses are not available in the provided text.',
         "notes": '17-20 credits (5 courses) of Technical Complementaries must be taken: 8 credits (2 courses) from List A, and 9-12 credits (3 courses) from List A or List B. Additionally, 9 credits of General Complementaries are required. The catalogue page was truncated and List B and General Complementaries courses are not available in the provided text.',
         "sort_order": 4,
       },
@@ -1272,6 +1281,7 @@ ENGINEERING_PROGRAMS = [
         "block_type": 'choose_credits',
         "group_name": 'List A',
         "credits_needed": 8,
+        "constraint_notes": '8 credits (2 courses) must be chosen from List A. An additional 9-12 credits (3 courses) may also be taken from List A or List B. List A is partially captured due to catalogue page truncation.',
         "notes": '8 credits (2 courses) must be chosen from List A. An additional 9-12 credits (3 courses) may also be taken from List A or List B. List A is partially captured due to catalogue page truncation.',
         "sort_order": 5,
         "courses": [
@@ -1322,6 +1332,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Required Year 0 Courses (25 credits)',
         "block_type": 'required',
         "credits_needed": 25,
+        "constraint_notes": 'Generally, students admitted to Engineering from Quebec CEGEPs may be granted transfer credit for Year 0 courses.',
         "notes": 'Generally, students admitted to Engineering from Quebec CEGEPs may be granted transfer credit for Year 0 courses.',
         "sort_order": 1,
         "courses": [
@@ -1460,6 +1471,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Required Computer Engineering Courses (64 credits)',
         "block_type": 'required',
         "credits_needed": 64,
+        "constraint_notes": 'ECSE 458N1 and ECSE 458N2 can be taken instead of ECSE 458D1 and ECSE 458D2.',
         "notes": 'ECSE 458N1 and ECSE 458N2 can be taken instead of ECSE 458D1 and ECSE 458D2.',
         "sort_order": 3,
         "courses": [
@@ -1612,6 +1624,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Complementary Courses (20-23 credits)',
         "block_type": 'multi_group',
         "credits_needed": 20,
+        "constraint_notes": 'Technical Complementaries: 11-14 credits (4 courses) must be taken, chosen as follows: 3-4 credits (1 course) from List A; 8-11 credits (3 courses) from List A or List B. The catalogue page was cut off before the full list of courses was displayed. Only partial List A content is available.',
         "notes": 'Technical Complementaries: 11-14 credits (4 courses) must be taken, chosen as follows: 3-4 credits (1 course) from List A; 8-11 credits (3 courses) from List A or List B. The catalogue page was cut off before the full list of courses was displayed. Only partial List A content is available.',
         "sort_order": 4,
         "courses": [
@@ -1648,6 +1661,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Required Year 0 Courses (25 credits)',
         "block_type": 'required',
         "credits_needed": 22,
+        "constraint_notes": 'Generally, students admitted to Engineering from Quebec CEGEPs may be granted transfer credit for Year 0 courses. Plus 3 credits of Natural Science complementary courses from approved science departments (ATOC, BIOL, CHEM, EPSC, ESYS, PHYS).',
         "notes": 'Generally, students admitted to Engineering from Quebec CEGEPs may be granted transfer credit for Year 0 courses. Plus 3 credits of Natural Science complementary courses from approved science departments (ATOC, BIOL, CHEM, EPSC, ESYS, PHYS).',
         "sort_order": 1,
         "courses": [
@@ -1700,6 +1714,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Natural Science Complementary Courses (3 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": '3 credits chosen from courses from the following science departments, approved by the Undergraduate Programs Office in the Department of Electrical and Computer Engineering: Atmospheric and Oceanic Sciences (ATOC), Biology (BIOL), Chemistry (CHEM), Earth and Planetary Sciences (EPSC), Earth System Science (ESYS), Physics (PHYS).',
         "notes": '3 credits chosen from courses from the following science departments, approved by the Undergraduate Programs Office in the Department of Electrical and Computer Engineering: Atmospheric and Oceanic Sciences (ATOC), Biology (BIOL), Chemistry (CHEM), Earth and Planetary Sciences (EPSC), Earth System Science (ESYS), Physics (PHYS).',
         "sort_order": 2,
       },
@@ -1815,6 +1830,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Required Software Engineering Courses (58 credits)',
         "block_type": 'required',
         "credits_needed": 58,
+        "constraint_notes": 'ECSE 458N1 and ECSE 458N2 can be taken instead of ECSE 458D1 and ECSE 458D2.',
         "notes": 'ECSE 458N1 and ECSE 458N2 can be taken instead of ECSE 458D1 and ECSE 458D2.',
         "sort_order": 4,
         "courses": [
@@ -1968,6 +1984,7 @@ ENGINEERING_PROGRAMS = [
         "block_type": 'choose_credits',
         "group_name": 'List A',
         "credits_needed": 3,
+        "constraint_notes": '3-4 credits (1 course) must be taken from List A. An additional 8-11 credits (3 courses) must be taken from List A or List B. Total technical complementaries: 11-14 credits (4 courses). List B courses are not shown in the provided catalogue text.',
         "notes": '3-4 credits (1 course) must be taken from List A. An additional 8-11 credits (3 courses) must be taken from List A or List B. Total technical complementaries: 11-14 credits (4 courses). List B courses are not shown in the provided catalogue text.',
         "sort_order": 5,
         "courses": [
@@ -2000,6 +2017,7 @@ ENGINEERING_PROGRAMS = [
         "block_type": 'choose_credits',
         "group_name": 'List A or List B',
         "credits_needed": 8,
+        "constraint_notes": '8-11 credits (3 courses) from List A or List B. List B courses are not shown in the provided catalogue text.',
         "notes": '8-11 credits (3 courses) from List A or List B. List B courses are not shown in the provided catalogue text.',
         "sort_order": 6,
         "courses": [
@@ -2043,6 +2061,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Required Year 0 Courses (22 credits)',
         "block_type": 'required',
         "credits_needed": 22,
+        "constraint_notes": 'Generally, students admitted to Engineering from Quebec CEGEPs may be granted transfer credit for these Year 0 courses.',
         "notes": 'Generally, students admitted to Engineering from Quebec CEGEPs may be granted transfer credit for these Year 0 courses.',
         "sort_order": 1,
         "courses": [
@@ -2332,6 +2351,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Technical Complementary Courses - 500-level MECH (6 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 6,
+        "constraint_notes": '6 credits at the 500 level or higher, chosen from Mechanical Engineering courses (subject code MECH).',
         "notes": '6 credits at the 500 level or higher, chosen from Mechanical Engineering courses (subject code MECH).',
         "sort_order": 4,
       },
@@ -2340,6 +2360,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Technical Complementary Courses - 300-level or higher (9 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 9,
+        "constraint_notes": '9 credits chosen from courses at the 300 level or higher (approved by the Department) in the Faculty of Engineering (including MECH courses) or from courses in the Faculty of Science; or selected courses from Group A and Group B (approved by the Department).',
         "notes": '9 credits chosen from courses at the 300 level or higher (approved by the Department) in the Faculty of Engineering (including MECH courses) or from courses in the Faculty of Science; or selected courses from Group A and Group B (approved by the Department).',
         "sort_order": 5,
       },
@@ -2349,6 +2370,7 @@ ENGINEERING_PROGRAMS = [
         "block_type": 'choose_credits',
         "group_name": 'Group A',
         "credits_needed": 3,
+        "constraint_notes": '3 credits from Group A - Impact of Technology on Society. Course list was truncated in the catalogue page; only partial list captured.',
         "notes": '3 credits from Group A - Impact of Technology on Society. Course list was truncated in the catalogue page; only partial list captured.',
         "sort_order": 6,
         "courses": [
@@ -2384,6 +2406,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Required Year 0 Courses (26 credits)',
         "block_type": 'required',
         "credits_needed": 26,
+        "constraint_notes": 'Generally, students admitted to Engineering from Quebec CEGEPs may be granted transfer credit for Year 0 courses.',
         "notes": 'Generally, students admitted to Engineering from Quebec CEGEPs may be granted transfer credit for Year 0 courses.',
         "sort_order": 1,
         "courses": [
@@ -2689,6 +2712,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Required Year 0 Courses (26 credits)',
         "block_type": 'required',
         "credits_needed": 26,
+        "constraint_notes": 'Generally, students admitted to Engineering from Quebec CEGEPs may be granted transfer credit for Year 0 courses.',
         "notes": 'Generally, students admitted to Engineering from Quebec CEGEPs may be granted transfer credit for Year 0 courses.',
         "sort_order": 1,
         "courses": [
@@ -2748,6 +2772,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Required Non-Departmental Courses (37 credits)',
         "block_type": 'required',
         "credits_needed": 37,
+        "constraint_notes": 'Students choose either COMP 208 or COMP 250.',
         "notes": 'Students choose either COMP 208 or COMP 250.',
         "sort_order": 2,
         "courses": [
@@ -2857,6 +2882,7 @@ ENGINEERING_PROGRAMS = [
         "block_type": 'choose_courses',
         "credits_needed": 3,
         "courses_needed": 1,
+        "constraint_notes": 'Students choose either COMP 208 or COMP 250.',
         "notes": 'Students choose either COMP 208 or COMP 250.',
         "sort_order": 3,
         "courses": [
@@ -2993,6 +3019,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Complementary Courses (34-35 credits)',
         "block_type": 'multi_group',
         "credits_needed": 34,
+        "constraint_notes": '17 credits from one of Stream A (CEGEP students) or Stream B. Full details of Stream A and Stream B were not available in the extracted catalogue text (page was cut off). MPMC 321 (3 credits) was partially visible as part of Stream A.',
         "notes": '17 credits from one of Stream A (CEGEP students) or Stream B. Full details of Stream A and Stream B were not available in the extracted catalogue text (page was cut off). MPMC 321 (3 credits) was partially visible as part of Stream A.',
         "sort_order": 5,
         "courses": [
@@ -3104,6 +3131,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Required Year 0 – Science Courses (10 credits)',
         "block_type": 'required',
         "credits_needed": 10,
+        "constraint_notes": 'All Year 0 students must successfully complete 10 credits from the following. Generally, students admitted from Quebec CEGEPs may be granted transfer credit for Year 0 courses. Course choices must be made through consultation with the Student Advisor for the Professional Programs.',
         "notes": 'All Year 0 students must successfully complete 10 credits from the following. Generally, students admitted from Quebec CEGEPs may be granted transfer credit for Year 0 courses. Course choices must be made through consultation with the Student Advisor for the Professional Programs.',
         "sort_order": 1,
         "courses": [
@@ -3112,18 +3140,21 @@ ENGINEERING_PROGRAMS = [
             "catalog": '133',
             "title": 'Linear Algebra and Geometry',
             "credits": 3.0,
+            "is_required": True,
           },
           {
             "subject": 'MATH',
             "catalog": '140',
             "title": 'Calculus 1',
             "credits": 3.0,
+            "is_required": True,
           },
           {
             "subject": 'PHYS',
             "catalog": '131',
             "title": 'Mechanics and Waves',
             "credits": 4.0,
+            "is_required": True,
             "notes": 'A PHYS course equivalent to Mechanics with labs may be substituted upon approval of the department.',
           },
         ],
@@ -3133,6 +3164,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Required Year 0 – Natural/Environmental Sciences Elective (3 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": '3 credits from among any 100- or 200-level courses with subject codes: ATOC (Atmospheric and Oceanic Sciences), COMP (Computer Science), ENVR (Environment), EPSC (Earth and Planetary Sciences).',
         "notes": '3 credits from among any 100- or 200-level courses with subject codes: ATOC (Atmospheric and Oceanic Sciences), COMP (Computer Science), ENVR (Environment), EPSC (Earth and Planetary Sciences).',
         "sort_order": 2,
       },
@@ -3141,6 +3173,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Required Year 0 – Humanities and Social Sciences Electives (15 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 15,
+        "constraint_notes": '15 credits from among any 100- or 200-level courses with subject codes: AFRI, ANTH, ARTH, CANS, CATH, CLAS, COMS, EAST, ECON, ENGL, FREN, FSCI, GEOG, GSFS, GERM, HISP, HIST, INDG, ISLA, ITAL, JWST, LING, LLCU, MUAR, PHIL, POLI, PSYC, RELG, RUSS, SOCI.',
         "notes": '15 credits from among any 100- or 200-level courses with subject codes: AFRI, ANTH, ARTH, CANS, CATH, CLAS, COMS, EAST, ECON, ENGL, FREN, FSCI, GEOG, GSFS, GERM, HISP, HIST, INDG, ISLA, ITAL, JWST, LING, LLCU, MUAR, PHIL, POLI, PSYC, RELG, RUSS, SOCI.',
         "sort_order": 3,
       },
@@ -3149,6 +3182,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Required Architectural Courses (83 credits)',
         "block_type": 'required',
         "credits_needed": 83,
+        "constraint_notes": 'ARCH 250 and ARCH 378 should be taken in the first year of studies.',
         "notes": 'ARCH 250 and ARCH 378 should be taken in the first year of studies.',
         "sort_order": 4,
         "courses": [
@@ -3308,6 +3342,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Complementary Courses (9 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 9,
+        "constraint_notes": '9 credits from among the following courses.',
         "notes": '9 credits from among the following courses.',
         "sort_order": 5,
         "courses": [
@@ -3491,6 +3526,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Complementary Courses – 3 credits from the following',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'Students may choose only one course from each of the following mutually exclusive pairs: (COMP 250 / ECSE 250); (COMP 424 / ECSE 526); (ECSE 439 / ECSE 539); (ECSE 446 / ECSE 546).',
         "notes": 'Students may choose only one course from each of the following mutually exclusive pairs: (COMP 250 / ECSE 250); (COMP 424 / ECSE 526); (ECSE 439 / ECSE 539); (ECSE 446 / ECSE 546).',
         "sort_order": 2,
         "courses": [
@@ -3515,6 +3551,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Complementary Courses – 6 credits from the following',
         "block_type": 'choose_credits',
         "credits_needed": 6,
+        "constraint_notes": 'Students may choose only one course from each of the following mutually exclusive pairs: (COMP 250 / ECSE 250); (COMP 424 / ECSE 526); (ECSE 439 / ECSE 539); (ECSE 446 / ECSE 546). ECSE 446, ECSE 526, ECSE 539, and ECSE 546 are restricted to Honours students or Computer/Electrical Engineering students with CGPA ≥ 3.0 and B+ or better in prerequisites.',
         "notes": 'Students may choose only one course from each of the following mutually exclusive pairs: (COMP 250 / ECSE 250); (COMP 424 / ECSE 526); (ECSE 439 / ECSE 539); (ECSE 446 / ECSE 546). ECSE 446, ECSE 526, ECSE 539, and ECSE 546 are restricted to Honours students or Computer/Electrical Engineering students with CGPA ≥ 3.0 and B+ or better in prerequisites.',
         "sort_order": 3,
         "courses": [
@@ -3690,6 +3727,7 @@ ENGINEERING_PROGRAMS = [
         "title": '3 credits from: COMP 250 or ECSE 250',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'Part of Complementary Courses (21-23 credits)',
         "notes": 'Part of Complementary Courses (21-23 credits)',
         "sort_order": 2,
         "courses": [
@@ -3712,6 +3750,7 @@ ENGINEERING_PROGRAMS = [
         "title": '3 credits from: COMP 302 or COMP 303',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'Part of Complementary Courses (21-23 credits)',
         "notes": 'Part of Complementary Courses (21-23 credits)',
         "sort_order": 3,
         "courses": [
@@ -3734,6 +3773,7 @@ ENGINEERING_PROGRAMS = [
         "title": '3-4 credits from: COMP 273 or ECSE 324',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'Part of Complementary Courses (21-23 credits). Credits range 3-4 depending on course chosen.',
         "notes": 'Part of Complementary Courses (21-23 credits). Credits range 3-4 depending on course chosen.',
         "sort_order": 4,
         "courses": [
@@ -3756,6 +3796,7 @@ ENGINEERING_PROGRAMS = [
         "title": '3-4 credits from: Numerical Methods courses',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'Part of Complementary Courses (21-23 credits). Credits range 3-4 depending on course chosen.',
         "notes": 'Part of Complementary Courses (21-23 credits). Credits range 3-4 depending on course chosen.',
         "sort_order": 5,
         "courses": [
@@ -3802,6 +3843,7 @@ ENGINEERING_PROGRAMS = [
         "title": '9 credits from: COMP 251, MATH 240, and COMP 300-level or above',
         "block_type": 'choose_credits',
         "credits_needed": 9,
+        "constraint_notes": 'Choose 9 credits from COMP 251, MATH 240, or any COMP courses at the 300 level or above except COMP 396 (Undergraduate Research Project) and COMP 400 (Project in Computer Science). It is strongly recommended that students take COMP 251 as it is a prerequisite of many later computer science courses.',
         "notes": 'Choose 9 credits from COMP 251, MATH 240, or any COMP courses at the 300 level or above except COMP 396 (Undergraduate Research Project) and COMP 400 (Project in Computer Science). It is strongly recommended that students take COMP 251 as it is a prerequisite of many later computer science courses.',
         "sort_order": 6,
         "courses": [
@@ -3867,6 +3909,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Complementary Courses (12 credits)',
         "block_type": 'multi_group',
         "credits_needed": 12,
+        "constraint_notes": '12 credits from one of the following streams. Students may take one complementary course outside of their stream, but their selection must be approved by the Minor Advisor prior to the registration for the course.',
         "notes": '12 credits from one of the following streams. Students may take one complementary course outside of their stream, but their selection must be approved by the Minor Advisor prior to the registration for the course.',
         "sort_order": 2,
       },
@@ -4161,6 +4204,7 @@ ENGINEERING_PROGRAMS = [
         "block_type": 'choose_credits',
         "group_name": 'Group A',
         "credits_needed": 3,
+        "constraint_notes": 'COMP 250 and ECSE 250 cannot both be taken.',
         "notes": 'COMP 250 and ECSE 250 cannot both be taken.',
         "sort_order": 1,
         "courses": [
@@ -4188,6 +4232,7 @@ ENGINEERING_PROGRAMS = [
         "block_type": 'choose_credits',
         "group_name": 'Group B',
         "credits_needed": 4,
+        "constraint_notes": 'ECSE 551 and COMP 551 cannot both be taken.',
         "notes": 'ECSE 551 and COMP 551 cannot both be taken.',
         "sort_order": 2,
         "courses": [
@@ -4327,6 +4372,7 @@ ENGINEERING_PROGRAMS = [
         "block_type": 'choose_credits',
         "group_name": 'Group E',
         "credits_needed": 9,
+        "constraint_notes": '9-12 credits from the following. COMP 424 and ECSE 526 cannot both be taken. ECSE 507 and MECH 579 cannot both be taken. Also includes any 400 or 500 level special topics courses in the area of artificial intelligence with the approval of the Electrical and Computer Engineering department.',
         "notes": '9-12 credits from the following. COMP 424 and ECSE 526 cannot both be taken. ECSE 507 and MECH 579 cannot both be taken. Also includes any 400 or 500 level special topics courses in the area of artificial intelligence with the approval of the Electrical and Computer Engineering department.',
         "sort_order": 5,
         "courses": [
@@ -4503,6 +4549,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Introductory Life Sciences (minimum 3 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'Minimum of 3 credits from the courses below. Students can choose one of ANAT 212/BIOC 212 or BIOL 201 (footnote 1). Students can choose one of ANAT 212, BIEN 219, BIOC 212, BIOL 200, BIOL 201, or BIOL 219 (footnote 2). CHEM 212 cannot be taken by Chemical Engineering students (footnote 3).',
         "notes": 'Minimum of 3 credits from the courses below. Students can choose one of ANAT 212/BIOC 212 or BIOL 201 (footnote 1). Students can choose one of ANAT 212, BIEN 219, BIOC 212, BIOL 200, BIOL 201, or BIOL 219 (footnote 2). CHEM 212 cannot be taken by Chemical Engineering students (footnote 3).',
         "sort_order": 1,
         "courses": [
@@ -4572,6 +4619,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Specialization Courses (minimum 12 credits)',
         "block_type": 'pool_group',
         "credits_needed": 12,
+        "constraint_notes": 'Minimum of 12 credits from courses below. Students must select 6 credits from courses outside their department and at least one BMDE course. BMDE courses are best taken near the end of the program, when prerequisites are satisfied.',
         "notes": 'Minimum of 12 credits from courses below. Students must select 6 credits from courses outside their department and at least one BMDE course. BMDE courses are best taken near the end of the program, when prerequisites are satisfied.',
         "sort_order": 2,
       },
@@ -4655,6 +4703,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Bioinformatics, Genomics and Proteomics',
         "block_type": 'group',
         "group_name": 'Bioinformatics, Genomics and Proteomics',
+        "constraint_notes": 'Students select either ANAT 458 or BIOC 458.',
         "notes": 'Students select either ANAT 458 or BIOC 458.',
         "sort_order": 4,
         "courses": [
@@ -4759,6 +4808,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Biomaterials, Biosensors and Nanotechnology',
         "block_type": 'group',
         "group_name": 'Biomaterials, Biosensors and Nanotechnology',
+        "constraint_notes": 'Catalogue page was truncated; courses listed up to the point of truncation are included.',
         "notes": 'Catalogue page was truncated; courses listed up to the point of truncation are included.',
         "sort_order": 5,
         "courses": [
@@ -4824,6 +4874,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Required Courses (12 credits) — Non-Chemical Engineering Students',
         "block_type": 'required',
         "credits_needed": 12,
+        "constraint_notes": 'For non-Chemical Engineering students. Chemical Engineering students follow the Alternative Required Courses block instead.',
         "notes": 'For non-Chemical Engineering students. Chemical Engineering students follow the Alternative Required Courses block instead.',
         "sort_order": 1,
         "courses": [
@@ -4862,6 +4913,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Alternative Required Courses — Chemical Engineering Students (15 credits)',
         "block_type": 'required',
         "credits_needed": 15,
+        "constraint_notes": 'For Chemical Engineering students only. Must take all five courses below plus one complementary course (not including FACC 300). Chemical Engineering students complete 15 credits beyond their B.Eng. program to obtain this Minor.',
         "notes": 'For Chemical Engineering students only. Must take all five courses below plus one complementary course (not including FACC 300). Chemical Engineering students complete 15 credits beyond their B.Eng. program to obtain this Minor.',
         "sort_order": 2,
         "courses": [
@@ -4907,6 +4959,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Complementary Courses — Biomedicine',
         "block_type": 'group',
         "group_name": 'Biomedicine',
+        "constraint_notes": '12 credits total from complementary courses. At least three courses must be taken from one area of concentration. Chemical Engineering students must take one complementary course (not FACC 300).',
         "notes": '12 credits total from complementary courses. At least three courses must be taken from one area of concentration. Chemical Engineering students must take one complementary course (not FACC 300).',
         "sort_order": 3,
         "courses": [
@@ -5029,6 +5082,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Complementary Courses — Management',
         "block_type": 'group',
         "group_name": 'Management',
+        "constraint_notes": 'Engineering students may not use these courses to count toward a Management minor, nor toward the Complementary Studies requirement.',
         "notes": 'Engineering students may not use these courses to count toward a Management minor, nor toward the Complementary Studies requirement.',
         "sort_order": 7,
         "courses": [
@@ -5200,6 +5254,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Complementary Courses — Physiology',
         "block_type": 'group',
         "group_name": 'Physiology',
+        "constraint_notes": 'Catalogue page was truncated; only partial Physiology course listing was available. EXMD 401 was listed but the page was cut off before the full list could be captured.',
         "notes": 'Catalogue page was truncated; only partial Physiology course listing was available. EXMD 401 was listed but the page was cut off before the full list could be captured.',
         "sort_order": 11,
         "courses": [
@@ -5225,6 +5280,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Complementary Courses (12 credits total)',
         "block_type": 'choose_credits',
         "credits_needed": 12,
+        "constraint_notes": "12 credits selected from courses outside the Department of the student's major program and/or from the listed areas. At least three courses must be taken from one area of concentration. Chemical Engineering students using the Alternative Required Courses path need only one complementary course (not FACC 300). Courses are organized into the following areas: Biomedicine, Chemistry, General, Immunology, Management, Microbiology, Molecular Biology (Biology), Molecular Biology (Biochemistry), Physiology.",
         "notes": "12 credits selected from courses outside the Department of the student's major program and/or from the listed areas. At least three courses must be taken from one area of concentration. Chemical Engineering students using the Alternative Required Courses path need only one complementary course (not FACC 300). Courses are organized into the following areas: Biomedicine, Chemistry, General, Immunology, Management, Microbiology, Molecular Biology (Biology), Molecular Biology (Biochemistry), Physiology.",
         "sort_order": 12,
       },
@@ -5244,6 +5300,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Introductory Course (3-4 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'Choose 3-4 credits from the following list.',
         "notes": 'Choose 3-4 credits from the following list.',
         "sort_order": 1,
         "courses": [
@@ -5267,6 +5324,7 @@ ENGINEERING_PROGRAMS = [
         "block_type": 'choose_credits',
         "group_name": 'Stream A',
         "credits_needed": 15,
+        "constraint_notes": "15 credits from the Engineering Course List. A minimum of 6 credits must be from outside the student's department. A maximum of 6 credits of research project courses may be counted toward this category, provided the project has sufficient environmental engineering content. Stream A also requires 3 credits from the Non-Engineering Course List (not shown in catalogue extract).",
         "notes": "15 credits from the Engineering Course List. A minimum of 6 credits must be from outside the student's department. A maximum of 6 credits of research project courses may be counted toward this category, provided the project has sufficient environmental engineering content. Stream A also requires 3 credits from the Non-Engineering Course List (not shown in catalogue extract).",
         "sort_order": 2,
         "courses": [
@@ -5397,6 +5455,7 @@ ENGINEERING_PROGRAMS = [
         "block_type": 'choose_credits',
         "group_name": 'Stream B',
         "credits_needed": 9,
+        "constraint_notes": '9 credits from the BITS field semester courses, provided the project has sufficient environmental engineering content (project requires approval of the Coordinator of the Minor). Stream B also requires 9 credits from the Engineering Course List (excluding CHEE 496).',
         "notes": '9 credits from the BITS field semester courses, provided the project has sufficient environmental engineering content (project requires approval of the Coordinator of the Minor). Stream B also requires 9 credits from the Engineering Course List (excluding CHEE 496).',
         "sort_order": 3,
         "courses": [
@@ -5420,6 +5479,7 @@ ENGINEERING_PROGRAMS = [
         "block_type": 'choose_credits',
         "group_name": 'Stream B',
         "credits_needed": 9,
+        "constraint_notes": '9 credits chosen from the Engineering Course List, excluding CHEE 496 Environmental Research Project. See Stream A Engineering Course List for available courses.',
         "notes": '9 credits chosen from the Engineering Course List, excluding CHEE 496 Environmental Research Project. See Stream A Engineering Course List for available courses.',
         "sort_order": 4,
         "courses": [
@@ -5748,6 +5808,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Complementary Courses – 3-6 credits from the following',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": '3-6 credits from the following courses.',
         "notes": '3-6 credits from the following courses.',
         "sort_order": 3,
         "courses": [
@@ -5770,6 +5831,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Complementary Courses – 0-3 credits from the following',
         "block_type": 'choose_credits',
         "credits_needed": 0,
+        "constraint_notes": '0-3 credits from the following courses.',
         "notes": '0-3 credits from the following courses.',
         "sort_order": 4,
         "courses": [
@@ -5815,6 +5877,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Microeconomic Theory (6 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 6,
+        "constraint_notes": 'Choose 6 credits from ECON 230D1/D2 or ECON 250D1/D2.',
         "notes": 'Choose 6 credits from ECON 230D1/D2 or ECON 250D1/D2.',
         "sort_order": 1,
         "courses": [
@@ -5849,6 +5912,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Economics Electives (12 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 12,
+        "constraint_notes": 'If ECON 209 is chosen, students choose either ECON 209 or ECON 332 + ECON 333. MIME 325 and MIME 526 are only open to Mining and Materials Engineering students.',
         "notes": 'If ECON 209 is chosen, students choose either ECON 209 or ECON 332 + ECON 333. MIME 325 and MIME 526 are only open to Mining and Materials Engineering students.',
         "sort_order": 2,
         "courses": [
@@ -6055,6 +6119,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Prerequisites',
         "block_type": 'required',
         "credits_needed": 12,
+        "constraint_notes": 'These are prerequisite courses required before taking the minor. They are not counted toward the 24 credits of the minor itself.',
         "notes": 'These are prerequisite courses required before taking the minor. They are not counted toward the 24 credits of the minor itself.',
         "sort_order": 1,
         "courses": [
@@ -6093,6 +6158,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Required Courses: Management and Law (15 credits)',
         "block_type": 'required',
         "credits_needed": 15,
+        "constraint_notes": 'All courses in the Minor must be passed with a grade of C or better.',
         "notes": 'All courses in the Minor must be passed with a grade of C or better.',
         "sort_order": 2,
         "courses": [
@@ -6138,6 +6204,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Complementary Courses (9 credits)',
         "block_type": 'multi_group',
         "credits_needed": 9,
+        "constraint_notes": '3 credits from List A and 6 credits from List B. All courses in the Minor must be passed with a grade of C or better.',
         "notes": '3 credits from List A and 6 credits from List B. All courses in the Minor must be passed with a grade of C or better.',
         "sort_order": 3,
       },
@@ -6147,6 +6214,7 @@ ENGINEERING_PROGRAMS = [
         "block_type": 'group',
         "group_name": 'List A',
         "credits_needed": 3,
+        "constraint_notes": 'Choose 3 credits from List A.',
         "notes": 'Choose 3 credits from List A.',
         "sort_order": 4,
         "courses": [
@@ -6186,6 +6254,7 @@ ENGINEERING_PROGRAMS = [
         "block_type": 'group',
         "group_name": 'List B',
         "credits_needed": 6,
+        "constraint_notes": 'Choose 6 credits from List B.',
         "notes": 'Choose 6 credits from List B.',
         "sort_order": 5,
         "courses": [
@@ -6309,6 +6378,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Required Courses (10 credits)',
         "block_type": 'required',
         "credits_needed": 10,
+        "constraint_notes": 'Students choose either CHEM 233 Topics in Physical Chemistry or CHEE 310 Physical Chemistry for Engineers (3 credits). CHEM 212 (4 credits) and CHEM 234 (3 credits) are required.',
         "notes": 'Students choose either CHEM 233 Topics in Physical Chemistry or CHEE 310 Physical Chemistry for Engineers (3 credits). CHEM 212 (4 credits) and CHEM 234 (3 credits) are required.',
         "sort_order": 1,
         "courses": [
@@ -6332,6 +6402,7 @@ ENGINEERING_PROGRAMS = [
             "catalog": '233',
             "title": 'Topics in Physical Chemistry.',
             "credits": 3.0,
+            "is_required": True,
             "choose_from_group": 'Physical Chemistry Choice',
             "choose_n_credits": 3,
             "notes": 'Choose either CHEM 233 or CHEE 310',
@@ -6341,6 +6412,7 @@ ENGINEERING_PROGRAMS = [
             "catalog": '310',
             "title": 'Physical Chemistry for Engineers.',
             "credits": 3.0,
+            "is_required": True,
             "choose_from_group": 'Physical Chemistry Choice',
             "choose_n_credits": 3,
             "notes": 'Choose either CHEM 233 or CHEE 310',
@@ -6352,6 +6424,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Complementary Courses (15 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 15,
+        "constraint_notes": '15 credits from the following lists; two courses must be laboratory courses (indicated by lab marker). CHEM 212 is a prerequisite for most courses listed. CHEM 213 and CHEM 273 or equivalents are prerequisites for Physical Chemistry courses. If students take CHEM 222 instead of CHEM 234, they receive credit for one of the two required laboratory courses but must complete a total of 25 credits.',
         "notes": '15 credits from the following lists; two courses must be laboratory courses (indicated by lab marker). CHEM 212 is a prerequisite for most courses listed. CHEM 213 and CHEM 273 or equivalents are prerequisites for Physical Chemistry courses. If students take CHEM 222 instead of CHEM 234, they receive credit for one of the two required laboratory courses but must complete a total of 25 credits.',
         "sort_order": 2,
         "courses": [
@@ -6466,6 +6539,7 @@ ENGINEERING_PROGRAMS = [
         "title": 'Faculty of Arts Courses (24 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 24,
+        "constraint_notes": 'Students must select at least two areas of concentration in the Faculty of Arts, with a minimum of 6 credits in any one area. At least 12 credits must be at the 300 level or higher. No more than 9 credits from Complementary Studies lists (Group A and Group B) can be credited toward the Arts Minor. All courses must be passed with a grade of C or better. Specific course selection must be made in consultation with a Faculty Adviser in the Engineering Student Centre. No individual courses are enumerated in the catalogue.',
         "notes": 'Students must select at least two areas of concentration in the Faculty of Arts, with a minimum of 6 credits in any one area. At least 12 credits must be at the 300 level or higher. No more than 9 credits from Complementary Studies lists (Group A and Group B) can be credited toward the Arts Minor. All courses must be passed with a grade of C or better. Specific course selection must be made in consultation with a Faculty Adviser in the Engineering Student Centre. No individual courses are enumerated in the catalogue.',
         "sort_order": 1,
       },

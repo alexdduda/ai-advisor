@@ -41,6 +41,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Complementary Courses (30 credits)',
         "block_type": 'multi_group',
         "credits_needed": 30,
+        "constraint_notes": '30 credits selected as follows: 9 credits from Group A AND 21 credits from Group B drawn from at least 3 disciplines with no more than 9 credits from any one discipline.',
         "notes": '30 credits selected as follows: 9 credits from Group A AND 21 credits from Group B drawn from at least 3 disciplines with no more than 9 credits from any one discipline.',
         "sort_order": 2,
       },
@@ -88,6 +89,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "block_type": 'group',
         "group_name": 'Group B',
         "credits_needed": 21,
+        "constraint_notes": '21 credits from at least 3 disciplines with no more than 9 credits from any one discipline.',
         "notes": '21 credits from at least 3 disciplines with no more than 9 credits from any one discipline.',
         "sort_order": 4,
         "courses": [
@@ -392,6 +394,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Required Courses (6 credits)',
         "block_type": 'required',
         "credits_needed": 6,
+        "constraint_notes": '6 credits to be taken in the first two terms of the program',
         "notes": '6 credits to be taken in the first two terms of the program',
         "sort_order": 1,
         "courses": [
@@ -551,6 +554,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Theory, Criticism and Methods (3 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": '3 credits of Theory, Criticism, and Methods courses from the complementary list or with permission of department adviser',
         "notes": '3 credits of Theory, Criticism, and Methods courses from the complementary list or with permission of department adviser',
         "sort_order": 5,
         "courses": [
@@ -705,6 +709,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Additional Courses (12 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 12,
+        "constraint_notes": '12 additional credits from ENGL offerings, in the Literature, Cultural Studies, and Drama and Theatre Options. Other courses require approval by a departmental adviser',
         "notes": '12 additional credits from ENGL offerings, in the Literature, Cultural Studies, and Drama and Theatre Options. Other courses require approval by a departmental adviser',
         "sort_order": 8,
       },
@@ -905,6 +910,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": "Drama and Theatre Option's Offerings - Additional Courses (6 credits)",
         "block_type": 'choose_credits',
         "credits_needed": 6,
+        "constraint_notes": 'This category includes all courses listed above except required courses, as well as the courses listed below. Any English course not on the lists specifically for the Drama and Theatre option may not count toward the Drama and Theatre program.',
         "notes": 'This category includes all courses listed above except required courses, as well as the courses listed below. Any English course not on the lists specifically for the Drama and Theatre option may not count toward the Drama and Theatre program.',
         "sort_order": 5,
         "courses": [
@@ -1029,6 +1035,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Drama and Theatre - Courses of Interest - Other Departments (up to 3 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 0,
+        "constraint_notes": 'Permission to count extra-departmental credits must be obtained in advance from a Department of English program adviser. Students are normally permitted to count 3 credits from other departments towards their Drama and Theatre Minor.',
         "notes": 'Permission to count extra-departmental credits must be obtained in advance from a Department of English program adviser. Students are normally permitted to count 3 credits from other departments towards their Drama and Theatre Minor.',
         "sort_order": 6,
         "courses": [
@@ -1075,6 +1082,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Required Courses (9 credits)',
         "block_type": 'required',
         "credits_needed": 9,
+        "constraint_notes": 'These courses should be taken in the first two terms of the program.',
         "notes": 'These courses should be taken in the first two terms of the program.',
         "sort_order": 1,
         "courses": [
@@ -1183,6 +1191,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "block_type": 'choose_credits',
         "group_name": 'Theory, Criticism and Methods',
         "credits_needed": 3,
+        "constraint_notes": '3 credits of Theory, Criticism, and Methods courses from the complementary list or with the permission of your department adviser.',
         "notes": '3 credits of Theory, Criticism, and Methods courses from the complementary list or with the permission of your department adviser.',
         "sort_order": 4,
         "courses": [
@@ -1236,6 +1245,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "block_type": 'choose_credits',
         "group_name": '400-Level Theory',
         "credits_needed": 3,
+        "constraint_notes": '3 credits from a list of 400-level courses in Cultural Studies with a theoretical component.',
         "notes": '3 credits from a list of 400-level courses in Cultural Studies with a theoretical component.',
         "sort_order": 5,
         "courses": [
@@ -1296,6 +1306,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "block_type": 'choose_credits',
         "group_name": 'Historical Dimension',
         "credits_needed": 6,
+        "constraint_notes": '6 credits from a list of courses in Cultural Studies with an historical dimension.',
         "notes": '6 credits from a list of courses in Cultural Studies with an historical dimension.',
         "sort_order": 6,
         "courses": [
@@ -1355,6 +1366,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Additional Courses (9 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 9,
+        "constraint_notes": '9 additional credits from ENGL offerings, in the Literature, Cultural Studies, and Drama and Theatre Options. Other courses require approval by a departmental adviser. Students are normally permitted to count 6 credits from other departments toward their English programs. In exceptional circumstances, an adviser may grant permission (to a maximum of 9 extra-departmental credits).',
         "notes": '9 additional credits from ENGL offerings, in the Literature, Cultural Studies, and Drama and Theatre Options. Other courses require approval by a departmental adviser. Students are normally permitted to count 6 credits from other departments toward their English programs. In exceptional circumstances, an adviser may grant permission (to a maximum of 9 extra-departmental credits).',
         "sort_order": 7,
         "courses": [
@@ -1406,6 +1418,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Complementary Courses (12 credits)',
         "block_type": 'multi_group',
         "credits_needed": 12,
+        "constraint_notes": 'Note on Topics Courses: The Department of English offers courses which change topic from academic year to academic year. Depending on the topic in a specific year, these courses may count toward different program requirements. At the time they register for a topics course, students should confirm with their program adviser the program requirement it fulfils for that academic year.',
         "notes": 'Note on Topics Courses: The Department of English offers courses which change topic from academic year to academic year. Depending on the topic in a specific year, these courses may count toward different program requirements. At the time they register for a topics course, students should confirm with their program adviser the program requirement it fulfils for that academic year.',
         "sort_order": 2,
       },
@@ -1415,6 +1428,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "block_type": 'group',
         "group_name": 'Major Figures',
         "credits_needed": 3,
+        "constraint_notes": '3 credits from a list of courses on Major Figures in Cultural Studies.',
         "notes": '3 credits from a list of courses on Major Figures in Cultural Studies.',
         "sort_order": 3,
         "courses": [
@@ -1462,6 +1476,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "block_type": 'group',
         "group_name": 'Historical Dimension',
         "credits_needed": 3,
+        "constraint_notes": '3 credits from a list of courses in Cultural Studies with an historical dimension.',
         "notes": '3 credits from a list of courses in Cultural Studies with an historical dimension.',
         "sort_order": 4,
         "courses": [
@@ -1523,6 +1538,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "block_type": 'group',
         "group_name": 'Additional Cultural Studies',
         "credits_needed": 6,
+        "constraint_notes": "6 additional credits from the option's offerings, which includes all courses specifically listed in the Cultural Studies categories above (Major Figures and Historical Dimension lists) and the courses listed below. Any ENGL course not on these Cultural Studies lists, such as courses in Literature, may not count toward the Minor Concentration English - Cultural Studies.",
         "notes": "6 additional credits from the option's offerings, which includes all courses specifically listed in the Cultural Studies categories above (Major Figures and Historical Dimension lists) and the courses listed below. Any ENGL course not on these Cultural Studies lists, such as courses in Literature, may not count toward the Minor Concentration English - Cultural Studies.",
         "sort_order": 5,
         "courses": [
@@ -1656,6 +1672,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Group A: Russian Language (18 credits)',
         "block_type": 'required',
         "credits_needed": 18,
+        "constraint_notes": 'Students entering this program with previous knowledge of or exposure to Russian may, with permission of the Department, replace this group with selections from Group B or Group C.',
         "notes": 'Students entering this program with previous knowledge of or exposure to Russian may, with permission of the Department, replace this group with selections from Group B or Group C.',
         "sort_order": 1,
         "courses": [
@@ -1664,6 +1681,7 @@ ARTS_LANGUAGES_SPECIALTY = [
             "catalog": '210',
             "title": 'Elementary Russian Language 1.',
             "credits": 3.0,
+            "is_required": True,
             "notes": 'Reading, grammar, translation, oral practice.',
           },
           {
@@ -1671,6 +1689,7 @@ ARTS_LANGUAGES_SPECIALTY = [
             "catalog": '211',
             "title": 'Elementary Russian Language 2.',
             "credits": 3.0,
+            "is_required": True,
             "notes": 'Russian Language; continuation of RUSS 210.',
           },
           {
@@ -1678,6 +1697,7 @@ ARTS_LANGUAGES_SPECIALTY = [
             "catalog": '215',
             "title": 'Elementary Russian Language Intensive 1.',
             "credits": 3.0,
+            "is_required": True,
             "notes": 'An intensive introduction to the Russian language which covers the first year of the normal level, i.e. RUSS 210/RUSS 211 in one semester. The basic grammatical structures are covered. Not open to students who have taken RUSS 210 or RUSS 211.',
           },
           {
@@ -1685,6 +1705,7 @@ ARTS_LANGUAGES_SPECIALTY = [
             "catalog": '301',
             "title": 'Russian for Heritage Speakers 2.',
             "credits": 3.0,
+            "is_required": True,
             "notes": 'For native speakers of Russian who have not had full academic instruction in the language. Focus on complex grammatical structures, syntax, and stylistically differentiated uses of vocabulary in written and spoken Russian. Multi-media approach including excerpts from literary works, current newspapers, Internet sources, and films.',
           },
           {
@@ -1692,6 +1713,7 @@ ARTS_LANGUAGES_SPECIALTY = [
             "catalog": '310',
             "title": 'Intermediate Russian Language 1.',
             "credits": 3.0,
+            "is_required": True,
             "notes": 'Reading, translation, conversation.',
           },
           {
@@ -1699,6 +1721,7 @@ ARTS_LANGUAGES_SPECIALTY = [
             "catalog": '311',
             "title": 'Intermediate Russian Language 2.',
             "credits": 3.0,
+            "is_required": True,
             "notes": 'Reading, translation, conversation.',
           },
           {
@@ -1706,6 +1729,7 @@ ARTS_LANGUAGES_SPECIALTY = [
             "catalog": '316',
             "title": 'Intermediate Russian Language Intensive 2.',
             "credits": 3.0,
+            "is_required": True,
             "notes": 'Continuing the Intensive program of RUSS 215 this course covers the second year of the normal level, i.e. RUSS 310/RUSS 311, in one semester. The basic grammatical structures are covered. Not open to students who have taken RUSS 310 or RUSS 311.',
           },
           {
@@ -1713,6 +1737,7 @@ ARTS_LANGUAGES_SPECIALTY = [
             "catalog": '327',
             "title": 'Reading Russian Poetry.',
             "credits": 3.0,
+            "is_required": True,
             "notes": "Introduction to Russia's major poets and bards of the 19th and 20th centuries. Selected works from Pushkin to Brodsky and 20th century bards will be read in Russian.",
           },
           {
@@ -1720,6 +1745,7 @@ ARTS_LANGUAGES_SPECIALTY = [
             "catalog": '328',
             "title": 'Readings in Russian.',
             "credits": 3.0,
+            "is_required": True,
             "notes": 'A general introduction to Russian prose, poetry and drama in the 19th Century. Selected texts will be read in the original and discussed.',
           },
           {
@@ -1727,6 +1753,7 @@ ARTS_LANGUAGES_SPECIALTY = [
             "catalog": '415',
             "title": 'Advanced Russian Language Intensive 1.',
             "credits": 3.0,
+            "is_required": True,
             "notes": 'Continuing the Intensive program of RUSS 215 and RUSS 316, students will complete their study of the fundamental structure of modern literary Russian, including the morphology and syntax of the nominal and verbal systems. Not open to students who have taken RUSS 411.',
           },
           {
@@ -1734,6 +1761,7 @@ ARTS_LANGUAGES_SPECIALTY = [
             "catalog": '453',
             "title": 'Advanced Russian Language and Syntax.',
             "credits": 3.0,
+            "is_required": True,
             "notes": 'Prose composition, translation, essay writing. An introduction to Russian stylistics.',
           },
         ],
@@ -1743,6 +1771,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Literature and Culture Electives (18 credits)',
         "block_type": 'pool_group',
         "credits_needed": 18,
+        "constraint_notes": '18 credits selected from the combination of Group B and Group C courses.',
         "notes": '18 credits selected from the combination of Group B and Group C courses.',
         "sort_order": 2,
       },
@@ -1751,6 +1780,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Group B: Russian Literature and Culture',
         "block_type": 'group',
         "group_name": 'Group B',
+        "constraint_notes": '9 credits available from this group as part of the 18-credit elective pool.',
         "notes": '9 credits available from this group as part of the 18-credit elective pool.',
         "sort_order": 3,
         "courses": [
@@ -1801,6 +1831,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Group C: Russian Culture and the Arts',
         "block_type": 'group',
         "group_name": 'Group C',
+        "constraint_notes": '9 credits available from this group as part of the 18-credit elective pool.',
         "notes": '9 credits available from this group as part of the 18-credit elective pool.',
         "sort_order": 4,
         "courses": [
@@ -1957,6 +1988,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Complementary Courses (18 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 18,
+        "constraint_notes": 'Students must choose 18 credits from the listed courses. Three mutual-exclusion rules apply: (1) RUSS 215 cannot be taken with RUSS 210 and RUSS 211; (2) RUSS 316 cannot be taken with RUSS 310 and RUSS 311; (3) RUSS 415 cannot be taken with RUSS 411.',
         "notes": 'Students must choose 18 credits from the listed courses. Three mutual-exclusion rules apply: (1) RUSS 215 cannot be taken with RUSS 210 and RUSS 211; (2) RUSS 316 cannot be taken with RUSS 310 and RUSS 311; (3) RUSS 415 cannot be taken with RUSS 411.',
         "sort_order": 1,
         "courses": [
@@ -2056,6 +2088,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "block_type": 'choose_credits',
         "group_name": 'Group A',
         "credits_needed": 6,
+        "constraint_notes": 'At least 6 credits from Group A',
         "notes": 'At least 6 credits from Group A',
         "sort_order": 1,
         "courses": [
@@ -2095,6 +2128,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "block_type": 'choose_credits',
         "group_name": 'Group B',
         "credits_needed": 6,
+        "constraint_notes": '6-12 credits from Group B',
         "notes": '6-12 credits from Group B',
         "sort_order": 2,
         "courses": [
@@ -2305,6 +2339,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Required Courses (18 credits)',
         "block_type": 'required',
         "credits_needed": 18,
+        "constraint_notes": 'HISP 243 and HISP 244 require successful completion of intermediate-level Spanish (HISP 220D1/HISP 220D2 or HISP 219 or equivalent) as a prerequisite.',
         "notes": 'HISP 243 and HISP 244 require successful completion of intermediate-level Spanish (HISP 220D1/HISP 220D2 or HISP 219 or equivalent) as a prerequisite.',
         "sort_order": 1,
         "courses": [
@@ -2355,6 +2390,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Complementary Courses (21 credits)',
         "block_type": 'pool_group',
         "credits_needed": 21,
+        "constraint_notes": 'Select 21 credits from the complementary course list in consultation with the Program Advisor. Requirements: (1) Courses from at least two disciplines or departments must be included. (2) At least 6 of the 21 credits must be at the 300 level or above. (3) No more than 6 credits in Spanish or Portuguese language courses (HISP 210D1/D2, HISP 218, HISP 219, HISP 220D1/D2) shall count for the Major concentration.',
         "notes": 'Select 21 credits from the complementary course list in consultation with the Program Advisor. Requirements: (1) Courses from at least two disciplines or departments must be included. (2) At least 6 of the 21 credits must be at the 300 level or above. (3) No more than 6 credits in Spanish or Portuguese language courses (HISP 210D1/D2, HISP 218, HISP 219, HISP 220D1/D2) shall count for the Major concentration.',
         "sort_order": 2,
         "courses": [
@@ -2816,6 +2852,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Complementary Courses (6 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 6,
+        "constraint_notes": 'At least 6 credits from the listed courses or any COMP courses at the 300 level or above, excluding COMP 396 (Undergraduate Research Project).',
         "notes": 'At least 6 credits from the listed courses or any COMP courses at the 300 level or above, excluding COMP 396 (Undergraduate Research Project).',
         "sort_order": 2,
         "courses": [
@@ -2895,6 +2932,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Arabic Language Courses (18 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 18,
+        "constraint_notes": '18 credits of Arabic language (3 levels) from the list below. In the case of Introductory Arabic (9 credits), the extra 3 credits will be counted as electives.',
         "notes": '18 credits of Arabic language (3 levels) from the list below. In the case of Introductory Arabic (9 credits), the extra 3 credits will be counted as electives.',
         "sort_order": 1,
         "courses": [
@@ -3009,6 +3047,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Complementary Courses',
         "block_type": 'choose_credits',
         "credits_needed": 12,
+        "constraint_notes": 'A maximum of 3 complementary course credits at the 200-level. A maximum of 6 credits from any given discipline with the exception of Indigenous Studies (INDG) courses.',
         "notes": 'A maximum of 3 complementary course credits at the 200-level. A maximum of 6 credits from any given discipline with the exception of Indigenous Studies (INDG) courses.',
         "sort_order": 2,
         "courses": [
@@ -3222,6 +3261,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Required Courses (6 credits)',
         "block_type": 'required',
         "credits_needed": 6,
+        "constraint_notes": 'Student must take ENGL 277 (3 credits) AND choose either EAST 279 or LLCU 279 (3 credits).',
         "notes": 'Student must take ENGL 277 (3 credits) AND choose either EAST 279 or LLCU 279 (3 credits).',
         "sort_order": 1,
         "courses": [
@@ -3237,6 +3277,7 @@ ARTS_LANGUAGES_SPECIALTY = [
             "catalog": '279',
             "title": 'Introduction to Film History.',
             "credits": 3.0,
+            "is_required": True,
             "choose_from_group": 'Film History Choice',
             "notes": 'Take either EAST 279 or LLCU 279 (3 credits total).',
           },
@@ -3245,6 +3286,7 @@ ARTS_LANGUAGES_SPECIALTY = [
             "catalog": '279',
             "title": 'Introduction to Film History.',
             "credits": 3.0,
+            "is_required": True,
             "choose_from_group": 'Film History Choice',
             "notes": 'Take either EAST 279 or LLCU 279 (3 credits total).',
           },
@@ -3255,6 +3297,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Complementary Courses (12 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 12,
+        "constraint_notes": "12 credits selected from the course list below with the following specifications: (a) a minimum of 6 credits in non-U.S. cinemas; (b) a maximum of 6 credits from any one department; (c) no more than 6 credits may be taken from the same discipline as the student's other major or minor concentrations.",
         "notes": "12 credits selected from the course list below with the following specifications: (a) a minimum of 6 credits in non-U.S. cinemas; (b) a maximum of 6 credits from any one department; (c) no more than 6 credits may be taken from the same discipline as the student's other major or minor concentrations.",
         "sort_order": 2,
         "courses": [
@@ -3574,6 +3617,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Complementary Courses (15 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 15,
+        "constraint_notes": '15 credits from the following list, of which only 9 credits may be taken in any one department. No more than 6 credits may be taken below the 300 level.',
         "notes": '15 credits from the following list, of which only 9 credits may be taken in any one department. No more than 6 credits may be taken below the 300 level.',
         "sort_order": 2,
         "courses": [
@@ -3821,6 +3865,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Philosophy of Science (6-12 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 6,
+        "constraint_notes": 'Maximum 6 credits at the 200 level',
         "notes": 'Maximum 6 credits at the 200 level',
         "sort_order": 1,
         "courses": [
@@ -3908,6 +3953,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'History of Science (6-12 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 6,
+        "constraint_notes": 'Maximum 6 credits at the 200 level. Combined with Philosophy of Science block, total must equal 18 credits.',
         "notes": 'Maximum 6 credits at the 200 level. Combined with Philosophy of Science block, total must equal 18 credits.',
         "sort_order": 2,
         "courses": [
@@ -4046,6 +4092,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Complementary Courses (18 credits)',
         "block_type": 'pool_group',
         "credits_needed": 18,
+        "constraint_notes": 'At least 3 credits from each of the three groups (History of Medicine, Anthropology of Medicine, Sociology of Medicine).',
         "notes": 'At least 3 credits from each of the three groups (History of Medicine, Anthropology of Medicine, Sociology of Medicine).',
         "sort_order": 1,
         "courses": [
@@ -4278,6 +4325,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Stream 1: Culture and Civilization – Introductory Curriculum (6 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 6,
+        "constraint_notes": "As course content may change according to the offering unit's yearly curriculum, all classes listed must be approved in consultation with the South Asian Studies adviser as relevant to the Minor Concentration.",
         "notes": "As course content may change according to the offering unit's yearly curriculum, all classes listed must be approved in consultation with the South Asian Studies adviser as relevant to the Minor Concentration.",
         "sort_order": 1,
         "courses": [
@@ -4590,6 +4638,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Required Courses',
         "block_type": 'required',
         "credits_needed": 9,
+        "constraint_notes": 'Normally completed in the following sequence: QCST 200 (U0 or U1), QCST 300 (U1), QCST 440 (U2 or U3). These foundational courses introduce the study of Quebec and integrate social, economic, cultural, political, and historical aspects.',
         "notes": 'Normally completed in the following sequence: QCST 200 (U0 or U1), QCST 300 (U1), QCST 440 (U2 or U3). These foundational courses introduce the study of Quebec and integrate social, economic, cultural, political, and historical aspects.',
         "sort_order": 1,
         "courses": [
@@ -4621,6 +4670,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Complementary Courses',
         "block_type": 'choose_credits',
         "credits_needed": 9,
+        "constraint_notes": "Selection made in consultation with Program Director and varies by student's major concentration. Of these 9 credits: (1) At least 6 credits must be core courses (or program-approved alternatives); (2) Exactly 3 credits must be from French-taught courses (including French as a Second Language options); (3) At least 6 of the 9 complementary credits must be 300-level or above. The core course list below includes all approved options across multiple disciplines.",
         "notes": "Selection made in consultation with Program Director and varies by student's major concentration. Of these 9 credits: (1) At least 6 credits must be core courses (or program-approved alternatives); (2) Exactly 3 credits must be from French-taught courses (including French as a Second Language options); (3) At least 6 of the 9 complementary credits must be 300-level or above. The core course list below includes all approved options across multiple disciplines.",
         "sort_order": 2,
         "courses": [
@@ -4889,6 +4939,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Complementary Courses (18 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 18,
+        "constraint_notes": "18 credits of language courses or any course above the 325 level given in the German language. Beginners' and Intermediate language levels are offered either as a one-term intensive course or a two-term spanned course. Students choose which version of the level they prefer.",
         "notes": "18 credits of language courses or any course above the 325 level given in the German language. Beginners' and Intermediate language levels are offered either as a one-term intensive course or a two-term spanned course. Students choose which version of the level they prefer.",
         "sort_order": 1,
         "courses": [
@@ -5163,6 +5214,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Persian Language Courses (18 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 18,
+        "constraint_notes": '18 credits of Persian language across 3 levels from the list below.',
         "notes": '18 credits of Persian language across 3 levels from the list below.',
         "sort_order": 1,
         "courses": [
@@ -5234,6 +5286,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Complementary Courses – Turkish Language (18 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 18,
+        "constraint_notes": '18 credits of Turkish language (3 levels) from the list below.',
         "notes": '18 credits of Turkish language (3 levels) from the list below.',
         "sort_order": 1,
         "courses": [
@@ -5314,6 +5367,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Complementary Courses (18 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 18,
+        "constraint_notes": '18 credits of Urdu language (3 levels) from the list below',
         "notes": '18 credits of Urdu language (3 levels) from the list below',
         "sort_order": 1,
         "courses": [
@@ -5467,6 +5521,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Cours Complémentaires – Traduction (12-18 crédits)',
         "block_type": 'choose_credits',
         "credits_needed": 12,
+        "constraint_notes": 'Choose 12 to 18 credits from the following translation courses',
         "notes": 'Choose 12 to 18 credits from the following translation courses',
         "sort_order": 2,
         "courses": [
@@ -5543,6 +5598,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Cours Complémentaires – Linguistique et Théorie (3-6 crédits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'Choose 3 to 6 credits from the following courses. Student may take FREN 394 Théories de la traduction and/or FREN 425 Traduction et culture.',
         "notes": 'Choose 3 to 6 credits from the following courses. Student may take FREN 394 Théories de la traduction and/or FREN 425 Traduction et culture.',
         "sort_order": 3,
         "courses": [
@@ -5607,6 +5663,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Bloc Études – Littérature (6-9 crédits)',
         "block_type": 'choose_credits',
         "credits_needed": 6,
+        "constraint_notes": 'Choose 6 to 9 credits from the literature courses below. At least 3 credits must be from literature before 1800 and at least 3 credits from literature since 1800.',
         "notes": 'Choose 6 to 9 credits from the literature courses below. At least 3 credits must be from literature before 1800 and at least 3 credits from literature since 1800.',
         "sort_order": 4,
         "courses": [
@@ -5801,6 +5858,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Bloc Pratiques – Création et Édition (0-3 crédits)',
         "block_type": 'choose_credits',
         "credits_needed": 0,
+        "constraint_notes": 'Choose 0 to 3 credits from the Création and Édition series',
         "notes": 'Choose 0 to 3 credits from the Création and Édition series',
         "sort_order": 5,
         "courses": [
@@ -5896,6 +5954,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "block_type": 'choose_credits',
         "group_name": 'Cours de traduction',
         "credits_needed": 6,
+        "constraint_notes": '6 à 12 crédits choisis parmi les cours suivants',
         "notes": '6 à 12 crédits choisis parmi les cours suivants',
         "sort_order": 2,
         "courses": [
@@ -5995,6 +6054,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "block_type": 'choose_credits',
         "group_name": 'Cours de langue et littérature',
         "credits_needed": 3,
+        "constraint_notes": '3 à 9 crédits choisis parmi les cours suivants',
         "notes": '3 à 9 crédits choisis parmi les cours suivants',
         "sort_order": 3,
         "courses": [
@@ -6163,6 +6223,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'East Asian Language',
         "block_type": 'choose_credits',
         "credits_needed": 9,
+        "constraint_notes": "Students may meet this requirement by passing the first level of Korean, Chinese or Japanese with a grade of 'C' or better. Students with prior knowledge of an Asian language may substitute a second level in place of a first level. Or, these students may take 6 credits of language at the 400-level or above from the list and an additional 3 credits of East Asian Studies (EAST) courses. Admission to language courses is subject to placement tests.",
         "notes": "Students may meet this requirement by passing the first level of Korean, Chinese or Japanese with a grade of 'C' or better. Students with prior knowledge of an Asian language may substitute a second level in place of a first level. Or, these students may take 6 credits of language at the 400-level or above from the list and an additional 3 credits of East Asian Studies (EAST) courses. Admission to language courses is subject to placement tests.",
         "sort_order": 2,
         "courses": [
@@ -6345,6 +6406,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'East Asian Studies (EAST) – 300-level and above',
         "block_type": 'choose_credits',
         "credits_needed": 6,
+        "constraint_notes": '6 credits at the 300 level or above in East Asian Studies (EAST) courses',
         "notes": '6 credits at the 300 level or above in East Asian Studies (EAST) courses',
         "sort_order": 3,
         "courses": [
@@ -6762,6 +6824,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Complementary Courses (18 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 18,
+        "constraint_notes": 'Choose 18 credits from either: (1) second, third, or fourth level language courses in a single East Asian language, OR (2) a combination of an advanced language and other courses in East Asian culture, literature, or society at the 300 level or above. All selections must be made in consultation with the Departmental Program Adviser. No specific course list is provided in the catalogue; students and advisers should consult the full East Asian Studies course offerings.',
         "notes": 'Choose 18 credits from either: (1) second, third, or fourth level language courses in a single East Asian language, OR (2) a combination of an advanced language and other courses in East Asian culture, literature, or society at the 300 level or above. All selections must be made in consultation with the Departmental Program Adviser. No specific course list is provided in the catalogue; students and advisers should consult the full East Asian Studies course offerings.',
         "sort_order": 1,
       },
@@ -6811,6 +6874,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Statistics (3 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": "Credit given for statistics courses is subject to certain restrictions. Students should consult the 'Course Overlap' information in the 'Course Requirements' section for the Faculty of Arts.",
         "notes": "Credit given for statistics courses is subject to certain restrictions. Students should consult the 'Course Overlap' information in the 'Course Requirements' section for the Faculty of Arts.",
         "sort_order": 2,
         "courses": [
@@ -6851,6 +6915,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Field Course (3 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'Students may take either GEOG 425 Southeast Asia Urban Field Studies or GEOG 494 Urban Field Studies, but not both.',
         "notes": 'Students may take either GEOG 425 Southeast Asia Urban Field Studies or GEOG 494 Urban Field Studies, but not both.',
         "sort_order": 3,
         "courses": [
@@ -6887,6 +6952,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Remaining Courses (21 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 21,
+        "constraint_notes": 'Of these 21 credits, at least 15 credits must be at the 300-level or above. At least 6 credits must also be taken outside of Geography. Architecture courses listed below have prerequisites waived for Urban Studies students, but 500-level Architecture courses may not be taken before U3 (third year).',
         "notes": 'Of these 21 credits, at least 15 credits must be at the 300-level or above. At least 6 credits must also be taken outside of Geography. Architecture courses listed below have prerequisites waived for Urban Studies students, but 500-level Architecture courses may not be taken before U3 (third year).',
         "sort_order": 4,
         "courses": [
@@ -7101,6 +7167,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Complementary Courses',
         "block_type": 'pool_group',
         "credits_needed": 15,
+        "constraint_notes": 'At least 9 credits must be completed at the 300-level or above.',
         "notes": 'At least 9 credits must be completed at the 300-level or above.',
         "sort_order": 2,
       },
@@ -7109,6 +7176,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Group A',
         "block_type": 'choose_credits',
         "group_name": 'Group A',
+        "constraint_notes": 'Part of complementary courses (6-9 credits from this group).',
         "notes": 'Part of complementary courses (6-9 credits from this group).',
         "sort_order": 3,
         "courses": [
@@ -7245,6 +7313,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Group B',
         "block_type": 'choose_credits',
         "group_name": 'Group B',
+        "constraint_notes": 'Part of complementary courses (6-9 credits from this group). Interdisciplinary list spanning Architecture, Art History, Communication Studies, Civil Engineering, History, Islamic Studies, Management, Political Science, Quebec Studies, Sociology, and Urban Planning. Architecture prerequisites are waived for Urban Studies students, but 500-level Architecture courses may not be taken before U3.',
         "notes": 'Part of complementary courses (6-9 credits from this group). Interdisciplinary list spanning Architecture, Art History, Communication Studies, Civil Engineering, History, Islamic Studies, Management, Political Science, Quebec Studies, Sociology, and Urban Planning. Architecture prerequisites are waived for Urban Studies students, but 500-level Architecture courses may not be taken before U3.',
         "sort_order": 4,
         "courses": [
@@ -7472,6 +7541,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Complementary Courses – Quebec Studies Choice (3 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'Or another undergraduate 3-credit course focused on Quebec',
         "notes": 'Or another undergraduate 3-credit course focused on Quebec',
         "sort_order": 3,
         "courses": [
@@ -7575,6 +7645,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Complementary Courses – CANS 300 and 400 Level (9-15 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 9,
+        "constraint_notes": '9-15 credits in interdisciplinary Canadian Studies (CANS) courses chosen from this list',
         "notes": '9-15 credits in interdisciplinary Canadian Studies (CANS) courses chosen from this list',
         "sort_order": 5,
         "courses": [
@@ -7681,6 +7752,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Complementary Courses – Other 300 and 400 Level (12-18 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 12,
+        "constraint_notes": '12-18 credits chosen from complementary courses at 300 and 400 levels',
         "notes": '12-18 credits chosen from complementary courses at 300 and 400 levels',
         "sort_order": 6,
         "courses": [
@@ -7846,6 +7918,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Required Courses (18 credits)',
         "block_type": 'required',
         "credits_needed": 18,
+        "constraint_notes": 'ENGL 202, ENGL 203, and ENGL 311 are normally taken in the first two terms of the program. ENGL 360 is normally taken in the second year. ENGL 491D1/D2 must be taken without exception in the final year.',
         "notes": 'ENGL 202, ENGL 203, and ENGL 311 are normally taken in the first two terms of the program. ENGL 360 is normally taken in the second year. ENGL 491D1/D2 must be taken without exception in the final year.',
         "sort_order": 1,
         "courses": [
@@ -7904,6 +7977,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Complementary: Theory, Criticism and Methods (3 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": '3 credits of Theory, Criticism, and Methods courses from the complementary list or with the permission of your department adviser.',
         "notes": '3 credits of Theory, Criticism, and Methods courses from the complementary list or with the permission of your department adviser.',
         "sort_order": 2,
         "courses": [
@@ -7950,6 +8024,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Complementary: Areas of English Literature (6 credits)',
         "block_type": 'multi_group',
         "credits_needed": 6,
+        "constraint_notes": '6 credits, 3 credits each from two of the following areas: Backgrounds of English Literature, Old English, Medieval, Renaissance. Student must choose any two of the four areas.',
         "notes": '6 credits, 3 credits each from two of the following areas: Backgrounds of English Literature, Old English, Medieval, Renaissance. Student must choose any two of the four areas.',
         "sort_order": 3,
       },
@@ -8138,6 +8213,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Complementary Courses – Remaining Credits (27 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 27,
+        "constraint_notes": '27 remaining credits from the full departmental complementary list (published annually on the Department of English website). Requirements embedded in these credits: at least 6 of the 36 total complementary credits must be at the 500 level; at least 3 credits must be a Major Author course; at least 3 credits must be a Canadian Literature course; a maximum of 9 credits may be from another department (with adviser permission); a maximum of 9 of the 36 complementary credits are allowed at the 200 level, none in the final year. The full list of eligible courses is not enumerated on this catalogue page.',
         "notes": '27 remaining credits from the full departmental complementary list (published annually on the Department of English website). Requirements embedded in these credits: at least 6 of the 36 total complementary credits must be at the 500 level; at least 3 credits must be a Major Author course; at least 3 credits must be a Canadian Literature course; a maximum of 9 credits may be from another department (with adviser permission); a maximum of 9 of the 36 complementary credits are allowed at the 200 level, none in the final year. The full list of eligible courses is not enumerated on this catalogue page.',
         "sort_order": 8,
       },
@@ -8157,6 +8233,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Required Courses (12 credits)',
         "block_type": 'required',
         "credits_needed": 12,
+        "constraint_notes": 'ENGL 230 and ENGL 355 are normally taken in tandem. ENGL 491D1/D2 is the Honours Essay and must be taken as a two-term sequence.',
         "notes": 'ENGL 230 and ENGL 355 are normally taken in tandem. ENGL 491D1/D2 is the Honours Essay and must be taken as a two-term sequence.',
         "sort_order": 1,
         "courses": [
@@ -8199,6 +8276,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Complementary Courses – Practice-Based (3 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": '3 credits from the following practice-based courses.',
         "notes": '3 credits from the following practice-based courses.',
         "sort_order": 2,
         "courses": [
@@ -8244,6 +8322,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Complementary Courses – Remaining (39 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 39,
+        "constraint_notes": 'At least 6 of the 42 total complementary credits must be at the 500 level. A maximum of 9 credits may be from another department with signed permission of the Program Adviser. A maximum of 9 of the 42 credits are allowed at the 200 level, none in the final year of the program. The sub-group structure within this block (e.g. historical, theoretical, national/transnational streams) is not fully recoverable from the raw catalogue text as titles and credits were not rendered. Courses from other departments (EAST 464, MUHL 287, PHIL 242, PSYC 212) may be accepted by an adviser. Duplicates across sub-lists have been deduplicated.',
         "notes": 'At least 6 of the 42 total complementary credits must be at the 500 level. A maximum of 9 credits may be from another department with signed permission of the Program Adviser. A maximum of 9 of the 42 credits are allowed at the 200 level, none in the final year of the program. The sub-group structure within this block (e.g. historical, theoretical, national/transnational streams) is not fully recoverable from the raw catalogue text as titles and credits were not rendered. Courses from other departments (EAST 464, MUHL 287, PHIL 242, PSYC 212) may be accepted by an adviser. Duplicates across sub-lists have been deduplicated.',
         "sort_order": 3,
         "courses": [
@@ -8538,6 +8617,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Required Courses (15 credits)',
         "block_type": 'required',
         "credits_needed": 15,
+        "constraint_notes": 'ENGL 275, ENGL 277, and ENGL 359 should be taken in the first two terms. ENGL 491D1/D2 (Honours Essay) taken in final year without exception. Minimum mark of B+ on Honours Essay required to graduate with Honours.',
         "notes": 'ENGL 275, ENGL 277, and ENGL 359 should be taken in the first two terms. ENGL 491D1/D2 (Honours Essay) taken in final year without exception. Minimum mark of B+ on Honours Essay required to graduate with Honours.',
         "sort_order": 1,
         "courses": [
@@ -8585,6 +8665,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Complementary Courses (39 credits)',
         "block_type": 'pool_group',
         "credits_needed": 39,
+        "constraint_notes": '39 credits from groups below. At least 6 credits must be at 500-level. Maximum 9 credits from another department with adviser permission. Maximum 9 credits at 200-level, none in final year. Topics courses may fulfil different requirements depending on year—confirm with adviser.',
         "notes": '39 credits from groups below. At least 6 credits must be at 500-level. Maximum 9 credits from another department with adviser permission. Maximum 9 credits at 200-level, none in final year. Topics courses may fulfil different requirements depending on year—confirm with adviser.',
         "sort_order": 2,
       },
@@ -8594,6 +8675,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "block_type": 'group',
         "group_name": 'Major Figures',
         "credits_needed": 3,
+        "constraint_notes": '3 credits from Major Figures in Cultural Studies.',
         "notes": '3 credits from Major Figures in Cultural Studies.',
         "sort_order": 3,
         "courses": [
@@ -8668,6 +8750,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "block_type": 'group',
         "group_name": 'Canadian Component',
         "credits_needed": 3,
+        "constraint_notes": '3 credits from courses with Canadian component.',
         "notes": '3 credits from courses with Canadian component.',
         "sort_order": 4,
         "courses": [
@@ -8700,6 +8783,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "block_type": 'group',
         "group_name": 'Theory, Criticism and Methods',
         "credits_needed": 3,
+        "constraint_notes": '3 credits of Theory, Criticism, and Methods courses from the list or with permission of department adviser.',
         "notes": '3 credits of Theory, Criticism, and Methods courses from the list or with permission of department adviser.',
         "sort_order": 5,
         "courses": [
@@ -8753,6 +8837,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "block_type": 'group',
         "group_name": 'Historical Dimension',
         "credits_needed": 6,
+        "constraint_notes": '6 credits from courses in Cultural Studies with an historical dimension.',
         "notes": '6 credits from courses in Cultural Studies with an historical dimension.',
         "sort_order": 6,
         "courses": [
@@ -8813,6 +8898,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "block_type": 'group',
         "group_name": '400-Level Theory',
         "credits_needed": 3,
+        "constraint_notes": '3 credits from 400-level courses in Cultural Studies with a theoretical component.',
         "notes": '3 credits from 400-level courses in Cultural Studies with a theoretical component.',
         "sort_order": 7,
         "courses": [
@@ -8873,6 +8959,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "block_type": 'group',
         "group_name": 'Departmental Offerings',
         "credits_needed": 6,
+        "constraint_notes": '6 credits from among other Departmental offerings (ENGL courses) not specifically listed in Cultural Studies categories.',
         "notes": '6 credits from among other Departmental offerings (ENGL courses) not specifically listed in Cultural Studies categories.',
         "sort_order": 8,
       },
@@ -8881,6 +8968,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Additional Cultural Studies',
         "block_type": 'choose_credits',
         "credits_needed": 15,
+        "constraint_notes": "15 additional credits from the option's offerings, including all courses from Cultural Studies categories above and those listed below. Any ENGL course not on the Cultural Studies lists (e.g. literature courses) may not count.",
         "notes": "15 additional credits from the option's offerings, including all courses from Cultural Studies categories above and those listed below. Any ENGL course not on the Cultural Studies lists (e.g. literature courses) may not count.",
         "sort_order": 9,
         "courses": [
@@ -9010,6 +9098,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Required Courses (6 credits)',
         "block_type": 'required',
         "credits_needed": 6,
+        "constraint_notes": 'All Honours students must complete the Honours Thesis as a capstone requirement.',
         "notes": 'All Honours students must complete the Honours Thesis as a capstone requirement.',
         "sort_order": 1,
         "courses": [
@@ -9028,6 +9117,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Complementary Courses (54 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 54,
+        "constraint_notes": '54 credits of complementary courses taken in German with the following specifications: (1) 6 credits must be in pre-20th century literature and culture; (2) Maximum 6 credits of LLCU courses (only with prior approval); (3) Maximum 9 credits in GERM courses offered in English (only with prior approval); (4) Minimum 3 credits at the 400-level. Note: Students can take either GERM 331 or GERM 336, but not both.',
         "notes": '54 credits of complementary courses taken in German with the following specifications: (1) 6 credits must be in pre-20th century literature and culture; (2) Maximum 6 credits of LLCU courses (only with prior approval); (3) Maximum 9 credits in GERM courses offered in English (only with prior approval); (4) Minimum 3 credits at the 400-level. Note: Students can take either GERM 331 or GERM 336, but not both.',
         "sort_order": 2,
         "courses": [
@@ -9428,6 +9518,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Complementary Courses (42 credits)',
         "block_type": 'multi_group',
         "credits_needed": 42,
+        "constraint_notes": 'Students must select from Spanish-taught courses at or above intermediate level (HISP 219, HISP 220D1/D2 or higher). Maximum 18 credits in English-taught courses allowed.',
         "notes": 'Students must select from Spanish-taught courses at or above intermediate level (HISP 219, HISP 220D1/D2 or higher). Maximum 18 credits in English-taught courses allowed.',
         "sort_order": 2,
       },
@@ -9437,6 +9528,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "block_type": 'level_elective',
         "group_name": '400-Level or Above',
         "credits_needed": 9,
+        "constraint_notes": 'At least 9 credits of undergraduate courses at the 400-level or above in Hispanic Studies.',
         "notes": 'At least 9 credits of undergraduate courses at the 400-level or above in Hispanic Studies.',
         "sort_order": 3,
       },
@@ -9446,6 +9538,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "block_type": 'choose_credits',
         "group_name": 'Intermediate+ Spanish Courses',
         "credits_needed": 33,
+        "constraint_notes": 'Remaining 33 credits from Spanish-taught courses at or above intermediate level (HISP 219, HISP 220D1/D2, or higher). Maximum 18 credits in English-taught courses allowed across entire complementary block.',
         "notes": 'Remaining 33 credits from Spanish-taught courses at or above intermediate level (HISP 219, HISP 220D1/D2, or higher). Maximum 18 credits in English-taught courses allowed across entire complementary block.',
         "sort_order": 4,
         "courses": [
@@ -9453,6 +9546,7 @@ ARTS_LANGUAGES_SPECIALTY = [
             "subject": 'HISP',
             "catalog": '219',
             "title": 'Spanish Language Intensive - Intermediate',
+            "credits": 3.0,
             "choose_from_group": 'Intermediate+ Spanish Courses',
             "notes": 'Minimum level for elective selection',
           },
@@ -9460,6 +9554,7 @@ ARTS_LANGUAGES_SPECIALTY = [
             "subject": 'HISP',
             "catalog": '220D1',
             "title": 'Spanish Language: Intermediate',
+            "credits": 3.0,
             "choose_from_group": 'Intermediate+ Spanish Courses',
             "notes": 'Minimum level for elective selection',
           },
@@ -9467,6 +9562,7 @@ ARTS_LANGUAGES_SPECIALTY = [
             "subject": 'HISP',
             "catalog": '220D2',
             "title": 'Spanish Language: Intermediate',
+            "credits": 3.0,
             "choose_from_group": 'Intermediate+ Spanish Courses',
             "notes": 'Minimum level for elective selection',
           },
@@ -9488,6 +9584,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Required Courses (6 credits)',
         "block_type": 'choose_courses',
         "courses_needed": 1,
+        "constraint_notes": 'One of the two honours thesis courses below. Choose either the D1/D2 pair (6 credits total) or the intensive option (6 credits).',
         "notes": 'One of the two honours thesis courses below. Choose either the D1/D2 pair (6 credits total) or the intensive option (6 credits).',
         "sort_order": 1,
         "courses": [
@@ -9516,6 +9613,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Complementary Courses (48 credits)',
         "block_type": 'pool_group',
         "credits_needed": 48,
+        "constraint_notes": '48 credits, 9 of which must be at the 400 level or above, selected from the four Italian course lists. Students with advanced standing in the language must replace language courses with courses from groups B, C, and D.',
         "notes": '48 credits, 9 of which must be at the 400 level or above, selected from the four Italian course lists. Students with advanced standing in the language must replace language courses with courses from groups B, C, and D.',
         "sort_order": 2,
         "courses": [
@@ -9805,6 +9903,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Required Courses (18 credits)',
         "block_type": 'required',
         "credits_needed": 18,
+        "constraint_notes": 'All 6 courses are required. Note: HISP 243 and HISP 244 require successful completion of intermediate-level Spanish (HISP 220D1/HISP 220D2 or HISP 219 or equivalent) as a prerequisite.',
         "notes": 'All 6 courses are required. Note: HISP 243 and HISP 244 require successful completion of intermediate-level Spanish (HISP 220D1/HISP 220D2 or HISP 219 or equivalent) as a prerequisite.',
         "sort_order": 1,
         "courses": [
@@ -9863,6 +9962,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Complementary Courses (42 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 42,
+        "constraint_notes": '42 credits selected from complementary course list in consultation with the Program Advisor with the following requirements: 12 credits must be taken in Spanish or Portuguese; 30 additional credits on Latin America and the Caribbean (exclusive of language courses); minimum 15 of these 30 credits must be taken in one of the three disciplinary clusters (may also include up to 6 credits of theoretical/methodological courses).',
         "notes": '42 credits selected from complementary course list in consultation with the Program Advisor with the following requirements: 12 credits must be taken in Spanish or Portuguese; 30 additional credits on Latin America and the Caribbean (exclusive of language courses); minimum 15 of these 30 credits must be taken in one of the three disciplinary clusters (may also include up to 6 credits of theoretical/methodological courses).',
         "sort_order": 2,
         "courses": [
@@ -10220,6 +10320,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Required Courses (9 credits)',
         "block_type": 'required',
         "credits_needed": 9,
+        "constraint_notes": 'All Honours Liberal Arts students must take these three courses designed to reflect on the contemporary significance of a Liberal Arts education.',
         "notes": 'All Honours Liberal Arts students must take these three courses designed to reflect on the contemporary significance of a Liberal Arts education.',
         "sort_order": 1,
         "courses": [
@@ -10254,6 +10355,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Stream 1: Literature and the Arts – List A Introductory Courses (9 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 9,
+        "constraint_notes": 'Students in the Literature and the Arts (including Theatre and Architecture) stream must take exactly 9 credits from the following introductory courses. These courses should be taken early in the program.',
         "notes": 'Students in the Literature and the Arts (including Theatre and Architecture) stream must take exactly 9 credits from the following introductory courses. These courses should be taken early in the program.',
         "sort_order": 2,
         "courses": [
@@ -10460,6 +10562,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Stream 1: Literature and the Arts – List B Advanced Courses (42 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 42,
+        "constraint_notes": 'Students must take 42 credits from: (1) any course (other than language instruction courses) at 200+ level in ARCH, ARTH, CLAS, ENGL, FREN, GERM, HISP, ITAL, LLCU, RUSS; (2) any course (other than language instruction courses) at 200+ level in JWST under Biblical Studies, Languages and Literatures – Hebrew, or Language and Literature – Yiddish; (3) up to 12 credits from the supplementary list below. A maximum of 9 credits of Music (MUAR) may be selected in consultation with the Program Director. Distribution requirements apply: at least 24 credits must be 300+ level; at least 6 credits must be 400+ level (language courses excluded); no more than 21 credits from a single discipline; at least 6 credits emphasizing Africa/Asia and at least 6 credits emphasizing Europe/Americas/Australasia; at least 6 credits from before 1500 and at least 6 credits from 1500-1900.',
         "notes": 'Students must take 42 credits from: (1) any course (other than language instruction courses) at 200+ level in ARCH, ARTH, CLAS, ENGL, FREN, GERM, HISP, ITAL, LLCU, RUSS; (2) any course (other than language instruction courses) at 200+ level in JWST under Biblical Studies, Languages and Literatures – Hebrew, or Language and Literature – Yiddish; (3) up to 12 credits from the supplementary list below. A maximum of 9 credits of Music (MUAR) may be selected in consultation with the Program Director. Distribution requirements apply: at least 24 credits must be 300+ level; at least 6 credits must be 400+ level (language courses excluded); no more than 21 credits from a single discipline; at least 6 credits emphasizing Africa/Asia and at least 6 credits emphasizing Europe/Americas/Australasia; at least 6 credits from before 1500 and at least 6 credits from 1500-1900.',
         "sort_order": 3,
         "courses": [
@@ -10609,6 +10712,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Group A: Required Courses',
         "block_type": 'required',
         "credits_needed": 12,
+        "constraint_notes": 'Students must submit project proposals to their departmental adviser by March 15th or November 15th of the preceding term for individual reading and independent research courses.',
         "notes": 'Students must submit project proposals to their departmental adviser by March 15th or November 15th of the preceding term for individual reading and independent research courses.',
         "sort_order": 1,
         "courses": [
@@ -10651,6 +10755,7 @@ ARTS_LANGUAGES_SPECIALTY = [
         "title": 'Group B: Russian Language',
         "block_type": 'choose_credits',
         "credits_needed": 0,
+        "constraint_notes": 'Students entering this program with previous knowledge of or exposure to Russian may, with permission of the Department, replace this group with selections from Group C or D.',
         "notes": 'Students entering this program with previous knowledge of or exposure to Russian may, with permission of the Department, replace this group with selections from Group C or D.',
         "sort_order": 2,
         "courses": [

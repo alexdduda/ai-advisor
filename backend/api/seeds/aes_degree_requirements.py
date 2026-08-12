@@ -37,7 +37,7 @@ AES_PROGRAMS = [
         "title": 'Required Courses (36 credits)',
         "block_type": 'required',
         "credits_needed": 36,
-        "sort_order": 1,
+        "sort_order": 0,
         "courses": [
           {
             "subject": 'AEBI',
@@ -137,7 +137,7 @@ AES_PROGRAMS = [
         "title": 'Complementary Courses (6 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 6,
-        "sort_order": 2,
+        "sort_order": 1,
         "courses": [
           {
             "subject": 'ENTO',
@@ -254,7 +254,7 @@ AES_PROGRAMS = [
         "title": 'Required Courses (36 credits)',
         "block_type": 'required',
         "credits_needed": 36,
-        "sort_order": 1,
+        "sort_order": 0,
         "courses": [
           {
             "subject": 'AEBI',
@@ -348,7 +348,7 @@ AES_PROGRAMS = [
         "block_type": 'choose_credits',
         "credits_needed": 6,
         "notes": 'Choose 6 credits from the following 18 options',
-        "sort_order": 2,
+        "sort_order": 1,
         "courses": [
           {
             "subject": 'ENTO',
@@ -454,7 +454,7 @@ AES_PROGRAMS = [
         "block_type": 'multi_group',
         "credits_needed": 12,
         "notes": 'Choose one of the following plans: Honours Plan A OR Honours Plan B',
-        "sort_order": 3,
+        "sort_order": 2,
       },
       {
         "block_key": 'envbio_honours_bsc_agenvsc_honours_plan_a',
@@ -525,7 +525,7 @@ AES_PROGRAMS = [
         "title": 'Required Courses (36 credits)',
         "block_type": 'required',
         "credits_needed": 36,
-        "sort_order": 1,
+        "sort_order": 0,
         "courses": [
           {
             "subject": 'AGEC',
@@ -628,7 +628,7 @@ AES_PROGRAMS = [
         "block_type": 'choose_credits',
         "credits_needed": 6,
         "notes": 'With the approval of the Academic Adviser, choose one introductory course in each of the following areas: Statistics and Written/Oral Communication',
-        "sort_order": 2,
+        "sort_order": 1,
         "courses": [
           {
             "title": 'Introductory Statistics Course',
@@ -650,7 +650,7 @@ AES_PROGRAMS = [
         "block_type": 'choose_courses',
         "courses_needed": 1,
         "notes": 'Students taking the Major in Agricultural Economics must take one of the following specializations: Agribusiness (24 credits) or Environmental Economics (24 credits). Students who take the Specialization in Agribusiness can also take the Specialization in Professional Agrology for Agribusiness (24 credits). Membership to the OAQ requires successful completion of both the Agribusiness and Professional Agrology for Agribusiness specializations.',
-        "sort_order": 3,
+        "sort_order": 2,
         "courses": [
           {
             "title": 'Agribusiness Specialization',
@@ -682,7 +682,7 @@ AES_PROGRAMS = [
         "title": 'Required Courses (33 credits)',
         "block_type": 'required',
         "credits_needed": 33,
-        "sort_order": 1,
+        "sort_order": 0,
         "courses": [
           {
             "subject": 'AEBI',
@@ -769,7 +769,7 @@ AES_PROGRAMS = [
         "title": 'Complementary Courses (9 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 9,
-        "sort_order": 2,
+        "sort_order": 1,
         "courses": [
           {
             "subject": 'ANSC',
@@ -942,7 +942,7 @@ AES_PROGRAMS = [
         "block_type": 'required',
         "credits_needed": 62,
         "notes": 'All BREE program courses require a minimum grade of C. A B+ must be obtained in BREE 252 to be permitted to register in BREE 504.',
-        "sort_order": 1,
+        "sort_order": 0,
         "courses": [
           {
             "subject": 'AEMA',
@@ -1137,7 +1137,7 @@ AES_PROGRAMS = [
         "group_name": 'Set A',
         "credits_needed": 3,
         "notes": 'Page was truncated after CIVE 302; additional courses in Set A and subsequent complementary course sets (Sets B, C, etc.) could not be captured. Advisor must verify the full list from the live catalogue.',
-        "sort_order": 2,
+        "sort_order": 1,
         "courses": [
           {
             "subject": 'AEMA',
@@ -1241,8 +1241,13 @@ def _upsert_courses(supabase, block_id: str, courses: list[dict]) -> None:
     for i, c in enumerate(courses):
         supabase.table("requirement_courses").insert({
             "block_id":              block_id,
-            "subject":               c["subject"],
-            "catalog":               c["catalog"],
+            # .get, not [], to match every other faculty seeder. Some rows are
+            # adviser-approved placeholders with no course code at all —
+            # "Introductory Statistics Course", "Agribusiness Specialization" —
+            # and a KeyError here aborts the whole block, silently leaving it
+            # with zero courses.
+            "subject":               c.get("subject", ""),
+            "catalog":               c.get("catalog"),
             "title":                 c.get("title", ""),
             "credits":               c.get("credits", 3),
             "is_required":           c.get("is_required", False),

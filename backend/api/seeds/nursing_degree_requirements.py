@@ -440,7 +440,7 @@ NURSING_PROGRAMS = [
         "block_type": 'required',
         "credits_needed": 55,
         "notes": 'All courses are mandatory for BNI students. Online students must register in online course sections (020-series).',
-        "sort_order": 1,
+        "sort_order": 0,
         "courses": [
           {
             "subject": 'IPEA',
@@ -611,7 +611,7 @@ NURSING_PROGRAMS = [
         "credits_needed": 4,
         "courses_needed": 1,
         "notes": 'Choose 1 course (4 credits) from the following options. Both courses are clinical practicums.',
-        "sort_order": 2,
+        "sort_order": 1,
         "courses": [
           {
             "subject": 'NUR1',
@@ -635,7 +635,7 @@ NURSING_PROGRAMS = [
         "block_type": 'choose_credits',
         "credits_needed": 6,
         "notes": '6 credits of electives required. Minimum 3 credits must be at the 300-level or above. Students may select any courses not explicitly listed as required or complementary, subject to prerequisites and restrictions.',
-        "sort_order": 3,
+        "sort_order": 2,
         "courses": [
           {
             "subject": 'ELEC',
