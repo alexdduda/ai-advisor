@@ -561,7 +561,7 @@ SCIENCE_PROGRAMS_PART2 = [
     "name": "Biochemistry Major (B.Sc.) (64 credits)",
     "program_type": "major",
     "faculty": "Faculty of Science",
-    "total_credits": 64,
+    "total_credits": 62,
     "description": "Integrates molecular biology, cell biology, and chemistry to understand biological processes at the molecular level.",
     "ecalendar_url": "https://coursecatalogue.mcgill.ca/en/undergraduate/science/programs/biochemistry/biochemistry-major-bsc/",
     "blocks": [
@@ -619,7 +619,7 @@ SCIENCE_PROGRAMS_PART2 = [
     "name": "Biochemistry Honours (B.Sc.) (73 credits)",
     "program_type": "honours",
     "faculty": "Faculty of Science",
-    "total_credits": 73,
+    "total_credits": 71,
     "description": "For students planning to pursue graduate study or a research career in biochemistry, molecular biology, or related fields.",
     "ecalendar_url": "https://coursecatalogue.mcgill.ca/en/undergraduate/science/programs/biochemistry/biochemistry-honours-bsc/",
     "blocks": [
