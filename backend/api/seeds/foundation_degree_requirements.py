@@ -177,271 +177,860 @@ def _dedupe(*row_lists) -> list:
 
 
 FOUNDATION_PROGRAMS = [
-
-    # ══════════════════════════════════════════════════════════════════
-    # Faculty of Arts — Foundation Program (General B.A.)
-    # ══════════════════════════════════════════════════════════════════
-    {
-        "program_key": "foundation_arts_ba",
-        "name": "Foundation Program – General (B.A.) (U0)",
-        "program_type": "foundation",
-        "faculty": "Faculty of Arts",
-        "total_credits": 30,
-        "description": (
-            "The 30-credit Foundation (U0) year taken by B.A. students admitted to a "
-            "120-credit degree. 18 of the 30 credits must be Foundation core courses, "
-            "with a minimum of 6 credits in 3 of the 4 categories. Foundation courses "
-            "must be passed with a grade of C or better and cannot be taken S/U, and "
-            "they cannot also count toward a major, minor or concentration."
-        ),
-        "ecalendar_url": (
-            "https://coursecatalogue.mcgill.ca/en/undergraduate/arts/degree-requirements/"
-            "about-program/foundation-program-general-ba/"
-        ),
-        "blocks": [
-            {
-                "block_key": "foundation_arts_social_sciences",
-                "title": "Category: Social Sciences (6 credits)",
-                "block_type": "choose_credits",
-                "credits_needed": 6,
-                "sort_order": 1,
-                "notes": (
-                    "One of the four Foundation categories — you need at least 6 credits "
-                    f"in 3 of the 4. Approved courses: {_ARTS_LIST_URL}. {_NO_OVERLAP_NOTE}"
-                ),
-                "constraint_notes": "Maximum 12 credits from any one department across the Foundation core.",
-                "courses": _ARTS_SOCIAL_SCIENCES_ROWS,
-            },
-            {
-                "block_key": "foundation_arts_humanities",
-                "title": "Category: Humanities (6 credits)",
-                "block_type": "choose_credits",
-                "credits_needed": 6,
-                "sort_order": 2,
-                "notes": (
-                    "One of the four Foundation categories — you need at least 6 credits "
-                    f"in 3 of the 4. Approved courses: {_ARTS_LIST_URL}. {_NO_OVERLAP_NOTE}"
-                ),
-                "constraint_notes": "Maximum 12 credits from any one department across the Foundation core.",
-                "courses": _ARTS_HUMANITIES_ROWS,
-            },
-            {
-                "block_key": "foundation_arts_languages",
-                "title": "Category: Languages (6 credits)",
-                "block_type": "choose_credits",
-                "credits_needed": 6,
-                "sort_order": 3,
-                "notes": (
-                    "One of the four Foundation categories — you need at least 6 credits "
-                    f"in 3 of the 4. Approved courses: {_ARTS_LIST_URL}. {_NO_OVERLAP_NOTE}"
-                ),
-                "constraint_notes": "Maximum 12 credits from any one department across the Foundation core.",
-                "courses": _ARTS_LANGUAGES_ROWS,
-            },
-            {
-                "block_key": "foundation_arts_math_science",
-                "title": "Category: Mathematics & Science (6 credits)",
-                "block_type": "choose_credits",
-                "credits_needed": 6,
-                "sort_order": 4,
-                "notes": (
-                    "One of the four Foundation categories — you need at least 6 credits "
-                    f"in 3 of the 4. Approved courses: {_ARTS_LIST_URL}. {_NO_OVERLAP_NOTE}"
-                ),
-                "constraint_notes": "Maximum 12 credits from any one department across the Foundation core.",
-                "courses": _ARTS_MATH_SCIENCE_ROWS,
-            },
-            {
-                "block_key": "foundation_arts_electives",
-                "title": "Foundation Electives (12 credits)",
-                "block_type": "level_elective",
-                "credits_needed": 12,
-                "min_level": 100,
-                "sort_order": 5,
-                "notes": (
-                    "The remaining 12 credits of the 30-credit U0 year. These may be further "
-                    "Foundation courses or free electives. Use the \"Counts toward\" selector "
-                    "on the Electives tab to place a course here."
-                ),
-                "constraint_notes": (
-                    "Maximum 18 credits from any single Foundation category; maximum 12 credits "
-                    "from any one department."
-                ),
-                "courses": [],
-            },
+  {
+    "program_key": 'foundation_arts_ba',
+    "name": 'Foundation Program – General (B.A.) (U0)',
+    "program_type": 'foundation',
+    "faculty": 'Faculty of Arts',
+    "total_credits": 30,
+    "description": 'The 30-credit Foundation (U0) year taken by B.A. students admitted to a 120-credit degree. 18 of the 30 credits must be Foundation core courses, with a minimum of 6 credits in 3 of the 4 categories. Foundation courses must be passed with a grade of C or better and cannot be taken S/U, and they cannot also count toward a major, minor or concentration.',
+    "ecalendar_url": 'https://coursecatalogue.mcgill.ca/en/undergraduate/arts/degree-requirements/about-program/foundation-program-general-ba/',
+    "blocks": [
+      {
+        "block_key": 'foundation_arts_social_sciences',
+        "title": 'Category: Social Sciences (6 credits)',
+        "block_type": 'choose_credits',
+        "credits_needed": 6,
+        "constraint_notes": 'Maximum 12 credits from any one department across the Foundation core.',
+        "notes": 'One of the four Foundation categories — you need at least 6 credits in 3 of the 4. Approved courses: https://www.mcgill.ca/oasis/students/new-ba-students/foundation-u0/approved-foundation-courses. Courses used for the Foundation (U0) program cannot also count toward your major, minor or concentration.',
+        "sort_order": 1,
+        "courses": [
+          {
+            "subject": 'ANTH',
+            "catalog": '200',
+            "title": 'Any 200-level Anthropology course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'ECON',
+            "catalog": '200',
+            "title": 'Any 200-level Economics course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'HIST',
+            "catalog": '200',
+            "title": 'Any 200-level History course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'LING',
+            "catalog": '200',
+            "title": 'Any 200-level Linguistics course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'POLI',
+            "catalog": '200',
+            "title": 'Any 200-level Political Science course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'SOCI',
+            "catalog": '200',
+            "title": 'Any 200-level Sociology course',
+            "credits": 3.0,
+          },
         ],
-    },
-
-    # ══════════════════════════════════════════════════════════════════
-    # Faculty of Science — Foundation Program (B.Sc.)
-    # ══════════════════════════════════════════════════════════════════
-    {
-        "program_key": "foundation_science_bsc",
-        "name": "Foundation Program (B.Sc.) (U0)",
-        "program_type": "foundation",
-        "faculty": "Faculty of Science",
-        "total_credits": 30,
-        "description": (
-            "The 30-credit Foundation (U0) year taken by B.Sc. students admitted to a "
-            "120-credit degree. It must include at least seven courses from the Approved "
-            "Foundation Year Science Courses list, six of which satisfy either 2 MATH + 4 "
-            "BIOL/CHEM/PHYS courses, or 3 MATH + 3 BIOL/CHEM/PHYS courses. Foundation "
-            "courses cannot also count toward a major, minor or concentration."
-        ),
-        "ecalendar_url": (
-            "https://coursecatalogue.mcgill.ca/en/undergraduate/science/"
-            "overview-programs-offered/sci-foundation-program/foundation-year/"
-        ),
-        "blocks": [
-            {
-                "block_key": "foundation_sci_math",
-                "title": "Mathematics (2–3 approved courses)",
-                "block_type": "choose_credits",
-                "credits_needed": 7,
-                "sort_order": 1,
-                "notes": (
-                    "Take 2 MATH courses if you are taking 4 science courses, or 3 MATH "
-                    f"courses if you are taking 3. Full approved list: {_SCI_LIST_URL}. "
-                    f"{_NO_OVERLAP_NOTE}"
-                ),
-                "constraint_notes": (
-                    "Normally one Calculus 1 course (MATH 139/140/150) plus one Calculus 2 "
-                    "course (MATH 141/151); MATH 133 may serve as the third."
-                ),
-                "courses": _SCI_MATH_ROWS,
-            },
-            {
-                "block_key": "foundation_sci_bcp",
-                "title": "Biology, Chemistry and Physics (3–4 approved courses)",
-                "block_type": "choose_credits",
-                "credits_needed": 14,
-                "sort_order": 2,
-                "notes": (
-                    "Choose 3 or 4 courses here to pair with your MATH courses so that six "
-                    "Foundation courses satisfy the 2+4 or 3+3 rule. Take the courses your "
-                    f"intended U1 program requires. Full approved list: {_SCI_LIST_URL}. "
-                    f"{_NO_OVERLAP_NOTE}"
-                ),
-                "courses": _SCI_BCP_ROWS,
-            },
-            {
-                "block_key": "foundation_sci_other_approved",
-                "title": "Other Approved Foundation Science Courses (max 2)",
-                "block_type": "choose_credits",
-                "credits_needed": 3,
-                "sort_order": 3,
-                "notes": (
-                    "These count as approved Foundation science courses but not toward the "
-                    "BIOL/CHEM/PHYS requirement. At most 2 of them may be used."
-                ),
-                "courses": _SCI_OTHER_APPROVED_ROWS,
-            },
-            {
-                "block_key": "foundation_sci_electives",
-                "title": "Foundation Electives (6 credits)",
-                "block_type": "level_elective",
-                "credits_needed": 6,
-                "min_level": 100,
-                "sort_order": 4,
-                "notes": (
-                    "The remainder of the 30-credit U0 year. Use the \"Counts toward\" "
-                    "selector on the Electives tab to place a course here."
-                ),
-                "constraint_notes": (
-                    "At most 6 credits (3 per term) may be taken outside the Faculties of "
-                    "Arts and of Science during the Foundation program."
-                ),
-                "courses": [],
-            },
+      },
+      {
+        "block_key": 'foundation_arts_humanities',
+        "title": 'Category: Humanities (6 credits)',
+        "block_type": 'choose_credits',
+        "credits_needed": 6,
+        "constraint_notes": 'Maximum 12 credits from any one department across the Foundation core.',
+        "notes": 'One of the four Foundation categories — you need at least 6 credits in 3 of the 4. Approved courses: https://www.mcgill.ca/oasis/students/new-ba-students/foundation-u0/approved-foundation-courses. Courses used for the Foundation (U0) program cannot also count toward your major, minor or concentration.',
+        "sort_order": 2,
+        "courses": [
+          {
+            "subject": 'AFRI',
+            "catalog": '200',
+            "title": 'Any 200-level African Studies course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'ARTH',
+            "catalog": '200',
+            "title": 'Any 200-level Art History course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'CATH',
+            "catalog": '200',
+            "title": 'Any 200-level Catholic Studies course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'CLAS',
+            "catalog": '200',
+            "title": 'Any 200-level Classics course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'COMS',
+            "catalog": '200',
+            "title": 'Any 200-level Communication Studies course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'EAST',
+            "catalog": '200',
+            "title": 'Any 200-level East Asian Studies course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'ENGL',
+            "catalog": '200',
+            "title": 'Any 200-level English course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'GERM',
+            "catalog": '200',
+            "title": 'Any 200-level German Studies course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'HISP',
+            "catalog": '200',
+            "title": 'Any 200-level Hispanic Studies course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'INDG',
+            "catalog": '200',
+            "title": 'Any 200-level Indigenous Studies course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'ITAL',
+            "catalog": '200',
+            "title": 'Any 200-level Italian Studies course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'JWST',
+            "catalog": '200',
+            "title": 'Any 200-level Jewish Studies course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'LLCU',
+            "catalog": '200',
+            "title": 'Any 200-level Languages, Literatures and Cultures course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'PHIL',
+            "catalog": '200',
+            "title": 'Any 200-level Philosophy course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'RELG',
+            "catalog": '200',
+            "title": 'Any 200-level Religious Studies course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'RUSS',
+            "catalog": '200',
+            "title": 'Any 200-level Russian course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'WCOM',
+            "catalog": '100',
+            "title": 'Any 100-level Writing and Communication course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'WCOM',
+            "catalog": '200',
+            "title": 'Any 200-level Writing and Communication course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'AFYR',
+            "catalog": '101',
+            "title": 'Complex Problems 1',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'AFYR',
+            "catalog": '102',
+            "title": 'Complex Problems 2',
+            "credits": 3.0,
+          },
         ],
-    },
-
-    # ══════════════════════════════════════════════════════════════════
-    # B.A. & Sc. — Foundation Program (interfaculty)
-    # ══════════════════════════════════════════════════════════════════
-    {
-        "program_key": "foundation_basc",
-        "name": "Foundation Program (B.A. & Sc.) (U0)",
-        "program_type": "foundation",
-        "faculty": "Bachelor of Arts and Science",
-        "total_credits": 30,
-        "description": (
-            "The 30-credit Foundation (U0) year for B.A. & Sc. students admitted to a "
-            "120-credit degree: an Arts component of at least 9 credits drawn from two of "
-            "the three Arts categories, plus a Science component of two MATH courses and "
-            "three science courses. Foundation courses must be passed with a grade of C or "
-            "better, cannot be taken S/U, and cannot also count toward another program."
-        ),
-        "ecalendar_url": (
-            "https://coursecatalogue.mcgill.ca/en/undergraduate/arts-science/"
-            "overview-programs-offered/basc-foundation-year-program/foundation-year-program-basc/"
-        ),
-        "blocks": [
-            {
-                "block_key": "foundation_basc_math",
-                "title": "Science Component – Mathematics (2 courses)",
-                "block_type": "choose_credits",
-                "credits_needed": 7,
-                "sort_order": 1,
-                "notes": (
-                    "One Calculus 1 course (MATH 139/140/150) and one Calculus 2 course "
-                    f"(MATH 141/151), or MATH 133. Approved list: {_BASC_LIST_URL}. "
-                    f"{_NO_OVERLAP_NOTE}"
-                ),
-                "courses": _SCI_MATH_ROWS,
-            },
-            {
-                "block_key": "foundation_basc_science",
-                "title": "Science Component – Foundational Sciences (3 courses)",
-                "block_type": "choose_credits",
-                "credits_needed": 10,
-                "sort_order": 2,
-                "notes": (
-                    "Three courses from BIOL 111/112, CHEM 110/120, PHYS 101/131/102/142. "
-                    "At most 2 may be COMP 202, ESYS 104 or PSYC 100."
-                ),
-                "courses": _dedupe(_SCI_BCP_ROWS, [
-                    {"subject": "COMP", "catalog": "202", "title": "Foundations of Programming", "credits": 3, "is_required": False, "notes": "Max 2 courses from COMP 202 / ESYS 104 / PSYC 100"},
-                    {"subject": "ESYS", "catalog": "104", "title": "The Earth System", "credits": 3, "is_required": False, "notes": "Max 2 courses from COMP 202 / ESYS 104 / PSYC 100"},
-                    {"subject": "PSYC", "catalog": "100", "title": "Introduction to Psychology", "credits": 3, "is_required": False, "notes": "Max 2 courses from COMP 202 / ESYS 104 / PSYC 100"},
-                ]),
-            },
-            {
-                "block_key": "foundation_basc_arts",
-                "title": "Arts Component (9 credits, from 2 of 3 categories)",
-                "block_type": "choose_credits",
-                "credits_needed": 9,
-                "sort_order": 3,
-                "notes": (
-                    "At least 9 credits of Arts courses from two of Humanities, Languages "
-                    "and Social Sciences. Maximum 2 courses from one category and maximum 2 "
-                    f"from any one department. Approved list: {_BASC_LIST_URL}."
-                ),
-                "constraint_notes": (
-                    "Courses from outside the Faculties of Arts and of Science cannot be used "
-                    "toward this requirement."
-                ),
-                "courses": _dedupe(
-                    _ARTS_SOCIAL_SCIENCES_ROWS,
-                    _ARTS_HUMANITIES_ROWS,
-                    _ARTS_LANGUAGES_ROWS,
-                ),
-            },
-            {
-                "block_key": "foundation_basc_electives",
-                "title": "Foundation Electives (4 credits)",
-                "block_type": "level_elective",
-                "credits_needed": 4,
-                "min_level": 100,
-                "sort_order": 4,
-                "notes": (
-                    "The remainder of the 30-credit U0 year. Use the \"Counts toward\" "
-                    "selector on the Electives tab to place a course here."
-                ),
-                "courses": [],
-            },
+      },
+      {
+        "block_key": 'foundation_arts_languages',
+        "title": 'Category: Languages (6 credits)',
+        "block_type": 'choose_credits',
+        "credits_needed": 6,
+        "constraint_notes": 'Maximum 12 credits from any one department across the Foundation core.',
+        "notes": 'One of the four Foundation categories — you need at least 6 credits in 3 of the 4. Approved courses: https://www.mcgill.ca/oasis/students/new-ba-students/foundation-u0/approved-foundation-courses. Courses used for the Foundation (U0) program cannot also count toward your major, minor or concentration.',
+        "sort_order": 3,
+        "courses": [
+          {
+            "subject": 'FRSL',
+            "catalog": '100',
+            "title": 'Any 100-level French as a Second Language course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'FRSL',
+            "catalog": '200',
+            "title": 'Any 200-level French as a Second Language course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'FREN',
+            "catalog": '200',
+            "title": 'Any 200-level French course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'CLAS',
+            "catalog": '200',
+            "title": 'Any 200-level Classics (Latin / Ancient Greek) course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'EAST',
+            "catalog": '220',
+            "title": 'First Level Korean',
+            "credits": 9.0,
+          },
+          {
+            "subject": 'EAST',
+            "catalog": '230',
+            "title": 'First Level Chinese',
+            "credits": 9.0,
+          },
+          {
+            "subject": 'EAST',
+            "catalog": '240',
+            "title": 'First Level Japanese',
+            "credits": 9.0,
+          },
         ],
-    },
+      },
+      {
+        "block_key": 'foundation_arts_math_science',
+        "title": 'Category: Mathematics & Science (6 credits)',
+        "block_type": 'choose_credits',
+        "credits_needed": 6,
+        "constraint_notes": 'Maximum 12 credits from any one department across the Foundation core.',
+        "notes": 'One of the four Foundation categories — you need at least 6 credits in 3 of the 4. Approved courses: https://www.mcgill.ca/oasis/students/new-ba-students/foundation-u0/approved-foundation-courses. Courses used for the Foundation (U0) program cannot also count toward your major, minor or concentration.',
+        "sort_order": 4,
+        "courses": [
+          {
+            "subject": 'MATH',
+            "catalog": '100',
+            "title": 'Any 100-level Mathematics course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'MATH',
+            "catalog": '200',
+            "title": 'Any 200-level Mathematics course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'BIOL',
+            "catalog": '100',
+            "title": 'Any 100-level Biology course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'CHEM',
+            "catalog": '100',
+            "title": 'Any 100-level Chemistry course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'PHYS',
+            "catalog": '100',
+            "title": 'Any 100-level Physics course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'GEOG',
+            "catalog": '200',
+            "title": 'Any 200-level Geography course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'PSYC',
+            "catalog": '100',
+            "title": 'Introduction to Psychology',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'COMP',
+            "catalog": '202',
+            "title": 'Foundations of Programming',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'ATOC',
+            "catalog": '100',
+            "title": 'Extreme-Weather and Climate-Change Physics',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'ESYS',
+            "catalog": '104',
+            "title": 'The Earth System',
+            "credits": 3.0,
+          },
+        ],
+      },
+      {
+        "block_key": 'foundation_arts_electives',
+        "title": 'Foundation Electives (12 credits)',
+        "block_type": 'level_elective',
+        "credits_needed": 12,
+        "min_level": 100,
+        "constraint_notes": 'Maximum 18 credits from any single Foundation category; maximum 12 credits from any one department.',
+        "notes": 'The remaining 12 credits of the 30-credit U0 year. These may be further Foundation courses or free electives. Use the "Counts toward" selector on the Electives tab to place a course here.',
+        "sort_order": 5,
+      },
+    ],
+  },
+  {
+    "program_key": 'foundation_science_bsc',
+    "name": 'Foundation Program (B.Sc.) (U0)',
+    "program_type": 'foundation',
+    "faculty": 'Faculty of Science',
+    "total_credits": 30,
+    "description": 'The 30-credit Foundation (U0) year taken by B.Sc. students admitted to a 120-credit degree. It must include at least seven courses from the Approved Foundation Year Science Courses list, six of which satisfy either 2 MATH + 4 BIOL/CHEM/PHYS courses, or 3 MATH + 3 BIOL/CHEM/PHYS courses. Foundation courses cannot also count toward a major, minor or concentration.',
+    "ecalendar_url": 'https://coursecatalogue.mcgill.ca/en/undergraduate/science/overview-programs-offered/sci-foundation-program/foundation-year/',
+    "blocks": [
+      {
+        "block_key": 'foundation_sci_math',
+        "title": 'Mathematics (2–3 approved courses)',
+        "block_type": 'choose_credits',
+        "credits_needed": 7,
+        "constraint_notes": 'Normally one Calculus 1 course (MATH 139/140/150) plus one Calculus 2 course (MATH 141/151); MATH 133 may serve as the third.',
+        "notes": 'Take 2 MATH courses if you are taking 4 science courses, or 3 MATH courses if you are taking 3. Full approved list: https://www.mcgill.ca/sousa/new-students/courseselection/bscu0. Courses used for the Foundation (U0) program cannot also count toward your major, minor or concentration.',
+        "sort_order": 1,
+        "courses": [
+          {
+            "subject": 'MATH',
+            "catalog": '139',
+            "title": 'Calculus 1 with Precalculus',
+            "credits": 4.0,
+          },
+          {
+            "subject": 'MATH',
+            "catalog": '140',
+            "title": 'Calculus 1',
+            "credits": 3.0,
+            "recommended": True,
+            "recommendation_reason": 'Standard Calculus 1 for students with high school calculus',
+          },
+          {
+            "subject": 'MATH',
+            "catalog": '141',
+            "title": 'Calculus 2',
+            "credits": 4.0,
+            "recommended": True,
+            "recommendation_reason": 'Follows MATH 139/140 — take in Winter',
+          },
+          {
+            "subject": 'MATH',
+            "catalog": '150',
+            "title": 'Calculus A',
+            "credits": 4.0,
+          },
+          {
+            "subject": 'MATH',
+            "catalog": '151',
+            "title": 'Calculus B',
+            "credits": 4.0,
+          },
+          {
+            "subject": 'MATH',
+            "catalog": '133',
+            "title": 'Linear Algebra and Geometry',
+            "credits": 3.0,
+            "recommended": True,
+            "recommendation_reason": 'Counts as the third MATH course and is a prerequisite for most U1 programs',
+          },
+        ],
+      },
+      {
+        "block_key": 'foundation_sci_bcp',
+        "title": 'Biology, Chemistry and Physics (3–4 approved courses)',
+        "block_type": 'choose_credits',
+        "credits_needed": 14,
+        "constraint_notes": 'Choose 3 or 4 courses here to pair with your MATH courses so that six Foundation courses satisfy the 2+4 or 3+3 rule. Take the courses your intended U1 program requires. Full approved list: https://www.mcgill.ca/sousa/new-students/courseselection/bscu0. Courses used for the Foundation (U0) program cannot also count toward your major, minor or concentration.',
+        "notes": 'Choose 3 or 4 courses here to pair with your MATH courses so that six Foundation courses satisfy the 2+4 or 3+3 rule. Take the courses your intended U1 program requires. Full approved list: https://www.mcgill.ca/sousa/new-students/courseselection/bscu0. Courses used for the Foundation (U0) program cannot also count toward your major, minor or concentration.',
+        "sort_order": 2,
+        "courses": [
+          {
+            "subject": 'BIOL',
+            "catalog": '111',
+            "title": 'Principles: Organismal Biology',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'BIOL',
+            "catalog": '112',
+            "title": 'Cell and Molecular Biology',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'CHEM',
+            "catalog": '110',
+            "title": 'General Chemistry 1',
+            "credits": 4.0,
+          },
+          {
+            "subject": 'CHEM',
+            "catalog": '120',
+            "title": 'General Chemistry 2',
+            "credits": 4.0,
+          },
+          {
+            "subject": 'PHYS',
+            "catalog": '101',
+            "title": 'Introductory Physics - Mechanics',
+            "credits": 4.0,
+          },
+          {
+            "subject": 'PHYS',
+            "catalog": '102',
+            "title": 'Introductory Physics - Electromagnetism',
+            "credits": 4.0,
+          },
+          {
+            "subject": 'PHYS',
+            "catalog": '131',
+            "title": 'Mechanics and Waves',
+            "credits": 4.0,
+          },
+          {
+            "subject": 'PHYS',
+            "catalog": '142',
+            "title": 'Electromagnetism and Optics',
+            "credits": 4.0,
+          },
+        ],
+      },
+      {
+        "block_key": 'foundation_sci_other_approved',
+        "title": 'Other Approved Foundation Science Courses (max 2)',
+        "block_type": 'choose_credits',
+        "credits_needed": 3,
+        "constraint_notes": 'These count as approved Foundation science courses but not toward the BIOL/CHEM/PHYS requirement. At most 2 of them may be used.',
+        "notes": 'These count as approved Foundation science courses but not toward the BIOL/CHEM/PHYS requirement. At most 2 of them may be used.',
+        "sort_order": 3,
+        "courses": [
+          {
+            "subject": 'COMP',
+            "catalog": '202',
+            "title": 'Foundations of Programming',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'PSYC',
+            "catalog": '100',
+            "title": 'Introduction to Psychology',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'ATOC',
+            "catalog": '100',
+            "title": 'Extreme-Weather and Climate-Change Physics',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'ESYS',
+            "catalog": '104',
+            "title": 'The Earth System',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'GEOG',
+            "catalog": '205',
+            "title": 'Global Change: Past, Present and Future',
+            "credits": 3.0,
+          },
+        ],
+      },
+      {
+        "block_key": 'foundation_sci_electives',
+        "title": 'Foundation Electives (6 credits)',
+        "block_type": 'level_elective',
+        "credits_needed": 6,
+        "min_level": 100,
+        "constraint_notes": 'At most 6 credits (3 per term) may be taken outside the Faculties of Arts and of Science during the Foundation program.',
+        "notes": 'The remainder of the 30-credit U0 year. Use the "Counts toward" selector on the Electives tab to place a course here.',
+        "sort_order": 4,
+      },
+    ],
+  },
+  {
+    "program_key": 'foundation_basc',
+    "name": 'Foundation Program (B.A. & Sc.) (U0)',
+    "program_type": 'foundation',
+    "faculty": 'Bachelor of Arts and Science',
+    "total_credits": 30,
+    "description": 'The 30-credit Foundation (U0) year for B.A. & Sc. students admitted to a 120-credit degree: an Arts component of at least 9 credits drawn from two of the three Arts categories, plus a Science component of two MATH courses and three science courses. Foundation courses must be passed with a grade of C or better, cannot be taken S/U, and cannot also count toward another program.',
+    "ecalendar_url": 'https://coursecatalogue.mcgill.ca/en/undergraduate/arts-science/overview-programs-offered/basc-foundation-year-program/foundation-year-program-basc/',
+    "blocks": [
+      {
+        "block_key": 'foundation_basc_math',
+        "title": 'Science Component – Mathematics (2 courses)',
+        "block_type": 'choose_credits',
+        "credits_needed": 7,
+        "constraint_notes": 'One Calculus 1 course (MATH 139/140/150) and one Calculus 2 course (MATH 141/151), or MATH 133. Approved list: https://www.mcgill.ca/sousa/new-students/courseselection/bascu0. Courses used for the Foundation (U0) program cannot also count toward your major, minor or concentration.',
+        "notes": 'One Calculus 1 course (MATH 139/140/150) and one Calculus 2 course (MATH 141/151), or MATH 133. Approved list: https://www.mcgill.ca/sousa/new-students/courseselection/bascu0. Courses used for the Foundation (U0) program cannot also count toward your major, minor or concentration.',
+        "sort_order": 1,
+        "courses": [
+          {
+            "subject": 'MATH',
+            "catalog": '139',
+            "title": 'Calculus 1 with Precalculus',
+            "credits": 4.0,
+          },
+          {
+            "subject": 'MATH',
+            "catalog": '140',
+            "title": 'Calculus 1',
+            "credits": 3.0,
+            "recommended": True,
+            "recommendation_reason": 'Standard Calculus 1 for students with high school calculus',
+          },
+          {
+            "subject": 'MATH',
+            "catalog": '141',
+            "title": 'Calculus 2',
+            "credits": 4.0,
+            "recommended": True,
+            "recommendation_reason": 'Follows MATH 139/140 — take in Winter',
+          },
+          {
+            "subject": 'MATH',
+            "catalog": '150',
+            "title": 'Calculus A',
+            "credits": 4.0,
+          },
+          {
+            "subject": 'MATH',
+            "catalog": '151',
+            "title": 'Calculus B',
+            "credits": 4.0,
+          },
+          {
+            "subject": 'MATH',
+            "catalog": '133',
+            "title": 'Linear Algebra and Geometry',
+            "credits": 3.0,
+            "recommended": True,
+            "recommendation_reason": 'Counts as the third MATH course and is a prerequisite for most U1 programs',
+          },
+        ],
+      },
+      {
+        "block_key": 'foundation_basc_science',
+        "title": 'Science Component – Foundational Sciences (3 courses)',
+        "block_type": 'choose_credits',
+        "credits_needed": 10,
+        "constraint_notes": 'Three courses from BIOL 111/112, CHEM 110/120, PHYS 101/131/102/142. At most 2 may be COMP 202, ESYS 104 or PSYC 100.',
+        "notes": 'Three courses from BIOL 111/112, CHEM 110/120, PHYS 101/131/102/142. At most 2 may be COMP 202, ESYS 104 or PSYC 100.',
+        "sort_order": 2,
+        "courses": [
+          {
+            "subject": 'BIOL',
+            "catalog": '111',
+            "title": 'Principles: Organismal Biology',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'BIOL',
+            "catalog": '112',
+            "title": 'Cell and Molecular Biology',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'CHEM',
+            "catalog": '110',
+            "title": 'General Chemistry 1',
+            "credits": 4.0,
+          },
+          {
+            "subject": 'CHEM',
+            "catalog": '120',
+            "title": 'General Chemistry 2',
+            "credits": 4.0,
+          },
+          {
+            "subject": 'PHYS',
+            "catalog": '101',
+            "title": 'Introductory Physics - Mechanics',
+            "credits": 4.0,
+          },
+          {
+            "subject": 'PHYS',
+            "catalog": '102',
+            "title": 'Introductory Physics - Electromagnetism',
+            "credits": 4.0,
+          },
+          {
+            "subject": 'PHYS',
+            "catalog": '131',
+            "title": 'Mechanics and Waves',
+            "credits": 4.0,
+          },
+          {
+            "subject": 'PHYS',
+            "catalog": '142',
+            "title": 'Electromagnetism and Optics',
+            "credits": 4.0,
+          },
+          {
+            "subject": 'COMP',
+            "catalog": '202',
+            "title": 'Foundations of Programming',
+            "credits": 3.0,
+            "notes": 'Max 2 courses from COMP 202 / ESYS 104 / PSYC 100',
+          },
+          {
+            "subject": 'ESYS',
+            "catalog": '104',
+            "title": 'The Earth System',
+            "credits": 3.0,
+            "notes": 'Max 2 courses from COMP 202 / ESYS 104 / PSYC 100',
+          },
+          {
+            "subject": 'PSYC',
+            "catalog": '100',
+            "title": 'Introduction to Psychology',
+            "credits": 3.0,
+            "notes": 'Max 2 courses from COMP 202 / ESYS 104 / PSYC 100',
+          },
+        ],
+      },
+      {
+        "block_key": 'foundation_basc_arts',
+        "title": 'Arts Component (9 credits, from 2 of 3 categories)',
+        "block_type": 'choose_credits',
+        "credits_needed": 9,
+        "constraint_notes": 'Courses from outside the Faculties of Arts and of Science cannot be used toward this requirement.',
+        "notes": 'At least 9 credits of Arts courses from two of Humanities, Languages and Social Sciences. Maximum 2 courses from one category and maximum 2 from any one department. Approved list: https://www.mcgill.ca/sousa/new-students/courseselection/bascu0.',
+        "sort_order": 3,
+        "courses": [
+          {
+            "subject": 'ANTH',
+            "catalog": '200',
+            "title": 'Any 200-level Anthropology course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'ECON',
+            "catalog": '200',
+            "title": 'Any 200-level Economics course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'HIST',
+            "catalog": '200',
+            "title": 'Any 200-level History course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'LING',
+            "catalog": '200',
+            "title": 'Any 200-level Linguistics course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'POLI',
+            "catalog": '200',
+            "title": 'Any 200-level Political Science course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'SOCI',
+            "catalog": '200',
+            "title": 'Any 200-level Sociology course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'AFRI',
+            "catalog": '200',
+            "title": 'Any 200-level African Studies course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'ARTH',
+            "catalog": '200',
+            "title": 'Any 200-level Art History course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'CATH',
+            "catalog": '200',
+            "title": 'Any 200-level Catholic Studies course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'CLAS',
+            "catalog": '200',
+            "title": 'Any 200-level Classics course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'COMS',
+            "catalog": '200',
+            "title": 'Any 200-level Communication Studies course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'EAST',
+            "catalog": '200',
+            "title": 'Any 200-level East Asian Studies course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'ENGL',
+            "catalog": '200',
+            "title": 'Any 200-level English course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'GERM',
+            "catalog": '200',
+            "title": 'Any 200-level German Studies course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'HISP',
+            "catalog": '200',
+            "title": 'Any 200-level Hispanic Studies course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'INDG',
+            "catalog": '200',
+            "title": 'Any 200-level Indigenous Studies course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'ITAL',
+            "catalog": '200',
+            "title": 'Any 200-level Italian Studies course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'JWST',
+            "catalog": '200',
+            "title": 'Any 200-level Jewish Studies course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'LLCU',
+            "catalog": '200',
+            "title": 'Any 200-level Languages, Literatures and Cultures course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'PHIL',
+            "catalog": '200',
+            "title": 'Any 200-level Philosophy course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'RELG',
+            "catalog": '200',
+            "title": 'Any 200-level Religious Studies course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'RUSS',
+            "catalog": '200',
+            "title": 'Any 200-level Russian course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'WCOM',
+            "catalog": '100',
+            "title": 'Any 100-level Writing and Communication course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'WCOM',
+            "catalog": '200',
+            "title": 'Any 200-level Writing and Communication course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'AFYR',
+            "catalog": '101',
+            "title": 'Complex Problems 1',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'AFYR',
+            "catalog": '102',
+            "title": 'Complex Problems 2',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'FRSL',
+            "catalog": '100',
+            "title": 'Any 100-level French as a Second Language course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'FRSL',
+            "catalog": '200',
+            "title": 'Any 200-level French as a Second Language course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'FREN',
+            "catalog": '200',
+            "title": 'Any 200-level French course',
+            "credits": 3.0,
+          },
+          {
+            "subject": 'EAST',
+            "catalog": '220',
+            "title": 'First Level Korean',
+            "credits": 9.0,
+          },
+          {
+            "subject": 'EAST',
+            "catalog": '230',
+            "title": 'First Level Chinese',
+            "credits": 9.0,
+          },
+          {
+            "subject": 'EAST',
+            "catalog": '240',
+            "title": 'First Level Japanese',
+            "credits": 9.0,
+          },
+        ],
+      },
+      {
+        "block_key": 'foundation_basc_electives',
+        "title": 'Foundation Electives (4 credits)',
+        "block_type": 'level_elective',
+        "credits_needed": 4,
+        "min_level": 100,
+        "constraint_notes": 'The remainder of the 30-credit U0 year. Use the "Counts toward" selector on the Electives tab to place a course here.',
+        "notes": 'The remainder of the 30-credit U0 year. Use the "Counts toward" selector on the Electives tab to place a course here.',
+        "sort_order": 4,
+      },
+    ],
+  },
 ]
 
 

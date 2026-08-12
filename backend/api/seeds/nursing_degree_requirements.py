@@ -43,290 +43,618 @@ logger = logging.getLogger(__name__)
 
 
 NURSING_PROGRAMS = [
-
-  # ════════════════════════════════════════════════════════════════════════
-  #  B.Sc.(N.) – NURSING  (103 credits)
-  # ════════════════════════════════════════════════════════════════════════
   {
-    "program_key":   "bscn_nursing",
-    "name":          "Bachelor of Science (Nursing) – B.Sc.(N.) (103 credits)",
-    "program_type":  "major",
-    "faculty":       "Ingram School of Nursing",
+    "program_key": 'bscn_nursing',
+    "name": 'Bachelor of Science (Nursing) – B.Sc.(N.) (103 credits)',
+    "program_type": 'major',
+    "faculty": 'Ingram School of Nursing',
     "total_credits": 103,
-    "description": (
-      "The B.Sc.(N.) is a 3-year program (103 credits) for CEGEP-prepared students "
-      "that focuses on complex and contemporary nursing issues. High school and "
-      "out-of-province entrants complete an additional U0 science year (~33–34 credits) "
-      "before beginning the three-year nursing sequence. The program prepares graduates "
-      "for entry-level nursing practice and for sitting licensure examinations in Quebec "
-      "(OIIQ) and Canada. Accredited by the Canadian Association of Schools of Nursing "
-      "since 1990 (full accreditation until 2031). French B2 proficiency is required "
-      "for full licensure in Quebec. Students with a completed bachelor's degree may "
-      "transfer to the MScA-N Qualifying Year after U2 summer."
-    ),
-    "ecalendar_url": (
-      "https://www.mcgill.ca/study/2024-2025/faculties/nursing/undergraduate/programs/"
-      "bachelor-science-nursing-bscn-nursing"
-    ),
+    "description": "The B.Sc.(N.) is a 3-year program (103 credits) for CEGEP-prepared students that focuses on complex and contemporary nursing issues. High school and out-of-province entrants complete an additional U0 science year (~33–34 credits) before beginning the three-year nursing sequence. The program prepares graduates for entry-level nursing practice and for sitting licensure examinations in Quebec (OIIQ) and Canada. Accredited by the Canadian Association of Schools of Nursing since 1990 (full accreditation until 2031). French B2 proficiency is required for full licensure in Quebec. Students with a completed bachelor's degree may transfer to the MScA-N Qualifying Year after U2 summer.",
+    "ecalendar_url": 'https://coursecatalogue.mcgill.ca/en/undergraduate/nursing/nursing/',
     "blocks": [
-
-      # ── U0 (Freshman Science Prerequisites) ───────────────────────────
       {
-        "block_key":      "bscn_u0_prerequisites",
-        "title":          "U0 Science Prerequisites (for high school / out-of-province entrants only)",
-        "block_type":     "required",
+        "block_key": 'bscn_u0_prerequisites',
+        "title": 'U0 Science Prerequisites (for high school / out-of-province entrants only)',
+        "block_type": 'required',
         "credits_needed": 27,
-        "courses_needed": None,
-        "group_name":     None,
-        "notes": (
-          "CEGEP entrants are exempt from U0 and begin directly in U1. "
-          "High school, out-of-province, mature, and IB students typically need all of these. "
-          "All math and science courses must have been completed within the last five years. "
-          "CHEM 110/120/212 are each 4 credits; PHYS 101/102 are each 4 credits."
-        ),
+        "notes": 'CEGEP entrants are exempt from U0 and begin directly in U1. High school, out-of-province, mature, and IB students typically need all of these. All math and science courses must have been completed within the last five years. CHEM 110/120/212 are each 4 credits; PHYS 101/102 are each 4 credits.',
+        "sort_order": 0,
         "courses": [
-          {"subject": "BIOL", "catalog": "112",  "title": "Cell and Molecular Biology", "credits": 3, "is_required": True},
-          {"subject": "CHEM", "catalog": "110",  "title": "General Chemistry 1", "credits": 4, "is_required": True},
-          {"subject": "CHEM", "catalog": "120",  "title": "General Chemistry 2", "credits": 4, "is_required": True},
-          {"subject": "CHEM", "catalog": "212",  "title": "Introductory Organic Chemistry 1", "credits": 4, "is_required": True},
-          {"subject": "MATH", "catalog": "141",  "title": "Calculus 2", "credits": 4, "is_required": True},
-          {"subject": "PHYS", "catalog": "101",  "title": "Introductory Physics – Mechanics", "credits": 4, "is_required": True},
-          {"subject": "PHYS", "catalog": "102",  "title": "Introductory Physics – Electromagnetism & Optics", "credits": 4, "is_required": True},
+          {
+            "subject": 'BIOL',
+            "catalog": '112',
+            "title": 'Cell and Molecular Biology',
+            "credits": 3.0,
+            "is_required": True,
+          },
+          {
+            "subject": 'CHEM',
+            "catalog": '110',
+            "title": 'General Chemistry 1',
+            "credits": 4.0,
+            "is_required": True,
+          },
+          {
+            "subject": 'CHEM',
+            "catalog": '120',
+            "title": 'General Chemistry 2',
+            "credits": 4.0,
+            "is_required": True,
+          },
+          {
+            "subject": 'CHEM',
+            "catalog": '212',
+            "title": 'Introductory Organic Chemistry 1',
+            "credits": 4.0,
+            "is_required": True,
+          },
+          {
+            "subject": 'MATH',
+            "catalog": '141',
+            "title": 'Calculus 2',
+            "credits": 4.0,
+            "is_required": True,
+          },
+          {
+            "subject": 'PHYS',
+            "catalog": '101',
+            "title": 'Introductory Physics – Mechanics',
+            "credits": 4.0,
+            "is_required": True,
+          },
+          {
+            "subject": 'PHYS',
+            "catalog": '102',
+            "title": 'Introductory Physics – Electromagnetism & Optics',
+            "credits": 4.0,
+            "is_required": True,
+          },
         ],
       },
-
-      # ── U1 Year ───────────────────────────────────────────────────────
       {
-        "block_key":      "bscn_u1_required",
-        "title":          "Year 1 (U1) – Required Courses",
-        "block_type":     "required",
-        "credits_needed": 37,
-        "courses_needed": None,
-        "group_name":     None,
-        "notes": (
-          "Taken over Fall, Winter, and Summer terms of U1. "
-          "Fall: NUR1 331, NUR1 335, IPEA 500. "
-          "Winter: NUR1 209, 210, 221, 224, 311, IPEA 501. "
-          "Summer: NUR1 225, 230, 231, 233, 234, 235, 236. "
-          "IPEA courses are non-credit, Pass/Fail, mandatory for graduation."
-        ),
+        "block_key": 'bscn_u1_required',
+        "title": 'Year 1 (U1) – Required Courses',
+        "block_type": 'required',
+        "credits_needed": 36,
+        "notes": 'Taken over Fall, Winter, and Summer terms of U1. All four IPEA courses (500–503) are completed in U1. IPEA courses are non-credit, Pass/Fail, mandatory for graduation.',
+        "sort_order": 1,
         "courses": [
-          {"subject": "NUR1", "catalog": "209",  "title": "Pathophysiology for Nursing 1", "credits": 3, "is_required": True},
-          {"subject": "NUR1", "catalog": "210",  "title": "Pathophysiology for Nursing 2", "credits": 3, "is_required": True},
-          {"subject": "NUR1", "catalog": "221",  "title": "Intro to Prof Practice & Strengths-Based Nursing and Healthcare", "credits": 3, "is_required": True},
-          {"subject": "NUR1", "catalog": "224",  "title": "Individual and Family Development Across Lifespans 1", "credits": 4, "is_required": True},
-          {"subject": "NUR1", "catalog": "225",  "title": "Individual and Family Development Across Lifespans 2", "credits": 4, "is_required": True},
-          {"subject": "NUR1", "catalog": "230",  "title": "Supporting Health and Healing Capacities 1", "credits": 1, "is_required": True},
-          {"subject": "NUR1", "catalog": "231",  "title": "Supporting Health and Healing Capacities 2", "credits": 1, "is_required": True},
-          {"subject": "NUR1", "catalog": "233",  "title": "Promoting Young Family Development (Clinical)", "credits": 2, "is_required": True},
-          {"subject": "NUR1", "catalog": "234",  "title": "Nursing Older Adults (Clinical)", "credits": 2, "is_required": True},
-          {"subject": "NUR1", "catalog": "235",  "title": "Health and Physical Assessment/Anatomy 1", "credits": 3, "is_required": True},
-          {"subject": "NUR1", "catalog": "236",  "title": "Health and Physical Assessment/Anatomy 2", "credits": 3, "is_required": True},
-          {"subject": "NUR1", "catalog": "311",  "title": "Infection Prevention and Control", "credits": 3, "is_required": True},
-          {"subject": "NUR1", "catalog": "331",  "title": "Nursing in Illness 1 (Clinical)", "credits": 4, "is_required": True},
-          {"subject": "NUR1", "catalog": "335",  "title": "Illness Management Clinical Skills Laboratory 1", "credits": 1, "is_required": True},
-          {"subject": "IPEA", "catalog": "500",  "title": "Roles in Interprofessional Teams (0 credits, Pass/Fail)", "credits": 0, "is_required": True,
-           "notes": "Mandatory IPE workshop – non-credit, appears on transcript."},
-          {"subject": "IPEA", "catalog": "501",  "title": "Communication in Interprofessional Teams (0 credits, Pass/Fail)", "credits": 0, "is_required": True},
-          {"subject": "IPEA", "catalog": "502",  "title": "Patient-Centred Care in Action (0 credits, Pass/Fail)", "credits": 0, "is_required": True},
-          {"subject": "IPEA", "catalog": "503",  "title": "Managing Interprofessional Conflict (0 credits, Pass/Fail)", "credits": 0, "is_required": True},
+          {
+            "subject": 'NUR1',
+            "catalog": '209',
+            "title": 'Pathophysiology for Nursing 1',
+            "credits": 3.0,
+            "is_required": True,
+          },
+          {
+            "subject": 'NUR1',
+            "catalog": '210',
+            "title": 'Pathophysiology for Nursing 2',
+            "credits": 3.0,
+            "is_required": True,
+          },
+          {
+            "subject": 'NUR1',
+            "catalog": '221',
+            "title": 'Introduction to Professional Practice',
+            "credits": 3.0,
+            "is_required": True,
+          },
+          {
+            "subject": 'NUR1',
+            "catalog": '224',
+            "title": 'Individual and Family Development Across Lifespans 1',
+            "credits": 4.0,
+            "is_required": True,
+          },
+          {
+            "subject": 'NUR1',
+            "catalog": '225',
+            "title": 'Individual and Family Development Across Lifespans 2',
+            "credits": 4.0,
+            "is_required": True,
+          },
+          {
+            "subject": 'NUR1',
+            "catalog": '230',
+            "title": 'Supporting Health and Healing Capacities 1',
+            "credits": 1.0,
+            "is_required": True,
+          },
+          {
+            "subject": 'NUR1',
+            "catalog": '231',
+            "title": 'Supporting Health and Healing Capacities 2',
+            "credits": 1.0,
+            "is_required": True,
+          },
+          {
+            "subject": 'NUR1',
+            "catalog": '233',
+            "title": 'Promoting Young Family Development (Clinical)',
+            "credits": 2.0,
+            "is_required": True,
+          },
+          {
+            "subject": 'NUR1',
+            "catalog": '234',
+            "title": 'Nursing Older Adults (Clinical)',
+            "credits": 2.0,
+            "is_required": True,
+          },
+          {
+            "subject": 'NUR1',
+            "catalog": '235',
+            "title": 'Health and Physical Assessment/Anatomy 1',
+            "credits": 3.0,
+            "is_required": True,
+          },
+          {
+            "subject": 'NUR1',
+            "catalog": '236',
+            "title": 'Health and Physical Assessment/Anatomy 2',
+            "credits": 3.0,
+            "is_required": True,
+          },
+          {
+            "subject": 'IPEA',
+            "catalog": '500',
+            "title": 'Roles in Interprofessional Teams (0 credits, Pass/Fail)',
+            "credits": 0.0,
+            "is_required": True,
+            "notes": 'Mandatory IPE workshop – non-credit, appears on transcript.',
+          },
+          {
+            "subject": 'IPEA',
+            "catalog": '501',
+            "title": 'Communication in Interprofessional Teams (0 credits, Pass/Fail)',
+            "credits": 0.0,
+            "is_required": True,
+          },
+          {
+            "subject": 'IPEA',
+            "catalog": '502',
+            "title": 'Patient-Centred Care in Action (0 credits, Pass/Fail)',
+            "credits": 0.0,
+            "is_required": True,
+          },
+          {
+            "subject": 'IPEA',
+            "catalog": '503',
+            "title": 'Managing Interprofessional Conflict (0 credits, Pass/Fail)',
+            "credits": 0.0,
+            "is_required": True,
+          },
         ],
       },
-
-      # ── U2 Year ───────────────────────────────────────────────────────
       {
-        "block_key":      "bscn_u2_required",
-        "title":          "Year 2 (U2) – Required Courses",
-        "block_type":     "required",
-        "credits_needed": 28,
-        "courses_needed": None,
-        "group_name":     None,
-        "notes": (
-          "Taken over Fall, Winter, and Summer terms of U2. "
-          "Fall: NUR1 329. "
-          "Winter: NUR1 300, 301, 323, 324, 325, 326, IPEA 502, 503 (IPEA 0-credit, counted in U1 block). "
-          "Summer: NUR1 332, 333 (or 431 as alternative), 336."
-        ),
+        "block_key": 'bscn_u2_required',
+        "title": 'Year 2 (U2) – Required Courses',
+        "block_type": 'required',
+        "credits_needed": 34,
+        "notes": 'Taken over Fall and Winter terms of U2.',
+        "sort_order": 2,
         "courses": [
-          {"subject": "NUR1", "catalog": "300",  "title": "Pharmacology for Nursing 1", "credits": 3, "is_required": True},
-          {"subject": "NUR1", "catalog": "301",  "title": "Pharmacology for Nursing 2", "credits": 3, "is_required": True},
-          {"subject": "NUR1", "catalog": "323",  "title": "Illness Management 1", "credits": 3, "is_required": True},
-          {"subject": "NUR1", "catalog": "324",  "title": "Illness Management 2", "credits": 3, "is_required": True},
-          {"subject": "NUR1", "catalog": "325",  "title": "Acute, Chronic, and Palliative Health Challenges 1", "credits": 4, "is_required": True},
-          {"subject": "NUR1", "catalog": "326",  "title": "Acute, Chronic, and Palliative Health Challenges 2", "credits": 4, "is_required": True},
-          {"subject": "NUR1", "catalog": "329",  "title": "Skin Integrity and Wound Care", "credits": 3, "is_required": True},
-          {"subject": "NUR1", "catalog": "332",  "title": "Nursing in Illness 2 (Clinical)", "credits": 4, "is_required": True},
-          {"subject": "NUR1", "catalog": "333",  "title": "Nursing in Illness 3 (Clinical)", "credits": 3, "is_required": True},
-          {"subject": "NUR1", "catalog": "336",  "title": "Illness Management Clinical Skills Laboratory 2", "credits": 1, "is_required": True},
+          {
+            "subject": 'NUR1',
+            "catalog": '300',
+            "title": 'Pharmacology for Nursing 1',
+            "credits": 3.0,
+            "is_required": True,
+          },
+          {
+            "subject": 'NUR1',
+            "catalog": '301',
+            "title": 'Pharmacology for Nursing 2',
+            "credits": 3.0,
+            "is_required": True,
+          },
+          {
+            "subject": 'NUR1',
+            "catalog": '311',
+            "title": 'Infection Prevention and Control',
+            "credits": 3.0,
+            "is_required": True,
+          },
+          {
+            "subject": 'NUR1',
+            "catalog": '323',
+            "title": 'Illness Management 1',
+            "credits": 3.0,
+            "is_required": True,
+          },
+          {
+            "subject": 'NUR1',
+            "catalog": '324',
+            "title": 'Illness Management 2',
+            "credits": 3.0,
+            "is_required": True,
+          },
+          {
+            "subject": 'NUR1',
+            "catalog": '325',
+            "title": 'Acute, Chronic, and Palliative Health Challenges 1',
+            "credits": 4.0,
+            "is_required": True,
+          },
+          {
+            "subject": 'NUR1',
+            "catalog": '326',
+            "title": 'Acute, Chronic, and Palliative Health Challenges 2',
+            "credits": 4.0,
+            "is_required": True,
+          },
+          {
+            "subject": 'NUR1',
+            "catalog": '329',
+            "title": 'Skin Integrity and Wound Care',
+            "credits": 3.0,
+            "is_required": True,
+          },
+          {
+            "subject": 'NUR1',
+            "catalog": '331',
+            "title": 'Nursing in Illness 1 (Clinical)',
+            "credits": 4.0,
+            "is_required": True,
+          },
+          {
+            "subject": 'NUR1',
+            "catalog": '332',
+            "title": 'Nursing in Illness 2 (Clinical)',
+            "credits": 4.0,
+            "is_required": True,
+          },
+          {
+            "subject": 'NUR1',
+            "catalog": '335',
+            "title": 'Illness Management Clinical Skills Laboratory 1',
+            "credits": 1.0,
+            "is_required": True,
+          },
+          {
+            "subject": 'NUR1',
+            "catalog": '336',
+            "title": 'Illness Management Clinical Skills Laboratory 2',
+            "credits": 1.0,
+            "is_required": True,
+          },
         ],
       },
-
-      # ── U3 Year ───────────────────────────────────────────────────────
       {
-        "block_key":      "bscn_u3_required",
-        "title":          "Year 3 (U3) – Required Courses",
-        "block_type":     "required",
-        "credits_needed": 15,
-        "courses_needed": None,
-        "group_name":     None,
-        "notes": (
-          "Taken over Fall and Winter terms of U3. "
-          "Fall: NUR1 424, 432, 529, and electives. "
-          "Winter: NUR1 423, plus complementary NUR1 530 or 531."
-        ),
+        "block_key": 'bscn_u3_required',
+        "title": 'Year 3 (U3) – Required Courses',
+        "block_type": 'required',
+        "credits_needed": 26,
+        "notes": 'Taken over Fall and Winter terms of U3. Includes capstone clinical placements.',
+        "sort_order": 3,
         "courses": [
-          {"subject": "NUR1", "catalog": "423",  "title": "Leading Change: Policy and Practice", "credits": 4, "is_required": True},
-          {"subject": "NUR1", "catalog": "424",  "title": "Legal, Ethical, and Professional Practice Issues", "credits": 4, "is_required": True},
-          {"subject": "NUR1", "catalog": "432",  "title": "Community Health Nursing Project", "credits": 3, "is_required": True},
-          {"subject": "NUR1", "catalog": "529",  "title": "Critical Care Nursing", "credits": 4, "is_required": True},
+          {
+            "subject": 'NUR1',
+            "catalog": '333',
+            "title": 'Nursing in Illness 3 (Clinical)',
+            "credits": 3.0,
+            "is_required": True,
+          },
+          {
+            "subject": 'NUR1',
+            "catalog": '423',
+            "title": 'Leading Change: Policy and Practice',
+            "credits": 4.0,
+            "is_required": True,
+          },
+          {
+            "subject": 'NUR1',
+            "catalog": '424',
+            "title": 'Legal, Ethical, and Professional Practice Issues',
+            "credits": 4.0,
+            "is_required": True,
+          },
+          {
+            "subject": 'NUR1',
+            "catalog": '431',
+            "title": 'Community Health Nursing Practicum',
+            "credits": 3.0,
+            "is_required": True,
+          },
+          {
+            "subject": 'NUR1',
+            "catalog": '432',
+            "title": 'Community Health Nursing Project',
+            "credits": 3.0,
+            "is_required": True,
+          },
+          {
+            "subject": 'NUR1',
+            "catalog": '529',
+            "title": 'Critical Care Nursing',
+            "credits": 4.0,
+            "is_required": True,
+          },
         ],
       },
-
-      # ── U3 Complementary ──────────────────────────────────────────────
       {
-        "block_key":      "bscn_u3_complementary",
-        "title":          "Year 3 (U3) – Complementary Course (choose one, 5 credits)",
-        "block_type":     "choose_courses",
+        "block_key": 'bscn_u3_complementary',
+        "title": 'Year 3 (U3) – Complementary Course (choose one, 5 credits)',
+        "block_type": 'choose_courses',
         "credits_needed": 5,
         "courses_needed": 1,
-        "group_name":     None,
-        "notes": "Choose one of NUR1 530 or NUR1 531.",
+        "notes": 'Choose one of NUR1 530 or NUR1 531.',
+        "sort_order": 4,
         "courses": [
-          {"subject": "NUR1", "catalog": "530",  "title": "Nursing Practice Consolidation", "credits": 5, "is_required": False,
-           "recommended": True, "recommendation_reason": "Standard nursing practice consolidation placement."},
-          {"subject": "NUR1", "catalog": "531",  "title": "Ambassador Nursing Practice Consolidation", "credits": 5, "is_required": False},
+          {
+            "subject": 'NUR1',
+            "catalog": '530',
+            "title": 'Nursing Practice Consolidation',
+            "credits": 5.0,
+            "recommended": True,
+            "recommendation_reason": 'Standard nursing practice consolidation placement.',
+          },
+          {
+            "subject": 'NUR1',
+            "catalog": '531',
+            "title": 'Ambassador Nursing Practice Consolidation',
+            "credits": 5.0,
+          },
         ],
       },
-
-      # ── Electives ─────────────────────────────────────────────────────
       {
-        "block_key":      "bscn_electives",
-        "title":          "Electives",
-        "block_type":     "choose_credits",
+        "block_key": 'bscn_electives',
+        "title": 'Electives',
+        "block_type": 'choose_credits',
         "credits_needed": 9,
-        "courses_needed": None,
-        "group_name":     None,
-        "notes": (
-          "9 elective credits (for CEGEP/U1 entrants), at the 200–500 level, "
-          "with at least 3 credits at the 300-level or above. "
-          "Students entering at U0 need only 6 elective credits. "
-          "Includes the required statistics course: PSYC 204 or EDPE 375 (3 credits)."
-        ),
+        "notes": '9 elective credits (for CEGEP/U1 entrants), at the 200–500 level, with at least 3 credits at the 300-level or above. Students entering at U0 need only 6 elective credits. Includes the required statistics course: PSYC 204 or EDPE 375 (3 credits).',
+        "sort_order": 5,
         "courses": [
-          {"subject": "PSYC", "catalog": "204",  "title": "Introduction to Psychological Statistics (or EDPE 375)", "credits": 3,
-           "is_required": False, "recommended": True,
-           "recommendation_reason": "Required statistics course; counts as one of the elective credits."},
-          {"subject": "EDPE", "catalog": "375",  "title": "Introduction to Statistics (or PSYC 204)", "credits": 3,
-           "is_required": False, "notes": "Alternative to PSYC 204 for the required stats elective."},
+          {
+            "subject": 'PSYC',
+            "catalog": '204',
+            "title": 'Introduction to Psychological Statistics (or EDPE 375)',
+            "credits": 3.0,
+            "recommended": True,
+            "recommendation_reason": 'Required statistics course; counts as one of the elective credits.',
+          },
+          {
+            "subject": 'EDPE',
+            "catalog": '375',
+            "title": 'Introduction to Statistics (or PSYC 204)',
+            "credits": 3.0,
+            "notes": 'Alternative to PSYC 204 for the required stats elective.',
+          },
         ],
       },
-
     ],
   },
-
-  # ════════════════════════════════════════════════════════════════════════
-  #  B.N.I. – BACHELOR OF NURSING (INTEGRATED)  (65 credits at McGill)
-  # ════════════════════════════════════════════════════════════════════════
   {
-    "program_key":   "bni_nursing",
-    "name":          "Bachelor of Nursing (Integrated) – B.N.I. (65 credits at McGill)",
-    "program_type":  "major",
-    "faculty":       "Ingram School of Nursing",
+    "program_key": 'bni_nursing',
+    "name": 'Bachelor of Nursing (Integrated) – B.N.I. (65 credits at McGill)',
+    "program_type": 'major',
+    "faculty": 'Ingram School of Nursing',
     "total_credits": 65,
-    "description": (
-      "The B.N.I. is a 2-year, 5-semester accelerated completion program (65 credits "
-      "at McGill) for holders of the 180.A.0 DEC in Nursing from a Quebec CEGEP. "
-      "Students are admitted at the U2 level with 27 credits of advanced standing "
-      "(total program = 92 credits). The program expands students' knowledge base, "
-      "strengthens critical thinking, and prepares them for baccalaureate-level nursing "
-      "roles. Offered in two modalities: on-campus and fully online. Online students "
-      "must register in online course sections (020-series). Applicants must apply "
-      "within three years of obtaining their DEC 180.A.0. CASN accredited. "
-      "Elective requirement: 6 credits (at least 3 credits at 300-level or above)."
-    ),
-    "ecalendar_url": (
-      "https://www.mcgill.ca/study/2024-2025/faculties/nursing/undergraduate/programs/"
-      "bachelor-nursing-bni-integrated-nursing"
-    ),
+    "description": "The B.N.I. is a 2-year, 5-semester accelerated completion program (65 credits at McGill) for holders of the 180.A.0 DEC in Nursing from a Quebec CEGEP. Students are admitted at the U2 level with 27 credits of advanced standing (total program = 92 credits). The program expands students' knowledge base, strengthens critical thinking, and prepares them for baccalaureate-level nursing roles. Offered in two modalities: on-campus and fully online. Online students must register in online course sections (020-series). Applicants must apply within three years of obtaining their DEC 180.A.0. CASN accredited.",
+    "ecalendar_url": 'https://www.mcgill.ca/study/2024-2025/faculties/nursing/undergraduate/programs/bachelor-nursing-bni-integrated-nursing',
     "blocks": [
-
-      # ── BNI Required Courses ──────────────────────────────────────────
-      # Source: eCalendar 2024-2025, verified January 2026. 55 required credits.
       {
-        "block_key":      "bni_required",
-        "title":          "BNI Required Courses (55 credits)",
-        "block_type":     "required",
+        "block_key": 'bni_nursing_required',
+        "title": 'Required Courses (55 credits)',
+        "block_type": 'required',
         "credits_needed": 55,
-        "courses_needed": None,
-        "group_name":     None,
-        "notes": (
-          "All courses are required. IPEA 500–503 are 0-credit interprofessional "
-          "education activities (mandatory, Pass/Fail). PSYC 204 is the required "
-          "statistics course. Program delivered over 5 semesters (2 years). "
-          "Online students register in 020-series sections."
-        ),
+        "notes": 'All courses are mandatory for BNI students. Online students must register in online course sections (020-series).',
+        "sort_order": 1,
         "courses": [
-          {"subject": "NUR1", "catalog": "209",  "title": "Pathophysiology for Nursing 1", "credits": 3, "is_required": True},
-          {"subject": "NUR1", "catalog": "210",  "title": "Pathophysiology for Nursing 2", "credits": 3, "is_required": True},
-          {"subject": "NUR1", "catalog": "222",  "title": "Strengths-Based Nursing and Healthcare and Professional Practice", "credits": 3, "is_required": True},
-          {"subject": "NUR1", "catalog": "300",  "title": "Pharmacology for Nursing 1", "credits": 3, "is_required": True},
-          {"subject": "NUR1", "catalog": "301",  "title": "Pharmacology for Nursing 2", "credits": 3, "is_required": True},
-          {"subject": "NUR1", "catalog": "312",  "title": "Research in Nursing", "credits": 3, "is_required": True},
-          {"subject": "NUR1", "catalog": "318",  "title": "Chronic Illness and Palliative Health Challenges", "credits": 4, "is_required": True},
-          {"subject": "NUR1", "catalog": "320",  "title": "Critical Care Nursing Theory", "credits": 3, "is_required": True},
-          {"subject": "NUR1", "catalog": "327",  "title": "Critical Health Challenges", "credits": 4, "is_required": True},
-          {"subject": "NUR1", "catalog": "329",  "title": "Skin Integrity and Wound Care", "credits": 3, "is_required": True},
-          {"subject": "NUR1", "catalog": "338",  "title": "Applied Health and Physical Assessment/Anatomy 1", "credits": 3, "is_required": True},
-          {"subject": "NUR1", "catalog": "339",  "title": "Applied Health and Physical Assessment/Anatomy 2", "credits": 3, "is_required": True},
-          {"subject": "NUR1", "catalog": "423",  "title": "Leading Change: Policy and Practice", "credits": 4, "is_required": True},
-          {"subject": "NUR1", "catalog": "424",  "title": "Legal, Ethical, and Professional Practice Issues", "credits": 4, "is_required": True},
-          {"subject": "NUR1", "catalog": "431",  "title": "Community Health Nursing Practicum", "credits": 3, "is_required": True},
-          {"subject": "NUR1", "catalog": "432",  "title": "Community Health Nursing Project", "credits": 3, "is_required": True},
-          {"subject": "PSYC", "catalog": "204",  "title": "Introduction to Psychological Statistics", "credits": 3, "is_required": True,
-           "notes": "Required statistics course."},
-          {"subject": "IPEA", "catalog": "500",  "title": "Roles in Interprofessional Teams (0 credits)", "credits": 0, "is_required": True},
-          {"subject": "IPEA", "catalog": "501",  "title": "Communication in Interprofessional Teams (0 credits)", "credits": 0, "is_required": True},
-          {"subject": "IPEA", "catalog": "502",  "title": "Patient-Centred Care in Action (0 credits)", "credits": 0, "is_required": True},
-          {"subject": "IPEA", "catalog": "503",  "title": "Managing Interprofessional Conflict (0 credits)", "credits": 0, "is_required": True},
+          {
+            "subject": 'IPEA',
+            "catalog": '500',
+            "title": 'Roles in Interprofessional Teams',
+            "credits": 0.5,
+            "is_required": True,
+            "notes": 'Half day workshop including preparatory work. Corequisite for NUR1 222.',
+          },
+          {
+            "subject": 'IPEA',
+            "catalog": '501',
+            "title": 'Communication in Interprofessional Teams',
+            "credits": 0.5,
+            "is_required": True,
+            "notes": 'Half day workshop including preparatory work. Corequisite for NUR1 320.',
+          },
+          {
+            "subject": 'IPEA',
+            "catalog": '502',
+            "title": 'Patient-Centred Care in Action',
+            "credits": 0.5,
+            "is_required": True,
+            "notes": 'Half day activity including preparatory work. Simulated patient/family-centred care scenario.',
+          },
+          {
+            "subject": 'IPEA',
+            "catalog": '503',
+            "title": 'Managing Interprofessional Conflict',
+            "credits": 0.5,
+            "is_required": True,
+            "notes": 'Reflection on conflict sources and management strategies. Prerequisite: IPEA 500, IPEA 501, IPEA 502, or permission from instructor.',
+          },
+          {
+            "subject": 'NUR1',
+            "catalog": '209',
+            "title": 'Pathophysiology for Nursing 1',
+            "credits": 3.0,
+            "is_required": True,
+            "notes": 'Prerequisite: BIOL 112, CHEM 110, CHEM 120, CHEM 212, PHYS 101, PHYS 102 or equivalent.',
+          },
+          {
+            "subject": 'NUR1',
+            "catalog": '210',
+            "title": 'Pathophysiology for Nursing 2',
+            "credits": 3.0,
+            "is_required": True,
+            "notes": 'Prerequisite: NUR1 209. Builds on previous knowledge from NUR1 209.',
+          },
+          {
+            "subject": 'NUR1',
+            "catalog": '222',
+            "title": 'Strengths-Based Nursing & Healthcare & Professional Practice',
+            "credits": 3.0,
+            "is_required": True,
+            "notes": 'Corequisite: IPEA 500. Not open to students in U0. Fee of $25.56 for two name pins charged.',
+          },
+          {
+            "subject": 'NUR1',
+            "catalog": '300',
+            "title": 'Pharmacology for Nursing 1',
+            "credits": 3.0,
+            "is_required": True,
+            "notes": 'Prerequisite: NUR1 209 and NUR1 210.',
+          },
+          {
+            "subject": 'NUR1',
+            "catalog": '301',
+            "title": 'Pharmacology for Nursing 2',
+            "credits": 3.0,
+            "is_required": True,
+            "notes": 'Prerequisite: NUR1 300. Builds on knowledge from NUR1 300.',
+          },
+          {
+            "subject": 'NUR1',
+            "catalog": '312',
+            "title": 'Research in Nursing',
+            "credits": 3.0,
+            "is_required": True,
+            "notes": 'Covers quantitative and qualitative approaches to nursing research.',
+          },
+          {
+            "subject": 'NUR1',
+            "catalog": '318',
+            "title": 'Chronic Illness and Palliative Health Challenges',
+            "credits": 4.0,
+            "is_required": True,
+            "notes": 'Pre/corequisites: NUR1 209, NUR1 222, NUR1 312. Corequisite: NUR1 338. Only open to BNI students.',
+          },
+          {
+            "subject": 'NUR1',
+            "catalog": '320',
+            "title": 'Critical Care Nursing Theory',
+            "credits": 3.0,
+            "is_required": True,
+            "notes": 'Prerequisite: NUR1 209. Pre/corequisites: NUR1 210, NUR1 312. Corequisites: IPEA 501, NUR1 327, NUR1 339. Not open to students who have taken NUR1 319 or NUR1 324. Only open to BNI students.',
+          },
+          {
+            "subject": 'NUR1',
+            "catalog": '327',
+            "title": 'Critical Health Challenges',
+            "credits": 4.0,
+            "is_required": True,
+            "notes": 'Corequisites: NUR1 320, NUR1 339. Prerequisite: NUR1 318. Only open to BNI students.',
+          },
+          {
+            "subject": 'NUR1',
+            "catalog": '329',
+            "title": 'Skin Integrity and Wound Care',
+            "credits": 3.0,
+            "is_required": True,
+            "notes": 'Prerequisite: NUR1 209, NUR1 210, and (NUR1 331 or NUR1 434 or NUR1 435).',
+          },
+          {
+            "subject": 'NUR1',
+            "catalog": '338',
+            "title": 'Applied Health and Physical Assessment/Anatomy 1',
+            "credits": 3.0,
+            "is_required": True,
+            "notes": 'Corequisite: NUR1 318. Pre/corequisite: NUR1 209.',
+          },
+          {
+            "subject": 'NUR1',
+            "catalog": '339',
+            "title": 'Applied Health and Physical Assessment/Anatomy 2',
+            "credits": 3.0,
+            "is_required": True,
+            "notes": 'Prerequisite: NUR1 338. Pre/corequisite: NUR1 210. Co-requisites: NUR1 320, NUR1 327. Not open to students who have taken NUR1 239.',
+          },
+          {
+            "subject": 'NUR1',
+            "catalog": '423',
+            "title": 'Leading Change: Policy and Practice',
+            "credits": 4.0,
+            "is_required": True,
+            "notes": 'Prerequisite: NUR1 424.',
+          },
+          {
+            "subject": 'NUR1',
+            "catalog": '424',
+            "title": 'Legal, Ethical, and Professional Practice Issues',
+            "credits": 4.0,
+            "is_required": True,
+            "notes": 'Prerequisite for B.N. (Integrated) students: NUR1 327.',
+          },
+          {
+            "subject": 'NUR1',
+            "catalog": '431',
+            "title": 'Community Health Nursing Practicum',
+            "credits": 3.0,
+            "is_required": True,
+            "notes": 'Prerequisite for B.N. (Integrated) students: NUR1 327. Clinical course with add/drop March 28th (before start) and withdrawal May 2nd (first day of class).',
+          },
+          {
+            "subject": 'PSYC',
+            "catalog": '204',
+            "title": 'Introduction to Psychological Statistics',
+            "credits": 3.0,
+            "is_required": True,
+            "notes": 'Not open to students who have passed a CEGEP statistics course with minimum 75%: Mathematics 201-307 or 201-337 or equivalent.',
+          },
         ],
       },
-
-      # ── BNI Complementary (choose one) ────────────────────────────────
       {
-        "block_key":      "bni_complementary",
-        "title":          "BNI Complementary Course (choose one, 4 credits)",
-        "block_type":     "choose_courses",
+        "block_key": 'bni_nursing_complementary',
+        "title": 'Complementary Course (4 credits)',
+        "block_type": 'choose_courses',
         "credits_needed": 4,
         "courses_needed": 1,
-        "group_name":     None,
-        "notes": "Choose one of NUR1 434 or NUR1 435.",
+        "notes": 'Choose 1 course (4 credits) from the following options. Both courses are clinical practicums.',
+        "sort_order": 2,
         "courses": [
-          {"subject": "NUR1", "catalog": "434",  "title": "Critical Care Nursing Practicum", "credits": 4, "is_required": False,
-           "recommended": True, "recommendation_reason": "Regularly scheduled; NUR1 435 is offered less frequently."},
-          {"subject": "NUR1", "catalog": "435",  "title": "Ambassador Critical Care Practicum", "credits": 4, "is_required": False},
+          {
+            "subject": 'NUR1',
+            "catalog": '434',
+            "title": 'Critical Care Nursing Practicum',
+            "credits": 4.0,
+            "notes": 'Prerequisite: NUR1 320, NUR1 327, NUR1 339. Not open to students who have taken NUR1 334. Only open to B.N. (Integrated) students. Clinical course with special add/drop (eleventh lecture day) and withdrawal (fifteenth lecture day) deadlines. Add/drop March 28th before start, withdrawal May 1st (first day of class).',
+          },
+          {
+            "subject": 'NUR1',
+            "catalog": '435',
+            "title": 'Ambassador Critical Care Practicum',
+            "credits": 4.0,
+            "notes": 'Prerequisite: NUR1 320, NUR1 327, NUR1 339. Requires permission of the instructor. Not scheduled for 2024-2025 academic year. Web add/drop March 30th before start, withdrawal fourth lecture day.',
+          },
         ],
       },
-
-      # ── Electives ─────────────────────────────────────────────────────
       {
-        "block_key":      "bni_electives",
-        "title":          "Electives",
-        "block_type":     "choose_credits",
+        "block_key": 'bni_nursing_elective',
+        "title": 'Elective Courses (6 credits)',
+        "block_type": 'choose_credits',
         "credits_needed": 6,
-        "courses_needed": None,
-        "group_name":     None,
-        "notes": (
-          "6 elective credits (at least 3 credits at the 300-level or above). "
-          "May be taken in U2 Summer or U3 Winter term. "
-          "Electives may be taken in any order as long as prerequisites are met and "
-          "the course fits within the nursing timetable."
-        ),
-        "courses": [],
+        "notes": '6 credits of electives required. Minimum 3 credits must be at the 300-level or above. Students may select any courses not explicitly listed as required or complementary, subject to prerequisites and restrictions.',
+        "sort_order": 3,
+        "courses": [
+          {
+            "subject": 'ELEC',
+            "catalog": '300',
+            "title": 'Any 300-level or above course',
+            "credits": 3.0,
+            "notes": 'Placeholder representing any course at 300-level or above. Minimum 3 credits must be at this level.',
+          },
+          {
+            "subject": 'ELEC',
+            "catalog": '100',
+            "title": 'Any course (100-level or above)',
+            "credits": 3.0,
+            "notes": 'Placeholder representing any additional courses to total 6 elective credits.',
+          },
+        ],
       },
-
     ],
   },
-
 ]
 
 
