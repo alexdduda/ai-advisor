@@ -240,6 +240,21 @@ def _key_of(subject: str, catalog) -> str:
 _OPEN_ENDED = re.compile(r"\b(?:or|and)\s+(?:above|higher|greater)\b")
 
 
+def _catalog_level(catalog) -> Optional[int]:
+    """Leading digits of a catalog number, or None.
+
+    Mirrors JavaScript's parseInt, which stops at the first non-digit — so
+    "227D1" is 227. Python's int() raises on that, which silently dropped every
+    multi-term D1/D2 course (ECON 230D1, FRSL 207D1, …) out of level bands here
+    while the frontend counted them. Those two runtimes disagreeing on a
+    student's credits is exactly what this module exists to prevent.
+    """
+    if catalog is None:
+        return None
+    m = re.match(r'\s*(\d+)', str(catalog))
+    return int(m.group(1)) if m else None
+
+
 def _band_exclusions(title: str) -> Optional[set]:
     """Course codes a wildcard title carves out, e.g. "(excluding COMP 396)".
 
@@ -262,11 +277,8 @@ def _course_in_band(band: dict, course: dict) -> bool:
     Port of courseInBand()."""
     if (course.get('subject') or '').upper() != band['subject']:
         return False
-    try:
-        cat = int(course.get('catalog'))
-    except (TypeError, ValueError):
-        return False
-    if cat < band['min'] or cat > band['max']:
+    cat = _catalog_level(course.get('catalog'))
+    if cat is None or cat < band['min'] or cat > band['max']:
         return False
     exclude = band.get('exclude')
     return not (exclude and _key_of(course.get('subject'), course.get('catalog')) in exclude)
@@ -318,12 +330,9 @@ def wildcard_band(req: dict) -> Optional[dict]:
     if re.search(r'upper[\s-]*level', title):
         return mk(300, float('inf'))
 
-    try:
-        cat = int(req.get('catalog'))
-        if cat % 100 == 0:
-            return mk(cat, float('inf') if open_ended else cat + 99)
-    except (TypeError, ValueError):
-        pass
+    cat = _catalog_level(req.get('catalog'))
+    if cat is not None and cat % 100 == 0:
+        return mk(cat, float('inf') if open_ended else cat + 99)
     return None
 
 
@@ -363,10 +372,7 @@ def block_wildcard_matches(block: dict, user_courses: list, exclude_keys: Option
         if exclude_keys and key in exclude_keys:
             continue
         uc_subj = (uc.get('subject') or '').upper()
-        try:
-            uc_lvl = int(uc.get('catalog'))
-        except (TypeError, ValueError):
-            uc_lvl = None
+        uc_lvl = _catalog_level(uc.get('catalog'))
         in_band = any(_course_in_band(b, uc) for b in bands)
         in_legacy = legacy_applies and uc_subj in block_subjects
         if in_legacy and min_level > 0 and (uc_lvl is None or uc_lvl < min_level):
