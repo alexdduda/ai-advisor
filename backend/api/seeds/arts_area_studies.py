@@ -1582,7 +1582,7 @@ ARTS_AREA_STUDIES = [
     "program_key": "liberal_arts_major",
     "name": "Liberal Arts – Faculty Program",
     "program_type": "major",
-    "total_credits": 60,
+    "total_credits": 36,
     "description": (
       "An interdisciplinary program that provides a broad foundation in the "
       "humanities and social sciences. Students choose from a wide range of "

@@ -21,10 +21,40 @@
  *   round-hundred placeholder catalog (200)  → subject 200–299
  */
 
-/** If `req` is a wildcard placeholder, return {subject, min, max}; else null. */
 /** "…or above" / "…or higher" / "…and greater" — the band has no ceiling. */
 const OPEN_ENDED = /\b(?:or|and)\s+(?:above|higher|greater)\b/
 
+/**
+ * Course codes carved out of a wildcard band by its own title, e.g.
+ * "Any 300-level COMP course or above (excluding COMP 396)".
+ *
+ * Only reads the text after "excluding"/"excludes"/"except", and only picks up
+ * things shaped like a course code. Titles that exclude a *category* rather
+ * than codes — "excluding specified projects and independent studies" — yield
+ * nothing, which is the honest outcome: we cannot tell which courses those are
+ * from the title alone, so we leave them in rather than guess.
+ */
+function bandExclusions(title) {
+  const clause = title.match(/exclud\w*|except\b/)
+  if (!clause) return null
+  const tail = title.slice(clause.index)
+  const codes = tail.match(/\b[a-z]{2,4}\s*\d{3}[a-z0-9]*/g)
+  if (!codes) return null
+  return new Set(codes.map(c => c.replace(/\s+/, ' ').replace(/^([a-z]{2,4})\s*(\d.*)$/, '$1 $2').toUpperCase()))
+}
+
+/** Does `course` fall inside `band`, respecting the band's own exclusions? */
+function courseInBand(band, course) {
+  if ((course.subject || '').toUpperCase() !== band.subject) return false
+  const cat = parseInt(course.catalog, 10)
+  if (Number.isNaN(cat) || cat < band.min || cat > band.max) return false
+  return !(band.exclude && band.exclude.has(keyOf(course)))
+}
+
+/**
+ * If `req` is a wildcard placeholder, return {subject, min, max, exclude};
+ * else null. `exclude` is a Set of course keys the title carves out, or null.
+ */
 export function wildcardBand(req) {
   if (!req) return null
   const title = (req.title || '').toLowerCase()
@@ -39,9 +69,14 @@ export function wildcardBand(req) {
   const subject = (req.subject || '').toUpperCase()
   if (!subject) return null
 
+  const exclude = bandExclusions(title)
+  // Only carry `exclude` when there is something to exclude, so a plain band
+  // stays shape-identical to what it has always been.
+  const mk = (min, max) => (exclude ? { subject, min, max, exclude } : { subject, min, max })
+
   // "300+" / "(300+)" → open-ended from that level.
   let m = title.match(/(\d{3})\s*\+/)
-  if (m) return { subject, min: parseInt(m[1], 10), max: Infinity }
+  if (m) return mk(parseInt(m[1], 10), Infinity)
 
   // "NNN-level" → that single hundred band, UNLESS the title also says the
   // band is open-ended. "Any 300-level COMP course or above" is the McGill
@@ -50,16 +85,16 @@ export function wildcardBand(req) {
   m = title.match(/(\d{3})\s*-?\s*level/)
   if (m) {
     const lvl = parseInt(m[1], 10)
-    return { subject, min: lvl, max: OPEN_ENDED.test(title) ? Infinity : lvl + 99 }
+    return mk(lvl, OPEN_ENDED.test(title) ? Infinity : lvl + 99)
   }
 
   // "upper-level" with no explicit number → conventionally 300+.
-  if (/upper[\s-]*level/.test(title)) return { subject, min: 300, max: Infinity }
+  if (/upper[\s-]*level/.test(title)) return mk(300, Infinity)
 
   // Fallback: a round-hundred placeholder catalog (e.g. "200").
   const cat = parseInt(req.catalog, 10)
   if (!Number.isNaN(cat) && cat % 100 === 0) {
-    return { subject, min: cat, max: OPEN_ENDED.test(title) ? Infinity : cat + 99 }
+    return mk(cat, OPEN_ENDED.test(title) ? Infinity : cat + 99)
   }
   return null
 }
@@ -102,9 +137,7 @@ export function matchCourse(req, userCourses = [], excludeKeys = null) {
   if (band) {
     return userCourses.find(c => {
       if (excludeKeys && excludeKeys.has(keyOf(c))) return false
-      if ((c.subject || '').toUpperCase() !== band.subject) return false
-      const cat = parseInt(c.catalog, 10)
-      return !Number.isNaN(cat) && cat >= band.min && cat <= band.max
+      return courseInBand(band, c)
     }) || null
   }
 
@@ -223,8 +256,7 @@ export function blockWildcardMatches(block, userCourses = [], excludeKeys = null
     if (excludeKeys && excludeKeys.has(keyOf(uc))) continue
     const ucSubj = (uc.subject || '').toUpperCase()
     const ucLvl = parseInt(uc.catalog, 10)
-    const inBand = bands.some(b =>
-      b.subject === ucSubj && !Number.isNaN(ucLvl) && ucLvl >= b.min && ucLvl <= b.max)
+    const inBand = bands.some(b => courseInBand(b, uc))
     let inLegacy = legacyApplies && blockSubjects.has(ucSubj)
     if (inLegacy && minLevel > 0 && (Number.isNaN(ucLvl) || ucLvl < minLevel)) inLegacy = false
     if (inBand || inLegacy) out.push(uc)
