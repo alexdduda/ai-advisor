@@ -1455,6 +1455,12 @@
 .mobile-card-thread {
   position: fixed;
   inset: 0;
+  /* iOS sizes a `position: fixed; inset: 0` box to the LARGE viewport — the
+     height as if Safari's toolbars were retracted. This is a column flex with
+     the composer as its last child, so the box ran taller than the visible
+     area and the chat bar sat below the fold: the thread opened with its
+     content, a gap, and no way to reply. dvh tracks the toolbars. */
+  height: 100dvh;
   z-index: 150;
   display: flex;
   flex-direction: column;

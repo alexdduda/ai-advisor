@@ -4,6 +4,10 @@
 
 /* ── Backdrop ─────────────────────────────────────── */
 .cdm-backdrop {
+  /* Sized to the visible viewport, not iOS's large one: a fixed inset:0 box
+     is laid out as if Safari's toolbars were retracted, so a centred child
+     can sit partly under them. */
+  height: 100dvh;
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.55);
