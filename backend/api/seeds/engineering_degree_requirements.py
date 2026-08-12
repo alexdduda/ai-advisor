@@ -1484,7 +1484,7 @@ ENGINEERING_PROGRAMS = [
     "name": "Computer Science – Minor (B.Eng.)",
     "program_type": "minor",
     "faculty": "Faculty of Engineering",
-    "total_credits": 24,
+    "total_credits": 26,
     "description": (
       "Computer Science Minor for Engineering students (24 credits). Requires 24 credits of "
       "approved COMP courses. Engineering students have access to this minor through the "
@@ -1570,7 +1570,7 @@ ENGINEERING_PROGRAMS = [
     "name": "Applied Artificial Intelligence – Minor (B.Eng.)",
     "program_type": "minor",
     "faculty": "Faculty of Engineering",
-    "total_credits": 21,
+    "total_credits": 25,
     "description": (
       "Applied Artificial Intelligence Minor (21 credits). Covers machine learning, deep learning, "
       "data science, and AI applications in engineering contexts. Draws from both ECSE and COMP "
@@ -1849,7 +1849,7 @@ ENGINEERING_PROGRAMS = [
     "name": "Construction Engineering and Management – Minor (B.Eng.)",
     "program_type": "minor",
     "faculty": "Faculty of Engineering",
-    "total_credits": 18,
+    "total_credits": 24,
     "description": "Construction Engineering and Management Minor (18 credits). Covers construction planning, estimating, project management, and professional practice for Engineering students, particularly those in Civil Engineering.",
     "ecalendar_url": "https://coursecatalogue.mcgill.ca/en/undergraduate/engineering/programs/minor-programs/construction-engineering-management-minor-beng/",
     "blocks": [
@@ -1907,7 +1907,7 @@ ENGINEERING_PROGRAMS = [
     "name": "Chemistry – Minor (B.Eng.)",
     "program_type": "minor",
     "faculty": "Faculty of Engineering",
-    "total_credits": 18,
+    "total_credits": 25,
     "description": "Chemistry Minor for Engineering students (18 credits). Deepens knowledge of chemistry beyond the required engineering foundations, including organic, physical, and analytical chemistry.",
     "ecalendar_url": "https://coursecatalogue.mcgill.ca/en/undergraduate/engineering/programs/minor-programs/chemistry-minor-beng/",
     "blocks": [
@@ -1937,7 +1937,7 @@ ENGINEERING_PROGRAMS = [
     "name": "Arts – Minor (B.Eng.)",
     "program_type": "minor",
     "faculty": "Faculty of Engineering",
-    "total_credits": 18,
+    "total_credits": 24,
     "description": "Arts Minor for Engineering students (18 credits). Allows Engineering students to broaden their education with courses in humanities, social sciences, and arts. The Faculty of Engineering allows up to 9 credits of overlap with the degree program.",
     "ecalendar_url": "https://coursecatalogue.mcgill.ca/en/undergraduate/engineering/programs/minor-programs/arts-minor-beng/",
     "blocks": [
