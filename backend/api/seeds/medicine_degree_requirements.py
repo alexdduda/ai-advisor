@@ -45,7 +45,7 @@ MEDICINE_PROGRAMS = [
         "block_type": 'required',
         "credits_needed": 92,
         "notes": 'Year 1 and first part of Year 2. Includes system-based courses (INDS 111-118), integrated assessments (INDS 125J1-J3), research fundamentals (INDS 123J1-J3, INDS 223), longitudinal family medicine (INDS 124J1-J3), and advanced courses (INDS 211, INDS 212).',
-        "sort_order": 1,
+        "sort_order": 0,
         "courses": [
           {
             "subject": 'INDS',
@@ -212,7 +212,7 @@ MEDICINE_PROGRAMS = [
         "block_type": 'required',
         "credits_needed": 25,
         "notes": 'Second half of Year 2. Includes clinical rotations in Family Medicine, Internal Medicine, Neurology, Pediatrics, Surgery, Radiology, Ophthalmology, plus integrated assessment and transition preparation.',
-        "sort_order": 2,
+        "sort_order": 1,
         "courses": [
           {
             "subject": 'FMED',
@@ -310,7 +310,7 @@ MEDICINE_PROGRAMS = [
         "block_type": 'required',
         "credits_needed": 84,
         "notes": 'Years 3 and 4. Includes core clerkship rotations in Family Medicine, Internal Medicine, Pediatrics, Surgery, plus specialty rotations and electives.',
-        "sort_order": 3,
+        "sort_order": 2,
         "courses": [
           {
             "subject": 'ANAE',

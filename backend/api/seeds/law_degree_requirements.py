@@ -36,6 +36,7 @@ LAW_PROGRAMS = [
         "title": 'Required Courses – First Year (33 credits)',
         "block_type": 'required',
         "credits_needed": 33,
+        "constraint_notes": 'The following 33 credits of courses may be taken only in the first year.',
         "notes": 'The following 33 credits of courses may be taken only in the first year.',
         "sort_order": 1,
         "courses": [
@@ -133,6 +134,7 @@ LAW_PROGRAMS = [
         "title": 'Required Courses – Second Year (13 credits)',
         "block_type": 'required',
         "credits_needed": 13,
+        "constraint_notes": 'The following 13 credits of courses may be taken only in the second year.',
         "notes": 'The following 13 credits of courses may be taken only in the second year.',
         "sort_order": 2,
         "courses": [
@@ -172,6 +174,7 @@ LAW_PROGRAMS = [
         "title": 'Required Courses – Any Year (1 credit)',
         "block_type": 'required',
         "credits_needed": 1,
+        "constraint_notes": 'The following 1 credit course may be taken in any year after completing the first year.',
         "notes": 'The following 1 credit course may be taken in any year after completing the first year.',
         "sort_order": 3,
         "courses": [
@@ -189,6 +192,7 @@ LAW_PROGRAMS = [
         "title": 'Complementary Courses (12 credits)',
         "block_type": 'multi_group',
         "credits_needed": 12,
+        "constraint_notes": '3 credits from each of four groups: Civil Law Immersion, Common Law Immersion, Social Diversity/Human Rights/Indigenous Law, and a 4th group not captured in the available catalogue text.',
         "notes": '3 credits from each of four groups: Civil Law Immersion, Common Law Immersion, Social Diversity/Human Rights/Indigenous Law, and a 4th group not captured in the available catalogue text.',
         "sort_order": 4,
       },
@@ -198,6 +202,7 @@ LAW_PROGRAMS = [
         "block_type": 'group',
         "group_name": 'Civil Law Immersion Courses',
         "credits_needed": 3,
+        "constraint_notes": '3 credits from the following list of civil law courses.',
         "notes": '3 credits from the following list of civil law courses.',
         "sort_order": 5,
         "courses": [
@@ -255,6 +260,7 @@ LAW_PROGRAMS = [
         "block_type": 'group',
         "group_name": 'Common Law Immersion Courses',
         "credits_needed": 3,
+        "constraint_notes": '3 credits from the following list of common law courses.',
         "notes": '3 credits from the following list of common law courses.',
         "sort_order": 6,
         "courses": [
@@ -306,6 +312,7 @@ LAW_PROGRAMS = [
         "block_type": 'group',
         "group_name": 'Social Diversity, Human Rights and Indigenous Law Courses',
         "credits_needed": 3,
+        "constraint_notes": 'Students must take at least 3 credits from the following courses. List is truncated in the available catalogue text; only partial course list captured.',
         "notes": 'Students must take at least 3 credits from the following courses. List is truncated in the available catalogue text; only partial course list captured.',
         "sort_order": 7,
         "courses": [

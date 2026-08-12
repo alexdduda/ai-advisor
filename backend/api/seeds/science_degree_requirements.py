@@ -24,6 +24,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Required Courses (9 credits)',
         "block_type": 'required',
         "credits_needed": 9,
+        "constraint_notes": 'Students who have sufficient knowledge of computer programming do not need to take COMP 202, but it must be replaced with an additional computer science complementary course.',
         "notes": 'Students who have sufficient knowledge of computer programming do not need to take COMP 202, but it must be replaced with an additional computer science complementary course.',
         "sort_order": 1,
         "courses": [
@@ -56,6 +57,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Complementary Courses (15 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 15,
+        "constraint_notes": '15 credits selected from the listed courses below and computer science courses at the 300 level or above (except COMP 396 Undergraduate Research Project). Students may receive up to 6 credits toward the Minor by taking certain approved courses outside the School of Computer Science with high CS content, subject to School approval.',
         "notes": '15 credits selected from the listed courses below and computer science courses at the 300 level or above (except COMP 396 Undergraduate Research Project). Students may receive up to 6 credits toward the Minor by taking certain approved courses outside the School of Computer Science with high CS content, subject to School approval.',
         "sort_order": 2,
         "courses": [
@@ -96,6 +98,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Required Courses (18 credits)',
         "block_type": 'required',
         "credits_needed": 18,
+        "constraint_notes": 'Students who have sufficient knowledge in a programming language do not need to take COMP 202, but it must be replaced with an additional computer science complementary course.',
         "notes": 'Students who have sufficient knowledge in a programming language do not need to take COMP 202, but it must be replaced with an additional computer science complementary course.',
         "sort_order": 1,
         "courses": [
@@ -149,6 +152,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Complementary Courses – Groups A, B, C, D (12 credits)',
         "block_type": 'multi_group',
         "credits_needed": 12,
+        "constraint_notes": '3 credits from each of the groups A, B, C, and D.',
         "notes": '3 credits from each of the groups A, B, C, and D.',
         "sort_order": 2,
       },
@@ -274,6 +278,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Additional 3 credits from Group A or B',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'An additional 3 credits may be selected from Group A or B.',
         "notes": 'An additional 3 credits may be selected from Group A or B.',
         "sort_order": 7,
         "courses": [
@@ -326,6 +331,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Remaining Complementary Credits – COMP 300-level or above (12 credits)',
         "block_type": 'level_elective',
         "credits_needed": 12,
+        "constraint_notes": 'The remaining complementary credits must be selected from any COMP courses at the 300 level or above except COMP 396 Undergraduate Research Project.',
         "notes": 'The remaining complementary credits must be selected from any COMP courses at the 300 level or above except COMP 396 Undergraduate Research Project.',
         "sort_order": 8,
       },
@@ -641,6 +647,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Required Courses (36-39 credits)',
         "block_type": 'required',
         "credits_needed": 39,
+        "constraint_notes": 'Students who have sufficient knowledge in a programming language do not need to take COMP 202. If exempt, minimum required credits is 36.',
         "notes": 'Students who have sufficient knowledge in a programming language do not need to take COMP 202. If exempt, minimum required credits is 36.',
         "sort_order": 1,
         "courses": [
@@ -649,6 +656,7 @@ SCIENCE_PROGRAMS = [
             "catalog": '202',
             "title": 'Foundations of Programming.',
             "credits": 3.0,
+            "is_required": True,
             "notes": 'Students who have sufficient knowledge in a programming language do not need to take this course.',
           },
           {
@@ -744,6 +752,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Complementary Courses - Groups A and B (9 credits, at least 3 from each)',
         "block_type": 'multi_group',
         "credits_needed": 9,
+        "constraint_notes": '9 credits selected from Groups A and B, with at least 3 credits selected from each.',
         "notes": '9 credits selected from Groups A and B, with at least 3 credits selected from each.',
         "sort_order": 2,
       },
@@ -752,6 +761,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Complementary Courses - Groups C and D (15 credits, at least 9 from Group C, at least 3 from Group D)',
         "block_type": 'multi_group',
         "credits_needed": 15,
+        "constraint_notes": '15 credits selected from Groups C and D, with at least 9 credits selected from Group C, and at least 3 credits selected from Group D.',
         "notes": '15 credits selected from Groups C and D, with at least 9 credits selected from Group C, and at least 3 credits selected from Group D.',
         "sort_order": 3,
       },
@@ -771,6 +781,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Required Courses (46-49 credits)',
         "block_type": 'required',
         "credits_needed": 46,
+        "constraint_notes": 'Students may complete this program with a minimum of 72 credits or a maximum of 75 credits. COMP 202 is not required for students who have sufficient knowledge in a programming language (footnote 1). Students take either MATH 340 or MATH 350 (footnote 2).',
         "notes": 'Students may complete this program with a minimum of 72 credits or a maximum of 75 credits. COMP 202 is not required for students who have sufficient knowledge in a programming language (footnote 1). Students take either MATH 340 or MATH 350 (footnote 2).',
         "sort_order": 1,
         "courses": [
@@ -779,6 +790,7 @@ SCIENCE_PROGRAMS = [
             "catalog": '202',
             "title": 'Foundations of Programming',
             "credits": 3.0,
+            "is_required": True,
             "notes": 'Students who have sufficient knowledge in a programming language do not need to take this course.',
           },
           {
@@ -887,6 +899,7 @@ SCIENCE_PROGRAMS = [
         "block_type": 'choose_courses',
         "credits_needed": 3,
         "courses_needed": 1,
+        "constraint_notes": 'Students take either MATH 340 or MATH 350.',
         "notes": 'Students take either MATH 340 or MATH 350.',
         "sort_order": 2,
         "courses": [
@@ -909,6 +922,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Complementary Courses – Mathematics (6 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 6,
+        "constraint_notes": '6 credits selected from the following mathematics courses.',
         "notes": '6 credits selected from the following mathematics courses.',
         "sort_order": 3,
         "courses": [
@@ -937,6 +951,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Complementary Courses – Computer Science Electives (20 credits)',
         "block_type": 'level_elective',
         "credits_needed": 20,
+        "constraint_notes": '20 credits selected from computer science courses at the 300 level or above (except COMP 396 Undergraduate Research Project) and ECSE 539 Advanced Software Language Engineering. At least 12 credits must be at the 500 level.',
         "notes": '20 credits selected from computer science courses at the 300 level or above (except COMP 396 Undergraduate Research Project) and ECSE 539 Advanced Software Language Engineering. At least 12 credits must be at the 500 level.',
         "sort_order": 4,
         "courses": [
@@ -964,6 +979,7 @@ SCIENCE_PROGRAMS = [
         "block_key": 'cs_biology_major_bsc_prerequisites',
         "title": 'Program Prerequisites (U0 Foundation)',
         "block_type": 'required',
+        "constraint_notes": 'U0 (Foundation) students should take these courses. MATH 140/MATH 141 and MATH 150/MATH 151 are alternatives (7-8 credits). PHYS 101/PHYS 102 and PHYS 131/PHYS 132 are alternatives (8 credits). MATH 150/MATH 151 provides equivalence for MATH 222. Students without background in COMP 202 or COMP 204 must take one of those.',
         "notes": 'U0 (Foundation) students should take these courses. MATH 140/MATH 141 and MATH 150/MATH 151 are alternatives (7-8 credits). PHYS 101/PHYS 102 and PHYS 131/PHYS 132 are alternatives (8 credits). MATH 150/MATH 151 provides equivalence for MATH 222. Students without background in COMP 202 or COMP 204 must take one of those.',
         "sort_order": 1,
         "courses": [
@@ -1011,6 +1027,7 @@ SCIENCE_PROGRAMS = [
             "catalog": '140',
             "title": 'Calculus 1',
             "credits": 3.0,
+            "is_required": True,
             "choose_from_group": 'Calculus Option',
             "notes": 'Taken with MATH 141; alternative to MATH 150/MATH 151',
           },
@@ -1019,6 +1036,7 @@ SCIENCE_PROGRAMS = [
             "catalog": '141',
             "title": 'Calculus 2',
             "credits": 4.0,
+            "is_required": True,
             "choose_from_group": 'Calculus Option',
             "notes": 'Taken with MATH 140; alternative to MATH 150/MATH 151',
           },
@@ -1027,6 +1045,7 @@ SCIENCE_PROGRAMS = [
             "catalog": '150',
             "title": 'Calculus A',
             "credits": 4.0,
+            "is_required": True,
             "choose_from_group": 'Calculus Option',
             "notes": 'Taken with MATH 151; alternative to MATH 140/MATH 141. MATH 150/151 provides equivalence for MATH 222.',
           },
@@ -1035,6 +1054,7 @@ SCIENCE_PROGRAMS = [
             "catalog": '151',
             "title": 'Calculus B',
             "credits": 4.0,
+            "is_required": True,
             "choose_from_group": 'Calculus Option',
             "notes": 'Taken with MATH 150; alternative to MATH 140/MATH 141. MATH 150/151 provides equivalence for MATH 222.',
           },
@@ -1043,6 +1063,7 @@ SCIENCE_PROGRAMS = [
             "catalog": '101',
             "title": 'Introductory Physics - Mechanics',
             "credits": 4.0,
+            "is_required": True,
             "choose_from_group": 'Physics Option',
             "notes": 'Taken with PHYS 102; alternative to PHYS 131/PHYS 132',
           },
@@ -1051,6 +1072,7 @@ SCIENCE_PROGRAMS = [
             "catalog": '102',
             "title": 'Introductory Physics - Electromagnetism',
             "credits": 4.0,
+            "is_required": True,
             "choose_from_group": 'Physics Option',
             "notes": 'Taken with PHYS 101; alternative to PHYS 131/PHYS 132',
           },
@@ -1059,6 +1081,7 @@ SCIENCE_PROGRAMS = [
             "catalog": '131',
             "title": 'Mechanics and Waves',
             "credits": 4.0,
+            "is_required": True,
             "choose_from_group": 'Physics Option',
             "notes": 'Taken with PHYS 142; alternative to PHYS 101/PHYS 102',
           },
@@ -1067,6 +1090,7 @@ SCIENCE_PROGRAMS = [
             "catalog": '142',
             "title": 'Electromagnetism and Optics',
             "credits": 4.0,
+            "is_required": True,
             "choose_from_group": 'Physics Option',
             "notes": 'Taken with PHYS 131; alternative to PHYS 101/PHYS 102',
           },
@@ -1077,6 +1101,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Required Courses - Bio-Physical Sciences Core',
         "block_type": 'required',
         "credits_needed": 18,
+        "constraint_notes": 'CHEM 212 and MATH 222 may be waived for students with CEGEP-level equivalents. MATH 222 is not required if student took MATH 150/151.',
         "notes": 'CHEM 212 and MATH 222 may be waived for students with CEGEP-level equivalents. MATH 222 is not required if student took MATH 150/151.',
         "sort_order": 2,
         "courses": [
@@ -1138,6 +1163,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Required Courses - Computer Science and Mathematics: Programming (choose one)',
         "block_type": 'choose_courses',
         "courses_needed": 1,
+        "constraint_notes": 'Students may take either COMP 202 or COMP 204, but not both. Students who have taken the equivalent prior to McGill are exempt from both.',
         "notes": 'Students may take either COMP 202 or COMP 204, but not both. Students who have taken the equivalent prior to McGill are exempt from both.',
         "sort_order": 3,
         "courses": [
@@ -1238,6 +1264,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Complementary Courses - Computational Biology Methods (3-4 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'Choose 3-4 credits: COMP 462 (3cr) or COMP 561 (4cr).',
         "notes": 'Choose 3-4 credits: COMP 462 (3cr) or COMP 561 (4cr).',
         "sort_order": 7,
         "courses": [
@@ -1260,6 +1287,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Complementary Courses - Mathematics (3-6 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'Choose 3-6 credits from MATH 315 and/or MATH 324.',
         "notes": 'Choose 3-6 credits from MATH 315 and/or MATH 324.',
         "sort_order": 8,
         "courses": [
@@ -1282,6 +1310,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Complementary Courses - Computer Science Block (9-12 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 9,
+        "constraint_notes": '9-12 credits from COMP 273 and any other COMP courses at 300-level or above, except COMP 400, COMP 401, COMP 402, COMP 462, and COMP 561. At least 3 of these 9-12 credits must be at 400-level or above.',
         "notes": '9-12 credits from COMP 273 and any other COMP courses at 300-level or above, except COMP 400, COMP 401, COMP 402, COMP 462, and COMP 561. At least 3 of these 9-12 credits must be at 400-level or above.',
         "sort_order": 9,
         "courses": [
@@ -1299,6 +1328,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Complementary Courses - Biology Block (9-12 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 9,
+        "constraint_notes": '9-12 credits from the listed biology courses, with 3-6 credits at 400-level or above. NOTE: The catalogue page was truncated at BIOL 320 — the full list of eligible courses may be incomplete.',
         "notes": '9-12 credits from the listed biology courses, with 3-6 credits at 400-level or above. NOTE: The catalogue page was truncated at BIOL 320 — the full list of eligible courses may be incomplete.',
         "sort_order": 10,
         "courses": [
@@ -2001,6 +2031,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Required Courses (9 credits)',
         "block_type": 'required',
         "credits_needed": 9,
+        "constraint_notes": 'MATH 223 may be replaced by MATH 235 (Algebra 1) and MATH 236 (Algebra 2). If this replacement is made, the complementary credit requirement is reduced by 3 credits (from 15 to 12).',
         "notes": 'MATH 223 may be replaced by MATH 235 (Algebra 1) and MATH 236 (Algebra 2). If this replacement is made, the complementary credit requirement is reduced by 3 credits (from 15 to 12).',
         "sort_order": 1,
         "courses": [
@@ -2033,6 +2064,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Complementary Courses (15 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 15,
+        "constraint_notes": '15 credits selected from the required and complementary courses for majors and honours students in Mathematics. MATH 323 (Probability) is strongly recommended. Alternatively, up to 6 credits may be allowed for appropriate courses from other departments. If MATH 223 is replaced by MATH 235 and MATH 236, this requirement is reduced by 3 credits (to 12 credits).',
         "notes": '15 credits selected from the required and complementary courses for majors and honours students in Mathematics. MATH 323 (Probability) is strongly recommended. Alternatively, up to 6 credits may be allowed for appropriate courses from other departments. If MATH 223 is replaced by MATH 235 and MATH 236, this requirement is reduced by 3 credits (to 12 credits).',
         "sort_order": 2,
         "courses": [
@@ -2106,6 +2138,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Complementary Courses (9-12 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 9,
+        "constraint_notes": '9-12 credits selected from the list. No more than 6 credits from this list may be taken outside the Department of Mathematics and Statistics.',
         "notes": '9-12 credits selected from the list. No more than 6 credits from this list may be taken outside the Department of Mathematics and Statistics.',
         "sort_order": 2,
         "courses": [
@@ -2260,6 +2293,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Program Prerequisites',
         "block_type": 'required',
         "credits_needed": 10,
+        "constraint_notes": 'Students entering the Major program are normally expected to have completed these courses or their equivalents. Deficiencies must be made up over and above the 54 credits of required courses.',
         "notes": 'Students entering the Major program are normally expected to have completed these courses or their equivalents. Deficiencies must be made up over and above the 54 credits of required courses.',
         "sort_order": 1,
         "courses": [
@@ -2294,6 +2328,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Required Courses (27 credits)',
         "block_type": 'required',
         "credits_needed": 27,
+        "constraint_notes": 'Students who have done well in MATH 235 and MATH 242 should consider entering the Honours stream by registering in MATH 251 and MATH 255 instead of MATH 236 and MATH 243. MATH 222 may be omitted if an equivalent course was completed with grade C or better, but must be replaced with 3 credits of complementary courses. Students may select either MATH 249 (Honours Complex Variables) or MATH 316 (Complex Variables) — these are mutually exclusive.',
         "notes": 'Students who have done well in MATH 235 and MATH 242 should consider entering the Honours stream by registering in MATH 251 and MATH 255 instead of MATH 236 and MATH 243. MATH 222 may be omitted if an equivalent course was completed with grade C or better, but must be replaced with 3 credits of complementary courses. Students may select either MATH 249 (Honours Complex Variables) or MATH 316 (Complex Variables) — these are mutually exclusive.',
         "sort_order": 2,
         "courses": [
@@ -2340,6 +2375,7 @@ SCIENCE_PROGRAMS = [
             "catalog": '249',
             "title": 'Honours Complex Variables',
             "credits": 3.0,
+            "is_required": True,
             "choose_from_group": 'Complex Variables Choice',
             "notes": 'Students may select either MATH 249 or MATH 316; these are mutually exclusive.',
           },
@@ -2348,6 +2384,7 @@ SCIENCE_PROGRAMS = [
             "catalog": '316',
             "title": 'Complex Variables',
             "credits": 3.0,
+            "is_required": True,
             "choose_from_group": 'Complex Variables Choice',
             "notes": 'Students may select either MATH 249 or MATH 316; these are mutually exclusive.',
           },
@@ -2379,6 +2416,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Complementary Courses (27 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 27,
+        "constraint_notes": 'The catalogue page does not list a formal set of complementary courses for the remaining 27 credits. Students should consult their adviser and the informal advisory lists for guidance on course selection based on their interests (computer science, probability/statistics, applied mathematics, secondary school teaching, business/industry/government).',
         "notes": 'The catalogue page does not list a formal set of complementary courses for the remaining 27 credits. Students should consult their adviser and the informal advisory lists for guidance on course selection based on their interests (computer science, probability/statistics, applied mathematics, secondary school teaching, business/industry/government).',
         "sort_order": 3,
       },
@@ -2386,6 +2424,7 @@ SCIENCE_PROGRAMS = [
         "block_key": 'mathematics_major_bsc_advisory_cs',
         "title": 'Advisory: Students Interested in Computer Science',
         "block_type": 'choose_credits',
+        "constraint_notes": 'Informal guidelines for students interested in computer science. Students are also advised to complete the Computer Science Minor.',
         "notes": 'Informal guidelines for students interested in computer science. Students are also advised to complete the Computer Science Minor.',
         "sort_order": 4,
         "courses": [
@@ -2443,6 +2482,7 @@ SCIENCE_PROGRAMS = [
         "block_key": 'mathematics_major_bsc_advisory_stats',
         "title": 'Advisory: Students Interested in Probability and Statistics',
         "block_type": 'choose_credits',
+        "constraint_notes": 'Informal guidelines for students interested in probability and statistics.',
         "notes": 'Informal guidelines for students interested in probability and statistics.',
         "sort_order": 5,
         "courses": [
@@ -2500,6 +2540,7 @@ SCIENCE_PROGRAMS = [
         "block_key": 'mathematics_major_bsc_advisory_applied',
         "title": 'Advisory: Students Interested in Applied Mathematics',
         "block_type": 'choose_credits',
+        "constraint_notes": 'Informal guidelines for students interested in applied mathematics.',
         "notes": 'Informal guidelines for students interested in applied mathematics.',
         "sort_order": 6,
         "courses": [
@@ -2557,6 +2598,7 @@ SCIENCE_PROGRAMS = [
         "block_key": 'mathematics_major_bsc_advisory_teaching',
         "title": 'Advisory: Students Considering Secondary School Teaching',
         "block_type": 'choose_credits',
+        "constraint_notes": 'Informal guidelines for students considering a career in secondary school teaching.',
         "notes": 'Informal guidelines for students considering a career in secondary school teaching.',
         "sort_order": 7,
         "courses": [
@@ -2598,6 +2640,7 @@ SCIENCE_PROGRAMS = [
         "block_key": 'mathematics_major_bsc_advisory_business',
         "title": 'Advisory: Students Interested in Business, Industry or Government',
         "block_type": 'choose_credits',
+        "constraint_notes": 'Informal guidelines for students interested in careers in business, industry or government.',
         "notes": 'Informal guidelines for students interested in careers in business, industry or government.',
         "sort_order": 8,
         "courses": [
@@ -2699,6 +2742,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Required Courses (33-36 credits)',
         "block_type": 'required',
         "credits_needed": 36,
+        "constraint_notes": 'MATH 222 is required only for students who have not completed an equivalent (MATH 150/151 or MATH 140/141/222) on entering the program. Students who have completed MATH 150/151 or equivalent of MATH 222 are not required to take MATH 222, reducing total required credits to 33.',
         "notes": 'MATH 222 is required only for students who have not completed an equivalent (MATH 150/151 or MATH 140/141/222) on entering the program. Students who have completed MATH 150/151 or equivalent of MATH 222 are not required to take MATH 222, reducing total required credits to 33.',
         "sort_order": 1,
         "courses": [
@@ -2794,6 +2838,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Complementary Courses – Analysis 1 (3 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'It is strongly recommended that students take MATH 254 Honours Analysis 1.',
         "notes": 'It is strongly recommended that students take MATH 254 Honours Analysis 1.',
         "sort_order": 2,
         "courses": [
@@ -2818,6 +2863,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Complementary Courses – Algebra 1 (3 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'It is strongly recommended that students take MATH 245 Honours Algebra 1.',
         "notes": 'It is strongly recommended that students take MATH 245 Honours Algebra 1.',
         "sort_order": 3,
         "courses": [
@@ -2842,6 +2888,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Complementary Electives (12-21 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 21,
+        "constraint_notes": 'The catalogue states 12-21 credits selected from this list. The actual number needed depends on how many credits were taken in the two preceding blocks (MATH 242/254 and MATH 235/245) and the total complementary requirement of 27 credits. Maximum is 21 credits (if only 3+3 taken above), minimum is 12 credits stated in catalogue.',
         "notes": 'The catalogue states 12-21 credits selected from this list. The actual number needed depends on how many credits were taken in the two preceding blocks (MATH 242/254 and MATH 235/245) and the total complementary requirement of 27 credits. Maximum is 21 credits (if only 3+3 taken above), minimum is 12 credits stated in catalogue.',
         "sort_order": 4,
         "courses": [
@@ -2985,6 +3032,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Program Prerequisites',
         "block_type": 'required',
         "credits_needed": 10,
+        "constraint_notes": 'Students entering the Major in Statistics program are normally expected to have completed these courses or their equivalents. Otherwise they will be required to make up any deficiencies over and above the 54 credits of program courses.',
         "notes": 'Students entering the Major in Statistics program are normally expected to have completed these courses or their equivalents. Otherwise they will be required to make up any deficiencies over and above the 54 credits of program courses.',
         "sort_order": 1,
         "courses": [
@@ -3019,6 +3067,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Required Courses (34 credits)',
         "block_type": 'required',
         "credits_needed": 34,
+        "constraint_notes": 'Students are strongly advised to complete all required courses and all Part I complementary courses by the end of U2, except for MATH 423 and MATH 523. Honours courses may be substituted for equivalent Major courses.',
         "notes": 'Students are strongly advised to complete all required courses and all Part I complementary courses by the end of U2, except for MATH 423 and MATH 523. Honours courses may be substituted for equivalent Major courses.',
         "sort_order": 2,
         "courses": [
@@ -3112,6 +3161,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Complementary Courses – Optional (0-3 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": '0-3 credits selected from. If a student has not completed the equivalent of MATH 203 upon entering the program, they must consult an academic adviser. If advised to take MATH 203, it must be taken as a complementary course in the first semester, increasing total program credits from 54 to 57.',
         "notes": '0-3 credits selected from. If a student has not completed the equivalent of MATH 203 upon entering the program, they must consult an academic adviser. If advised to take MATH 203, it must be taken as a complementary course in the first semester, increasing total program credits from 54 to 57.',
         "sort_order": 3,
         "courses": [
@@ -3129,6 +3179,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Complementary Courses – Part I (6 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 6,
+        "constraint_notes": '6 credits selected from the following list. Students take either MATH 317 Numerical Analysis or COMP 350 Numerical Computing, but not both.',
         "notes": '6 credits selected from the following list. Students take either MATH 317 Numerical Analysis or COMP 350 Numerical Computing, but not both.',
         "sort_order": 4,
         "courses": [
@@ -3253,6 +3304,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Complementary Courses – Part II (14 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 14,
+        "constraint_notes": '14 credits selected from the following list.',
         "notes": '14 credits selected from the following list.',
         "sort_order": 5,
         "courses": [
@@ -3327,6 +3379,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Required Courses (25-28 credits)',
         "block_type": 'required',
         "credits_needed": 25,
+        "constraint_notes": 'Students who have not completed an equivalent of MATH 222 on entering the program must take MATH 222 as a required course, increasing total program credits from 60 to 63. Students select either MATH 251 Honours Algebra 2 or MATH 247 Honours Applied Linear Algebra, but not both. Students with limited programming experience should take COMP 202/204/208 before COMP 250.',
         "notes": 'Students who have not completed an equivalent of MATH 222 on entering the program must take MATH 222 as a required course, increasing total program credits from 60 to 63. Students select either MATH 251 Honours Algebra 2 or MATH 247 Honours Applied Linear Algebra, but not both. Students with limited programming experience should take COMP 202/204/208 before COMP 250.',
         "sort_order": 1,
         "courses": [
@@ -3350,6 +3403,7 @@ SCIENCE_PROGRAMS = [
             "catalog": '222',
             "title": 'Calculus 3',
             "credits": 3.0,
+            "is_required": True,
             "notes": 'Required only if student has not completed MATH 150/151 or equivalent on entering the program. Taking this course increases total program credits from 60 to 63.',
           },
           {
@@ -3357,6 +3411,7 @@ SCIENCE_PROGRAMS = [
             "catalog": '247',
             "title": 'Honours Applied Linear Algebra',
             "credits": 3.0,
+            "is_required": True,
             "choose_from_group": 'Linear Algebra Choice',
             "notes": 'Choose either MATH 247 or MATH 251, but not both.',
           },
@@ -3365,6 +3420,7 @@ SCIENCE_PROGRAMS = [
             "catalog": '251',
             "title": 'Honours Algebra 2',
             "credits": 3.0,
+            "is_required": True,
             "choose_from_group": 'Linear Algebra Choice',
             "notes": 'Choose either MATH 247 or MATH 251, but not both.',
           },
@@ -3410,6 +3466,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Complementary Courses (35 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 35,
+        "constraint_notes": 'Advisory groupings exist within this block. Students interested in mathematical statistics are advised to take MATH 587 and consider MATH 358, MATH 454, MATH 455. Students interested in applied statistics/careers are advised to take MATH 523, MATH 524, MATH 547, and at least one of MATH 525 and MATH 558. Students interested in data science/ML are advised to choose from the data science list. MATH 547 appears in both the probability and actuarial advisory lists.',
         "notes": 'Advisory groupings exist within this block. Students interested in mathematical statistics are advised to take MATH 587 and consider MATH 358, MATH 454, MATH 455. Students interested in applied statistics/careers are advised to take MATH 523, MATH 524, MATH 547, and at least one of MATH 525 and MATH 558. Students interested in data science/ML are advised to choose from the data science list. MATH 547 appears in both the probability and actuarial advisory lists.',
         "sort_order": 2,
         "courses": [
@@ -3757,6 +3814,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Required Courses – Bio-Physical Sciences Core',
         "block_type": 'required',
         "credits_needed": 18,
+        "constraint_notes": 'CHEM 212 and MATH 222: if already taken or equivalent, credits can be made up with electives. Students take either COMP 202 or COMP 204 (not both). Students take either MATH 223 or MATH 247 (not both). BIOL 219 + BIOL 301 + BIOL 395 + CHEM 212 + MATH 315 + MATH 323 are always required. COMP and linear algebra choices handled in separate blocks.',
         "notes": 'CHEM 212 and MATH 222: if already taken or equivalent, credits can be made up with electives. Students take either COMP 202 or COMP 204 (not both). Students take either MATH 223 or MATH 247 (not both). BIOL 219 + BIOL 301 + BIOL 395 + CHEM 212 + MATH 315 + MATH 323 are always required. COMP and linear algebra choices handled in separate blocks.',
         "sort_order": 1,
         "courses": [
@@ -3818,6 +3876,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Required Courses – Programming Course (choose 1)',
         "block_type": 'choose_courses',
         "courses_needed": 1,
+        "constraint_notes": 'Students may take either COMP 202 or COMP 204. Students with sufficient programming knowledge should take COMP 250 instead of COMP 202.',
         "notes": 'Students may take either COMP 202 or COMP 204. Students with sufficient programming knowledge should take COMP 250 instead of COMP 202.',
         "sort_order": 2,
         "courses": [
@@ -3841,6 +3900,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Required Courses – Linear Algebra (choose 1)',
         "block_type": 'choose_courses',
         "courses_needed": 1,
+        "constraint_notes": 'Students may take either MATH 223 or MATH 247.',
         "notes": 'Students may take either MATH 223 or MATH 247.',
         "sort_order": 3,
         "courses": [
@@ -3893,6 +3953,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Complementary – Math or Biology Research Course (3–6 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": '3–6 credits from Math or Biology research courses. Students selecting a BIOL course count this toward their 21 credits of BIOL/NEUR/PHGY/PSYC; students selecting a MATH course count this toward their 18 credits of MATH courses.',
         "notes": '3–6 credits from Math or Biology research courses. Students selecting a BIOL course count this toward their 21 credits of BIOL/NEUR/PHGY/PSYC; students selecting a MATH course count this toward their 18 credits of MATH courses.',
         "sort_order": 5,
         "courses": [
@@ -3927,6 +3988,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Complementary – Math Courses: Stream 1 or Stream 2 (9–12 credits)',
         "block_type": 'multi_group',
         "credits_needed": 9,
+        "constraint_notes": 'Students choose one of two streams (Applied Mathematics or Statistics) and take 9–12 credits from it, contributing toward a total of 15–18 MATH credits (depending on research course chosen). At least 6 credits of complementary courses must be at the 400 level or above.',
         "notes": 'Students choose one of two streams (Applied Mathematics or Statistics) and take 9–12 credits from it, contributing toward a total of 15–18 MATH credits (depending on research course chosen). At least 6 credits of complementary courses must be at the 400 level or above.',
         "sort_order": 6,
       },
@@ -3935,6 +3997,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Complementary – Remaining Math Courses (3–9 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'Remaining 3–9 credits of MATH courses may be chosen from either stream above and/or from this list. Total MATH credits: 15 if MATH 410 chosen as research course, 18 otherwise.',
         "notes": 'Remaining 3–9 credits of MATH courses may be chosen from either stream above and/or from this list. Total MATH credits: 15 if MATH 410 chosen as research course, 18 otherwise.',
         "sort_order": 7,
         "courses": [
@@ -4019,6 +4082,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Complementary – BIOL/NEUR/PHGY/PHYS/PSYC Courses including Biology Stream (15–21 credits)',
         "block_type": 'pool_group',
         "credits_needed": 15,
+        "constraint_notes": 'PAGE TRUNCATED: The catalogue page is cut off. Only the start of the Ecology and Evolutionary Biology stream is visible (BIOL 206, 3 credits). The Molecular Evolution and Neurosciences streams are entirely missing. 15 credits if 6-credit BIOL research course selected; 18 credits if 3-credit BIOL research course selected. Advisors must verify full stream content from the complete catalogue page.',
         "notes": 'PAGE TRUNCATED: The catalogue page is cut off. Only the start of the Ecology and Evolutionary Biology stream is visible (BIOL 206, 3 credits). The Molecular Evolution and Neurosciences streams are entirely missing. 15 credits if 6-credit BIOL research course selected; 18 credits if 3-credit BIOL research course selected. Advisors must verify full stream content from the complete catalogue page.',
         "sort_order": 8,
         "courses": [
@@ -4065,6 +4129,7 @@ SCIENCE_PROGRAMS = [
         "block_type": 'choose_courses',
         "credits_needed": 3,
         "courses_needed": 1,
+        "constraint_notes": 'Part of the 15 complementary credits. Choose one of PHYS 230 or PHYS 251.',
         "notes": 'Part of the 15 complementary credits. Choose one of PHYS 230 or PHYS 251.',
         "sort_order": 2,
         "courses": [
@@ -4088,6 +4153,7 @@ SCIENCE_PROGRAMS = [
         "block_type": 'choose_courses',
         "credits_needed": 3,
         "courses_needed": 1,
+        "constraint_notes": 'Part of the 15 complementary credits. Choose one of PHYS 232 or PHYS 253.',
         "notes": 'Part of the 15 complementary credits. Choose one of PHYS 232 or PHYS 253.',
         "sort_order": 3,
         "courses": [
@@ -4111,6 +4177,7 @@ SCIENCE_PROGRAMS = [
         "block_type": 'choose_courses',
         "credits_needed": 3,
         "courses_needed": 1,
+        "constraint_notes": 'Part of the 15 complementary credits. Choose one of PHYS 241 or PHYS 258.',
         "notes": 'Part of the 15 complementary credits. Choose one of PHYS 241 or PHYS 258.',
         "sort_order": 4,
         "courses": [
@@ -4134,6 +4201,7 @@ SCIENCE_PROGRAMS = [
         "block_type": 'choose_courses',
         "credits_needed": 3,
         "courses_needed": 1,
+        "constraint_notes": 'Part of the 15 complementary credits. Choose one of PHYS 224, 228, 260, 320, or 346.',
         "notes": 'Part of the 15 complementary credits. Choose one of PHYS 224, 228, 260, 320, or 346.',
         "sort_order": 5,
         "courses": [
@@ -4175,6 +4243,7 @@ SCIENCE_PROGRAMS = [
         "block_type": 'choose_courses',
         "credits_needed": 3,
         "courses_needed": 1,
+        "constraint_notes": 'Part of the 15 complementary credits. Choose one of PHYS 340 or PHYS 350.',
         "notes": 'Part of the 15 complementary credits. Choose one of PHYS 340 or PHYS 350.',
         "sort_order": 6,
         "courses": [
@@ -4208,6 +4277,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Program Prerequisites (Required)',
         "block_type": 'required',
         "credits_needed": 19,
+        "constraint_notes": 'Students entering from the Foundation program must have completed these courses or their equivalents. Quebec students must have completed the DEC with appropriate science and mathematics courses.',
         "notes": 'Students entering from the Foundation program must have completed these courses or their equivalents. Quebec students must have completed the DEC with appropriate science and mathematics courses.',
         "sort_order": 1,
         "courses": [
@@ -4253,6 +4323,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Program Prerequisites — Calculus (7-8 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 8,
+        "constraint_notes": 'Either MATH 140 and MATH 141 (7 credits total) or MATH 150 and MATH 151 (8 credits total).',
         "notes": 'Either MATH 140 and MATH 141 (7 credits total) or MATH 150 and MATH 151 (8 credits total).',
         "sort_order": 2,
         "courses": [
@@ -4291,6 +4362,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Required Courses (45 credits)',
         "block_type": 'required',
         "credits_needed": 45,
+        "constraint_notes": 'Students coming into the program with sufficient knowledge of computer programming may replace COMP 208 with PHYS 512 or another 3-credit COMP course at the 200 level or above after consulting with an adviser.',
         "notes": 'Students coming into the program with sufficient knowledge of computer programming may replace COMP 208 with PHYS 512 or another 3-credit COMP course at the 200 level or above after consulting with an adviser.',
         "sort_order": 3,
         "courses": [
@@ -4407,6 +4479,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Complementary Courses — Calculus 3 (0-3 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'Students who did not complete an equivalent to MATH 222 on entering the program must take this course.',
         "notes": 'Students who did not complete an equivalent to MATH 222 on entering the program must take this course.',
         "sort_order": 4,
         "courses": [
@@ -4446,6 +4519,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Complementary Courses — Electives (12 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 12,
+        "constraint_notes": 'A maximum of 6 credits of complementary courses may be from research courses PHYS 449, PHYS 479, and PHYS 459D1/PHYS 459D2. PHYS 459D1 and PHYS 459D2 must be taken together.',
         "notes": 'A maximum of 6 credits of complementary courses may be from research courses PHYS 449, PHYS 479, and PHYS 459D1/PHYS 459D2. PHYS 459D1 and PHYS 459D2 must be taken together.',
         "sort_order": 6,
         "courses": [
@@ -4567,6 +4641,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Program Prerequisites – Required Courses',
         "block_type": 'required',
         "credits_needed": 18,
+        "constraint_notes": 'Students entering from Foundation program must have completed these courses or equivalents. Quebec students must have completed DEC with appropriate science and mathematics courses.',
         "notes": 'Students entering from Foundation program must have completed these courses or equivalents. Quebec students must have completed DEC with appropriate science and mathematics courses.',
         "sort_order": 1,
         "courses": [
@@ -4612,6 +4687,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Program Prerequisites – Calculus (7–8 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 7,
+        "constraint_notes": 'Either MATH 140 and MATH 141 (7 credits total) or MATH 150 and MATH 151 (8 credits total).',
         "notes": 'Either MATH 140 and MATH 141 (7 credits total) or MATH 150 and MATH 151 (8 credits total).',
         "sort_order": 2,
         "courses": [
@@ -4778,6 +4854,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Complementary Courses – MATH 222 (0–3 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'Students who did not complete an equivalent of MATH 222 Calculus 3 on entering the program must take this course in the first semester. This block contributes 0 or 3 credits depending on prior coursework.',
         "notes": 'Students who did not complete an equivalent of MATH 222 Calculus 3 on entering the program must take this course in the first semester. This block contributes 0 or 3 credits depending on prior coursework.',
         "sort_order": 4,
         "courses": [
@@ -4795,6 +4872,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Complementary Courses – Advanced Laboratory (3 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": '3 credits from PHYS 359 or PHYS 469.',
         "notes": '3 credits from PHYS 359 or PHYS 469.',
         "sort_order": 5,
         "courses": [
@@ -4817,6 +4895,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Complementary Courses – Research/Lab Component (6 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 6,
+        "constraint_notes": '6 credits selected from this list. If PHYS 459D1 is chosen, PHYS 459D2 must also be taken (they are taken together). Students cannot use the same course (PHYS 359 or PHYS 469) to satisfy both this requirement and the previous 3-credit laboratory requirement.',
         "notes": '6 credits selected from this list. If PHYS 459D1 is chosen, PHYS 459D2 must also be taken (they are taken together). Students cannot use the same course (PHYS 359 or PHYS 469) to satisfy both this requirement and the previous 3-credit laboratory requirement.',
         "sort_order": 6,
         "courses": [
@@ -4861,6 +4940,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Complementary Courses – Physics Electives (18 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 18,
+        "constraint_notes": '18 credits selected from the list below. Students may substitute one or more courses with any 3-credit course approved by the Department of Physics.',
         "notes": '18 credits selected from the list below. Students may substitute one or more courses with any 3-credit course approved by the Department of Physics.',
         "sort_order": 7,
         "courses": [
@@ -4973,6 +5053,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Program Prerequisites – Required',
         "block_type": 'required',
         "credits_needed": 16,
+        "constraint_notes": 'Students entering Physics programs must have completed these courses or equivalents. Quebec students must have completed the DEC with appropriate science and mathematics courses.',
         "notes": 'Students entering Physics programs must have completed these courses or equivalents. Quebec students must have completed the DEC with appropriate science and mathematics courses.',
         "sort_order": 1,
         "courses": [
@@ -5018,6 +5099,7 @@ SCIENCE_PROGRAMS = [
         "title": 'Program Prerequisites – One of BIOL 111 or BIOL 112',
         "block_type": 'choose_courses',
         "courses_needed": 1,
+        "constraint_notes": 'Students must complete one of BIOL 111 or BIOL 112 as a prerequisite.',
         "notes": 'Students must complete one of BIOL 111 or BIOL 112 as a prerequisite.',
         "sort_order": 2,
         "courses": [
@@ -5039,6 +5121,7 @@ SCIENCE_PROGRAMS = [
         "block_key": 'physics_computer_science_major_bsc_prereq_calculus',
         "title": 'Program Prerequisites – Calculus Sequence (choose one sequence)',
         "block_type": 'multi_group',
+        "constraint_notes": 'Students must complete either MATH 140 + MATH 141, or MATH 150 + MATH 151.',
         "notes": 'Students must complete either MATH 140 + MATH 141, or MATH 150 + MATH 151.',
         "sort_order": 3,
       },

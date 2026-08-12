@@ -90,6 +90,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Complementary Courses (Main)',
         "block_type": 'choose_credits',
         "credits_needed": 9,
+        "constraint_notes": 'Choose 9-18 credits from this section. Note: Either MATH 249 (Honours Complex Variables) or MATH 316 (Complex Variables) may be taken but not both.',
         "notes": 'Choose 9-18 credits from this section. Note: Either MATH 249 (Honours Complex Variables) or MATH 316 (Complex Variables) may be taken but not both.',
         "sort_order": 2,
         "courses": [
@@ -176,6 +177,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Complementary Courses (Elective Section 1)',
         "block_type": 'choose_credits',
         "credits_needed": 0,
+        "constraint_notes": 'Choose 0-3 credits from this section.',
         "notes": 'Choose 0-3 credits from this section.',
         "sort_order": 3,
         "courses": [
@@ -199,6 +201,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Complementary Courses (Elective Section 2)',
         "block_type": 'choose_credits',
         "credits_needed": 0,
+        "constraint_notes": 'Choose 0-9 credits from this section.',
         "notes": 'Choose 0-9 credits from this section.',
         "sort_order": 4,
         "courses": [
@@ -320,6 +323,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Program Prerequisites',
         "block_type": 'required',
         "credits_needed": 10,
+        "constraint_notes": 'Students who have not completed these prerequisite courses or their equivalents will be required to make up any deficiencies over and above the 18 credits required for the program.',
         "notes": 'Students who have not completed these prerequisite courses or their equivalents will be required to make up any deficiencies over and above the 18 credits required for the program.',
         "sort_order": 1,
         "courses": [
@@ -351,6 +355,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Expandable Version: Required Courses (12 credits)',
         "block_type": 'required',
         "credits_needed": 12,
+        "constraint_notes": 'Expandable version for students who may expand into Major Concentration Mathematics.',
         "notes": 'Expandable version for students who may expand into Major Concentration Mathematics.',
         "sort_order": 2,
         "courses": [
@@ -390,6 +395,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Expandable Version: Complementary Courses (6 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 6,
+        "constraint_notes": 'Students selecting the expandable version complete 6 credits of complementary courses. It is strongly recommended that students take MATH 323 Probability as a complementary course.',
         "notes": 'Students selecting the expandable version complete 6 credits of complementary courses. It is strongly recommended that students take MATH 323 Probability as a complementary course.',
         "sort_order": 3,
         "courses": [
@@ -496,6 +502,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Non-Expandable Version: Required Courses (9 credits)',
         "block_type": 'required',
         "credits_needed": 9,
+        "constraint_notes": 'Non-expandable version for students committed to the Minor only.',
         "notes": 'Non-expandable version for students committed to the Minor only.',
         "sort_order": 4,
         "courses": [
@@ -528,6 +535,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Non-Expandable Version: Complementary Courses (9 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 9,
+        "constraint_notes": 'Students selecting the non-expandable version complete 9 credits of complementary courses. It is strongly recommended that students take MATH 323 Probability as a complementary course.',
         "notes": 'Students selecting the non-expandable version complete 9 credits of complementary courses. It is strongly recommended that students take MATH 323 Probability as a complementary course.',
         "sort_order": 5,
         "courses": [
@@ -857,6 +865,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Required Courses (36–39 credits)',
         "block_type": 'required',
         "credits_needed": 36,
+        "constraint_notes": 'This block ranges from 36 to 39 credits. MATH 222 is required only for students who have not completed an equivalent (MATH 150/151); those who have are exempt, keeping total at 36 credits. Students select either MATH 251 Honours Algebra 2 OR MATH 247 Honours Applied Linear Algebra, but not both.',
         "notes": 'This block ranges from 36 to 39 credits. MATH 222 is required only for students who have not completed an equivalent (MATH 150/151); those who have are exempt, keeping total at 36 credits. Students select either MATH 251 Honours Algebra 2 OR MATH 247 Honours Applied Linear Algebra, but not both.',
         "sort_order": 1,
         "courses": [
@@ -969,6 +978,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Complementary – Analysis 1 (3 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'It is strongly recommended that students take both MATH 245 Honours Algebra 1 and MATH 254 Honours Analysis 1.',
         "notes": 'It is strongly recommended that students take both MATH 245 Honours Algebra 1 and MATH 254 Honours Analysis 1.',
         "sort_order": 2,
         "courses": [
@@ -993,6 +1003,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Complementary – Algebra 1 (3 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'It is strongly recommended that students take both MATH 245 Honours Algebra 1 and MATH 254 Honours Analysis 1.',
         "notes": 'It is strongly recommended that students take both MATH 245 Honours Algebra 1 and MATH 254 Honours Analysis 1.',
         "sort_order": 3,
         "courses": [
@@ -1059,6 +1070,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Complementary – Courses with No Honours Equivalent (0–6 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 0,
+        "constraint_notes": '0 to 6 credits may be selected from these courses for which no Honours equivalent exists.',
         "notes": '0 to 6 credits may be selected from these courses for which no Honours equivalent exists.',
         "sort_order": 6,
         "courses": [
@@ -1327,6 +1339,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Program Prerequisites (not counted toward 36 credits)',
         "block_type": 'required',
         "credits_needed": 13,
+        "constraint_notes": 'Students who have not completed these prerequisite courses will be required to make them up over and above the 36 credits required for the program.',
         "notes": 'Students who have not completed these prerequisite courses will be required to make them up over and above the 36 credits required for the program.',
         "sort_order": 1,
         "courses": [
@@ -1395,6 +1408,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Complementary Courses (27 credits)',
         "block_type": 'pool_group',
         "credits_needed": 27,
+        "constraint_notes": 'Pool of complementary electives organized into three sub-selections.',
         "notes": 'Pool of complementary electives organized into three sub-selections.',
         "sort_order": 3,
       },
@@ -1449,6 +1463,7 @@ ARTS_MATH_STATS_ENV = [
         "title": '15 credits from Honours Mathematics and Statistics courses',
         "block_type": 'choose_credits',
         "credits_needed": 15,
+        "constraint_notes": '15 credits selected from the list below. The remaining credits may be chosen from the full list of available Honours courses in Mathematics and Statistics.',
         "notes": '15 credits selected from the list below. The remaining credits may be chosen from the full list of available Honours courses in Mathematics and Statistics.',
         "sort_order": 6,
         "courses": [
@@ -1526,6 +1541,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Required Courses (34 credits)',
         "block_type": 'required',
         "credits_needed": 34,
+        "constraint_notes": 'Students who received advanced standing or the CEGEP equivalent of 100-level Math courses are no longer required to take them. Whenever an exemption without credits is granted for a 200-level and above required Math course, it must be replaced with a complementary course chosen in consultation with a program advisor. Students are strongly advised to complete all required courses by the end of U2. Where appropriate, Honours courses may be substituted for equivalent courses.',
         "notes": 'Students who received advanced standing or the CEGEP equivalent of 100-level Math courses are no longer required to take them. Whenever an exemption without credits is granted for a 200-level and above required Math course, it must be replaced with a complementary course chosen in consultation with a program advisor. Students are strongly advised to complete all required courses by the end of U2. Where appropriate, Honours courses may be substituted for equivalent courses.',
         "sort_order": 1,
         "courses": [
@@ -1616,6 +1632,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Complementary Courses (12 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 12,
+        "constraint_notes": 'Students can take at most one of MATH 410 (Majors Project), MATH 420 (Independent Study), MATH 527D1/MATH 527D2 (Statistical Data Science Practicum), or WCOM 314 (Communicating Science).',
         "notes": 'Students can take at most one of MATH 410 (Majors Project), MATH 420 (Independent Study), MATH 527D1/MATH 527D2 (Statistical Data Science Practicum), or WCOM 314 (Communicating Science).',
         "sort_order": 2,
         "courses": [
@@ -1759,6 +1776,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Required Courses (15 credits)',
         "block_type": 'required',
         "credits_needed": 15,
+        "constraint_notes": 'Note: If the Minor Concentration Statistics is combined with the Major Concentration Mathematics, the required courses MATH 222 (Calculus 3), MATH 223 (Linear Algebra), and MATH 323 (Probability) must be replaced by courses selected from the Complementary Courses. Credit cannot be received for both MATH 223 (Linear Algebra) and MATH 236 (Algebra 2, listed as a required course in the Major Concentration Mathematics).',
         "notes": 'Note: If the Minor Concentration Statistics is combined with the Major Concentration Mathematics, the required courses MATH 222 (Calculus 3), MATH 223 (Linear Algebra), and MATH 323 (Probability) must be replaced by courses selected from the Complementary Courses. Credit cannot be received for both MATH 223 (Linear Algebra) and MATH 236 (Algebra 2, listed as a required course in the Major Concentration Mathematics).',
         "sort_order": 1,
         "courses": [
@@ -1944,6 +1962,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Required Courses (25-28 credits)',
         "block_type": 'required',
         "credits_needed": 25,
+        "constraint_notes": 'Students who have not completed MATH 222 Calculus 3 or equivalent (MATH 150/MATH 151) on entering must take MATH 222, increasing total program credits from 60 to 63. Students must select either MATH 251 or MATH 247, but not both. To be awarded Honours degree, student must have CGPA of at least 3.00 in required and complementary Mathematics courses, plus overall CGPA of 3.00.',
         "notes": 'Students who have not completed MATH 222 Calculus 3 or equivalent (MATH 150/MATH 151) on entering must take MATH 222, increasing total program credits from 60 to 63. Students must select either MATH 251 or MATH 247, but not both. To be awarded Honours degree, student must have CGPA of at least 3.00 in required and complementary Mathematics courses, plus overall CGPA of 3.00.',
         "sort_order": 1,
         "courses": [
@@ -1967,6 +1986,7 @@ ARTS_MATH_STATS_ENV = [
             "catalog": '222',
             "title": 'Calculus 3',
             "credits": 3.0,
+            "is_required": True,
             "notes": 'Conditionally required. Students who have successfully completed MATH 150/MATH 151 or equivalent on entering the program are not required to take this course. Others must take in first semester.',
           },
           {
@@ -1974,6 +1994,7 @@ ARTS_MATH_STATS_ENV = [
             "catalog": '247',
             "title": 'Honours Applied Linear Algebra',
             "credits": 3.0,
+            "is_required": True,
             "choose_from_group": 'Linear Algebra Choice',
             "notes": 'Students select either MATH 247 or MATH 251, but not both.',
           },
@@ -1982,6 +2003,7 @@ ARTS_MATH_STATS_ENV = [
             "catalog": '251',
             "title": 'Honours Algebra 2',
             "credits": 3.0,
+            "is_required": True,
             "choose_from_group": 'Linear Algebra Choice',
             "notes": 'Students select either MATH 251 or MATH 247, but not both.',
           },
@@ -2028,6 +2050,7 @@ ARTS_MATH_STATS_ENV = [
         "block_type": 'choose_credits',
         "group_name": 'Probability Interest',
         "credits_needed": 35,
+        "constraint_notes": 'Students wishing to pursue mathematical statistics in graduate school are advised to take MATH 587 and recommended to take honours mathematics courses, particularly MATH 358, MATH 454 (preferably before MATH 587), and MATH 455. This track represents one of several advisory pathways; students may select from other complementary courses as well.',
         "notes": 'Students wishing to pursue mathematical statistics in graduate school are advised to take MATH 587 and recommended to take honours mathematics courses, particularly MATH 358, MATH 454 (preferably before MATH 587), and MATH 455. This track represents one of several advisory pathways; students may select from other complementary courses as well.',
         "sort_order": 2,
         "courses": [
@@ -2064,6 +2087,7 @@ ARTS_MATH_STATS_ENV = [
         "block_type": 'choose_credits',
         "group_name": 'Actuarial Science Interest',
         "credits_needed": 35,
+        "constraint_notes": 'Students with interest in actuarial science are advised to choose from the following as part of their Complementary Courses.',
         "notes": 'Students with interest in actuarial science are advised to choose from the following as part of their Complementary Courses.',
         "sort_order": 3,
         "courses": [
@@ -2112,6 +2136,7 @@ ARTS_MATH_STATS_ENV = [
         "block_type": 'choose_credits',
         "group_name": 'Data Science and Machine Learning Interest',
         "credits_needed": 35,
+        "constraint_notes": 'Students with interest in data science and machine learning are advised to choose from the following as part of their Complementary Courses.',
         "notes": 'Students with interest in data science and machine learning are advised to choose from the following as part of their Complementary Courses.',
         "sort_order": 4,
         "courses": [
@@ -2211,6 +2236,7 @@ ARTS_MATH_STATS_ENV = [
         "block_type": 'choose_credits',
         "group_name": 'Applied Statistics Interest',
         "credits_needed": 35,
+        "constraint_notes": 'Students wishing to pursue applied statistics and/or careers as statisticians in industry or government are advised to take MATH 523, MATH 524, MATH 547, at least one of MATH 525/MATH 558, and as many courses as possible from Part III (Data Science courses). Students interested in A.Stat accreditation should discuss course selection with academic adviser.',
         "notes": 'Students wishing to pursue applied statistics and/or careers as statisticians in industry or government are advised to take MATH 523, MATH 524, MATH 547, at least one of MATH 525/MATH 558, and as many courses as possible from Part III (Data Science courses). Students interested in A.Stat accreditation should discuss course selection with academic adviser.',
         "sort_order": 5,
         "courses": [
@@ -2382,6 +2408,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Core and Domain Courses (54 credits)',
         "block_type": 'required',
         "credits_needed": 54,
+        "constraint_notes": '54 credits of core and domain courses completed according to chosen domain in the B.A. Environment program. See B.A. Environment program requirements for details.',
         "notes": '54 credits of core and domain courses completed according to chosen domain in the B.A. Environment program. See B.A. Environment program requirements for details.',
         "sort_order": 1,
       },
@@ -2390,6 +2417,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Honours Required Courses (6 credits)',
         "block_type": 'required',
         "credits_needed": 6,
+        "constraint_notes": 'Students must choose either the D1/D2 sequence or the N1/N2 sequence. Both options are 6 credits total. Students must earn a B grade (3.0) or higher in the Honours Research courses.',
         "notes": 'Students must choose either the D1/D2 sequence or the N1/N2 sequence. Both options are 6 credits total. Students must earn a B grade (3.0) or higher in the Honours Research courses.',
         "sort_order": 2,
         "courses": [
@@ -2446,6 +2474,7 @@ ARTS_MATH_STATS_ENV = [
         "block_key": 'environment_joint_honours_corequisites',
         "title": 'Program Corequisites (6-8 credits)',
         "block_type": 'multi_group',
+        "constraint_notes": 'These are required by the end of U1 year and are in addition to the overall credit account. Choose one course from Basic Science (3 credits) AND one from Calculus (3 credits).',
         "notes": 'These are required by the end of U1 year and are in addition to the overall credit account. Choose one course from Basic Science (3 credits) AND one from Calculus (3 credits).',
         "sort_order": 1,
         "courses": [
@@ -2576,6 +2605,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Honours Research (0-6 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 0,
+        "constraint_notes": 'Students must complete 6 credits of honours research between the two components of the program. If the second component requires 0 credits of honours research, the student must take 6 credits of ENVR honours research. If the second component requires 3 credits of honours research, the student must take 3 credits of ENVR honours research. If the second component requires 6 credits of honours research, the student is not required to take any credits of ENVR honours research. Students may not count the same honours research credits towards both components.',
         "notes": 'Students must complete 6 credits of honours research between the two components of the program. If the second component requires 0 credits of honours research, the student must take 6 credits of ENVR honours research. If the second component requires 3 credits of honours research, the student must take 3 credits of ENVR honours research. If the second component requires 6 credits of honours research, the student is not required to take any credits of ENVR honours research. Students may not count the same honours research credits towards both components.',
         "sort_order": 4,
         "courses": [
@@ -2616,6 +2646,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Complementary Courses (6-12 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 6,
+        "constraint_notes": '6-12 credits chosen with approval of the Program Adviser. A maximum of 3 credits of these courses may be at 200 or 300 level. This block is flexible and allows students to choose from any available courses with adviser approval.',
         "notes": '6-12 credits chosen with approval of the Program Adviser. A maximum of 3 credits of these courses may be at 200 or 300 level. This block is flexible and allows students to choose from any available courses with adviser approval.',
         "sort_order": 5,
       },
@@ -2679,6 +2710,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Complementary Courses',
         "block_type": 'pool_group',
         "credits_needed": 24,
+        "constraint_notes": 'Pool of 24 credits from four component groups: Introductory Physical Geography (3 cr), Statistics (3 cr), Research (3-6 cr), and Geography electives (12-15 cr).',
         "notes": 'Pool of 24 credits from four component groups: Introductory Physical Geography (3 cr), Statistics (3 cr), Research (3-6 cr), and Geography electives (12-15 cr).',
         "sort_order": 2,
       },
@@ -2712,6 +2744,7 @@ ARTS_MATH_STATS_ENV = [
         "block_type": 'choose_credits',
         "group_name": 'Statistics',
         "credits_needed": 3,
+        "constraint_notes": "Credit given for statistics courses is subject to certain restrictions. Students should consult the 'Course Overlap' information in the 'Course Requirements' section for the Faculty of Arts.",
         "notes": "Credit given for statistics courses is subject to certain restrictions. Students should consult the 'Course Overlap' information in the 'Course Requirements' section for the Faculty of Arts.",
         "sort_order": 4,
         "courses": [
@@ -2759,6 +2792,7 @@ ARTS_MATH_STATS_ENV = [
         "block_type": 'choose_credits',
         "group_name": 'Research',
         "credits_needed": 3,
+        "constraint_notes": '3-6 credits required. Where both departments require an Honours Thesis, the student may submit to either department. If submitted to the other department, must register for GEOG 492D1 and GEOG 492D2. In some cases, thesis may be jointly supervised by faculty of both departments.',
         "notes": '3-6 credits required. Where both departments require an Honours Thesis, the student may submit to either department. If submitted to the other department, must register for GEOG 492D1 and GEOG 492D2. In some cases, thesis may be jointly supervised by faculty of both departments.',
         "sort_order": 5,
         "courses": [
@@ -2798,6 +2832,7 @@ ARTS_MATH_STATS_ENV = [
         "block_type": 'choose_credits',
         "group_name": 'Geography Electives',
         "credits_needed": 12,
+        "constraint_notes": '12-15 credits from a coherent set of Geography (GEOG) courses. Excludes GEOG 200 (Geographical Perspectives: World Environmental Problems) and GEOG 205 (Global Change: Past, Present and Future). Requires approval by Program Adviser. Including a field course is desirable. No more than 6 credits may be taken from 200-level courses.',
         "notes": '12-15 credits from a coherent set of Geography (GEOG) courses. Excludes GEOG 200 (Geographical Perspectives: World Environmental Problems) and GEOG 205 (Global Change: Past, Present and Future). Requires approval by Program Adviser. Including a field course is desirable. No more than 6 credits may be taken from 200-level courses.',
         "sort_order": 6,
       },
@@ -2840,6 +2875,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Complementary Courses',
         "block_type": 'multi_group',
         "credits_needed": 12,
+        "constraint_notes": '3 credits from Group 1 (Programming) AND 3 credits from Group 2 (Remote Sensing Fundamentals) AND 6 credits from Group 3 (Advanced Topics). Courses appearing in multiple groups cannot have credits double-counted.',
         "notes": '3 credits from Group 1 (Programming) AND 3 credits from Group 2 (Remote Sensing Fundamentals) AND 6 credits from Group 3 (Advanced Topics). Courses appearing in multiple groups cannot have credits double-counted.',
         "sort_order": 2,
       },
@@ -3024,6 +3060,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Complementary Courses – Group 1 (3 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'Choose 3 credits from the following courses',
         "notes": 'Choose 3 credits from the following courses',
         "sort_order": 2,
         "courses": [
@@ -3064,6 +3101,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Complementary Courses – Group 2 (3 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'Choose 3 credits from the following courses',
         "notes": 'Choose 3 credits from the following courses',
         "sort_order": 3,
         "courses": [
@@ -3188,6 +3226,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Statistics (3 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": "Credit given for statistics courses is subject to certain restrictions. Students should consult the 'Course Overlap' information in the 'Course Requirements' section for the Faculty of Arts.",
         "notes": "Credit given for statistics courses is subject to certain restrictions. Students should consult the 'Course Overlap' information in the 'Course Requirements' section for the Faculty of Arts.",
         "sort_order": 2,
         "courses": [
@@ -3228,6 +3267,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Field Course (3 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'Students may take either GEOG 425 Southeast Asia Urban Field Studies or GEOG 494 Urban Field Studies, but not both.',
         "notes": 'Students may take either GEOG 425 Southeast Asia Urban Field Studies or GEOG 494 Urban Field Studies, but not both.',
         "sort_order": 3,
         "courses": [
@@ -3264,6 +3304,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Geography (12 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 12,
+        "constraint_notes": 'Of these 12 credits, at least 6 credits must be at the 300-level or above. Note: course list may be incomplete due to page truncation.',
         "notes": 'Of these 12 credits, at least 6 credits must be at the 300-level or above. Note: course list may be incomplete due to page truncation.',
         "sort_order": 4,
         "courses": [
@@ -3364,6 +3405,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'List A – Behavioural Neuroscience, Cognition and Quantitative Methods (3 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'Select 3 credits from this list',
         "notes": 'Select 3 credits from this list',
         "sort_order": 1,
         "courses": [
@@ -3620,6 +3662,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'List B – Social, Health and Developmental Psychology (3 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'Select 3 credits from this list. Detailed course list not provided in catalogue excerpt.',
         "notes": 'Select 3 credits from this list. Detailed course list not provided in catalogue excerpt.',
         "sort_order": 2,
         "courses": [
@@ -3637,6 +3680,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Psychology 400 or 500 Level (3 credits)',
         "block_type": 'level_elective',
         "credits_needed": 3,
+        "constraint_notes": 'Select 3 credits from any Psychology course at the 400 or 500 level',
         "notes": 'Select 3 credits from any Psychology course at the 400 or 500 level',
         "sort_order": 3,
       },
@@ -3645,6 +3689,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Interdisciplinary 300+ Level (9 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 9,
+        "constraint_notes": 'Select 9 credits at the 300 level or above from one or more of the following disciplines: Psychology (PSYC), Anthropology (ANTH), Linguistics (LING), or Sociology (SOCI)',
         "notes": 'Select 9 credits at the 300 level or above from one or more of the following disciplines: Psychology (PSYC), Anthropology (ANTH), Linguistics (LING), or Sociology (SOCI)',
         "sort_order": 4,
       },
@@ -3664,6 +3709,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Program Prerequisites (0–6 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 0,
+        "constraint_notes": 'Optional. Students planning to enter the B.A. Joint Honours Psychology program should have completed an introductory course in general psychology, biology and statistics at the CEGEP level. Otherwise, they can complete them in their first year of study at McGill University. CEGEP Introduction to Psychology is equivalent to PSYC 100. If not completed in CEGEP, students are advised to take PSYC 100. Students should have completed Human Biology or General 1 or 2 in CEGEP for biology background; if not, they are advised to complete a biology course. McGill Foundation students are recommended to complete these courses in U0 year.',
         "notes": 'Optional. Students planning to enter the B.A. Joint Honours Psychology program should have completed an introductory course in general psychology, biology and statistics at the CEGEP level. Otherwise, they can complete them in their first year of study at McGill University. CEGEP Introduction to Psychology is equivalent to PSYC 100. If not completed in CEGEP, students are advised to take PSYC 100. Students should have completed Human Biology or General 1 or 2 in CEGEP for biology background; if not, they are advised to complete a biology course. McGill Foundation students are recommended to complete these courses in U0 year.',
         "sort_order": 1,
         "courses": [
@@ -3706,6 +3752,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Required U1 Courses (15 credits)',
         "block_type": 'required',
         "credits_needed": 15,
+        "constraint_notes": 'All five U1 core courses must be completed. PSYC 204 may be exempted for CEGEP students who have completed Quantitative Methods and either Advanced Quantitative Methods or Statistics for Social Science, or Probability & Statistics/Statistics (with minimum grade of 75%); B.A. students exempt from PSYC 204 must replace it with 3 credits at the 300 level or above in PSYC, ANTH, LING, or SOCI.',
         "notes": 'All five U1 core courses must be completed. PSYC 204 may be exempted for CEGEP students who have completed Quantitative Methods and either Advanced Quantitative Methods or Statistics for Social Science, or Probability & Statistics/Statistics (with minimum grade of 75%); B.A. students exempt from PSYC 204 must replace it with 3 credits at the 300 level or above in PSYC, ANTH, LING, or SOCI.',
         "sort_order": 2,
         "courses": [
@@ -3752,6 +3799,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Required U1 or U2 Course (3 credits)',
         "block_type": 'required',
         "credits_needed": 3,
+        "constraint_notes": 'Must be completed in U1 year for admission to Joint Honours program. Students applying to Joint Honours must complete PSYC 305 in U1 and maintain a minimum of 27 graded credits in the academic year prior to applying (fall and winter terms only). Exceptional performance in this course is a primary criterion for acceptance.',
         "notes": 'Must be completed in U1 year for admission to Joint Honours program. Students applying to Joint Honours must complete PSYC 305 in U1 and maintain a minimum of 27 graded credits in the academic year prior to applying (fall and winter terms only). Exceptional performance in this course is a primary criterion for acceptance.',
         "sort_order": 3,
         "courses": [
@@ -3770,6 +3818,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Required U2 Courses (12 credits)',
         "block_type": 'required',
         "credits_needed": 12,
+        "constraint_notes": 'All three courses must be completed in U2. PSYC 380D1 and PSYC 380D2 form a mandatory 2-term research course sequence (9 credits total). PSYC 306 and PSYC 380D1/D2 require minimum grade of B for Joint Honours award, minimum grade of A- for First Class Honours. Awarding of the B.A. Joint Honours program depends on both CGPA and grades in these courses.',
         "notes": 'All three courses must be completed in U2. PSYC 380D1 and PSYC 380D2 form a mandatory 2-term research course sequence (9 credits total). PSYC 306 and PSYC 380D1/D2 require minimum grade of B for Joint Honours award, minimum grade of A- for First Class Honours. Awarding of the B.A. Joint Honours program depends on both CGPA and grades in these courses.',
         "sort_order": 4,
         "courses": [
@@ -3804,6 +3853,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'U2 or U3 Elective Course (3 credits)',
         "block_type": 'required',
         "credits_needed": 3,
+        "constraint_notes": 'Must be taken at U2 or U3 level. This appears to be an optional advanced course, but it is listed as a complementary requirement.',
         "notes": 'Must be taken at U2 or U3 level. This appears to be an optional advanced course, but it is listed as a complementary requirement.',
         "sort_order": 5,
         "courses": [
@@ -3812,6 +3862,7 @@ ARTS_MATH_STATS_ENV = [
             "catalog": '439',
             "title": 'Correlational Techniques',
             "credits": 3.0,
+            "is_required": True,
             "notes": 'Optional U2 or U3 course. Students may alternatively choose any Psychology course at the 400 or 500 level to fulfill the 3-credit complementary requirement.',
           },
         ],
@@ -3821,6 +3872,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Complementary Course (3 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'Any Psychology course at the 400 or 500 level. Specific courses are not listed in the catalogue; students should consult the course offerings in their academic year.',
         "notes": 'Any Psychology course at the 400 or 500 level. Specific courses are not listed in the catalogue; students should consult the course offerings in their academic year.',
         "sort_order": 6,
         "courses": [
@@ -3999,6 +4051,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Complementary Courses – Music History (18 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 18,
+        "constraint_notes": 'Students select 18 credits from MUHL or MUPP courses at the 300-level or higher.',
         "notes": 'Students select 18 credits from MUHL or MUPP courses at the 300-level or higher.',
         "sort_order": 1,
         "courses": [
@@ -4296,6 +4349,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Required Course (3 credits)',
         "block_type": 'required',
         "credits_needed": 3,
+        "constraint_notes": 'All students must take BIOL 210 regardless of disciplinary area chosen.',
         "notes": 'All students must take BIOL 210 regardless of disciplinary area chosen.',
         "sort_order": 1,
         "courses": [
@@ -4314,6 +4368,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Complementary Courses (15 credits)',
         "block_type": 'pool_group',
         "credits_needed": 15,
+        "constraint_notes": '15 credits from ONE disciplinary area. Where suggested courses have prerequisites at the 200 or 300 level, credit for associated prerequisites may count toward the 15 credits. Prerequisites at the 100 level cannot be counted. With prior written approval of the Program Adviser, alternative courses may be substituted.',
         "notes": '15 credits from ONE disciplinary area. Where suggested courses have prerequisites at the 200 or 300 level, credit for associated prerequisites may count toward the 15 credits. Prerequisites at the 100 level cannot be counted. With prior written approval of the Program Adviser, alternative courses may be substituted.',
         "sort_order": 2,
       },
@@ -4322,6 +4377,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Atmospheric and Oceanic Sciences',
         "block_type": 'group',
         "group_name": 'Atmospheric and Oceanic Sciences',
+        "constraint_notes": 'Prerequisites which cannot be counted: MATH 140, MATH 141 or equivalents; PHYS 101 or PHYS 131 and PHYS 102 or PHYS 142 or equivalents recommended.',
         "notes": 'Prerequisites which cannot be counted: MATH 140, MATH 141 or equivalents; PHYS 101 or PHYS 131 and PHYS 102 or PHYS 142 or equivalents recommended.',
         "sort_order": 3,
         "courses": [
@@ -4388,6 +4444,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Biochemistry',
         "block_type": 'group',
         "group_name": 'Biochemistry',
+        "constraint_notes": 'Prerequisites which cannot be counted: BIOL 111, BIOL 112, CHEM 110, CHEM 120 or equivalents. Students select BIOL 201 or ANAT 212 or BIOC 212 (footnote 1).',
         "notes": 'Prerequisites which cannot be counted: BIOL 111, BIOL 112, CHEM 110, CHEM 120 or equivalents. Students select BIOL 201 or ANAT 212 or BIOC 212 (footnote 1).',
         "sort_order": 4,
         "courses": [
@@ -4446,6 +4503,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Biology - Cell and Molecular Stream',
         "block_type": 'group',
         "group_name": 'Biology - Cell and Molecular Stream',
+        "constraint_notes": 'Prerequisites which cannot be counted: BIOL 111, BIOL 112, CHEM 110, CHEM 120 or equivalents. Students select BIOL 201 or ANAT 212 or BIOC 212 (footnote 1). Cell and molecular biology leads to upper-level courses in developmental biology, human genetics, molecular biology, or allied fields.',
         "notes": 'Prerequisites which cannot be counted: BIOL 111, BIOL 112, CHEM 110, CHEM 120 or equivalents. Students select BIOL 201 or ANAT 212 or BIOC 212 (footnote 1). Cell and molecular biology leads to upper-level courses in developmental biology, human genetics, molecular biology, or allied fields.',
         "sort_order": 5,
         "courses": [
@@ -4523,6 +4581,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Biology - Organismal Stream',
         "block_type": 'group',
         "group_name": 'Biology - Organismal Stream',
+        "constraint_notes": 'Prerequisites which cannot be counted: BIOL 111, BIOL 112, CHEM 110, CHEM 120 or equivalents; PHYS 101 or PHYS 131; MATH 140 and PHYS 102 or PHYS 142 if taking BIOL 306. Students select BIOL 201 or ANAT 212 or BIOC 212 (footnote 1). Organismal biology leads to upper-level courses in biodiversity, ecology, neurobiology, behaviour, or conservation biology.',
         "notes": 'Prerequisites which cannot be counted: BIOL 111, BIOL 112, CHEM 110, CHEM 120 or equivalents; PHYS 101 or PHYS 131; MATH 140 and PHYS 102 or PHYS 142 if taking BIOL 306. Students select BIOL 201 or ANAT 212 or BIOC 212 (footnote 1). Organismal biology leads to upper-level courses in biodiversity, ecology, neurobiology, behaviour, or conservation biology.',
         "sort_order": 6,
         "courses": [
@@ -4633,6 +4692,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Chemistry',
         "block_type": 'group',
         "group_name": 'Chemistry',
+        "constraint_notes": 'Prerequisites which cannot be counted: BIOL 112, CHEM 110, CHEM 120 or equivalents; MATH 140, PHYS 101 or PHYS 131, PHYS 102 or PHYS 142 or equivalents if taking CHEM 334. Department strongly encourages students to take one or more laboratory courses. Note: CHEM 212 or equivalent is prerequisite to all 200-level or higher courses.',
         "notes": 'Prerequisites which cannot be counted: BIOL 112, CHEM 110, CHEM 120 or equivalents; MATH 140, PHYS 101 or PHYS 131, PHYS 102 or PHYS 142 or equivalents if taking CHEM 334. Department strongly encourages students to take one or more laboratory courses. Note: CHEM 212 or equivalent is prerequisite to all 200-level or higher courses.',
         "sort_order": 7,
         "courses": [
@@ -4667,6 +4727,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Earth and Planetary Sciences',
         "block_type": 'group',
         "group_name": 'Earth and Planetary Sciences',
+        "constraint_notes": 'Earth and Planetary Sciences disciplinary area. Specific courses not fully listed in the provided catalogue excerpt.',
         "notes": 'Earth and Planetary Sciences disciplinary area. Specific courses not fully listed in the provided catalogue excerpt.',
         "sort_order": 8,
       },
@@ -4675,6 +4736,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Geography',
         "block_type": 'group',
         "group_name": 'Geography',
+        "constraint_notes": 'Geography disciplinary area. Specific courses not fully listed in the provided catalogue excerpt.',
         "notes": 'Geography disciplinary area. Specific courses not fully listed in the provided catalogue excerpt.',
         "sort_order": 9,
       },
@@ -4683,6 +4745,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Mathematics and Statistics',
         "block_type": 'group',
         "group_name": 'Mathematics and Statistics',
+        "constraint_notes": 'Mathematics and Statistics disciplinary area. Specific courses not fully listed in the provided catalogue excerpt.',
         "notes": 'Mathematics and Statistics disciplinary area. Specific courses not fully listed in the provided catalogue excerpt.',
         "sort_order": 10,
       },
@@ -4691,6 +4754,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Microbiology and Immunology',
         "block_type": 'group',
         "group_name": 'Microbiology and Immunology',
+        "constraint_notes": 'Microbiology and Immunology disciplinary area. Specific courses not fully listed in the provided catalogue excerpt.',
         "notes": 'Microbiology and Immunology disciplinary area. Specific courses not fully listed in the provided catalogue excerpt.',
         "sort_order": 11,
       },
@@ -4699,6 +4763,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Pathology',
         "block_type": 'group',
         "group_name": 'Pathology',
+        "constraint_notes": 'Pathology disciplinary area. Specific courses not fully listed in the provided catalogue excerpt.',
         "notes": 'Pathology disciplinary area. Specific courses not fully listed in the provided catalogue excerpt.',
         "sort_order": 12,
       },
@@ -4707,6 +4772,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Physics',
         "block_type": 'group',
         "group_name": 'Physics',
+        "constraint_notes": 'Physics disciplinary area. Specific courses not fully listed in the provided catalogue excerpt.',
         "notes": 'Physics disciplinary area. Specific courses not fully listed in the provided catalogue excerpt.',
         "sort_order": 13,
       },
@@ -4715,6 +4781,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Physiology',
         "block_type": 'group',
         "group_name": 'Physiology',
+        "constraint_notes": 'Physiology disciplinary area. Specific courses not fully listed in the provided catalogue excerpt.',
         "notes": 'Physiology disciplinary area. Specific courses not fully listed in the provided catalogue excerpt.',
         "sort_order": 14,
       },
@@ -4723,6 +4790,7 @@ ARTS_MATH_STATS_ENV = [
         "title": 'Psychology',
         "block_type": 'group',
         "group_name": 'Psychology',
+        "constraint_notes": 'Psychology disciplinary area. Specific courses not fully listed in the provided catalogue excerpt.',
         "notes": 'Psychology disciplinary area. Specific courses not fully listed in the provided catalogue excerpt.',
         "sort_order": 15,
       },

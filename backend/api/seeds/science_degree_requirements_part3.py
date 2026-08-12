@@ -273,6 +273,7 @@ SCIENCE_PROGRAMS_PART3 = [
         "title": 'Complementary: 3 credits, one of (Cell Biology)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'Select one course from this list as part of the 12-13 complementary credits.',
         "notes": 'Select one course from this list as part of the 12-13 complementary credits.',
         "sort_order": 3,
         "courses": [
@@ -295,6 +296,7 @@ SCIENCE_PROGRAMS_PART3 = [
         "title": 'Complementary: 3 credits, one of (Statistics/Computing)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'Select one course from this list as part of the 12-13 complementary credits.',
         "notes": 'Select one course from this list as part of the 12-13 complementary credits.',
         "sort_order": 4,
         "courses": [
@@ -335,6 +337,7 @@ SCIENCE_PROGRAMS_PART3 = [
         "title": 'Complementary: 3 credits, one of (Biochemistry/Chemistry)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'Select one course from this list as part of the 12-13 complementary credits.',
         "notes": 'Select one course from this list as part of the 12-13 complementary credits.',
         "sort_order": 5,
         "courses": [
@@ -363,6 +366,7 @@ SCIENCE_PROGRAMS_PART3 = [
         "title": 'Complementary: 3-4 credits, one of (Anatomy)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'Select one course (3-4 credits) from this list as part of the 12-13 complementary credits. ANAT 261 is 4 credits; others are 3 credits.',
         "notes": 'Select one course (3-4 credits) from this list as part of the 12-13 complementary credits. ANAT 261 is 4 credits; others are 3 credits.',
         "sort_order": 6,
         "courses": [
@@ -391,6 +395,7 @@ SCIENCE_PROGRAMS_PART3 = [
         "title": 'Upper-Level Physiology (ULP) Courses (9 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 9,
+        "constraint_notes": '9 credits selected from the Upper-Level Physiology (ULP) course list.',
         "notes": '9 credits selected from the Upper-Level Physiology (ULP) course list.',
         "sort_order": 7,
         "courses": [
@@ -699,6 +704,7 @@ SCIENCE_PROGRAMS_PART3 = [
         "title": 'Complementary Courses – Cell Biology (3 credits, choose one)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": '3 credits from one of the following.',
         "notes": '3 credits from one of the following.',
         "sort_order": 2,
         "courses": [
@@ -721,6 +727,7 @@ SCIENCE_PROGRAMS_PART3 = [
         "title": 'Complementary Courses – Statistics/Computing (3 credits, choose one)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": '3 credits from one of the following.',
         "notes": '3 credits from one of the following.',
         "sort_order": 3,
         "courses": [
@@ -761,6 +768,7 @@ SCIENCE_PROGRAMS_PART3 = [
         "title": 'Complementary Courses – Chemistry/Biochemistry (3 credits, choose one)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": '3 credits from one of the following.',
         "notes": '3 credits from one of the following.',
         "sort_order": 4,
         "courses": [
@@ -789,6 +797,7 @@ SCIENCE_PROGRAMS_PART3 = [
         "title": 'Complementary Courses – Upper-Level Physiology (ULP) (6 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 6,
+        "constraint_notes": '6 credits selected from the Upper-Level Physiology (ULP) course list. The catalogue page may be truncated; additional ULP courses may exist beyond PHGY 502.',
         "notes": '6 credits selected from the Upper-Level Physiology (ULP) course list. The catalogue page may be truncated; additional ULP courses may exist beyond PHGY 502.',
         "sort_order": 5,
         "courses": [
@@ -889,6 +898,7 @@ SCIENCE_PROGRAMS_PART3 = [
         "title": 'Program Prerequisites - Biology and Chemistry',
         "block_type": 'required',
         "credits_needed": 11,
+        "constraint_notes": 'Required prerequisite courses: BIOL 112 (3 cr), CHEM 110 (4 cr), CHEM 120 (4 cr).',
         "notes": 'Required prerequisite courses: BIOL 112 (3 cr), CHEM 110 (4 cr), CHEM 120 (4 cr).',
         "sort_order": 1,
         "courses": [
@@ -920,6 +930,7 @@ SCIENCE_PROGRAMS_PART3 = [
         "title": 'Program Prerequisites - Calculus 1 (one of)',
         "block_type": 'choose_courses',
         "courses_needed": 1,
+        "constraint_notes": 'Students complete one of MATH 139, MATH 140, or MATH 150.',
         "notes": 'Students complete one of MATH 139, MATH 140, or MATH 150.',
         "sort_order": 2,
         "courses": [
@@ -948,6 +959,7 @@ SCIENCE_PROGRAMS_PART3 = [
         "title": 'Program Prerequisites - Calculus 2 (one of)',
         "block_type": 'choose_courses',
         "courses_needed": 1,
+        "constraint_notes": 'Students complete one of either MATH 141 or MATH 151.',
         "notes": 'Students complete one of either MATH 141 or MATH 151.',
         "sort_order": 3,
         "courses": [
@@ -970,6 +982,7 @@ SCIENCE_PROGRAMS_PART3 = [
         "title": 'Program Prerequisites - Physics 1 Mechanics (one of)',
         "block_type": 'choose_courses',
         "courses_needed": 1,
+        "constraint_notes": 'Students complete one of either PHYS 101 or PHYS 131.',
         "notes": 'Students complete one of either PHYS 101 or PHYS 131.',
         "sort_order": 4,
         "courses": [
@@ -992,6 +1005,7 @@ SCIENCE_PROGRAMS_PART3 = [
         "title": 'Program Prerequisites - Physics 2 Electromagnetism (one of)',
         "block_type": 'choose_courses',
         "courses_needed": 1,
+        "constraint_notes": 'Students complete one of either PHYS 102 or PHYS 142.',
         "notes": 'Students complete one of either PHYS 102 or PHYS 142.',
         "sort_order": 5,
         "courses": [
@@ -1163,6 +1177,7 @@ SCIENCE_PROGRAMS_PART3 = [
         "title": 'Complementary - Mathematics (3 credits from)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'Students who have successfully completed an equivalent to MATH 222 at CEGEP or elsewhere must replace these credits with a 3-credit elective course to satisfy the total credit requirement for the Neuroscience Major.',
         "notes": 'Students who have successfully completed an equivalent to MATH 222 at CEGEP or elsewhere must replace these credits with a 3-credit elective course to satisfy the total credit requirement for the Neuroscience Major.',
         "sort_order": 10,
         "courses": [
@@ -1269,6 +1284,7 @@ SCIENCE_PROGRAMS_PART3 = [
         "title": 'Complementary - Advanced Courses (6 credits from)',
         "block_type": 'choose_credits',
         "credits_needed": 6,
+        "constraint_notes": 'Page appears truncated; PSYC 302 description was cut off but course is included as listed.',
         "notes": 'Page appears truncated; PSYC 302 description was cut off but course is included as listed.',
         "sort_order": 13,
         "courses": [
@@ -1506,6 +1522,7 @@ SCIENCE_PROGRAMS_PART3 = [
         "title": 'Complementary: 3 credits from Mathematics/Calculus',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'Students who have successfully completed an equivalent to MATH 222 Calculus 3 at CEGEP or elsewhere must replace these credits with a 3-credit elective course to satisfy the total credit requirement for Honours Neuroscience.',
         "notes": 'Students who have successfully completed an equivalent to MATH 222 Calculus 3 at CEGEP or elsewhere must replace these credits with a 3-credit elective course to satisfy the total credit requirement for Honours Neuroscience.',
         "sort_order": 5,
         "courses": [
@@ -1694,6 +1711,7 @@ SCIENCE_PROGRAMS_PART3 = [
         "title": 'Complementary: 15 credits of 400/500 level courses (12 from List A or B, 3 from the other list)',
         "block_type": 'multi_group',
         "credits_needed": 15,
+        "constraint_notes": 'WARNING: The catalogue page was truncated and the full course listings for List A and List B are not available. Only the beginning of List A (BIOL 506) was visible. Please consult the full catalogue page for the complete lists. The rule is: 12 credits from List A or List B, and 3 credits from the other list.',
         "notes": 'WARNING: The catalogue page was truncated and the full course listings for List A and List B are not available. Only the beginning of List A (BIOL 506) was visible. Please consult the full catalogue page for the complete lists. The rule is: 12 credits from List A or List B, and 3 credits from the other list.',
         "sort_order": 9,
         "courses": [
@@ -1870,6 +1888,7 @@ SCIENCE_PROGRAMS_PART3 = [
         "title": 'Program Prerequisites – Psychology (0-3 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 0,
+        "constraint_notes": 'Students who have not completed Introduction to Psychology or General Psychology at the collegial level are advised to take PSYC 100 in their first year. These credits are prerequisites and are not counted toward the 54-credit programme.',
         "notes": 'Students who have not completed Introduction to Psychology or General Psychology at the collegial level are advised to take PSYC 100 in their first year. These credits are prerequisites and are not counted toward the 54-credit programme.',
         "sort_order": 1,
         "courses": [
@@ -1888,6 +1907,7 @@ SCIENCE_PROGRAMS_PART3 = [
         "title": 'Program Prerequisites – Biology (0-3 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 0,
+        "constraint_notes": 'Students who have not completed General Biology 1 or 2 at the collegial level are advised to complete one of the following in their first year. These credits are prerequisites and are not counted toward the 54-credit programme.',
         "notes": 'Students who have not completed General Biology 1 or 2 at the collegial level are advised to complete one of the following in their first year. These credits are prerequisites and are not counted toward the 54-credit programme.',
         "sort_order": 2,
         "courses": [
@@ -1914,6 +1934,7 @@ SCIENCE_PROGRAMS_PART3 = [
         "title": 'Required Courses (15 credits)',
         "block_type": 'required',
         "credits_needed": 15,
+        "constraint_notes": 'PSYC 204: Students with the MATH 203 exemption may either complete PSYC 204 for credit or go directly to PSYC 305 and replace the PSYC 204 credits with 3 credits at the 300 level or above in Psychology, Anatomy, Biochemistry, Biology, Chemistry, Computer Science, Mathematics, Physiology, or Psychiatry. PSYC 305 must be completed in U1 for students wishing to apply to the Honours program.',
         "notes": 'PSYC 204: Students with the MATH 203 exemption may either complete PSYC 204 for credit or go directly to PSYC 305 and replace the PSYC 204 credits with 3 credits at the 300 level or above in Psychology, Anatomy, Biochemistry, Biology, Chemistry, Computer Science, Mathematics, Physiology, or Psychiatry. PSYC 305 must be completed in U1 for students wishing to apply to the Honours program.',
         "sort_order": 3,
         "courses": [
@@ -1961,6 +1982,7 @@ SCIENCE_PROGRAMS_PART3 = [
         "title": 'List A – Behavioural Neuroscience, Cognition and Quantitative Methods (6 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 6,
+        "constraint_notes": '6 credits in Psychology from List A (Behavioural Neuroscience, Cognition and Quantitative Methods). This is part of the 39-credit Complementary Courses block. NOTE: The catalogue page was truncated after PSYC 529; additional List A courses and further complementary lists (List B, List C, etc.) may exist but were not visible in the provided text.',
         "notes": '6 credits in Psychology from List A (Behavioural Neuroscience, Cognition and Quantitative Methods). This is part of the 39-credit Complementary Courses block. NOTE: The catalogue page was truncated after PSYC 529; additional List A courses and further complementary lists (List B, List C, etc.) may exist but were not visible in the provided text.',
         "sort_order": 4,
         "courses": [
@@ -2180,6 +2202,7 @@ SCIENCE_PROGRAMS_PART3 = [
         "title": 'Program Prerequisites – Psychology (0–3 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'Students who have not completed Introduction to Psychology or General Psychology at the collegial level are advised to take PSYC 100. 0 credits needed if prerequisite already satisfied at CEGEP.',
         "notes": 'Students who have not completed Introduction to Psychology or General Psychology at the collegial level are advised to take PSYC 100. 0 credits needed if prerequisite already satisfied at CEGEP.',
         "sort_order": 1,
         "courses": [
@@ -2197,6 +2220,7 @@ SCIENCE_PROGRAMS_PART3 = [
         "title": 'Program Prerequisites – Biology (3 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'Students who have not completed General Biology 1 or 2 at the collegial level are advised to take one of these courses.',
         "notes": 'Students who have not completed General Biology 1 or 2 at the collegial level are advised to take one of these courses.',
         "sort_order": 2,
         "courses": [
@@ -2219,6 +2243,7 @@ SCIENCE_PROGRAMS_PART3 = [
         "title": 'Required Courses (30 credits)',
         "block_type": 'required',
         "credits_needed": 30,
+        "constraint_notes": 'U1 courses: PSYC 204, 211, 213, 215. U1 or U2: PSYC 305. U2 Honours: PSYC 306, 380D1, 380D2. U2 or U3 Honours: PSYC 439.',
         "notes": 'U1 courses: PSYC 204, 211, 213, 215. U1 or U2: PSYC 305. U2 Honours: PSYC 306, 380D1, 380D2. U2 or U3 Honours: PSYC 439.',
         "sort_order": 3,
         "courses": [
@@ -2301,6 +2326,7 @@ SCIENCE_PROGRAMS_PART3 = [
         "title": 'Complementary Courses – Research/500-level Psychology (3–9 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 9,
+        "constraint_notes": '3-9 credits must be completed with any 500-level Psychology course or from the listed courses below. If the 9 credits are not fulfilled with these courses, the remaining 3-6 credits are to be completed with any 400-level Psychology course. Students entering Honours in U3 who previously took PSYC 385, PSYC 484D1/D2, and/or PSYC 485 may use these courses to fulfill these requirements.',
         "notes": '3-9 credits must be completed with any 500-level Psychology course or from the listed courses below. If the 9 credits are not fulfilled with these courses, the remaining 3-6 credits are to be completed with any 400-level Psychology course. Students entering Honours in U3 who previously took PSYC 385, PSYC 484D1/D2, and/or PSYC 485 may use these courses to fulfill these requirements.',
         "sort_order": 4,
         "courses": [
@@ -2347,6 +2373,7 @@ SCIENCE_PROGRAMS_PART3 = [
         "block_type": 'choose_credits',
         "group_name": 'List A',
         "credits_needed": 6,
+        "constraint_notes": '6 credits in Psychology from List A (Behavioural Neuroscience, Cognition, and Quantitative Methods). Part of 21 credits of Honours complementary courses. List A may be incomplete due to page truncation.',
         "notes": '6 credits in Psychology from List A (Behavioural Neuroscience, Cognition, and Quantitative Methods). Part of 21 credits of Honours complementary courses. List A may be incomplete due to page truncation.',
         "sort_order": 5,
         "courses": [
@@ -2765,6 +2792,7 @@ SCIENCE_PROGRAMS_PART3 = [
         "title": 'Core Complementary: 3-6 credits selected from',
         "block_type": 'choose_credits',
         "credits_needed": 6,
+        "constraint_notes": 'Choose 3-6 credits. ATOC 219 and CHEM 219 are equivalent; only one may count.',
         "notes": 'Choose 3-6 credits. ATOC 219 and CHEM 219 are equivalent; only one may count.',
         "sort_order": 2,
         "courses": [
@@ -2858,6 +2886,7 @@ SCIENCE_PROGRAMS_PART3 = [
         "title": 'Core Complementary: 6-10 credits selected from',
         "block_type": 'choose_credits',
         "credits_needed": 6,
+        "constraint_notes": 'Choose 6-10 credits. MATH 203 and MATH 324 are mutually exclusive (only one may count). PHYS 340 and PHYS 350 are mutually exclusive. PHYS 342 and PHYS 352 are mutually exclusive.',
         "notes": 'Choose 6-10 credits. MATH 203 and MATH 324 are mutually exclusive (only one may count). PHYS 340 and PHYS 350 are mutually exclusive. PHYS 342 and PHYS 352 are mutually exclusive.',
         "sort_order": 6,
         "courses": [
@@ -2964,6 +2993,7 @@ SCIENCE_PROGRAMS_PART3 = [
         "title": 'Streams (15-17 credits from one of the following streams)',
         "block_type": 'pool_group',
         "credits_needed": 15,
+        "constraint_notes": 'Students must complete 15-17 credits from ONE of the four streams listed. Only the Weather Analysis and Forecasting Stream is partially available due to page truncation. Advisors must verify remaining streams.',
         "notes": 'Students must complete 15-17 credits from ONE of the four streams listed. Only the Weather Analysis and Forecasting Stream is partially available due to page truncation. Advisors must verify remaining streams.',
         "sort_order": 7,
       },
@@ -2973,6 +3003,7 @@ SCIENCE_PROGRAMS_PART3 = [
         "block_type": 'group',
         "group_name": 'Weather Analysis and Forecasting Stream',
         "credits_needed": 13,
+        "constraint_notes": 'All 5 courses listed are required (13 credits total: 4 x 3cr + 1 x 1cr).',
         "notes": 'All 5 courses listed are required (13 credits total: 4 x 3cr + 1 x 1cr).',
         "sort_order": 8,
         "courses": [
@@ -3025,6 +3056,7 @@ SCIENCE_PROGRAMS_PART3 = [
         "block_type": 'choose_credits',
         "group_name": 'Weather Analysis and Forecasting Stream',
         "credits_needed": 3,
+        "constraint_notes": 'Page is truncated mid-stream; only ATOC 404 and ATOC 512 are visible. There may be additional courses. Advisors should verify.',
         "notes": 'Page is truncated mid-stream; only ATOC 404 and ATOC 512 are visible. There may be additional courses. Advisors should verify.',
         "sort_order": 9,
         "courses": [
@@ -3076,6 +3108,7 @@ SCIENCE_PROGRAMS_PART3 = [
         "title": 'Complementary Courses (21 credits)',
         "block_type": 'pool_group',
         "credits_needed": 21,
+        "constraint_notes": 'Students must take a minimum of 6 credits at the 400 to 500 level. Students may not take any courses from their home department(s). Students complete a minimum of 9 credits each in two areas.',
         "notes": 'Students must take a minimum of 6 credits at the 400 to 500 level. Students may not take any courses from their home department(s). Students complete a minimum of 9 credits each in two areas.',
         "sort_order": 2,
       },
@@ -3156,6 +3189,7 @@ SCIENCE_PROGRAMS_PART3 = [
         "title": 'Linguistics',
         "block_type": 'group',
         "group_name": 'Linguistics',
+        "constraint_notes": 'Any course at the 300, 400 or 500 level from the department of Linguistics is also eligible. The courses listed below are lower-level options explicitly included.',
         "notes": 'Any course at the 300, 400 or 500 level from the department of Linguistics is also eligible. The courses listed below are lower-level options explicitly included.',
         "sort_order": 4,
         "courses": [

@@ -50,6 +50,7 @@ ARTS_SCIENCE_PROGRAMS = [
         "title": 'Core Complementary Courses (21 credits)',
         "block_type": 'multi_group',
         "credits_needed": 21,
+        "constraint_notes": '3 credits from each of the following six subject area groups: Logic, Statistics, Computer Science, Linguistics, Philosophy, Neuroscience.',
         "notes": '3 credits from each of the following six subject area groups: Logic, Statistics, Computer Science, Linguistics, Philosophy, Neuroscience.',
         "sort_order": 2,
       },
@@ -59,6 +60,7 @@ ARTS_SCIENCE_PROGRAMS = [
         "block_type": 'group',
         "group_name": 'Logic',
         "credits_needed": 3,
+        "constraint_notes": '3 credits from the following logic courses.',
         "notes": '3 credits from the following logic courses.',
         "sort_order": 3,
         "courses": [
@@ -91,6 +93,7 @@ ARTS_SCIENCE_PROGRAMS = [
         "block_type": 'group',
         "group_name": 'Statistics',
         "credits_needed": 3,
+        "constraint_notes": '3 credits from the following statistics courses.',
         "notes": '3 credits from the following statistics courses.',
         "sort_order": 4,
         "courses": [
@@ -123,6 +126,7 @@ ARTS_SCIENCE_PROGRAMS = [
         "block_type": 'group',
         "group_name": 'Computer Science (Core)',
         "credits_needed": 3,
+        "constraint_notes": '3 credits from the following computer science courses.',
         "notes": '3 credits from the following computer science courses.',
         "sort_order": 5,
         "courses": [
@@ -155,6 +159,7 @@ ARTS_SCIENCE_PROGRAMS = [
         "block_type": 'group',
         "group_name": 'Linguistics (Core)',
         "credits_needed": 3,
+        "constraint_notes": '3 credits from the following linguistics courses.',
         "notes": '3 credits from the following linguistics courses.',
         "sort_order": 6,
         "courses": [
@@ -187,6 +192,7 @@ ARTS_SCIENCE_PROGRAMS = [
         "block_type": 'group',
         "group_name": 'Philosophy (Core)',
         "credits_needed": 3,
+        "constraint_notes": '3 credits from the following philosophy courses.',
         "notes": '3 credits from the following philosophy courses.',
         "sort_order": 7,
         "courses": [
@@ -227,6 +233,7 @@ ARTS_SCIENCE_PROGRAMS = [
         "block_type": 'group',
         "group_name": 'Neuroscience (Core)',
         "credits_needed": 3,
+        "constraint_notes": '3 credits from the following neuroscience courses.',
         "notes": '3 credits from the following neuroscience courses.',
         "sort_order": 8,
         "courses": [
@@ -258,6 +265,7 @@ ARTS_SCIENCE_PROGRAMS = [
         "title": 'Complementary Courses (33 credits)',
         "block_type": 'multi_group',
         "credits_needed": 33,
+        "constraint_notes": '30 credits selected as follows: 18 credits from ONE of the five lists (Computer Science, Linguistics, Neuroscience, Philosophy, or Psychology); 15 credits from any of the five lists. Of the 33 credits, 15 must be at the 400 level or higher. WARNING: The catalogue page was truncated. Only partial course listings for the Computer Science stream are available (COMP 206, COMP 250, COMP 251 cut off). The full lists for all five streams and the complete 400-level course requirements could not be extracted. Advisors must verify the complete stream course lists from the live catalogue.',
         "notes": '30 credits selected as follows: 18 credits from ONE of the five lists (Computer Science, Linguistics, Neuroscience, Philosophy, or Psychology); 15 credits from any of the five lists. Of the 33 credits, 15 must be at the 400 level or higher. WARNING: The catalogue page was truncated. Only partial course listings for the Computer Science stream are available (COMP 206, COMP 250, COMP 251 cut off). The full lists for all five streams and the complete 400-level course requirements could not be extracted. Advisors must verify the complete stream course lists from the live catalogue.',
         "sort_order": 9,
         "courses": [
@@ -303,6 +311,7 @@ ARTS_SCIENCE_PROGRAMS = [
         "title": 'Required Courses (9 credits)',
         "block_type": 'required',
         "credits_needed": 9,
+        "constraint_notes": 'Students must achieve a minimum program GPA of 3.3 and a grade of B+ (3.3) or better in COGS 444 to receive Honours degree.',
         "notes": 'Students must achieve a minimum program GPA of 3.3 and a grade of B+ (3.3) or better in COGS 444 to receive Honours degree.',
         "sort_order": 1,
         "courses": [
@@ -329,6 +338,7 @@ ARTS_SCIENCE_PROGRAMS = [
         "title": 'Core Complementary Courses (21 credits)',
         "block_type": 'pool_group',
         "credits_needed": 21,
+        "constraint_notes": '6 groups of 3 credits each (one course per group). Choose one course from each of the six categories: Logic, Statistics, Computer Science, Linguistics, Philosophy, and Neuroscience/Psychology.',
         "notes": '6 groups of 3 credits each (one course per group). Choose one course from each of the six categories: Logic, Statistics, Computer Science, Linguistics, Philosophy, and Neuroscience/Psychology.',
         "sort_order": 2,
         "courses": [
@@ -475,6 +485,7 @@ ARTS_SCIENCE_PROGRAMS = [
         "block_type": 'choose_credits',
         "group_name": 'Computer Science',
         "credits_needed": 18,
+        "constraint_notes": '18 credits from Computer Science list. Must include 15 credits at 400-level or higher across all 30 complementary credits.',
         "notes": '18 credits from Computer Science list. Must include 15 credits at 400-level or higher across all 30 complementary credits.',
         "sort_order": 3,
         "courses": [
@@ -618,6 +629,7 @@ ARTS_SCIENCE_PROGRAMS = [
         "title": 'Complementary Courses - Linguistics',
         "block_type": 'choose_credits',
         "group_name": 'Linguistics',
+        "constraint_notes": 'Linguistics courses available for complementary electives. 18 credits from one list required; this list can fulfill that requirement or contribute to the 12 discretionary credits.',
         "notes": 'Linguistics courses available for complementary electives. 18 credits from one list required; this list can fulfill that requirement or contribute to the 12 discretionary credits.',
         "sort_order": 4,
       },
@@ -626,6 +638,7 @@ ARTS_SCIENCE_PROGRAMS = [
         "title": 'Complementary Courses - Neuroscience',
         "block_type": 'choose_credits',
         "group_name": 'Neuroscience',
+        "constraint_notes": 'Neuroscience courses available for complementary electives. 18 credits from one list required; this list can fulfill that requirement or contribute to the 12 discretionary credits.',
         "notes": 'Neuroscience courses available for complementary electives. 18 credits from one list required; this list can fulfill that requirement or contribute to the 12 discretionary credits.',
         "sort_order": 5,
       },
@@ -634,6 +647,7 @@ ARTS_SCIENCE_PROGRAMS = [
         "title": 'Complementary Courses - Philosophy',
         "block_type": 'choose_credits',
         "group_name": 'Philosophy',
+        "constraint_notes": 'Philosophy courses available for complementary electives. 18 credits from one list required; this list can fulfill that requirement or contribute to the 12 discretionary credits.',
         "notes": 'Philosophy courses available for complementary electives. 18 credits from one list required; this list can fulfill that requirement or contribute to the 12 discretionary credits.',
         "sort_order": 6,
       },
@@ -642,6 +656,7 @@ ARTS_SCIENCE_PROGRAMS = [
         "title": 'Complementary Courses - Psychology',
         "block_type": 'choose_credits',
         "group_name": 'Psychology',
+        "constraint_notes": 'Psychology courses available for complementary electives. 18 credits from one list required; this list can fulfill that requirement or contribute to the 12 discretionary credits.',
         "notes": 'Psychology courses available for complementary electives. 18 credits from one list required; this list can fulfill that requirement or contribute to the 12 discretionary credits.',
         "sort_order": 7,
       },
@@ -1378,6 +1393,7 @@ ARTS_SCIENCE_PROGRAMS = [
         "title": 'Honours Required Courses (6 credits)',
         "block_type": 'required',
         "credits_needed": 6,
+        "constraint_notes": 'Students must take either ENVR 495D1 and ENVR 495D2 (consecutive terms) OR ENVR 495N1 and ENVR 495N2 (non-consecutive terms). Students must earn B (3.0) or higher in Honours Research courses. Minimum program GPA of 3.3 required to enter Honours program and maintain Honours status at graduation.',
         "notes": 'Students must take either ENVR 495D1 and ENVR 495D2 (consecutive terms) OR ENVR 495N1 and ENVR 495N2 (non-consecutive terms). Students must earn B (3.0) or higher in Honours Research courses. Minimum program GPA of 3.3 required to enter Honours program and maintain Honours status at graduation.',
         "sort_order": 2,
         "courses": [
@@ -1402,6 +1418,7 @@ ARTS_SCIENCE_PROGRAMS = [
             "catalog": '495N1',
             "title": 'Honours Research',
             "credits": 3.0,
+            "is_required": True,
             "notes": 'Preparation of an honours thesis. Non-consecutive term option (alternative to D1).',
           },
           {
@@ -1409,6 +1426,7 @@ ARTS_SCIENCE_PROGRAMS = [
             "catalog": '495N2',
             "title": 'Honours Research',
             "credits": 3.0,
+            "is_required": True,
             "notes": 'Preparation of an honours thesis. Non-consecutive term option (paired with N1).',
           },
         ],
@@ -1425,30 +1443,35 @@ ARTS_SCIENCE_PROGRAMS = [
             "catalog": '200',
             "title": 'The Global Environment',
             "credits": 3.0,
+            "is_required": True,
           },
           {
             "subject": 'ENVR',
             "catalog": '202',
             "title": 'The Evolving Earth',
             "credits": 3.0,
+            "is_required": True,
           },
           {
             "subject": 'ENVR',
             "catalog": '203',
             "title": 'Knowledge, Ethics and Environment',
             "credits": 3.0,
+            "is_required": True,
           },
           {
             "subject": 'GEOG',
             "catalog": '203',
             "title": 'Environmental Systems',
             "credits": 3.0,
+            "is_required": True,
           },
           {
             "subject": 'GEOG',
             "catalog": '408',
             "title": 'Geography of Development',
             "credits": 3.0,
+            "is_required": True,
           },
         ],
       },
@@ -1457,6 +1480,7 @@ ARTS_SCIENCE_PROGRAMS = [
         "title": 'Statistics (3 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'Choose 3 credits from the following.',
         "notes": 'Choose 3 credits from the following.',
         "sort_order": 4,
         "courses": [
@@ -1498,6 +1522,7 @@ ARTS_SCIENCE_PROGRAMS = [
         "title": 'Economics (3 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'Choose 3 credits from the following.',
         "notes": 'Choose 3 credits from the following.',
         "sort_order": 5,
         "courses": [
@@ -1550,6 +1575,7 @@ ARTS_SCIENCE_PROGRAMS = [
         "title": 'Sustainability in Business (3 credits)',
         "block_type": 'choose_credits',
         "credits_needed": 3,
+        "constraint_notes": 'Choose 3 credits of Management from the following.',
         "notes": 'Choose 3 credits of Management from the following.',
         "sort_order": 6,
         "courses": [
@@ -1584,6 +1610,7 @@ ARTS_SCIENCE_PROGRAMS = [
         "title": 'Area 1: Methods: Observation, Analysis, Modelling, and Management (variable credits)',
         "block_type": 'choose_credits',
         "group_name": 'Area 1',
+        "constraint_notes": '18 additional credits of complementary courses chosen from three areas (1, 2, 3). At least 9 credits must be at 300 level or higher; students must choose at least 6 credits from EACH area (1, 2, and 3). This block represents Area 1 options only.',
         "notes": '18 additional credits of complementary courses chosen from three areas (1, 2, 3). At least 9 credits must be at 300 level or higher; students must choose at least 6 credits from EACH area (1, 2, and 3). This block represents Area 1 options only.',
         "sort_order": 7,
         "courses": [
@@ -1672,6 +1699,7 @@ ARTS_SCIENCE_PROGRAMS = [
         "title": 'Areas 2 & 3: Courses (variable credits)',
         "block_type": 'choose_credits',
         "group_name": 'Areas 2-3',
+        "constraint_notes": 'Students must choose at least 6 credits from Area 2 and at least 6 credits from Area 3 (total 18 credits from all three areas, with at least 9 at 300-level or higher). Area 2 and Area 3 course lists not provided in the source text.',
         "notes": 'Students must choose at least 6 credits from Area 2 and at least 6 credits from Area 3 (total 18 credits from all three areas, with at least 9 at 300-level or higher). Area 2 and Area 3 course lists not provided in the source text.',
         "sort_order": 8,
       },
@@ -1691,6 +1719,7 @@ ARTS_SCIENCE_PROGRAMS = [
         "title": 'Required Courses (18 credits)',
         "block_type": 'required',
         "credits_needed": 18,
+        "constraint_notes": "Core required courses are taught at both McGill's Downtown campus and at the Macdonald campus in Sainte-Anne-de-Bellevue. Register in Section 001 for Downtown campus, Section 051 for Macdonald campus.",
         "notes": "Core required courses are taught at both McGill's Downtown campus and at the Macdonald campus in Sainte-Anne-de-Bellevue. Register in Section 001 for Downtown campus, Section 051 for Macdonald campus.",
         "sort_order": 1,
         "courses": [
@@ -1743,6 +1772,7 @@ ARTS_SCIENCE_PROGRAMS = [
         "title": 'Senior Research Project',
         "block_type": 'choose_courses',
         "courses_needed": 1,
+        "constraint_notes": 'Only 3 credits will be applied to the program; extra credits will count as electives.',
         "notes": 'Only 3 credits will be applied to the program; extra credits will count as electives.',
         "sort_order": 2,
         "courses": [
@@ -1817,6 +1847,7 @@ ARTS_SCIENCE_PROGRAMS = [
         "title": 'Area 1: Population, Community, and Ecosystem Ecology',
         "block_type": 'group',
         "group_name": 'Area 1',
+        "constraint_notes": 'BIOL 308 and ENVB 305 are mutually exclusive; you may take one or the other but not both.',
         "notes": 'BIOL 308 and ENVB 305 are mutually exclusive; you may take one or the other but not both.',
         "sort_order": 4,
         "courses": [
@@ -1901,6 +1932,7 @@ ARTS_SCIENCE_PROGRAMS = [
         "title": 'Areas (30 credits from at least three of five areas)',
         "block_type": 'pool_group',
         "credits_needed": 30,
+        "constraint_notes": '30 credits from at least three of the following Areas. At least 6 credits must be at the 400 level or higher, selected either from these lists or in consultation with the Program Adviser.',
         "notes": '30 credits from at least three of the following Areas. At least 6 credits must be at the 400 level or higher, selected either from these lists or in consultation with the Program Adviser.',
         "sort_order": 4,
       },
