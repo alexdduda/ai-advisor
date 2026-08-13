@@ -1407,7 +1407,6 @@
     flex-wrap: nowrap;
     scroll-snap-type: x proximity;
     scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
   }
   .dp-prog-tabs::-webkit-scrollbar { display: none; }
   .dp-prog-tab {

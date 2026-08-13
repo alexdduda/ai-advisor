@@ -173,7 +173,10 @@
      (z-index 100) on a real iPhone while sitting correctly on top in desktop
      Chrome, which ignores the property outright — the bug was invisible
      locally and took two attempts to place.
-     It has been redundant since iOS 13 made momentum scrolling the default. */
+     It has been redundant since iOS 13 made momentum scrolling the default, so
+     it is gone from every stylesheet in this project — do not reintroduce it.
+     A scroller that wants momentum already has it; a scroller that declares
+     this also silently breaks any fixed descendant it ever gains. */
   overscroll-behavior-y: contain;
   padding: 1rem;
   padding-left:  max(1rem, env(safe-area-inset-left));

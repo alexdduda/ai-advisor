@@ -837,7 +837,6 @@
   max-height: calc(100vh - 40px);
   max-height: calc(100dvh - 40px);
   overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
   animation: popIn 0.2s ease;
 }
 
@@ -1793,7 +1792,6 @@
 
 .cal-bulk-list {
   overflow-y: scroll;
-  -webkit-overflow-scrolling: touch;
   flex: 1 1 0px;
   min-height: 0;
   padding: 0.65rem 0.9rem;
@@ -2128,7 +2126,6 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
   /* Don't chain scroll to the page behind the modal — that chaining is what
      read as a "freeze" on the mobile shell when the body reached its end. */
   overscroll-behavior: contain;
@@ -2677,7 +2674,6 @@
 /* List */
 .mgr-list {
   overflow-y: scroll;
-  -webkit-overflow-scrolling: touch;
   flex: 1 1 0px;
   min-height: 0;
   padding: 0.75rem 1rem;
