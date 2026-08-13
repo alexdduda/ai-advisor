@@ -1001,7 +1001,8 @@
 /* ── Freeform input ── */
 .advisor-cards-freeform {
   padding: 14px 24px 18px;
-  border-top: 1px solid var(--card-border, var(--border-primary));
+  /* No border-top / box-shadow: the ask bar is identified by its red underline,
+     not by a light box drawn around it. */
   display: flex;
   gap: 12px;
   align-items: center;
@@ -1011,29 +1012,25 @@
 
 .freeform-input {
   flex: 1;
-  padding: 14px 20px;
-  border: 2px solid var(--accent-primary);
-  border-radius: 50px;
+  /* Same treatment as .card-chat-bar__input in the thread composer, so the two
+     places you type at the advisor look like the same control. A hard red
+     underline rather than a pill outline inside a lighter box. */
+  padding: 10px 2px;
+  border: none;
+  border-bottom: 2px solid var(--accent-primary);
+  border-radius: 0;
   font-size: 0.95rem;
-  background: var(--bg-secondary);
+  background: transparent;
   color: var(--text-primary);
   font-family: inherit;
   outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-[data-theme="dark"] .freeform-input {
-  background: #000;
+  transition: border-color 0.2s;
+  min-width: 0;
 }
 
 .freeform-input:focus {
-  border-color: var(--accent-primary);
-  background: var(--bg-primary);
-  box-shadow: 0 4px 12px rgba(237, 27, 47, 0.15);
-}
-
-[data-theme="dark"] .freeform-input:focus {
-  background: #000;
+  border-bottom-color: var(--accent-primary);
+  border-bottom-width: 2.5px;
 }
 
 .freeform-input::placeholder { color: var(--text-muted, var(--text-tertiary)); }
@@ -1193,16 +1190,16 @@
     bottom: calc(56px + env(safe-area-inset-bottom, 0px));
     z-index: 30;
     margin-top: 12px;
-    padding: 8px;
+    padding: 4px 12px 8px;
     gap: 8px;
-    border: 1px solid var(--card-border, var(--border-primary));
-    border-radius: 999px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.14);
+    /* No border, no shadow, no pill: the red underline is the affordance.
+       The opaque background stays — this bar is sticky over a scrolling feed,
+       so without it the text underneath reads straight through the input. */
     background: var(--card-bg, var(--bg-primary));
   }
 
   .freeform-input {
-    padding: 11px 16px;
+    padding: 10px 2px;
     /* 16px exactly: anything smaller makes iOS Safari zoom on focus. */
     font-size: 16px;
   }
