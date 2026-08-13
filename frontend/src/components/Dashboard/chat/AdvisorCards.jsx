@@ -10,6 +10,9 @@ import {
   FaGripVertical, FaTrash, FaMapPin, FaCompass,
 } from 'react-icons/fa'
 import { CARD_CATEGORIES, CATEGORY_LABELS } from '../../../lib/cardsAPI'
+import { useAuth } from '../../../contexts/AuthContext'
+import { scheduleRegistrationReminder } from '../../../lib/registrationReminder'
+import useNotificationPrefs from '../../../hooks/useNotificationPrefs'
 import useViewport from '../../../hooks/useViewport'
 import './AdvisorCards.css'
 
@@ -122,9 +125,92 @@ function CardChatBar({ onSend, isThinking, onFocus }) {
 
 // ── Follow-up chips ───────────────────────────────────────────
 // Shared by the desktop inline panel and the mobile full-screen thread so the
+
+/**
+ * Inline form for the student's own registration start time.
+ *
+ * McGill staggers those times per student, so the card cannot know when a given
+ * student's slot opens — they read it off Minerva and enter it here. Saving
+ * puts it on their calendar and queues a reminder the day before.
+ *
+ * Deliberately inline rather than a modal: it is two fields, and the mobile
+ * thread already fills the screen, so a modal over it would be a second layer
+ * for no gain.
+ */
+function RegistrationTimeForm({ onCancel }) {
+  const { t } = useLanguage()
+  const { user } = useAuth()
+  // Reminders honour the student's notification settings — if they've turned
+  // reminders off, the event is still saved to the calendar and simply doesn't
+  // notify, rather than us quietly overriding their preference.
+  const [notifPrefs] = useNotificationPrefs(user?.id, user?.email)
+  const [date, setDate] = useState('')
+  const [time, setTime] = useState('')
+  const [status, setStatus] = useState(null)   // null | 'saving' | 'saved'
+  const [error, setError] = useState(null)
+
+  const submit = async (e) => {
+    e.preventDefault()
+    if (!date || !user?.id || status === 'saving') return
+    setStatus('saving'); setError(null)
+    try {
+      await scheduleRegistrationReminder(
+        user.id, user.email, date, time || null, notifPrefs,
+      )
+      setStatus('saved')
+    } catch (err) {
+      setStatus(null)
+      setError(err?.message || t('brief.regError'))
+    }
+  }
+
+  if (status === 'saved') {
+    return (
+      <p className="advisor-card__reg-saved" role="status">
+        {t('brief.regSaved')}
+      </p>
+    )
+  }
+
+  return (
+    <form className="advisor-card__reg-form" onSubmit={submit}>
+      <p className="advisor-card__reg-hint">{t('brief.regHint')}</p>
+      <div className="advisor-card__reg-fields">
+        <label>
+          <span>{t('brief.regDate')}</span>
+          <input
+            type="date"
+            value={date}
+            onChange={e => setDate(e.target.value)}
+            required
+          />
+        </label>
+        <label>
+          <span>{t('brief.regTime')}</span>
+          <input
+            type="time"
+            value={time}
+            onChange={e => setTime(e.target.value)}
+          />
+        </label>
+      </div>
+      {error && <p className="advisor-card__reg-error" role="alert">{error}</p>}
+      <div className="advisor-card__reg-actions">
+        <button type="button" className="advisor-card__reg-cancel" onClick={onCancel}>
+          {t('brief.regCancel')}
+        </button>
+        <button type="submit" className="advisor-card__reg-save" disabled={!date || status === 'saving'}>
+          {status === 'saving' ? t('brief.regSaving') : t('brief.regSave')}
+        </button>
+      </div>
+    </form>
+  )
+}
+
 // typed-action map below only ever exists in one place. Renders exactly the
 // markup the desktop panel used before this was extracted.
 function CardChips({ chips, isThinking, onSend }) {
+  const [regFormOpen, setRegFormOpen] = useState(false)
   if (!chips.length) return null
   return (
     <div className="advisor-card__chips">
@@ -138,7 +224,11 @@ function CardChips({ chips, isThinking, onSend }) {
           open_degree_planning:   'open-degree-planning',
         }
         const dispatchEvent = TYPED_ACTIONS[chipType]
+        // This one opens a form in place rather than navigating: the value it
+        // needs (the student's own Minerva start time) lives nowhere in the app.
+        const opensRegForm = chipType === 'set_registration_time'
         const handleChipClick = () => {
+          if (opensRegForm) { setRegFormOpen(v => !v); return }
           if (dispatchEvent) {
             window.dispatchEvent(new CustomEvent(dispatchEvent))
             return
@@ -150,13 +240,14 @@ function CardChips({ chips, isThinking, onSend }) {
             key={i}
             className="advisor-card__chip"
             onClick={handleChipClick}
-            disabled={isThinking && !dispatchEvent}
+            disabled={isThinking && !dispatchEvent && !opensRegForm}
           >
             <FaBolt className="chip-icon" />
             {chipLabel}
           </button>
         )
       })}
+      {regFormOpen && <RegistrationTimeForm onCancel={() => setRegFormOpen(false)} />}
     </div>
   )
 }

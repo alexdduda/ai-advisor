@@ -314,6 +314,102 @@
 /* The student's own question, shown above the advisor's answer. Quieter than
    the body and set off by a rule so the card reads question-then-answer
    rather than as two paragraphs of equal weight. */
+/* ── Registration start-time form ──
+   Shown inline under the chips when the student opts to record their own
+   Minerva slot. Two fields and two buttons — no modal, since the mobile thread
+   already fills the screen. */
+.advisor-card__reg-form {
+  width: 100%;
+  margin-top: 10px;
+  padding: 12px;
+  border: 1px solid var(--card-border, var(--border-primary));
+  border-radius: 10px;
+  background: var(--bg-secondary);
+}
+
+.advisor-card__reg-hint {
+  margin: 0 0 10px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.advisor-card__reg-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.advisor-card__reg-fields label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1 1 130px;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.advisor-card__reg-fields input {
+  /* 16px exactly: anything smaller makes iOS Safari zoom on focus. */
+  font-size: 16px;
+  padding: 8px 10px;
+  border: 1px solid var(--border-primary);
+  border-radius: 8px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: inherit;
+  min-width: 0;
+}
+
+.advisor-card__reg-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.advisor-card__reg-actions button {
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.advisor-card__reg-cancel {
+  background: transparent;
+  border: 1px solid var(--border-primary);
+  color: var(--text-secondary);
+}
+
+.advisor-card__reg-save {
+  background: var(--accent-primary);
+  border: 1px solid var(--accent-primary);
+  color: #fff;
+}
+
+.advisor-card__reg-save:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.advisor-card__reg-saved {
+  width: 100%;
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--accent-light);
+  color: var(--accent-text);
+  font-size: 0.85rem;
+}
+
+.advisor-card__reg-error {
+  margin: 8px 0 0;
+  font-size: 0.8rem;
+  color: var(--error-primary, #b91c1c);
+}
+
 .advisor-card__question {
   margin: 0 0 10px;
   padding-left: 10px;

@@ -1444,6 +1444,11 @@ def _insert_course_registration_card(user_id: str, days_before_open: int) -> boo
             "title": title,
             "body": body,
             "actions": json.dumps([
+                # Opens an inline date/time form in the card. The student's own
+                # start time is the one thing this card cannot know — McGill
+                # staggers them — so they read it off Minerva and enter it, and
+                # we put it on their calendar with a reminder the day before.
+                {"type": "set_registration_time", "label": "Add my registration time to my calendar"},
                 {"type": "open_degree_planning", "label": "Open Degree Planning"},
                 "Which courses should I take in Fall and which in Winter?",
                 "Where in Minerva do I find my registration start time?",
