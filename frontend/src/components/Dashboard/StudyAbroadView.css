@@ -344,7 +344,6 @@
   .sa-tabs {
     overflow-x: auto;
     scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
   }
   .sa-tabs::-webkit-scrollbar { display: none; }
   .sa-tab { flex: 0 0 auto; padding: 0.6rem 0.85rem; }

@@ -2622,7 +2622,6 @@
   .club-manage__tabs {
     padding: 0.5rem 0.75rem;
     gap: 4px;
-    -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
   }
   .club-manage__tabs::-webkit-scrollbar { display: none; }
