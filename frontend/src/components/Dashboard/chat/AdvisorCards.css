@@ -785,6 +785,11 @@
 .card-chat-bar__input:focus {
   border-bottom-color: var(--accent-primary);
   outline: none;
+  /* index.css gives every input a 3px translucent-red focus ring. On a boxed
+     field that reads as a glow; on an underline field it draws a rectangle
+     around text that has no box — which is the light rectangle this bar was
+     never supposed to have. The underline is the focus affordance here. */
+  box-shadow: none;
 }
 
 .card-chat-bar__input::placeholder {
@@ -1028,9 +1033,18 @@
   min-width: 0;
 }
 
+/* index.css's `input:hover { border-color: … }` is (0,1,1) and beats
+   `.freeform-input` at (0,1,0), so without this the red underline repaints
+   itself in the neutral hover colour the moment the pointer crosses it. */
+.freeform-input:hover {
+  border-bottom-color: var(--accent-primary);
+}
+
 .freeform-input:focus {
   border-bottom-color: var(--accent-primary);
   border-bottom-width: 2.5px;
+  /* Same global focus ring as above — see .card-chat-bar__input:focus. */
+  box-shadow: none;
 }
 
 .freeform-input::placeholder { color: var(--text-muted, var(--text-tertiary)); }
