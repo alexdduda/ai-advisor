@@ -165,7 +165,15 @@
      sticky headers screens rely on. `clip` contains the overflow without
      establishing a second scroll container. */
   overflow-x: clip;
-  -webkit-overflow-scrolling: touch;
+  /* NO -webkit-overflow-scrolling: touch here.
+     On iOS it creates a compositing layer that traps `position: fixed`
+     DESCENDANTS: they resolve against this scroller instead of the viewport,
+     get clipped by it, and their z-index cannot escape it. That is why the
+     mobile card thread (fixed, z-index 150) rendered UNDER the tab bar
+     (z-index 100) on a real iPhone while sitting correctly on top in desktop
+     Chrome, which ignores the property outright — the bug was invisible
+     locally and took two attempts to place.
+     It has been redundant since iOS 13 made momentum scrolling the default. */
   overscroll-behavior-y: contain;
   padding: 1rem;
   padding-left:  max(1rem, env(safe-area-inset-left));

@@ -110,3 +110,65 @@ def test_save_cards_reraises_other_db_errors(fake_supabase, monkeypatch):
 
     with pytest.raises(APIError):
         save_cards("user-1", [{"title": "t", "body": "b", "type": "insight"}])
+
+
+class TestCourseRegistrationReminder:
+    """Fall and Winter registration open on the SAME day at McGill — there is no
+    separate Winter window. The reminder used to say "the courses you need next
+    term", which reads as Fall only; students who planned just Fall came back in
+    November to find the Winter sections they wanted already full.
+
+    These pin the both-terms message so a future copy edit can't quietly drop it.
+    """
+
+    def _card(self, days_before_open, monkeypatch):
+        """Run the insert and capture the row it would write, without a DB."""
+        import api.routes.cards as cards
+        captured = {}
+
+        class _Tbl:
+            def __init__(self, name): self.name = name
+            def select(self, *a, **k): return self
+            def eq(self, *a, **k): return self
+            def gte(self, *a, **k): return self
+            def limit(self, *a, **k): return self
+            def update(self, *a, **k): return self
+            def execute(self): return type('R', (), {'data': []})()
+            def insert(self, row):
+                if self.name == 'advisor_cards' and row.get('label') == cards.COURSE_REGISTRATION_REMINDER_LABEL:
+                    captured.update(row)
+                return self
+
+        monkeypatch.setattr(cards, 'get_supabase', lambda: type('S', (), {'table': staticmethod(lambda n: _Tbl(n))})())
+        monkeypatch.setattr(cards, '_has_active_course_registration_card', lambda uid: False)
+        assert cards._insert_course_registration_card('u1', days_before_open) is True
+        return captured
+
+    def test_heads_up_card_names_both_terms(self, monkeypatch):
+        card = self._card(8, monkeypatch)
+        blob = f"{card['title']} {card['body']}".lower()
+        assert 'fall' in blob and 'winter' in blob
+        assert 'same time' in blob, 'must say the two terms open together'
+
+    def test_day_of_card_names_both_terms(self, monkeypatch):
+        card = self._card(0, monkeypatch)
+        blob = f"{card['title']} {card['body']}".lower()
+        assert 'fall' in blob and 'winter' in blob
+        assert 'both' in blob
+
+    def test_day_of_card_says_there_is_no_second_window(self, monkeypatch):
+        """The actionable part: don't wait and register for Winter later."""
+        body = self._card(0, monkeypatch)['body'].lower()
+        assert 'no second registration date' in body
+
+    def test_neither_card_says_only_next_term(self, monkeypatch):
+        """The old wording. Singular "next term" is what caused the problem."""
+        for days in (8, 0):
+            blob = f"{self._card(days, monkeypatch)['body']}".lower()
+            assert 'next term' not in blob, f'days_before_open={days} still says "next term"'
+
+    def test_chips_cover_both_terms(self, monkeypatch):
+        import json as _json
+        actions = _json.loads(self._card(0, monkeypatch)['actions'])
+        text = ' '.join(a if isinstance(a, str) else a.get('label', '') for a in actions).lower()
+        assert 'fall' in text and 'winter' in text

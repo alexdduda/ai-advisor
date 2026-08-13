@@ -77,7 +77,9 @@ TRANSCRIPT_REMINDER_LABEL = "TRANSCRIPT UPDATE"
 
 
 # ── Course-registration reminder config ─────────────────────────────
-# Course registration for Fall/Winter opens late May. We fire:
+# Fall and Winter registration open on the SAME date in late May — there is no
+# separate Winter window — so both reminder cards tell students to register for
+# both terms at once. We fire:
 #   - May 20: one-week heads-up so students can plan ("look ahead")
 #   - May 28: day-of "registration opens, go register now"
 # Update annually if McGill's registration window shifts.
@@ -1404,22 +1406,28 @@ def _insert_course_registration_card(user_id: str, days_before_open: int) -> boo
         except Exception:
             pass
 
-        # Wording shifts based on whether registration is opening today or upcoming
+        # Wording shifts based on whether registration is opening today or upcoming.
+        # Both cards lead with the same point: Fall and Winter open TOGETHER, so
+        # this is one sitting for the whole year. Students who plan only Fall
+        # come back in November to find the Winter sections they wanted full.
         if days_before_open > 0:
-            title = f"Course registration opens in {days_before_open} days"
+            title = f"Registration opens in {days_before_open} days — plan Fall AND Winter"
             body = (
-                f"McGill course registration for Fall/Winter opens in about {days_before_open} days. "
-                "Now's the time to review your degree plan, identify the courses you need next term, "
-                "and build a backup list in case your first picks fill up. "
-                "Avoid scheduling conflicts by lining up your top choices ahead of time."
+                f"McGill course registration opens in about {days_before_open} days, and Fall and "
+                "Winter open at the SAME TIME — you register for both terms in one sitting, not "
+                "twice. Plan a full year now: the courses you need for Fall, the ones for Winter, "
+                "and a backup for each in case your first picks fill up. If you only plan Fall, "
+                "the Winter sections you wanted are usually gone by the time you come back to them."
             )
             card_type = "warning"
         else:
-            title = "Course registration is open"
+            title = "Registration is open — register for Fall AND Winter"
             body = (
-                "McGill Minerva course registration is open. Sign in and register for next term's "
-                "courses as soon as possible — popular sections fill quickly. Double-check your "
-                "Fall and Winter selections, watch for time conflicts, and queue up backup courses."
+                "McGill Minerva course registration is open. Fall and Winter both opened today, so "
+                "register for BOTH terms in this session — there is no second registration date for "
+                "Winter, and popular sections fill within hours. Check for time conflicts within "
+                "each term, confirm prerequisites carry across from Fall to Winter, and have a "
+                "backup ready for anything that fills up."
             )
             card_type = "urgent"
 
@@ -1433,8 +1441,8 @@ def _insert_course_registration_card(user_id: str, days_before_open: int) -> boo
             "body": body,
             "actions": json.dumps([
                 {"type": "open_degree_planning", "label": "Open Degree Planning"},
-                "Which courses do I need to take next term?",
-                "How do I check for prerequisite conflicts?",
+                "Which courses should I take in Fall and which in Winter?",
+                "Do any of my Winter choices need a Fall prerequisite first?",
                 "What backups should I have ready if my first picks fill up?",
             ]),
             "category": "deadlines",
