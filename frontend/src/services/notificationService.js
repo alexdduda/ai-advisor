@@ -62,6 +62,10 @@ export async function scheduleNotification(event, userId, userEmail, notifPrefs 
 
   const payload = {
     user_id:          userId,
+    // Optional stable key. When set the backend upserts on it, so a caller that
+    // re-submits a corrected date updates the same event instead of stacking
+    // duplicates. Omitted by most callers, which want a new row each time.
+    ...(event.clientId ? { client_id: event.clientId } : {}),
     title:            event.title,
     date:             event.date,
     time:             event.time        || null,
