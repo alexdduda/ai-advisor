@@ -167,6 +167,16 @@ class TestCourseRegistrationReminder:
             blob = f"{self._card(days, monkeypatch)['body']}".lower()
             assert 'next term' not in blob, f'days_before_open={days} still says "next term"'
 
+    def test_both_cards_send_the_student_to_minerva_for_their_own_time(self, monkeypatch):
+        """McGill staggers registration start times per student, so "registration
+        opens May 28" is not the same as "yours opens May 28". The card has to
+        point at Minerva for the student's own slot rather than implying one
+        shared time."""
+        for days in (8, 0):
+            body = self._card(days, monkeypatch)['body'].lower()
+            assert 'minerva' in body, f'days_before_open={days}'
+            assert 'stagger' in body, f'days_before_open={days} must say times differ per student'
+
     def test_chips_cover_both_terms(self, monkeypatch):
         import json as _json
         actions = _json.loads(self._card(0, monkeypatch)['actions'])

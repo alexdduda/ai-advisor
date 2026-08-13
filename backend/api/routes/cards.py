@@ -1415,19 +1415,23 @@ def _insert_course_registration_card(user_id: str, days_before_open: int) -> boo
             body = (
                 f"McGill course registration opens in about {days_before_open} days, and Fall and "
                 "Winter open at the SAME TIME — you register for both terms in one sitting, not "
-                "twice. Plan a full year now: the courses you need for Fall, the ones for Winter, "
-                "and a backup for each in case your first picks fill up. If you only plan Fall, "
-                "the Winter sections you wanted are usually gone by the time you come back to them."
+                "twice. Check Minerva for the exact day and time YOUR registration opens: McGill "
+                "staggers start times per student, so yours may differ from a friend's. Plan a full "
+                "year before then — the courses you need for Fall, the ones for Winter, and a "
+                "backup for each. If you only plan Fall, the Winter sections you wanted are usually "
+                "gone by the time you come back to them."
             )
             card_type = "warning"
         else:
             title = "Registration is open — register for Fall AND Winter"
             body = (
-                "McGill Minerva course registration is open. Fall and Winter both opened today, so "
-                "register for BOTH terms in this session — there is no second registration date for "
-                "Winter, and popular sections fill within hours. Check for time conflicts within "
-                "each term, confirm prerequisites carry across from Fall to Winter, and have a "
-                "backup ready for anything that fills up."
+                "McGill course registration is opening. Fall and Winter open together, so register "
+                "for BOTH terms in one session — there is no second registration date for Winter, "
+                "and popular sections fill within hours. Registration times are staggered per "
+                "student, so check Minerva for your own start time and be ready at it rather than "
+                "assuming it is this morning. Watch for time conflicts within each term, confirm "
+                "prerequisites carry across from Fall to Winter, and have a backup ready for "
+                "anything that fills up."
             )
             card_type = "urgent"
 
@@ -1442,6 +1446,7 @@ def _insert_course_registration_card(user_id: str, days_before_open: int) -> boo
             "actions": json.dumps([
                 {"type": "open_degree_planning", "label": "Open Degree Planning"},
                 "Which courses should I take in Fall and which in Winter?",
+                "Where in Minerva do I find my registration start time?",
                 "Do any of my Winter choices need a Fall prerequisite first?",
                 "What backups should I have ready if my first picks fill up?",
             ]),
