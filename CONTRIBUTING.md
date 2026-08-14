@@ -54,7 +54,9 @@ npm run build
 ```
 
 CI runs the same checks plus a secret scan and Lighthouse budget. PRs
-can't merge until CI is green (and `main` is protected).
+should be green before merging — branch protection enforcing this on
+GitHub is not yet turned on for `main`, so this is currently a norm,
+not a hard gate.
 
 ## Branch + commit conventions
 
