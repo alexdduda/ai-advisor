@@ -1,6 +1,6 @@
 # Symbolos Mobile — Phase 0 Audit
 
-**Status:** read-only audit. No code changed. Not committed.
+**Status:** read-only audit. No code changed. Not committed. Predates the work in [docs/mobile/handoff.md](handoff.md) (now merged to `main`) — read that first for current state; this audit is historical context on how the plan changed.
 **Branch at time of audit:** `main` @ `8a7ce65` (clean)
 
 ---

@@ -1,8 +1,7 @@
 # Symbolos Mobile — Developer Handoff
 
-**Branch:** `mobile-app` (18 commits ahead of `main`, pushed)
-**Status:** web-side work complete and verified by build + tests. **Nothing has run on a real device or simulator.**
-**Written:** 2026-07-20
+**Written:** 2026-07-20. **Historical reference** — `mobile-app` is fully merged into `main` as of 2026-08-14 (0 commits ahead); the branch itself is stale and safe to delete. Whether the device/simulator testing described below as outstanding was ever done is not recorded — verify before relying on it.
+**At time of writing:** branch `mobile-app`, 18 commits ahead of `main`, web-side work complete and verified by build + tests, nothing run on a real device or simulator.
 
 You have a Mac. That is the thing this project has been blocked on. Almost everything in §6 needs one.
 

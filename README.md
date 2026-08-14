@@ -31,7 +31,7 @@ Students create a profile (major, year, GPA, interests) and then interact with t
 | Frontend | React 19 + Vite 7, CSS3 with CSS variables |
 | Backend | Python FastAPI, Uvicorn |
 | Database | Supabase (PostgreSQL) with Row Level Security |
-| AI | Anthropic Claude API (claude-opus model) |
+| AI | Anthropic Claude API (Claude Haiku, `claude-haiku-4-5-20251001`) |
 | Auth | Supabase Auth + JWT |
 | Deployment | Vercel (both frontend and backend as serverless) |
 | Data | Crowdsourced CSV of ~10k+ McGill course sections with historical grades, professor ratings via RateMyProfessor scraping |
@@ -108,7 +108,7 @@ npm run dev
 # Runs at http://localhost:5173
 ```
 
-**Important**: The backend uses the Supabase **service role** key (full access). The frontend uses the **anon/public** key (restricted by RLS policies). Never expose the service key in client code.
+**Important**: The frontend uses the Supabase **anon/public** key (restricted by RLS policies). The backend uses **both** — the **service role** key (full access) for admin and cron work, and a per-request client authenticated with the user's JWT (restricted by RLS, same as the frontend) for all user-scoped queries. Never expose the service key in client code.
 
 ---
 
@@ -122,7 +122,11 @@ The cards system uses a separate prompt that asks Claude to generate 3–6 high-
 
 ## Contributing
 
-Fork the repo, create a feature branch, and open a pull request. Follow existing code conventions, test locally, and keep commit messages clear.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for local setup, branch/commit conventions, and what CI checks before a PR can merge.
+
+## Further Documentation
+
+[docs/README.md](docs/README.md) indexes everything else — architecture, operations runbooks, mobile app status, security reviews, ADRs, and agent-facing docs.
 
 ---
 
