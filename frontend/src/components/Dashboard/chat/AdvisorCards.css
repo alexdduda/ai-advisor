@@ -782,13 +782,19 @@
   transition: border-color 0.2s;
 }
 
-.card-chat-bar__input:focus {
+.card-chat-bar__input:focus,
+.card-chat-bar__input:focus-visible {
   border-bottom-color: var(--accent-primary);
   outline: none;
   /* index.css gives every input a 3px translucent-red focus ring. On a boxed
      field that reads as a glow; on an underline field it draws a rectangle
      around text that has no box — which is the light rectangle this bar was
-     never supposed to have. The underline is the focus affordance here. */
+     never supposed to have. The underline is the focus affordance here.
+
+     :focus-visible listed explicitly rather than relied on via :focus
+     co-matching (true for text inputs in every current engine, but explicit
+     beats implicit) — see .freeform-input:focus for the fuller explanation
+     of why this specific property needed its own override. */
   box-shadow: none;
 }
 
@@ -1040,11 +1046,22 @@
   border-bottom-color: var(--accent-primary);
 }
 
-.freeform-input:focus {
+.freeform-input:focus,
+.freeform-input:focus-visible {
   border-bottom-color: var(--accent-primary);
   border-bottom-width: 2.5px;
-  /* Same global focus ring as above — see .card-chat-bar__input:focus. */
+  /* Same global focus ring as .card-chat-bar__input:focus below — box-shadow
+     was the light rectangle drawn ON the input. This outline is a SEPARATE
+     property and a separate cascade fight: theme.css's
+     `input:focus-visible { outline: 2px solid var(--border-focus);
+     outline-offset: 2px }` is (0,1,1). The base .freeform-input rule's
+     `outline: none` is only (0,1,0) — same class-column count, and the
+     type-column tiebreak goes to theme.css's rule because it also matches
+     the `input` element. That untouched outline, offset 2px OUTSIDE the
+     input, is what actually drew the rectangle in every screenshot; removing
+     border and box-shadow never could have touched it. */
   box-shadow: none;
+  outline: none;
 }
 
 .freeform-input::placeholder { color: var(--text-muted, var(--text-tertiary)); }
