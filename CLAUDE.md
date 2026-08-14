@@ -63,6 +63,11 @@ frontend/src/
 - **Add a route**: create `backend/api/routes/<name>.py` → register in `main.py`
 - **Change Claude model**: set `CLAUDE_MODEL` / `CLAUDE_CARDS_MODEL` in env or `config.py`
 
+## Git / PR workflow
+- **Before creating a new branch or PR**, run `gh pr list -R damianphim/symbolos --state open` to see what's already in flight. Avoids duplicate work and — more importantly — avoids branch/working-tree collisions with another concurrent session.
+- This working directory can be shared by concurrent sessions/agents. Don't leave renames or edits staged across multiple tool calls — commit promptly, or another session's `git checkout` can sweep your staged changes into its own commit. Check `git status`/`git branch` before starting work if picking up mid-task.
+- If `gh pr create` fails with a GraphQL rate-limit error, check `gh api rate_limit` — GraphQL and REST quotas are tracked separately, so REST often still has headroom. Fall back to `gh api repos/damianphim/symbolos/pulls -f title=... -f head=owner:branch -f base=main -f body=...`.
+
 ## Feature map (what each part of the site is for)
 - **Home** — daily dashboard: AI "Brief" cards, current courses (active term only), Up Next deadlines, degree progress, quick actions.
 - **Brief / Chat** — AI advisor cards generated per-user from their academic data (`cards.py`); freeform Q&A grounded in student context (`chat.py`).
