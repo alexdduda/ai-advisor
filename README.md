@@ -16,7 +16,7 @@ Students create a profile (major, year, GPA, interests) and then interact with t
 
 **Course Tracking** — Save courses to favorites, mark courses as completed (with grade and term), and flag current semester enrollments. This data feeds into the AI advisor's context for better recommendations.
 
-**Academic Calendar** — A full calendar view with personal events, McGill academic dates, and auto-generated final exam entries based on your current courses. Supports configurable reminders via email or SMS.
+**Academic Calendar** — A full calendar view with personal events, McGill academic dates, and auto-generated final exam entries based on your current courses. Supports configurable email reminders.
 
 **Bilingual Interface** — Full English/French language support across the entire UI.
 
