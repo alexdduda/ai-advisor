@@ -41,7 +41,7 @@ export default function Home() {
 
   return (
     <div className="mx-auto max-w-md px-6 pt-16">
-      <p className="text-sm uppercase tracking-[0.3em] text-magenta">Live at {data?.event.venue ?? "your campus"}</p>
+      <p className="text-sm uppercase tracking-[0.3em] text-white/60">Live at {data?.event.venue ?? "your campus"}</p>
       <h1 className="mt-2 font-display text-5xl font-bold leading-[0.95]">PRIMADONIS</h1>
       <p className="mt-3 text-white/70">{data?.event.description ?? "One night. One stage. Everyone you know."}</p>
 
@@ -54,7 +54,7 @@ export default function Home() {
             ["Sec", countdown.secs],
           ].map(([label, value]) => (
             <div key={label as string} className="rounded-2xl card py-3">
-              <div className="font-display text-2xl font-bold text-gold">{String(value).padStart(2, "0")}</div>
+              <div className="font-display text-2xl font-bold">{String(value).padStart(2, "0")}</div>
               <div className="text-[10px] uppercase tracking-wide text-white/50">{label}</div>
             </div>
           ))}
@@ -64,7 +64,7 @@ export default function Home() {
       <div className="mt-8 flex gap-3">
         <Link
           to="/tickets"
-          className="flex-1 rounded-xl bg-magenta py-3 text-center font-semibold"
+          className="flex-1 rounded-xl bg-white py-3 text-center font-semibold text-ink"
         >
           Get tickets
         </Link>

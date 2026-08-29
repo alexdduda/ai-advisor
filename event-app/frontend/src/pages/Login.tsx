@@ -16,7 +16,7 @@ export default function Login() {
       <h1 className="font-display text-3xl font-bold">Sign in</h1>
       <p className="mt-2 text-white/60">We'll email you a magic link. No password to remember.</p>
       {sent ? (
-        <p className="mt-8 rounded-2xl card px-6 py-4 text-gold">Check your inbox for the link.</p>
+        <p className="mt-8 rounded-2xl card px-6 py-4">Check your inbox for the link.</p>
       ) : (
         <form onSubmit={handleSubmit} className="mt-8 w-full space-y-3">
           <input
@@ -25,9 +25,9 @@ export default function Login() {
             placeholder="you@school.edu"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 outline-none focus:border-magenta"
+            className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 outline-none focus:border-white"
           />
-          <button className="w-full rounded-xl bg-magenta py-3 font-semibold">
+          <button className="w-full rounded-xl bg-white py-3 font-semibold text-ink">
             Send magic link
           </button>
         </form>

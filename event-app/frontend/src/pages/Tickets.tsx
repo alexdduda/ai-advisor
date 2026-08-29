@@ -46,7 +46,7 @@ export default function Tickets() {
     return (
       <div className="mx-auto max-w-md px-6 pt-16 text-center">
         <p className="text-white/70">Sign in to buy a ticket.</p>
-        <a href="/login" className="mt-4 inline-block rounded-xl bg-magenta px-6 py-3 font-semibold">
+        <a href="/login" className="mt-4 inline-block rounded-xl bg-white px-6 py-3 font-semibold text-ink">
           Sign in
         </a>
       </div>
@@ -67,7 +67,7 @@ export default function Tickets() {
                   <div className="mx-auto mt-4 w-fit rounded-xl bg-white p-3">
                     <QRCodeSVG value={t.qr_secret} size={160} />
                   </div>
-                  <p className={`mt-3 text-sm ${t.status === "checked_in" ? "text-white/40" : "text-gold"}`}>
+                  <p className={`mt-3 text-sm ${t.status === "checked_in" ? "text-white/40" : "text-white"}`}>
                     {t.status === "checked_in" ? "Checked in" : "Show this at the door"}
                   </p>
                 </>
@@ -93,7 +93,7 @@ export default function Tickets() {
               <button
                 disabled={soldOut || busyTierId === tier.id}
                 onClick={() => buy(tier.id)}
-                className="rounded-xl bg-magenta px-4 py-2 text-sm font-semibold disabled:opacity-40"
+                className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-ink disabled:opacity-40"
               >
                 {soldOut ? "Sold out" : busyTierId === tier.id ? "..." : "Buy"}
               </button>
@@ -102,7 +102,7 @@ export default function Tickets() {
         })}
       </div>
 
-      {error && <p className="mt-4 text-sm text-red-400">{error}</p>}
+      {error && <p className="mt-4 rounded-lg border border-white/30 px-3 py-2 text-sm">{error}</p>}
     </div>
   );
 }

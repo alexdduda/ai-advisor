@@ -18,7 +18,7 @@ export default function Lineup() {
           <div key={slot.id} className="rounded-2xl card p-4">
             <div className="flex items-baseline justify-between">
               <h2 className="font-display text-lg font-semibold">{slot.artist_name}</h2>
-              <span className="text-xs text-gold">
+              <span className="text-xs text-white/70">
                 {new Date(slot.set_start).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
               </span>
             </div>

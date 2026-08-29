@@ -4,9 +4,7 @@ export default {
   theme: {
     extend: {
       colors: {
-        ink: "#0b0410",
-        magenta: "#e0459c",
-        gold: "#f4c542",
+        ink: "#000000",
       },
       fontFamily: {
         display: ["'Space Grotesk'", "system-ui", "sans-serif"],

@@ -56,13 +56,13 @@ export default function Feed() {
             onChange={(e) => setCaption(e.target.value)}
             placeholder="What's happening?"
             rows={2}
-            className="w-full resize-none rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm outline-none focus:border-magenta"
+            className="w-full resize-none rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm outline-none focus:border-white"
           />
           <div className="flex items-center justify-between">
             <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] ?? null)} className="text-xs text-white/50" />
             <button
               disabled={posting}
-              className="rounded-lg bg-magenta px-4 py-1.5 text-sm font-semibold disabled:opacity-50"
+              className="rounded-lg bg-white px-4 py-1.5 text-sm font-semibold text-ink disabled:opacity-50"
             >
               Post
             </button>

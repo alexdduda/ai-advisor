@@ -18,7 +18,7 @@ export default function BottomNav() {
               end={tab.to === "/"}
               className={({ isActive }) =>
                 `flex flex-col items-center gap-1 py-3 text-xs tracking-wide transition ${
-                  isActive ? "text-gold" : "text-white/50 hover:text-white/80"
+                  isActive ? "text-white" : "text-white/50 hover:text-white/80"
                 }`
               }
             >
