@@ -8,7 +8,7 @@ router = APIRouter(prefix="/api/event", tags=["event"])
 
 @router.get("")
 def get_event():
-    """Public, cacheable — no per-user data. Same shape as Symbolos's public
+    """Public, cacheable, no per-user data. Same shape as Symbolos's public
     /api/clubs endpoint: safe to sit behind a CDN cache."""
     client = get_service_client()
     event = client.table("events").select("*").eq("slug", settings.event_slug).single().execute().data

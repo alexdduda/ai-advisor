@@ -32,7 +32,7 @@ def list_my_tickets(user_id: str = Depends(get_current_user_id)):
 @limiter.limit("10/minute")
 def create_checkout_session(request: Request, body: CheckoutRequest, user_id: str = Depends(get_current_user_id)):
     """Reserves a seat, then hands the buyer to Stripe Checkout. Stripe owns
-    card entry and PCI compliance entirely — we never see card numbers."""
+    card entry and PCI compliance entirely. We never see card numbers."""
     client = get_service_client()
     tier = client.table("ticket_tiers").select("*").eq("id", body.tier_id).single().execute().data
     if not tier:
@@ -56,7 +56,7 @@ def create_checkout_session(request: Request, body: CheckoutRequest, user_id: st
                     "price_data": {
                         "currency": tier["currency"],
                         "unit_amount": tier["price_cents"],
-                        "product_data": {"name": f"Primadonis — {tier['name']}"},
+                        "product_data": {"name": f"Primadonis: {tier['name']}"},
                     },
                     "quantity": 1,
                 }
@@ -85,7 +85,7 @@ def create_etransfer_reservation(request: Request, body: EtransferRequest, user_
     """Fallback for students who'd rather pay by Interac e-Transfer than
     card. Stripe doesn't clear e-Transfers, so this reserves the seat and
     marks it pending manual confirmation by an event organizer once the
-    e-Transfer lands — see /api/tickets/etransfer/{id}/confirm."""
+    e-Transfer lands. See /api/tickets/etransfer/{id}/confirm."""
     client = get_service_client()
     try:
         reservation = client.rpc(

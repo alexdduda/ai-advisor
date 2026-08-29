@@ -15,7 +15,7 @@ export default function Lineup() {
       <h1 className="font-display text-3xl font-bold">Lineup</h1>
       <div className="mt-6 space-y-3">
         {slots.map((slot) => (
-          <div key={slot.id} className="rounded-2xl glass p-4">
+          <div key={slot.id} className="rounded-2xl card p-4">
             <div className="flex items-baseline justify-between">
               <h2 className="font-display text-lg font-semibold">{slot.artist_name}</h2>
               <span className="text-xs text-gold">

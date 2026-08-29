@@ -1,4 +1,4 @@
--- Primadonis event app — Supabase schema
+-- Primadonis event app: Supabase schema
 -- Run in the Supabase SQL editor (or `supabase db push`) for a fresh project.
 -- Idempotent: safe to re-run.
 
@@ -125,7 +125,7 @@ create table if not exists feed_comments (
 -- ---------------------------------------------------------------------------
 -- Atomic operations (called via supabase.rpc(...) from the backend, using
 -- the service-role key). These exist so ticket sales and door check-in are
--- safe under concurrent requests — the "row lock + check + write" happens
+-- safe under concurrent requests. The "row lock + check + write" happens
 -- inside one transaction instead of racing between two round trips.
 -- ---------------------------------------------------------------------------
 
@@ -198,7 +198,7 @@ end;
 $$ language plpgsql;
 
 -- Door check-in: single-use, atomic. Returns the checked-in row, or no rows
--- if the ticket doesn't exist, isn't paid, or was already scanned — the
+-- if the ticket doesn't exist, isn't paid, or was already scanned. The
 -- caller distinguishes "already used" by a follow-up lookup if needed.
 create or replace function check_in_ticket(p_qr_secret text, p_staff_id uuid)
 returns tickets as $$

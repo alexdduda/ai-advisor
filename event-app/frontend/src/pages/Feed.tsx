@@ -50,7 +50,7 @@ export default function Feed() {
       <h1 className="font-display text-3xl font-bold">Feed</h1>
 
       {session && (
-        <form onSubmit={submit} className="mt-6 space-y-2 rounded-2xl glass p-4">
+        <form onSubmit={submit} className="mt-6 space-y-2 rounded-2xl card p-4">
           <textarea
             value={caption}
             onChange={(e) => setCaption(e.target.value)}
@@ -62,7 +62,7 @@ export default function Feed() {
             <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] ?? null)} className="text-xs text-white/50" />
             <button
               disabled={posting}
-              className="rounded-lg bg-gradient-to-r from-violet to-magenta px-4 py-1.5 text-sm font-semibold disabled:opacity-50"
+              className="rounded-lg bg-magenta px-4 py-1.5 text-sm font-semibold disabled:opacity-50"
             >
               Post
             </button>
@@ -72,13 +72,13 @@ export default function Feed() {
 
       <div className="mt-6 space-y-4">
         {posts.map((post) => (
-          <div key={post.id} className="rounded-2xl glass p-4">
+          <div key={post.id} className="rounded-2xl card p-4">
             <p className="text-sm font-medium">{post.profiles?.full_name ?? "Someone"}</p>
             {post.image_url && <img src={post.image_url} className="mt-2 rounded-xl" alt="" />}
             {post.caption && <p className="mt-2 text-sm text-white/80">{post.caption}</p>}
           </div>
         ))}
-        {posts.length === 0 && <p className="text-white/50">No posts yet — be the first.</p>}
+        {posts.length === 0 && <p className="text-white/50">No posts yet. Be the first.</p>}
       </div>
     </div>
   );

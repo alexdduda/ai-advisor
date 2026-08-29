@@ -47,7 +47,7 @@ export default function Scan() {
       <h1 className="font-display text-2xl font-bold">Door check-in</h1>
       <div id="scan-region" className="mx-auto mt-6 overflow-hidden rounded-2xl" />
       {result && (
-        <p className={`mt-6 rounded-xl glass px-4 py-3 text-lg font-semibold ${result.ok ? "text-gold" : "text-red-400"}`}>
+        <p className={`mt-6 rounded-xl card px-4 py-3 text-lg font-semibold ${result.ok ? "text-gold" : "text-red-400"}`}>
           {result.message}
         </p>
       )}

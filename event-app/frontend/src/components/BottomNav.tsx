@@ -9,7 +9,7 @@ const TABS = [
 
 export default function BottomNav() {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 glass px-2 pb-[env(safe-area-inset-bottom)]">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-ink px-2 pb-[env(safe-area-inset-bottom)]">
       <ul className="mx-auto flex max-w-md justify-between">
         {TABS.map((tab) => (
           <li key={tab.to} className="flex-1">

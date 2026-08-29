@@ -46,7 +46,7 @@ export default function Tickets() {
     return (
       <div className="mx-auto max-w-md px-6 pt-16 text-center">
         <p className="text-white/70">Sign in to buy a ticket.</p>
-        <a href="/login" className="mt-4 inline-block rounded-xl bg-gradient-to-r from-violet to-magenta px-6 py-3 font-semibold">
+        <a href="/login" className="mt-4 inline-block rounded-xl bg-magenta px-6 py-3 font-semibold">
           Sign in
         </a>
       </div>
@@ -60,7 +60,7 @@ export default function Tickets() {
       {myTickets.length > 0 && (
         <div className="mt-6 space-y-4">
           {myTickets.map((t) => (
-            <div key={t.id} className="rounded-2xl glass p-5 text-center">
+            <div key={t.id} className="rounded-2xl card p-5 text-center">
               <p className="text-sm uppercase tracking-wide text-white/50">{t.ticket_tiers.name}</p>
               {t.status === "paid" || t.status === "checked_in" ? (
                 <>
@@ -85,7 +85,7 @@ export default function Tickets() {
         {tiers.map((tier) => {
           const soldOut = tier.quantity_sold >= tier.quantity_total;
           return (
-            <div key={tier.id} className="flex items-center justify-between rounded-2xl glass p-4">
+            <div key={tier.id} className="flex items-center justify-between rounded-2xl card p-4">
               <div>
                 <p className="font-semibold">{tier.name}</p>
                 <p className="text-sm text-white/50">{money(tier.price_cents, tier.currency)}</p>
@@ -93,7 +93,7 @@ export default function Tickets() {
               <button
                 disabled={soldOut || busyTierId === tier.id}
                 onClick={() => buy(tier.id)}
-                className="rounded-xl bg-gradient-to-r from-violet to-magenta px-4 py-2 text-sm font-semibold disabled:opacity-40"
+                className="rounded-xl bg-magenta px-4 py-2 text-sm font-semibold disabled:opacity-40"
               >
                 {soldOut ? "Sold out" : busyTierId === tier.id ? "..." : "Buy"}
               </button>

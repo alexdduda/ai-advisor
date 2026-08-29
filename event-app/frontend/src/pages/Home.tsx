@@ -53,7 +53,7 @@ export default function Home() {
             ["Min", countdown.mins],
             ["Sec", countdown.secs],
           ].map(([label, value]) => (
-            <div key={label as string} className="rounded-2xl glass py-3">
+            <div key={label as string} className="rounded-2xl card py-3">
               <div className="font-display text-2xl font-bold text-gold">{String(value).padStart(2, "0")}</div>
               <div className="text-[10px] uppercase tracking-wide text-white/50">{label}</div>
             </div>
@@ -64,7 +64,7 @@ export default function Home() {
       <div className="mt-8 flex gap-3">
         <Link
           to="/tickets"
-          className="flex-1 rounded-xl bg-gradient-to-r from-violet to-magenta py-3 text-center font-semibold shadow-lg shadow-magenta/30"
+          className="flex-1 rounded-xl bg-magenta py-3 text-center font-semibold"
         >
           Get tickets
         </Link>
