@@ -1,6 +1,4 @@
 import { useDashboardData } from '../../contexts/DashboardDataContext'
-import { useState } from 'react'
-import FeedbackModal from './FeedbackModal'
 import { FaCamera, FaSignOutAlt, FaChevronRight } from 'react-icons/fa'
 import { useLanguage } from '../../contexts/PreferencesContext'
 import useViewport from '../../hooks/useViewport'
@@ -21,14 +19,11 @@ export default function ProfileTab({
   handleAvatarClick,
 }) {
   const { handleToggleCompleted } = useDashboardData()
-  const [feedbackOpen, setFeedbackOpen] = useState(false)
   const { t } = useLanguage()
   const { isMobile } = useViewport()
 
   return (
     <div className="profile-page">
-      <button className="btn-secondary" onClick={() => setFeedbackOpen(true)}>{t('fb.button')}</button>
-      <FeedbackModal userId={user?.id} userEmail={user?.email} open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
       <div className="profile-page-header">
         <div className="profile-hero">
           <div className="profile-avatar-section">
