@@ -806,7 +806,6 @@ export default function CalendarTab({ user, authFlags, clubEvents = [], managedC
       {/* Header */}
       <div className="cal-header">
         <div className="cal-header-left">
-          <FaCalendarAlt className="cal-header-icon" />
           <div>
             <h2 className="cal-title">{t('nav.calendar')}</h2>
             <p className="cal-subtitle">{t('calendar.subtitle')}</p>

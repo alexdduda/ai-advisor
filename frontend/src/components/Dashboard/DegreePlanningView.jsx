@@ -929,7 +929,7 @@ function ProgramSection({ prog, completedCourses, currentCourses, advStanding, o
         const pillMod = blockDone ? 'dp-req-pill--done' : blockInProgress ? 'dp-req-pill--progress' : 'dp-req-pill--none'
 
         return (
-          <div key={block.id} className={`dp-req-block m-group ${blockDone ? 'dp-req-block--done' : blockInProgress ? 'dp-req-block--progress' : ''}`}>
+          <div key={block.id} className="dp-req-block m-group">
             <button
               className="dp-req-block-header m-row m-row--tappable"
               onClick={() => setOpenBlocks(p => ({ ...p, [block.id]: !p[block.id] }))}
@@ -941,7 +941,7 @@ function ProgramSection({ prog, completedCourses, currentCourses, advStanding, o
               </div>
               <div className="dp-req-block-right">
                 <span className={`dp-req-pill ${pillMod}`}>
-                  {blockDone ? <FaCheckCircle /> : pillText}
+                  {blockDone ? <FaCheckCircle /> : blockInProgress ? t('dp.statusTaking') : pillText}
                 </span>
               </div>
             </button>
@@ -971,6 +971,11 @@ function ProgramSection({ prog, completedCourses, currentCourses, advStanding, o
                   const filledKey = matched
                     ? `${matched.subject} ${matched.catalog}`.toUpperCase()
                     : (c.catalog ? key : null)
+                  // A wildcard row ("Any 300-level COMP course") should show the
+                  // real course that filled it, not the generic placeholder —
+                  // otherwise a student taking COMP 421 just sees "COMP •••".
+                  const displayCourse = (!c.catalog && matched) ? matched : c
+                  const displayTitle = (!c.catalog && matched) ? (matched.course_title || matched.title || '') : c.title
 
                   const resolvedTo = (filledKey && (done || taking)) ? (effectiveAllocation[filledKey] || null) : null
                   const allocatedElsewhere = !!resolvedTo && resolvedTo !== progKey
@@ -990,7 +995,7 @@ function ProgramSection({ prog, completedCourses, currentCourses, advStanding, o
                           : <FaCircle className="dp-req-course-icon dp-req-course-icon--empty" />
                       }
                       {c.subject && /^\d{3}[A-Z0-9]*$/i.test(c.catalog || '') && !isTransfer && (
-                        <button type="button" className="btn-secondary"
+                        <button type="button" className="btn-secondary dp-req-mark-btn"
                           aria-label={`${t(done ? 'courses.editCompleted' : 'courses.markCompleted')}: ${c.subject} ${c.catalog}`}
                           onClick={() => handleToggleCompleted({ ...c, title: c.title })}>
                           {t(done ? 'courses.editCompleted' : 'courses.markCompleted')}
@@ -999,11 +1004,11 @@ function ProgramSection({ prog, completedCourses, currentCourses, advStanding, o
                       <div className="dp-req-course-main">
                         <div
                           className="dp-req-course-row"
-                          onClick={() => c.subject && c.catalog && openCourse(c.subject, c.catalog)}
-                          style={c.subject && c.catalog ? { cursor: 'pointer' } : undefined}
+                          onClick={() => displayCourse.subject && displayCourse.catalog && openCourse(displayCourse.subject, displayCourse.catalog)}
+                          style={displayCourse.subject && displayCourse.catalog ? { cursor: 'pointer' } : undefined}
                         >
-                          <span className="dp-req-course-code">{c.subject} {c.catalog || '•••'}</span>
-                          <span className="dp-req-course-title">{c.title}</span>
+                          <span className="dp-req-course-code">{displayCourse.subject} {displayCourse.catalog || '•••'}</span>
+                          <span className="dp-req-course-title">{displayTitle}</span>
                           {done && isTransfer  && <span className="dp-req-transfer-tag">{t('dp.statusTransfer')} · {t('dp.transferExempt')}</span>}
                           {done && !isTransfer && !allocatedElsewhere && <span className="dp-req-done-tag">{t('dp.statusDone')}</span>}
                           {taking && !allocatedElsewhere && <span className="dp-req-taking-tag">{t('dp.statusTaking')}</span>}
@@ -1037,60 +1042,6 @@ function ProgramSection({ prog, completedCourses, currentCourses, advStanding, o
         )
       })}
 
-      {/* Other Courses (Added by you), electives the user manually counted
-          toward this program. Collapsible like a requirement block. */}
-      {manuallyAdded.length > 0 && (
-        <div className="dp-req-block dp-req-block--manual m-group">
-          <button
-            className="dp-req-block-header m-row m-row--tappable"
-            onClick={() => setOpenBlocks(p => ({ ...p, [`__manual_${progKey}`]: !p[`__manual_${progKey}`] }))}
-          >
-            <div className="dp-req-block-left">
-              <span className="dp-req-block-chevron">
-                {openBlocks[`__manual_${progKey}`] ? <FaChevronDown /> : <FaChevronRight />}
-              </span>
-              <span className="dp-req-block-name">{t('dp.otherCoursesAdded')}</span>
-              <span className="dp-req-block-cr">
-                {manuallyAdded.reduce((s, c) => s + parseFloat(c.credits || 3), 0)}cr
-              </span>
-            </div>
-          </button>
-
-          {openBlocks[`__manual_${progKey}`] && (
-            <div className="dp-req-block-courses">
-              <p className="dp-req-block-note">{t('dp.otherCoursesNote')}</p>
-              {manuallyAdded.map(uc => {
-                const key = `${uc.subject} ${uc.catalog}`.toUpperCase()
-                return (
-                  <div key={key} className="dp-req-course dp-req-course--done m-row">
-                    <FaCheckCircle className="dp-req-course-icon dp-req-course-icon--done" />
-                    <div className="dp-req-course-main">
-                      <div
-                        className="dp-req-course-row"
-                        onClick={() => openCourse(uc.subject, uc.catalog)}
-                        style={{ cursor: 'pointer' }}
-                      >
-                        <span className="dp-req-course-code">{uc.subject} {uc.catalog}</span>
-                        <span className="dp-req-course-title">{uc.course_title || uc.title || ''}</span>
-                        <span className="dp-req-done-tag">{t('dp.statusDone')}</span>
-                      </div>
-                      {assignCourse && (
-                        <button
-                          className="dp-req-remove-manual"
-                          onClick={() => assignCourse(key, null)}
-                          title={t('dp.removeFromProgram')}
-                        >
-                          <FaTimes /> {t('dp.removeFromProgram')}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </div>
-      )}
     </div>
   )
 }
@@ -2029,10 +1980,12 @@ export default function DegreePlanningView({
   return (
     <div className="dp-view">
 
-      <div className="dp-import-btns">
-        <button className="btn-secondary" onClick={() => handleTabChange('profile')}>{t('dp.chooseProgram')}</button>
-        <button className="btn-secondary" onClick={() => handleTabChange('courses')}>{t('dp.addCoursesManually')}</button>
-      </div>
+      {completedCourses.length === 0 && (
+        <div className="dp-import-btns dp-setup-btns">
+          <button className="btn-secondary" onClick={() => handleTabChange('profile')}>{t('dp.chooseProgram')}</button>
+          <button className="btn-secondary" onClick={() => handleTabChange('courses')}>{t('dp.addCoursesManually')}</button>
+        </div>
+      )}
       {/* ── Sub-tabs ──────────────────────────────────────── */}
       <div className="dp-subtab-bar" data-tour="degree-subtabs">
         <button

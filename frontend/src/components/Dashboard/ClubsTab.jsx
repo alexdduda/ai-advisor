@@ -2209,7 +2209,6 @@ export default function ClubsTab({ user, authFlags, onClubEventsChange }) {
 
       <div className="clubs-header">
         <div className="clubs-header__left">
-          <div className="clubs-header__icon-wrap"><FaUsers size={26} /></div>
           <div>
             <h1 className="clubs-header__title">{t('clubs.title')}</h1>
             <p className="clubs-header__sub">{t('clubs.subtitle')}</p>
