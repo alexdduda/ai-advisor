@@ -1403,8 +1403,11 @@
 }
 
 /* Much smaller than a normal .btn-secondary — this sits inline next to a
-   course row, not as a standalone action. */
-.dp-req-mark-btn {
+   course row, not as a standalone action. The compound selector (rather
+   than a bare .dp-req-mark-btn) is needed to reliably outrank .btn-secondary,
+   which carries the same specificity and would otherwise win on source
+   order alone. */
+.dp-req-course .dp-req-mark-btn {
   flex: none;
   padding: 2px 8px;
   font-size: 10px;
