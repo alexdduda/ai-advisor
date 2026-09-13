@@ -338,16 +338,19 @@ function ElectivesPanel({ profile, completedCourses, currentCourses, allProgramD
     return allTaken.filter(c => {
       if (!c.subject || !c.catalog) return false
       const key = `${c.subject} ${c.catalog}`.toUpperCase()
+      // A course some block already claims by name or wildcard (exact code,
+      // U0 Foundation, "any 300-level X") isn't an elective — it has a home.
+      // A course the student manually assigned with no block claiming it
+      // (courseAllocations set, effectiveAllocation set, but neither of the
+      // checks below match) DOES still belong here: it's the only place a
+      // manual assignment can be changed back to "auto" i.e. unassigned.
       if (requiredCodes.has(key)) return false
-      // Anything a program already counts, including U0 Foundation work and
-      // courses the student placed by hand, is not an elective.
-      if (effectiveAllocation[key]) return false
       for (const b of wildcardAllBlocks) {
         if (blockWildcardMatches(b, [c]).length > 0) return false
       }
       return true
     })
-  }, [completedCourses, currentCourses, profile, requiredCodes, wildcardAllBlocks, effectiveAllocation])
+  }, [completedCourses, currentCourses, profile, requiredCodes, wildcardAllBlocks])
 
   // Courses two or more programs would both count. Before, these were invisible
   //, they weren't electives (a program claimed them) and no requirement row
@@ -973,9 +976,14 @@ function ProgramSection({ prog, completedCourses, currentCourses, advStanding, o
                     : (c.catalog ? key : null)
                   // A wildcard row ("Any 300-level COMP course") should show the
                   // real course that filled it, not the generic placeholder —
-                  // otherwise a student taking COMP 421 just sees "COMP •••".
-                  const displayCourse = (!c.catalog && matched) ? matched : c
-                  const displayTitle = (!c.catalog && matched) ? (matched.course_title || matched.title || '') : c.title
+                  // otherwise a student taking COMP 421 just sees "COMP 300:
+                  // Any 300-level COMP course". Wildcards aren't only rows with
+                  // no catalog — most store a round-hundred placeholder catalog
+                  // ("300") alongside a title like "Any 300-level COMP course",
+                  // detected the same way matchCourse/blockWildcardMatches do.
+                  const isWildcardRow = !!wildcardBand(c)
+                  const displayCourse = (isWildcardRow && matched) ? matched : c
+                  const displayTitle = (isWildcardRow && matched) ? (matched.course_title || matched.title || '') : c.title
 
                   const resolvedTo = (filledKey && (done || taking)) ? (effectiveAllocation[filledKey] || null) : null
                   const allocatedElsewhere = !!resolvedTo && resolvedTo !== progKey
