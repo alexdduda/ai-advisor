@@ -605,7 +605,6 @@
 
 .dp-req-course:hover { background: var(--bg-hover); }
 .dp-req-course--done { opacity: 0.75; }
-.dp-req-course--taking { background: var(--accent-lighter); }
 .dp-req-course--conflict { opacity: 0.6; background: var(--bg-secondary); }
 
 .dp-req-course-main { display: flex; flex-direction: column; flex: 1; min-width: 0; gap: 4px; }
@@ -1406,9 +1405,11 @@
 /* Much smaller than a normal .btn-secondary — this sits inline next to a
    course row, not as a standalone action. */
 .dp-req-mark-btn {
+  flex: none;
   padding: 2px 8px;
   font-size: 10px;
   font-weight: 500;
+  white-space: nowrap;
 }
 
 /* ── Foundation waived banner ── */
