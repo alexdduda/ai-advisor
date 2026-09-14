@@ -952,97 +952,114 @@ function ProgramSection({ prog, completedCourses, currentCourses, advStanding, o
             {isOpen && (
               <div className="dp-req-block-courses">
                 {block.notes && <p className="dp-req-block-note">{block.notes}</p>}
-                {block.courses?.map(c => {
-                  const key = `${c.subject} ${c.catalog}`.toUpperCase()
+                {block.courses?.flatMap(c => {
                   const isTransfer = matchTransfer(c, advStanding)
-                  // matchCourse handles wildcard placeholders ("Any 200-level
-                  // X course") as well as exact codes, so a 209 fills the 200
-                  // placeholder's radio. excludeKeys (explicitClaims) stops a
-                  // wildcard row from showing a course as satisfying it when
-                  // that course is already claimed by name in another block.
-                  const matchedCompleted = isTransfer ? null : matchCourse(c, completedCourses, explicitClaims)
-                  const matchedCurrent = (isTransfer || matchedCompleted) ? null : matchCourse(c, currentCourses, explicitClaims)
-                  const done = isTransfer || !!matchedCompleted
-                  const taking = !done && !!matchedCurrent
+                  const isWildcardRow = !isTransfer && !!wildcardBand(c)
 
-                  // For a wildcard row ("Any 200-level ANTH course") the
-                  // allocation belongs to the course that actually filled it,
-                  // not to the placeholder's own code, otherwise a course
-                  // counted toward another program still showed a green tick
-                  // here.
-                  const matched = matchedCompleted || matchedCurrent
-                  const filledKey = matched
-                    ? `${matched.subject} ${matched.catalog}`.toUpperCase()
-                    : (c.catalog ? key : null)
-                  // A wildcard row ("Any 300-level COMP course") should show the
-                  // real course that filled it, not the generic placeholder —
-                  // otherwise a student taking COMP 421 just sees "COMP 300:
-                  // Any 300-level COMP course". Wildcards aren't only rows with
-                  // no catalog — most store a round-hundred placeholder catalog
-                  // ("300") alongside a title like "Any 300-level COMP course",
-                  // detected the same way matchCourse/blockWildcardMatches do.
-                  const isWildcardRow = !!wildcardBand(c)
-                  const displayCourse = (isWildcardRow && matched) ? matched : c
-                  const displayTitle = (isWildcardRow && matched) ? (matched.course_title || matched.title || '') : c.title
+                  // A normal exact-code row and a transfer row always render
+                  // exactly one entry — either the placeholder itself
+                  // (untaken) or the course that matches its code. A wildcard
+                  // row ("Any 300-level COMP course") can be satisfied by
+                  // several courses at once, a student taking two different
+                  // 300+ COMP courses this term, so it renders one entry per
+                  // match instead of stopping at the first: the credit total
+                  // for the block already counts every match via
+                  // blockWildcardMatches, but this per-row display used to
+                  // show only the single course matchCourse() happened to
+                  // find first, hiding the rest.
+                  let entries
+                  if (isTransfer) {
+                    entries = [{ course: c, title: c.title, done: true, taking: false }]
+                  } else if (isWildcardRow) {
+                    const pseudoBlock = { courses: [c] }
+                    const wcDone = blockWildcardMatches(pseudoBlock, completedCourses, explicitClaims)
+                    const wcTaking = blockWildcardMatches(pseudoBlock, currentCourses, explicitClaims)
+                    entries = (wcDone.length + wcTaking.length > 0)
+                      ? [
+                          ...wcDone.map(m => ({ course: m, title: m.course_title || m.title || '', done: true, taking: false })),
+                          ...wcTaking.map(m => ({ course: m, title: m.course_title || m.title || '', done: false, taking: true })),
+                        ]
+                      : [{ course: c, title: c.title, done: false, taking: false }]
+                  } else {
+                    // matchCourse handles wildcard placeholders too, but this
+                    // branch only runs once isWildcardRow is known false, so
+                    // it's effectively the exact-code path here. excludeKeys
+                    // (explicitClaims) stops a course already claimed by name
+                    // in another block from also filling this row.
+                    const matchedCompleted = matchCourse(c, completedCourses, explicitClaims)
+                    const matchedCurrent = matchedCompleted ? null : matchCourse(c, currentCourses, explicitClaims)
+                    const done = !!matchedCompleted
+                    const taking = !done && !!matchedCurrent
+                    entries = [{ course: c, title: c.title, done, taking }]
+                  }
 
-                  const resolvedTo = (filledKey && (done || taking)) ? (effectiveAllocation[filledKey] || null) : null
-                  const allocatedElsewhere = !!resolvedTo && resolvedTo !== progKey
-                  const foundationOwns = allocatedElsewhere && FOUNDATION_PROGRAM_KEYS.has(resolvedTo)
-                  // The picker only makes sense where the student actually has
-                  // a choice: Foundation claims are fixed by McGill's rules.
-                  const isOverlap = !!filledKey && overlapKeys.has(filledKey) && (done || taking) && !foundationOwns
-                  const otherProgName = allocatedElsewhere
-                    ? (allProgramData.find(p => p?.program_key === resolvedTo)?.name?.replace(/\s*[–-]\s*(Major|Minor|Honours|Concentration).*/, '') || resolvedTo)
-                    : null
-                  return (
-                    <div key={c.id} className={`dp-req-course m-row ${done && !allocatedElsewhere ? 'dp-req-course--done' : ''} ${taking && !allocatedElsewhere ? 'dp-req-course--taking' : ''} ${allocatedElsewhere ? 'dp-req-course--conflict' : ''}`}>
-                      {done && !allocatedElsewhere
-                        ? <FaCheckCircle className="dp-req-course-icon dp-req-course-icon--done" />
-                        : taking && !allocatedElsewhere
-                          ? <FaCircle className="dp-req-course-icon dp-req-course-icon--taking" />
-                          : <FaCircle className="dp-req-course-icon dp-req-course-icon--empty" />
-                      }
-                      {c.subject && /^\d{3}[A-Z0-9]*$/i.test(c.catalog || '') && !isTransfer && (
-                        <button type="button" className="btn-secondary dp-req-mark-btn"
-                          aria-label={`${t(done ? 'courses.editCompleted' : 'courses.markCompleted')}: ${c.subject} ${c.catalog}`}
-                          onClick={() => handleToggleCompleted({ ...c, title: c.title })}>
-                          {t(done ? 'courses.editCompleted' : 'courses.markCompleted')}
-                        </button>
-                      )}
-                      <div className="dp-req-course-main">
-                        <div
-                          className="dp-req-course-row"
-                          onClick={() => displayCourse.subject && displayCourse.catalog && openCourse(displayCourse.subject, displayCourse.catalog)}
-                          style={displayCourse.subject && displayCourse.catalog ? { cursor: 'pointer' } : undefined}
-                        >
-                          <span className="dp-req-course-code">{displayCourse.subject} {displayCourse.catalog || '•••'}</span>
-                          <span className="dp-req-course-title">{displayTitle}</span>
-                          {done && isTransfer  && <span className="dp-req-transfer-tag">{t('dp.statusTransfer')} · {t('dp.transferExempt')}</span>}
-                          {done && !isTransfer && !allocatedElsewhere && <span className="dp-req-done-tag">{t('dp.statusDone')}</span>}
-                          {taking && !allocatedElsewhere && <span className="dp-req-taking-tag">{t('dp.statusTaking')}</span>}
-                          {allocatedElsewhere && !foundationOwns && <span className="dp-req-conflict-tag">{t('dp.countedToward').replace('{program}', otherProgName)}</span>}
-                          {foundationOwns && <span className="dp-req-conflict-tag">{t('dp.countedTowardFoundation')}</span>}
-                        </div>
-                        {isOverlap && assignCourse && (
-                          <div className="dp-req-overlap-assign">
-                            <span className="dp-req-overlap-label"><FaExclamationTriangle style={{ marginRight: '4px', verticalAlign: 'middle' }} />{t('dp.overlapsWith')}</span>
-                            <select
-                              className="dp-req-overlap-select"
-                              value={courseAllocations[filledKey] || ''}
-                              onChange={e => assignCourse(filledKey, e.target.value || null)}
-                            >
-                              <option value="">{t('dp.countTowardAuto')}</option>
-                              {allProgramData.filter(Boolean).map(p => (
-                                <option key={p.program_key} value={p.program_key}>
-                                  {t('dp.countTowardOnly').replace('{program}', p.name?.replace(/\s*[–-]\s*(Major|Minor|Honours|Concentration).*/, '') || p.program_key)}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
+                  return entries.map(({ course: displayCourse, title: displayTitle, done, taking }, i) => {
+                    // For a wildcard row the allocation belongs to the course
+                    // that actually filled it, not to the placeholder's own
+                    // code, otherwise a course counted toward another program
+                    // still showed a green tick here.
+                    const filledKey = (displayCourse.subject && displayCourse.catalog)
+                      ? `${displayCourse.subject} ${displayCourse.catalog}`.toUpperCase()
+                      : null
+                    const resolvedTo = (filledKey && (done || taking)) ? (effectiveAllocation[filledKey] || null) : null
+                    const allocatedElsewhere = !!resolvedTo && resolvedTo !== progKey
+                    const foundationOwns = allocatedElsewhere && FOUNDATION_PROGRAM_KEYS.has(resolvedTo)
+                    // The picker only makes sense where the student actually has
+                    // a choice: Foundation claims are fixed by McGill's rules.
+                    const isOverlap = !!filledKey && overlapKeys.has(filledKey) && (done || taking) && !foundationOwns
+                    const otherProgName = allocatedElsewhere
+                      ? (allProgramData.find(p => p?.program_key === resolvedTo)?.name?.replace(/\s*[–-]\s*(Major|Minor|Honours|Concentration).*/, '') || resolvedTo)
+                      : null
+                    return (
+                      <div key={`${c.id}_${filledKey || i}`} className={`dp-req-course m-row ${done && !allocatedElsewhere ? 'dp-req-course--done' : ''} ${allocatedElsewhere ? 'dp-req-course--conflict' : ''}`}>
+                        {done && !allocatedElsewhere
+                          ? <FaCheckCircle className="dp-req-course-icon dp-req-course-icon--done" />
+                          : taking && !allocatedElsewhere
+                            ? <FaCircle className="dp-req-course-icon dp-req-course-icon--taking" />
+                            : <FaCircle className="dp-req-course-icon dp-req-course-icon--empty" />
+                        }
+                        {displayCourse.subject && /^\d{3}[A-Z0-9]*$/i.test(displayCourse.catalog || '') && !isTransfer && (
+                          <button type="button" className="btn-secondary dp-req-mark-btn"
+                            aria-label={`${t(done ? 'courses.editCompleted' : 'courses.markCompleted')}: ${displayCourse.subject} ${displayCourse.catalog}`}
+                            onClick={() => handleToggleCompleted({ ...displayCourse, title: displayTitle })}>
+                            {t(done ? 'courses.editCompleted' : 'courses.markCompleted')}
+                          </button>
                         )}
+                        <div className="dp-req-course-main">
+                          <div
+                            className="dp-req-course-row"
+                            onClick={() => displayCourse.subject && displayCourse.catalog && openCourse(displayCourse.subject, displayCourse.catalog)}
+                            style={displayCourse.subject && displayCourse.catalog ? { cursor: 'pointer' } : undefined}
+                          >
+                            <span className="dp-req-course-code">{displayCourse.subject} {displayCourse.catalog || '•••'}</span>
+                            <span className="dp-req-course-title">{displayTitle}</span>
+                            {done && isTransfer  && <span className="dp-req-transfer-tag">{t('dp.statusTransfer')} · {t('dp.transferExempt')}</span>}
+                            {done && !isTransfer && !allocatedElsewhere && <span className="dp-req-done-tag">{t('dp.statusDone')}</span>}
+                            {taking && !allocatedElsewhere && <span className="dp-req-taking-tag">{t('dp.statusTaking')}</span>}
+                            {allocatedElsewhere && !foundationOwns && <span className="dp-req-conflict-tag">{t('dp.countedToward').replace('{program}', otherProgName)}</span>}
+                            {foundationOwns && <span className="dp-req-conflict-tag">{t('dp.countedTowardFoundation')}</span>}
+                          </div>
+                          {isOverlap && assignCourse && (
+                            <div className="dp-req-overlap-assign">
+                              <span className="dp-req-overlap-label"><FaExclamationTriangle style={{ marginRight: '4px', verticalAlign: 'middle' }} />{t('dp.overlapsWith')}</span>
+                              <select
+                                className="dp-req-overlap-select"
+                                value={courseAllocations[filledKey] || ''}
+                                onChange={e => assignCourse(filledKey, e.target.value || null)}
+                              >
+                                <option value="">{t('dp.countTowardAuto')}</option>
+                                {allProgramData.filter(Boolean).map(p => (
+                                  <option key={p.program_key} value={p.program_key}>
+                                    {t('dp.countTowardOnly').replace('{program}', p.name?.replace(/\s*[–-]\s*(Major|Minor|Honours|Concentration).*/, '') || p.program_key)}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  )
+                    )
+                  })
                 })}
               </div>
             )}
