@@ -658,7 +658,6 @@ export default function Forum() {
       {/* Header */}
       <div className="forum-header">
         <div className="forum-header__left">
-          <div className="forum-header__icon"><FaComments size={22} /></div>
           <div>
             <h1 className="forum-header__title">Community</h1>
             <p className="forum-header__sub">Reviews · Clubs · Discussion · Feedback</p>
