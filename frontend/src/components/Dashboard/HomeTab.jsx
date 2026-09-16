@@ -13,7 +13,7 @@ import {
   FaFileUpload, FaGraduationCap, FaFilePdf, FaComments, FaCalendarPlus,
   FaCheckCircle, FaRegCircle, FaArrowRight, FaTimes, FaRegLightbulb,
   FaBook, FaCalendarAlt, FaChartLine, FaClipboardList, FaFileAlt, FaPenAlt,
-  FaExclamationTriangle, FaExclamationCircle, FaChevronRight,
+  FaExclamationTriangle, FaExclamationCircle, FaChevronRight, FaCommentAlt,
 } from 'react-icons/fa'
 import { useLanguage } from '../../contexts/PreferencesContext'
 import useViewport from '../../hooks/useViewport'
@@ -23,6 +23,7 @@ import EmptyState from '../ui/EmptyState'
 import Skeleton from '../ui/Skeleton'
 import SectionHeader from '../ui/SectionHeader'
 import Badge from '../ui/Badge'
+import FeedbackModal from './FeedbackModal'
 import './HomeTab.css'
 
 // Invariant: no raw emojis in the UI, react-icons only.
@@ -92,6 +93,8 @@ export default function HomeTab({
     setSetupDismissed(false)
     try { localStorage.removeItem(dismissKey) } catch { /* ignore */ }
   }
+
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
 
   const steps = useMemo(() => [
     {
@@ -408,6 +411,7 @@ export default function HomeTab({
               { key: 'syllabus',   icon: <FaFilePdf />,    label: t('home.actionSyllabus'),   onClick: onImportSyllabus },
               { key: 'advisor',    icon: <FaComments />,   label: t('home.actionAdvisor'),    onClick: () => onTabChange('chat') },
               { key: 'event',      icon: <FaCalendarPlus />, label: t('home.actionEvent'),    onClick: () => onTabChange('calendar') },
+              { key: 'feedback',   icon: <FaCommentAlt />, label: t('fb.button'),             onClick: () => setFeedbackOpen(true) },
             ].map(action => (
               <button
                 key={action.key}
@@ -424,6 +428,7 @@ export default function HomeTab({
             ))}
           </div>
         </section>
+        <FeedbackModal open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
       </div>
     )
   }
@@ -655,9 +660,13 @@ export default function HomeTab({
               <button className="home-action" onClick={() => onTabChange('calendar')}>
                 <FaCalendarPlus /> {t('home.actionEvent')}
               </button>
+              <button className="home-action" onClick={() => setFeedbackOpen(true)}>
+                <FaCommentAlt /> {t('fb.button')}
+              </button>
             </div>
           </section>
         </div>
+        <FeedbackModal open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
       </div>
     </div>
   )
