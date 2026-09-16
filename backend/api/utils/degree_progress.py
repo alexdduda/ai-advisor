@@ -582,6 +582,7 @@ def compute_degree_progress_summary(user: dict, completed_courses: list, user_id
     overlap_keys = {k for k, n in counts.items() if n > 1}
 
     lines = []
+    grade_notes = []
     for label, key in tabs:
         prog = programs.get(key)
         if not prog:
@@ -590,5 +591,50 @@ def compute_degree_progress_summary(user: dict, completed_courses: list, user_id
         earned = r['earned']
         earned_str = str(int(earned)) if earned == int(earned) else str(earned)
         lines.append(f"{label}: {r['pct']}% complete ({earned_str}/{r['total']} credits)")
+        grade_notes.extend(_grade_related_notes(label, prog))
+
+    if grade_notes:
+        # Real, program-specific grade/GPA requirement text from the seed data
+        # (e.g. "must be passed with a grade of C or better", Joint Honours
+        # grade thresholds). Without this the model had NO grounding for
+        # these claims at all and would answer from vague, unverifiable
+        # training knowledge instead — see the "better than a C/D for later
+        # math electives" incident, which wasn't in the student's actual
+        # program data anywhere.
+        lines.append("\nGrade/GPA requirements found in this student's own program data:")
+        lines.extend(f"  - {n}" for n in grade_notes)
 
     return "\n".join(lines)
+
+
+_GRADE_KEYWORDS = ("grade", "gpa", "cgpa")
+
+
+def _grade_related_notes(label: str, prog: dict) -> list[str]:
+    """Non-empty description/notes text mentioning a grade/GPA requirement,
+    scoped to programs the student is actually enrolled in. Deliberately
+    narrow (keyword-filtered, deduped) rather than dumping every note for
+    every course, most of which have nothing to do with grades and would
+    just bloat the prompt for no grounding benefit."""
+    seen: set[str] = set()
+    out: list[str] = []
+
+    def add(text: Optional[str]):
+        if not text:
+            return
+        text = text.strip()
+        if not text or text in seen:
+            return
+        if not any(kw in text.lower() for kw in _GRADE_KEYWORDS):
+            return
+        seen.add(text)
+        out.append(f"[{label}] {text}")
+
+    add(prog.get('description'))
+    for block in prog.get('blocks') or []:
+        add(block.get('notes'))
+        add(block.get('constraint_notes'))
+        for c in block.get('courses') or []:
+            add(c.get('notes'))
+
+    return out
