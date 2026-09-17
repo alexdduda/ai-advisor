@@ -105,9 +105,17 @@ function buildFeed(userEvents, currentCourses) {
 export default function useUpcomingEvents(user, currentCourses, { limit = 5 } = {}) {
   const userId = user?.id
 
-  const [feed, setFeed] = useState(() =>
-    readCache(CACHE_PREFIX, userId, { all: [], urgentIds: [], hasCourseEvents: false })
-  )
+  const [feed, setFeed] = useState(() => {
+    // Guard against a pre-existing cache entry from before urgentIds existed
+    // (it used to carry a plain urgentCount number) — without this, a
+    // returning user's stale cache crashes the urgentCount memo below.
+    const cached = readCache(CACHE_PREFIX, userId, { all: [], urgentIds: [], hasCourseEvents: false })
+    return {
+      all: Array.isArray(cached.all) ? cached.all : [],
+      urgentIds: Array.isArray(cached.urgentIds) ? cached.urgentIds : [],
+      hasCourseEvents: !!cached.hasCourseEvents,
+    }
+  })
   const [loading, setLoading] = useState(() => feed.all.length === 0)
   const [seenIds, setSeenIds] = useState(() => readSeenIds(userId))
 
