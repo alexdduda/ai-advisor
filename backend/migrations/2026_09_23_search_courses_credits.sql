@@ -10,8 +10,14 @@
 --
 -- Pure addition: every existing column, join, and filter is unchanged.
 --
--- Idempotent — CREATE OR REPLACE, safe to re-run.
+-- Idempotent — safe to re-run. Postgres won't let CREATE OR REPLACE change a
+-- function's RETURNS TABLE shape (adding the credits column counts as a
+-- change), so this drops the old signature first — same as ALTER'ing a
+-- column, not a data-destructive DROP; the function body is recreated
+-- immediately after in the same statement batch.
 -- ────────────────────────────────────────────────────────────────────────────
+
+DROP FUNCTION IF EXISTS public.search_courses(text, text, integer);
 
 CREATE OR REPLACE FUNCTION public.search_courses(p_query text DEFAULT NULL::text, p_subject text DEFAULT NULL::text, p_limit integer DEFAULT 50)
  RETURNS TABLE(course_code text, subject text, catalog text, title text, credits numeric, recent_average numeric, recent_year integer, instructor text, num_sections bigint, rmp_rating numeric, rmp_difficulty numeric, rmp_num_ratings numeric, rmp_would_take_again numeric, mc_rating numeric, mc_num_ratings numeric, blended_rating numeric)
