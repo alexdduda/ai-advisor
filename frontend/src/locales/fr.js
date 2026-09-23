@@ -11,9 +11,6 @@ const FR_TRANSLATIONS = {
     "common.save": "Enregistrer",
     "common.remove": "Supprimer",
 
-    "courses.compare": "Comparer",
-    "courses.compareHint": "Comparez jusqu’à 3 cours. Les moyennes historiques et avis étudiants ne prédisent pas votre note.",
-    "courses.noComparisonData": "Non disponible",
     "dp.chooseProgram": "Choisir ou modifier votre programme",
     "dp.addCoursesManually": "Rechercher et ajouter des cours manuellement",
 

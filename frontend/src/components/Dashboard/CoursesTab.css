@@ -567,39 +567,3 @@
   }
 }
 
-.course-comparison {
-  margin-bottom: 1.5rem;
-  padding: 1rem;
-  border: 1px solid var(--border-primary);
-  border-radius: var(--radius-container);
-  background: var(--card-bg);
-  min-width: 0;
-}
-.course-comparison h2 { margin: 0 0 0.5rem; }
-.course-comparison p { color: var(--text-secondary); }
-.course-comparison table { width: 100%; min-width: 480px; border-collapse: collapse; }
-.course-comparison th, .course-comparison td {
-  padding: 0.75rem;
-  border-bottom: 1px solid var(--border-primary);
-  text-align: left;
-  font-variant-numeric: tabular-nums;
-}
-.course-comparison th button {
-  margin-left: 0.5rem;
-  padding: 0.25rem 0.5rem;
-  border: 0;
-  background: transparent;
-  color: var(--text-secondary);
-  cursor: pointer;
-}
-.course-compare-btn {
-  min-height: 36px;
-  padding: 0.4rem 0.7rem;
-  border: 1px solid var(--border-primary);
-  border-radius: var(--radius-control);
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-  cursor: pointer;
-}
-.course-compare-btn[aria-pressed="true"] { border-color: var(--accent-primary); }
-.course-compare-btn:disabled { opacity: 0.5; cursor: default; }

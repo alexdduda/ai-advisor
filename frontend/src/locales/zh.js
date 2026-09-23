@@ -11,9 +11,6 @@ const ZH_TRANSLATIONS = {
     "common.save": "保存",
     "common.remove": "移除",
 
-    "courses.compare": "对比",
-    "courses.compareHint": "最多对比3门课程。历史均分和学生评分仅供参考，不能预测你的成绩。",
-    "courses.noComparisonData": "暂无数据",
     "dp.chooseProgram": "选择或编辑专业",
     "dp.addCoursesManually": "搜索并手动添加课程",
 

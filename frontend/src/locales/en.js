@@ -11,9 +11,6 @@ const EN_TRANSLATIONS = {
     "common.save": "Save",
     "common.remove": "Remove",
 
-    "courses.compare": "Compare",
-    "courses.compareHint": "Compare up to 3 courses. Historical averages and student ratings are context, not a prediction of your grade.",
-    "courses.noComparisonData": "Not available",
     "dp.chooseProgram": "Choose or edit your program",
     "dp.addCoursesManually": "Find and add courses manually",
 
