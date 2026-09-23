@@ -105,6 +105,11 @@
   gap: 16px;
   align-items: flex-start;
   flex-wrap: wrap;
+  /* .cdm-close is absolutely positioned (top/right: 14px, 32px wide) and
+     reserves no layout space of its own, so this row's content can run
+     right underneath it. Extra right padding here keeps the action
+     buttons clear of that circle instead of overlapping it. */
+  padding-right: 28px;
 }
 
 .cdm-code-block {
