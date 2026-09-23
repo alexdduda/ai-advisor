@@ -333,6 +333,7 @@ async def search(
                 "subject":      row.get("subject"),
                 "catalog":      row.get("catalog"),
                 "title":        row.get("title"),
+                "credits":      row.get("credits"),
                 "average":      row.get("recent_average"),
                 "average_year": row.get("recent_year"),
                 "instructor":   row.get("instructor"),

@@ -130,6 +130,12 @@
 
 .course-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
 .course-code { font-size: 1.1rem; font-weight: 700; color: var(--accent-primary); }
+.course-credits {
+  margin-left: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
 
 .course-average {
   padding: 0.25rem 0.75rem;

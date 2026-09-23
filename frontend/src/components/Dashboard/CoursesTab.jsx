@@ -170,7 +170,10 @@ export default function CoursesTab({
                 <div key={cardKey} className="course-card m-row m-row--tappable">
                   <div className="course-card-content" onClick={() => openCourse(course.subject, course.catalog)}>
                     <div className="course-header">
-                      <div className="course-code">{course.subject} {course.catalog}</div>
+                      <div className="course-code">
+                        {course.subject} {course.catalog}
+                        {course.credits != null && <span className="course-credits">{course.credits} cr</span>}
+                      </div>
                       {course.average != null && (
                         <div className="course-average">
                           {course.average.toFixed(1)} GPA ({gpaToLetterGrade(course.average)})
