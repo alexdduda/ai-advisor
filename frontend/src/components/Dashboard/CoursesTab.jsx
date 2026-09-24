@@ -34,11 +34,6 @@ export default function CoursesTab({
   // share one detail UI.
   const { openCourse } = useCourseDetail()
   const [currentPage, setCurrentPage] = useState(1)
-  const [comparison, setComparison] = useState([])
-  const compare = course => setComparison(prev => {
-    const exists = prev.some(c => c.subject === course.subject && c.catalog === course.catalog)
-    return exists ? prev.filter(c => c.subject !== course.subject || c.catalog !== course.catalog) : [...prev, course].slice(0, 3)
-  })
 
   const handleSortChange = (val) => { setSortBy(val); setCurrentPage(1) }
   const handleSearch     = (e)   => { setCurrentPage(1); handleCourseSearch(e) }
@@ -56,22 +51,6 @@ export default function CoursesTab({
   return (
     <div className="courses-container">
 
-      {comparison.length > 0 && <section className="course-comparison">
-        <h2>{t('courses.compare')}</h2>
-        <p>{t('courses.compareHint')}</p>
-        <div style={{ overflowX: 'auto' }}><table>
-          <thead><tr><th>{t('nav.courses')}</th>{comparison.map(c => <th key={`${c.subject}${c.catalog}`}>
-            {c.subject} {c.catalog}
-            <button onClick={() => compare(c)} aria-label={`${t('common.remove')}: ${c.subject} ${c.catalog}`}>×</button>
-          </th>)}</tr></thead>
-          <tbody>{[
-            ['courses.recentGpa', c => c.average == null ? null : Number(c.average).toFixed(2)],
-            ['courses.rating', c => getBestRating(c)?.toFixed(1)],
-            ['courses.difficulty', c => c.rmp_difficulty?.toFixed(1)],
-            ['courses.instructorsTitle', c => c.term_instructor || c.instructor],
-          ].map(([label, getValue]) => <tr key={label}><th>{t(label)}</th>{comparison.map(c => <td key={`${c.subject}${c.catalog}`}>{getValue(c) ?? t('courses.noComparisonData')}</td>)}</tr>)}</tbody>
-        </table></div>
-      </section>}
       {/* ── Search bar ──────────────────────────────────────── */}
       <form className="search-section" onSubmit={handleSearch}>
         <input
@@ -191,7 +170,10 @@ export default function CoursesTab({
                 <div key={cardKey} className="course-card m-row m-row--tappable">
                   <div className="course-card-content" onClick={() => openCourse(course.subject, course.catalog)}>
                     <div className="course-header">
-                      <div className="course-code">{course.subject} {course.catalog}</div>
+                      <div className="course-code">
+                        {course.subject} {course.catalog}
+                        {course.credits != null && <span className="course-credits">{course.credits} cr</span>}
+                      </div>
                       {course.average != null && (
                         <div className="course-average">
                           {course.average.toFixed(1)} GPA ({gpaToLetterGrade(course.average)})
@@ -241,9 +223,6 @@ export default function CoursesTab({
                   </div>
 
                   <div className="course-card-actions">
-                    <button type="button" className="course-compare-btn" aria-pressed={comparison.some(c => c.subject === course.subject && c.catalog === course.catalog)}
-                      disabled={comparison.length >= 3 && !comparison.some(c => c.subject === course.subject && c.catalog === course.catalog)}
-                      onClick={e => { e.stopPropagation(); compare(course) }}>{t('courses.compare')}</button>
                     <button className={`favorite-btn ${isFavorited(course.subject, course.catalog) ? 'favorited' : ''}`} onClick={(e) => { e.stopPropagation(); handleToggleFavorite(course) }} data-tooltip={isFavorited(course.subject, course.catalog) ? t('courses.tipRemoveSaved') : t('courses.tipSaveCourse')}>
                       {isFavorited(course.subject, course.catalog) ? <FaHeart className="favorite-icon" /> : <FaRegHeart className="favorite-icon" />}
                     </button>
