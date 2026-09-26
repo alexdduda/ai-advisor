@@ -603,7 +603,8 @@ def _persist_syllabus_result(user_id: str, filename: str, extracted: dict, supab
                     if send_on >= date.today():
                         notif_rows.append({
                             "user_id": user_id, "event_id": ev["id"],
-                            "event_title": ev["title"], "event_type": ev.get("type", "academic"),
+                            "event_title": ev["title"], "event_date": ev["date"],
+                            "event_type": ev.get("type", "academic"),
                             "send_on": send_on.isoformat(), "method": "email",
                             "email": user_email, "phone": None, "sent": False,
                         })
