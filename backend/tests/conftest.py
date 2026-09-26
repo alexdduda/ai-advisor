@@ -85,10 +85,17 @@ class FakeTable:
         return self
     def single(self): return self
     def insert(self, row):
-        row = dict(row) if not isinstance(row, dict) else dict(row)
-        row.setdefault("id", f"fake-{self._name}-{len(self._data)}-{id(row)}")
-        self._data.append(row)
-        self._inserted = [row]
+        # Real Supabase accepts either a single dict or a list of dicts
+        # (bulk insert) — several routes use the bulk form, so the fake
+        # needs to as well rather than only ever handling one row.
+        incoming = row if isinstance(row, list) else [row]
+        inserted = []
+        for r in incoming:
+            r = dict(r)
+            r.setdefault("id", f"fake-{self._name}-{len(self._data)}-{id(r)}")
+            self._data.append(r)
+            inserted.append(r)
+        self._inserted = inserted
         return self
     def update(self, row):
         self._pending_update = dict(row)
