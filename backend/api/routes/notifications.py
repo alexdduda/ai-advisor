@@ -178,6 +178,98 @@ def _build_html_email(event_title: str, event_date: str, event_type: str, days_b
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
+def _backfill_missing_notification_queue_rows(supabase) -> int:
+    """
+    Self-healing safety net, run at the start of every cron before sending.
+
+    Every other queuing path (_queue_notifications for manually-created
+    events, the syllabus-upload path in syllabus.py) runs exactly once, at
+    creation time, with no retry. A transient DB error, a bug, a race —
+    anything that makes that one attempt fail — means the event silently
+    never gets a reminder again, forever (this is exactly what happened to
+    every syllabus-extracted assessment: that insert omitted the required
+    event_date column, so the whole batch insert failed and got swallowed
+    by a bare try/except). Rather than trust each one-shot queuing call to
+    always succeed, re-derive what should be queued from calendar_events
+    itself and fill in whatever's missing before every send.
+
+    Scoped to date >= today: past events don't need reminders queued.
+    Returns the number of rows backfilled.
+    """
+    today = date.today()
+    today_str = today.isoformat()
+
+    events = (
+        supabase.table("calendar_events")
+        .select("id, user_id, title, date, type, notify_enabled, notify_email, "
+                "notify_email_addr, notify_same_day, notify_1day, notify_7days")
+        .eq("notify_enabled", True)
+        .eq("notify_email", True)
+        .gte("date", today_str)
+        .execute()
+    )
+    events_data = events.data or []
+    if not events_data:
+        return 0
+
+    event_ids = [e["id"] for e in events_data]
+    existing = (
+        supabase.table("notification_queue")
+        .select("event_id, send_on")
+        .in_("event_id", event_ids)
+        .execute()
+    )
+    existing_pairs = {(r["event_id"], r["send_on"]) for r in (existing.data or [])}
+
+    # Manually-created events carry their own notify_email_addr; syllabus-
+    # extracted ones don't, so fall back to the owning user's account email.
+    user_emails: dict[str, Optional[str]] = {}
+
+    def _email_for(ev: dict) -> Optional[str]:
+        if ev.get("notify_email_addr"):
+            return ev["notify_email_addr"]
+        uid = ev["user_id"]
+        if uid not in user_emails:
+            u = supabase.table("users").select("email").eq("id", uid).execute()
+            user_emails[uid] = u.data[0]["email"] if u.data else None
+        return user_emails[uid]
+
+    to_insert = []
+    for ev in events_data:
+        try:
+            ev_date = date.fromisoformat(ev["date"])
+        except (TypeError, ValueError):
+            continue
+        offsets = []
+        if ev.get("notify_7days"):    offsets.append(7)
+        if ev.get("notify_1day"):     offsets.append(1)
+        if ev.get("notify_same_day"): offsets.append(0)
+        if not offsets:
+            continue
+        email_addr = _email_for(ev)
+        if not email_addr:
+            continue
+        for days_before in offsets:
+            send_on = ev_date - timedelta(days=days_before)
+            if send_on < today:
+                continue
+            key = (ev["id"], send_on.isoformat())
+            if key in existing_pairs:
+                continue
+            to_insert.append({
+                "user_id": ev["user_id"], "event_id": ev["id"],
+                "event_title": ev["title"], "event_date": ev["date"],
+                "event_type": ev.get("type", "personal"),
+                "send_on": send_on.isoformat(), "method": "email",
+                "email": email_addr, "phone": None, "sent": False,
+            })
+
+    if to_insert:
+        supabase.table("notification_queue").insert(to_insert).execute()
+        logger.info(f"Backfilled {len(to_insert)} missing notification_queue rows")
+    return len(to_insert)
+
+
 def _queue_notifications(supabase, event_id: str, event: CalendarEventIn):
     """Delete old queued notifications for this event and re-queue."""
     try:
@@ -487,6 +579,11 @@ async def run_cron(request: Request, x_cron_secret: Optional[str] = Header(None)
 
     today = date.today().isoformat()
     supabase = get_supabase()
+
+    try:
+        _backfill_missing_notification_queue_rows(supabase)
+    except Exception as e:
+        logger.error(f"Notification backfill failed: {e}")
 
     due = (
         supabase.table("notification_queue")
