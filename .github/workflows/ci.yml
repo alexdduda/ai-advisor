@@ -117,6 +117,13 @@ jobs:
   secret-scan:
     name: Secret scan
     runs-on: ubuntu-latest
+    # gitleaks-action lists the pull request's commits through the API, which
+    # needs pull-requests: read. Without an explicit block this job depends on
+    # the repository's default token permissions, and when those were
+    # restricted it failed with "Resource not accessible by integration".
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
       - uses: actions/checkout@v7
         with:
